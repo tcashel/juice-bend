@@ -15,7 +15,7 @@ mise install
 mise run setup
 mise run doctor
 mise run build
-./scripts/run --demo
+mise run run -- --demo
 ```
 
 The demo uses a new private temporary directory and entirely synthetic history.

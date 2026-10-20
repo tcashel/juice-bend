@@ -1,0 +1,53 @@
+Projection cursor read-only SQL diagnostic
+Synthetic snapshot: 100000 physical records, 125000 events.
+SQLite: 3.54.0 2026-04-09 12:25:13 8fa8248e303219400c646a885e36dfc52eae33d83f4412e3f369b2be5373aapl (64-bit)
+Prior predicate: snapshot=@snapshot AND (ordinal>@after_ordinal OR (ordinal=@equal_ordinal AND event>@after_event))
+Tuple predicate: snapshot=@snapshot AND (ordinal,event)>(@after_ordinal,@after_event)
+Distinct ordinal parameters intentionally model the prior production bindings.
+No persisted database or application source changes were made by this measurement.
+SQL-only walls exclude Bend serialization/hashing/FFI and are not full-app savings estimates.
+
+Method: one-off Python orchestration invokes /usr/bin/sqlite3 -readonly, not
+Python's separately linked SQLite library. It reads only ordered ordinal/event
+keys, constructs cursors after every 64 rows plus the initial (-1,-1) and final
+empty-page cursor, and runs the exact production window/budget query for each.
+The synthetic rows fit the byte budget at 64 rows; each sweep verifies the
+summed returned count. .stats vmstep supplies per-query VM counts. Subprocess
+wall timing includes SQLite startup, parameter setup, parsing and count output.
+The old predicate uses separate equal-valued ordinal parameters, as production
+did; replacing them with identical literal constants would optimize differently.
+The tuple variant changes only that predicate and removes the duplicate
+ordinal binding. Native Bend regression tests separately verify full seal
+equivalence and the byte-limited case.
+
+Exact query plans (prior then tuple):
+QUERY PLAN
+|--CO-ROUTINE (subquery-2)
+|  |--CO-ROUTINE (subquery-4)
+|  |  |--CO-ROUTINE (subquery-5)
+|  |  |  |--CO-ROUTINE e
+|  |  |  |  `--SEARCH events USING INDEX sqlite_autoindex_events_1 (snapshot=?)
+|  |  |  `--SCAN e
+|  |  `--SCAN (subquery-5)
+|  `--SCAN (subquery-4)
+|--SCAN (subquery-2)
+`--USE TEMP B-TREE FOR ORDER BY
+QUERY PLAN
+|--CO-ROUTINE (subquery-2)
+|  |--CO-ROUTINE (subquery-4)
+|  |  |--CO-ROUTINE (subquery-5)
+|  |  |  |--CO-ROUTINE e
+|  |  |  |  `--SEARCH events USING INDEX sqlite_autoindex_events_1 (snapshot=? AND (ordinal,event)>(?,?))
+|  |  |  `--SCAN e
+|  |  `--SCAN (subquery-5)
+|  `--SCAN (subquery-4)
+|--SCAN (subquery-2)
+`--USE TEMP B-TREE FOR ORDER BY
+
+prior: queries=1955, rows=125000, last_rows=0, vm_steps=887951664, wall_seconds=6.398661
+tuple: queries=1955, rows=125000, last_rows=0, vm_steps=32528654, wall_seconds=0.597348
+prior_repeat: queries=1955, rows=125000, last_rows=0, vm_steps=887951664, wall_seconds=6.152550
+tuple_repeat: queries=1955, rows=125000, last_rows=0, vm_steps=32528654, wall_seconds=0.597322
+
+Native regression: ./scripts/test tests/projection_cursor.bend passed 12 checks.
+Regression compares production projection_digest with prior OR traversal sharing production row encoding and hash chain; includes split physical-record boundaries, changed boundary events, byte-limited batches and an empty capture.

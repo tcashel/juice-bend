@@ -5,7 +5,7 @@ Measured on 2026-10-20, macOS 27.0.1 (26A434), arm64, Bend 2.0.37 at
 The host also ran implementation/testing work; these are observations, not an
 isolated machine comparison or a Swift Juice comparison.
 
-Run `./scripts/bench 10000` or `./scripts/bench 100000`. The wrapper creates a
+Run `mise run bench -- 10000` or `mise run bench -- 100000`. The wrapper creates a
 private temporary working directory. Fixture generation is Bend code and is
 excluded from operation timers. Generator v1, seed 1337, creates one long
 Claude-format session with varied Unicode text, integer payloads, paths,
@@ -13,7 +13,7 @@ repositories, timestamps, tool arguments/results and usage. Each four physical
 JSONL records yield five normalized events. Events include tools and are not
 presented as five independent human/assistant messages.
 
-| Observation | 10k baseline | 100k baseline | 100k FTS schema v2 | Final fresh 100k with verified context |
+| Observation | 10k baseline | 100k baseline | 100k FTS schema v2 | 100k verified-context baseline |
 |---|---:|---:|---:|---:|
 | Raw records / normalized events | 10,000 / 12,500 | 100,000 / 125,000 | 100,000 / 125,000 | 100,000 / 125,000 |
 | Source bytes before append | 3,545,358 | 35,601,602 | 35,601,602 | 35,601,602 |
@@ -33,7 +33,7 @@ presented as five independent human/assistant messages.
 Raw results: [10k baseline](../benchmarks/results/10000.jsonl),
 [100k baseline](../benchmarks/results/100000.jsonl),
 [100k FTS v2](../benchmarks/results/100000-fts-v2.jsonl), and
-[final fresh 100k](../benchmarks/results/100000-context-v1.jsonl). Search and warm late-page statistics
+[verified-context baseline](../benchmarks/results/100000-context-v1.jsonl). Search and warm late-page statistics
 use five trials; p95 is the nearest-rank fifth value, so it is the observed
 maximum of this small sample. Other operations have one final-run observation.
 All measurements use the upstream monotonic millisecond clock. “First” means
@@ -48,18 +48,67 @@ checks independently named first records at beginning/middle/end. It also
 checks unchanged snapshot reuse and the actual append snapshot/record/event
 counts before reporting them.
 
+The projection-checksum cursor subsequently changed from
+`ordinal > ? OR (ordinal = ? AND event > ?)` to the equivalent tuple comparison
+`(ordinal, event) > (?, ?)`. With separate bound ordinal parameters, SQLite
+used only the snapshot prefix of the composite key for the former predicate;
+the tuple permits a range seek. A read-only diagnostic traversed the same
+125,000 synthetic events in 1,955 queries. The prior query used 887,951,664 VM
+steps and took 6.40/6.15 seconds; the tuple used 32,528,654 steps and took
+0.597/0.597 seconds. These SQL-only observations exclude Bend hashing and
+file verification, and are not full-application savings estimates.
+[Exact plans and method](../benchmarks/results/projection-cursor-plan.txt)
+are retained. Twelve native regression assertions compare the entire
+production checksum against the prior traversal, including page boundaries
+within one physical record, corruption immediately after those boundaries,
+byte-limited batches and empty snapshots. Row ordering, payload bounds,
+checksum encoding, raw verification and context checks are unchanged.
+
+A fresh run of the immutable tuple-cursor candidate completed all benchmark
+assertions. Its [raw results](../benchmarks/results/100000-projection-tuple.jsonl)
+and [source/executable identities](../benchmarks/results/100000-projection-tuple-build.txt)
+are retained separately from the baseline. This candidate predates the later
+capture-publication observer work.
+
+| Observation | Verified-context baseline | Tuple-cursor candidate | Final combined source |
+|---|---:|---:|---:|
+| First import | 56,525 ms | 37,499 ms | 36,381 ms |
+| Unchanged refresh | 10,860 ms | 7,047 ms | 7,019 ms |
+| Append 16 raw records / 20 events | 71,368 ms | 40,999 ms | 39,945 ms |
+| Warm scoped search median / p95 | 59 / 60 ms | 48 / 48 ms | 49 / 51 ms |
+| Warm late page median / p95 | 13 / 20 ms | 8 / 8 ms | 8 / 8 ms |
+| Warm repository-scoped late page median / p95 | 25 / 30 ms | 18 / 18 ms | 18 / 19 ms |
+| SQLite logical page bytes after append | 224,432,128 | 224,604,160 | 224,604,160 |
+| Existing database reopen and status | 23 ms | 17 ms | 17 ms |
+
+The tuple run retained two accepted snapshots and exactly 100,016 raw records
+and 125,020 events in the latest one. The affected test suites and SQL diagnostic
+completed before it began. The host was not isolated, and unchanged
+refresh also became faster despite not using the checksum cursor. The full
+wall-time difference therefore cannot be attributed entirely to this change.
+
+The final combined run includes the explicit linear capture observer and uses
+the ordinary `Unobserved` application entry point. All correctness checks passed;
+all 31 source/build hashes and the executable hash were unchanged before and
+after execution. Its [raw results](../benchmarks/results/100000-final-combined.jsonl),
+[build identity](../benchmarks/results/100000-final-combined-build.txt), and
+[source manifest](../benchmarks/results/100000-final-combined-sources.sha256)
+are retained. Focused tests finished before this run; the final integrated suite
+and application builds started afterward.
+
 The baseline 100k search p95 missed the provisional 150 ms target. Schema v2
 indexes only current accepted snapshots and joins the FTS rowid directly to the
-event rowid. The final fresh run's 60 ms p95 passes that backend target; the
-five actual warm trials were 60, 59, 60, 58 and 58 ms. The append run retains 250,020 event
+event rowid. The final combined run's 51 ms p95 passes that backend target; the
+five actual warm trials were 48, 48, 49, 49 and 51 ms. The append run retains 250,020 event
 rows across both immutable snapshots but indexes 125,020 current events.
 Backend late-page reads are below 200 ms, including near the end. Backend reopen
 is not native startup-to-interactive. Unchanged refresh verifies the retained prefix without
 provider decoding; append verifies that prefix, checks projection integrity,
 copies projection/context rows into a new immutable snapshot and verifies the
-accepted extent again. Those costs remain linear in the existing session.
-The final observed 71.4-second append of 16 records is a material preservation
-performance limitation, even though read targets pass. Capture/refresh UI
+accepted extent again. After correcting the repeated checksum-prefix scans,
+these costs remain linear in the existing session. The observed 39.9-second
+append of 16 records remains a material preservation performance limitation,
+even though read targets pass. Capture/refresh UI
 responsiveness must be measured separately; these durations are not evidence
 that input remains responsive. Historical raw and event rows remain
 available for pinned evidence even though historical matches are omitted from
@@ -76,7 +125,7 @@ expected counts of 9 and 25 visible events at physical record 99,900.
 Its copied database was 199,024,640 logical bytes after rebuilding one snapshot;
 it is distinct from the final fresh database with both snapshots checkpointed.
 
-The source audit at 2026-10-20 16:50:32 UTC uses physical newline counts,
+The source audit at 2026-10-20 17:38:12 UTC uses physical newline counts,
 including comments and blank lines, and exact file bytes. The
 [per-file inventory](receipts/code-size.tsv) records every counted path and
 SHA-256; categories do not overlap. No cached test binaries or repeated generated
@@ -84,8 +133,8 @@ C outputs are included in application source counts.
 
 | Category | Files | Lines | Bytes |
 |---|---:|---:|---:|
-| First-party Bend application, excluding bitmap asset below | 24 | 8,556 | 368,180 |
-| First-party Bend tests | 29 | 4,136 | 227,398 |
+| First-party Bend application, excluding bitmap asset below | 24 | 8,628 | 371,239 |
+| First-party Bend tests | 31 | 4,683 | 254,423 |
 | First-party Bend benchmarks | 2 | 391 | 16,826 |
 | First-party Bend laws/proofs | 2 | 165 | 4,206 |
 | SQLite C bridge | 1 | 418 | 14,863 |
@@ -97,23 +146,43 @@ C outputs are included in application source counts.
 | Vendored dependency implementation | 0 | 0 | 0 |
 | Ignored upstream compiler/Base/runtime cache, including guides and inventory | 90 | 27,050 | 907,029 |
 | Local upstream toolchain patches | 0 | 0 | 0 |
-| Generated C for one final application candidate | 1 | 445,988 | 22,687,415 |
+| Generated C for the current application | 1 | 447,692 | 22,736,145 |
 
-Application Bend including its bitmap asset is 8,778 lines. All maintained Bend
-including tests, benchmarks, laws and assets is 13,470 lines. The 418-line bridge
+Application Bend including its bitmap asset is 8,850 lines. All maintained Bend
+including tests, benchmarks, laws and assets is 14,089 lines. The 418-line bridge
 contains SQLite bindings; generated C also contains the upstream runtime and
 compiler expansion. It is not an additional maintained native application
 implementation. SQLite is the system library and is not vendored. All 88 pinned
 upstream files passed the [hash verification](receipts/toolchain-integrity.txt);
 the cache's two additional files are source revision/inventory metadata.
 
-The audited `build/juice-bend-next` candidate is 4,619,552 bytes, SHA-256
-`4ad55c63cb542b68740e032f05ff528c25c3ce7250a6f07c1bfbd0d3f25f5d49`.
-Its generated C is SHA-256
-`c78f1edabba528da8806ea0b5d24442c82c276507b7773a2b319f4213311cad2`.
-That candidate's build duration was not timed. The separately timed application
-build below has its own executable identity. These are file sizes, not
-filesystem allocation or process memory.
+The current `build/juice-bend` and `build/Juice Bend Current.app` executables
+are identical: 4,621,176 bytes, SHA-256
+`6a1287727e86e6d956dbfa7bf42bb6a1551d2fe064f110c805e14f6e8b85a32c`.
+The generated C is SHA-256
+`6eb99af678e235c7be063f67c48e16aa00dd706fc60b0489905747f1e2cb3593`.
+These are file sizes, not filesystem allocation or process memory. The previous
+desktop-observed executable is retained separately and identified in
+[native validation](native-validation.md); the Mac locked before the current
+build could be desktop-tested.
+
+Two final builds used the frozen source and pinned installed compiler. The
+first started with an empty Clang module-cache directory; the previous cache
+was moved to an ignored backup, not deleted. Installed Bun/compiler and OS
+caches were retained. The repeat used the populated module cache and included
+local `.app` packaging; it produced the exact same executable hash.
+
+| Final native build | Elapsed | User / system CPU time | Maximum RSS |
+|---|---:|---:|---:|
+| Fresh Clang module cache: `mise run build -- src/main.bend build/juice-bend` | 63.89 s | 71.97 / 6.13 s | 6,809,216 KiB |
+| Repeat build and local bundle: `mise run app -- "build/Juice Bend Current.app"` | 62.85 s | 70.29 / 3.68 s | 7,914,448 KiB |
+
+Both exited 0. The zsh `time` keyword reports `%M` in KiB. These are process
+resource observations on this shared host, not an isolated speed comparison.
+The wrapper always regenerates C and recompiles; it has no incremental compiler
+artifact reuse, so the second figure is a repeat full build, not a true incremental
+build. Receipts: [fresh cache](../benchmarks/results/main-clean-build.txt),
+[repeat and package](../benchmarks/results/main-repeat-build.txt).
 
 The baseline benchmark executable was 1,745,904 bytes, SHA-256
 `9a701f6c7007d1b236e3f3022aba092c14e466ac316566065e6ce9169db19d1d`.
@@ -131,7 +200,7 @@ The wrapper emits C and recompiles; this is not a measured clean/incremental
 application build pair. Ordinary proof checking took 0.46 seconds. Stronger
 kernel checking remains unavailable pending the exact Lean 4.34.0 toolchain.
 
-The final application entry point, including native window support, was built
+An earlier application candidate, including native window support, was built
 with `/usr/bin/time -l ./scripts/build src/main.bend build/juice-bend-measured`.
 The build succeeded in 73.52 seconds elapsed (81.02 user, 7.69 system).
 The executable is 4,602,768 bytes, SHA-256
@@ -145,7 +214,7 @@ query failure: [page attempt](../benchmarks/results/final-page-time-resources.tx
 
 The pre-existing macOS zsh 5.9 `time` keyword successfully reported process
 resource usage through `%M` (maximum RSS in KiB, as documented by the local
-`zshparam(1)` manual). These commands used the same final native executable
+`zshparam(1)` manual). These commands used that earlier native executable
 against an isolated APFS copy of the already generated 100,016-record library.
 Copying and fixture generation were outside the measurements. A verified
 rebuild first updated that copy's derived state to parser version 4. The page

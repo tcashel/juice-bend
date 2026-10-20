@@ -1,0 +1,3 @@
+[build] $ ./scripts/build src/main.bend build/juice-bend
+Built build/juice-bend
+elapsed_seconds=63.89s user_seconds=71.97s system_seconds=6.13s maximum_rss_kib=6809216

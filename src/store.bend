@@ -16,10 +16,59 @@ type Piece is Data:
 type Split is Data:
   Split{pieces: List<&2, Piece>, tail: List<&2, U32>, length: U32, oversized: Bool}
 
+# Explicit observation of the real capture transaction. The ordinary entry
+# point supplies Unobserved; tests may hold an owned child at a named boundary.
+# No environment/DB switch enables this, and no callback runs per record.
+type ImportPhase is Data:
+  BeforeTransaction{}
+  Staged{}
+  Reverified{}
+  Sealed{}
+  Accepted{}
+  SearchRemoved{}
+  LatestRepointed{}
+  BeforeCommit{}
+  Committed{}
+
+def phase_name(phase: ImportPhase) -> String:
+  match phase:
+    case BeforeTransaction{}:
+      "before_transaction"
+    case Staged{}:
+      "staged"
+    case Reverified{}:
+      "reverified"
+    case Sealed{}:
+      "sealed"
+    case Accepted{}:
+      "accepted"
+    case SearchRemoved{}:
+      "search_removed"
+    case LatestRepointed{}:
+      "latest_repointed"
+    case BeforeCommit{}:
+      "before_commit"
+    case Committed{}:
+      "committed"
+
+type ImportObserver is Type:
+  Unobserved{}
+  Observed{step: ImportPhase -> IO(ImportObserver)}
+
+# Functions are affine in Bend. Each callback therefore returns the observer
+# for the next boundary instead of copying a closure or consulting global state.
+def observe_phase(observer: ImportObserver,phase: ImportPhase) -> IO(ImportObserver):
+  match observer:
+    case Unobserved{}:
+      IO.pure(ImportObserver,Unobserved{})
+    case Observed{step}:
+      step(phase)
+
 type ImportState is Type:
   ImportState{db: U32, file: File, provider: String, source: String,
     generation: String, snapshot: String, extent: U32, offset: U32, ordinal: U32,
-    checkpoint: U32, checkpoint_ordinal: U32, context: Context}
+    checkpoint: U32, checkpoint_ordinal: U32, context: Context,
+    observe: ImportObserver}
 
 def text(cell: Sql.Cell) -> String:
   match cell:
@@ -550,7 +599,7 @@ def context_before(+db: U32,+snapshot: String,generation: String,+extent: U32,
     context_rows(snapshot,extent,raw,rows)
 
 def put_piece(state: ImportState, piece: Piece) -> IO(ImportState):
-  ImportState{+db,file,+provider,+source,+gen,+snap,+extent,+off,+ord,+checkpoint,+checkpoint_ord,+ctx} = state
+  ImportState{+db,file,+provider,+source,+gen,+snap,+extent,+off,+ord,+checkpoint,+checkpoint_ord,+ctx,observe} = state
   Piece{+bytes,+len,+newline,+oversized} = piece
   do IO<ImportState>:
     exec(db,"INSERT INTO raw(generation,ordinal,offset,n,digest,bytes,complete,oversized) VALUES(?,?,?,?,?,?,?,?)",
@@ -564,7 +613,7 @@ def put_piece(state: ImportState, piece: Piece) -> IO(ImportState):
     next : Context <- put_events(piece_events(oversized,provider,bytes),db,snap,ord,0,provider,ctx)
     return ImportState{db,file,provider,source,gen,snap,extent,(off + len : U32),(ord + 1 : U32),
       Bool.pick(U32,newline,(off + len : U32),checkpoint),
-      Bool.pick(U32,newline,(ord + 1 : U32),checkpoint_ord),next}
+      Bool.pick(U32,newline,(ord + 1 : U32),checkpoint_ord),next,observe}
 
 def put_pieces(pieces: List<&2,Piece>, state: ImportState) -> IO(ImportState):
   match pieces:
@@ -675,6 +724,8 @@ def projection_continue(done: Bool,digest: String,next: Unit -> IO(String)) -> I
     case False{}:
       next(Unit{})
 
+# A tuple cursor lets the composite primary key seek beyond the previous page.
+# The equivalent OR predicate scans the snapshot prefix for each bound query.
 def projection_walk(fuel: Nat,+db: U32,+snapshot: String,+ordinal: String,event: String,digest: String) -> IO(String):
   match fuel:
     case 0n:
@@ -682,8 +733,8 @@ def projection_walk(fuel: Nat,+db: U32,+snapshot: String,+ordinal: String,event:
     case 1n+rest:
       do IO<String>:
         +rows : List<&2,List<&2,Sql.Cell>> <- q(db,
-          "SELECT ordinal,event,role,body,tool,call_id,arguments,result,repository,session,timestamp,model,usage,parent,coverage FROM (SELECT e.*,row_number() OVER (ORDER BY ordinal,event) AS rn,sum(length(CAST(role AS BLOB))+length(CAST(body AS BLOB))+length(CAST(tool AS BLOB))+length(CAST(call_id AS BLOB))+length(CAST(arguments AS BLOB))+length(CAST(result AS BLOB))+length(CAST(repository AS BLOB))+length(CAST(session AS BLOB))+length(CAST(timestamp AS BLOB))+length(CAST(model AS BLOB))+length(CAST(usage AS BLOB))+length(CAST(parent AS BLOB))+length(CAST(coverage AS BLOB))+256) OVER (ORDER BY ordinal,event) AS total_bytes FROM (SELECT * FROM events WHERE snapshot=? AND (ordinal>? OR (ordinal=? AND event>?)) ORDER BY ordinal,event LIMIT 64) e) WHERE total_bytes<=1048576 OR rn=1 ORDER BY ordinal,event",
-          [Sql.Cell.Integer{snapshot},Sql.Cell.Integer{ordinal},Sql.Cell.Integer{ordinal},Sql.Cell.Integer{event}],64)
+          "SELECT ordinal,event,role,body,tool,call_id,arguments,result,repository,session,timestamp,model,usage,parent,coverage FROM (SELECT e.*,row_number() OVER (ORDER BY ordinal,event) AS rn,sum(length(CAST(role AS BLOB))+length(CAST(body AS BLOB))+length(CAST(tool AS BLOB))+length(CAST(call_id AS BLOB))+length(CAST(arguments AS BLOB))+length(CAST(result AS BLOB))+length(CAST(repository AS BLOB))+length(CAST(session AS BLOB))+length(CAST(timestamp AS BLOB))+length(CAST(model AS BLOB))+length(CAST(usage AS BLOB))+length(CAST(parent AS BLOB))+length(CAST(coverage AS BLOB))+256) OVER (ORDER BY ordinal,event) AS total_bytes FROM (SELECT * FROM events WHERE snapshot=? AND (ordinal,event)>(?,?) ORDER BY ordinal,event LIMIT 64) e) WHERE total_bytes<=1048576 OR rn=1 ORDER BY ordinal,event",
+          [Sql.Cell.Integer{snapshot},Sql.Cell.Integer{ordinal},Sql.Cell.Integer{event}],64)
         +last : List<&2,Sql.Cell> = projection_last(rows,[])
         +next : String = projection_rows(rows,digest)
         projection_continue(List.is_empty(&2,List<&2,Sql.Cell>,rows),next,
@@ -726,30 +777,39 @@ def projection_valid(+db: U32,+snapshot: String) -> IO(Bool):
       [Sql.Cell.Integer{snapshot}],1)
     projection_check_rows(db,snapshot,rows)
 
-def finish_verified(+db: U32,+source: String,+snap: String,got: File & Bool) -> IO(String):
+def finish_verified(+db: U32,+source: String,+snap: String,got: File & Bool,
+  observe: ImportObserver) -> IO(String):
   (file,stable) = got
   do IO<String>:
     File.close(file)
     checked(stable,"Source changed during capture; transaction discarded")
+    verified_observer : ImportObserver <- observe_phase(observe,Reverified{})
     seal_projection(db,snap)
+    sealed_observer : ImportObserver <- observe_phase(verified_observer,Sealed{})
     exec(db,"UPDATE snapshots SET accepted=1 WHERE id=?",[Sql.Cell.Integer{snap}])
+    accepted_observer : ImportObserver <- observe_phase(sealed_observer,Accepted{})
     exec(db,
       "DELETE FROM search WHERE snapshot IN (SELECT latest FROM sources WHERE id=?)",
       [Sql.Cell.Integer{source}])
+    removed_observer : ImportObserver <- observe_phase(accepted_observer,SearchRemoved{})
     exec(db,"UPDATE sources SET latest=? WHERE id=?",[Sql.Cell.Integer{snap},Sql.Cell.Integer{source}])
+    latest_observer : ImportObserver <- observe_phase(removed_observer,LatestRepointed{})
     index_search_snapshot(db,snap)
+    commit_observer : ImportObserver <- observe_phase(latest_observer,BeforeCommit{})
     exec(db,"COMMIT",[])
+    finished_observer : ImportObserver <- observe_phase(commit_observer,Committed{})
     return snap
 
 def finish(state: ImportState) -> IO(String):
-  ImportState{+db,file,provider,+source,gen,+snap,+extent,off,ord,checkpoint,checkpoint_ord,ctx} = state
+  ImportState{+db,file,provider,+source,gen,+snap,+extent,off,ord,checkpoint,checkpoint_ord,ctx,observe} = state
   do IO<String>:
     checked(U32.is_eq(off,extent),"Capture extent mismatch")
     exec(db,"UPDATE snapshots SET checkpoint=?,checkpoint_ordinal=?,records=? WHERE id=?",
       [Sql.Cell.Integer{U32.show(checkpoint)},Sql.Cell.Integer{U32.show(checkpoint_ord)},
        Sql.Cell.Integer{U32.show(ord)},Sql.Cell.Integer{snap}])
+    staged_observer : ImportObserver <- observe_phase(observe,Staged{})
     verified : File & Bool <- verify_loop(4294967295n,db,snap,0,file)
-    finish_verified(db,source,snap,verified)
+    finish_verified(db,source,snap,verified,staged_observer)
 
 def finish_tail(state: ImportState, tail: List<&2,U32>, len: U32, oversized: Bool) ->
   IO(String):
@@ -780,14 +840,14 @@ def capture_bytes(state: ImportState,cursor: U32,tail: List<&2,U32>,
 def capture_step(state: ImportState, +cursor: U32, tail: List<&2,U32>,
   len: U32, oversized: Bool, done: Bool,
   next: ImportState -> U32 -> List<&2,U32> -> U32 -> Bool -> IO(String)) -> IO(String):
-  ImportState{db,file,provider,source,gen,snap,+extent,off,ord,checkpoint,cpord,ctx} = state
+  ImportState{db,file,provider,source,gen,snap,+extent,off,ord,checkpoint,cpord,ctx,observe} = state
   match done:
     case True{}:
-      finish_tail(ImportState{db,file,provider,source,gen,snap,extent,off,ord,checkpoint,cpord,ctx},tail,len,oversized)
+      finish_tail(ImportState{db,file,provider,source,gen,snap,extent,off,ord,checkpoint,cpord,ctx,observe},tail,len,oversized)
     case False{}:
       read(String,file,cursor,U32.min(65536,(extent - cursor : U32)),
         f => bytes => capture_bytes(
-          ImportState{db,f,provider,source,gen,snap,extent,off,ord,checkpoint,cpord,ctx},
+          ImportState{db,f,provider,source,gen,snap,extent,off,ord,checkpoint,cpord,ctx,observe},
           cursor,tail,len,oversized,bytes,next))
 
 def capture_loop(fuel: Nat,state: ImportState,cursor: U32,tail: List<&2,U32>,
@@ -796,13 +856,14 @@ def capture_loop(fuel: Nat,state: ImportState,cursor: U32,tail: List<&2,U32>,
     case 0n:
       IO.die(String,1,"Capture budget exhausted")
     case 1n+rest:
-      ImportState{db,file,provider,source,gen,snap,+extent,off,ord,checkpoint,cpord,ctx} = state
+      ImportState{db,file,provider,source,gen,snap,+extent,off,ord,checkpoint,cpord,ctx,observe} = state
       +pos = cursor
-      capture_step(ImportState{db,file,provider,source,gen,snap,extent,off,ord,checkpoint,cpord,ctx},
+      capture_step(ImportState{db,file,provider,source,gen,snap,extent,off,ord,checkpoint,cpord,ctx,observe},
         pos,tail,length,oversized,(pos >= extent : U32),
         st => cur => pending => len => over => capture_loop(rest,st,cur,pending,len,over))
 
-def new_capture(+db: U32, file: File, provider: String, +source: String, +extent: U32) ->
+def new_capture(+db: U32, file: File, provider: String, +source: String, +extent: U32,
+  observe: ImportObserver) ->
   IO(String):
   do IO<String>:
     exec(db,"INSERT INTO generations(source) VALUES(?)",[Sql.Cell.Integer{source}])
@@ -810,7 +871,7 @@ def new_capture(+db: U32, file: File, provider: String, +source: String, +extent
     exec(db,"INSERT INTO snapshots(generation,extent) VALUES(?,?)",
       [Sql.Cell.Integer{gen},Sql.Cell.Integer{U32.show(extent)}])
     snap : String <- last_id(db)
-    capture_loop(65537n,ImportState{db,file,provider,source,gen,snap,extent,0,0,0,0,Context{"","","",""}},
+    capture_loop(65537n,ImportState{db,file,provider,source,gen,snap,extent,0,0,0,0,Context{"","","",""},observe},
       0,[],0,False{})
 
 def append_context(row: List<&2,Sql.Cell>) -> Context:
@@ -905,7 +966,7 @@ def copy_context_walk(fuel: Nat,+db: U32,+old: String,+snapshot: String,+extent:
         copy_context_walk(rest,db,old,snapshot,extent,count,next,U32.is_ge(next,count))
 
 def append_copy(+db: U32,file: File,provider: String,source: String,+extent: U32,
-  +previous: List<&2,Sql.Cell>) -> IO(String):
+  +previous: List<&2,Sql.Cell>,observe: ImportObserver) -> IO(String):
   +gen = field(previous,0n)
   +old = field(previous,1n)
   +checkpoint = number(field(previous,3n))
@@ -922,93 +983,104 @@ def append_copy(+db: U32,file: File,provider: String,source: String,+extent: U32
     ctxrows : List<&2,List<&2,Sql.Cell>> <- q(db,
       "SELECT repository,session,model,parent FROM events WHERE snapshot=? ORDER BY ordinal DESC,event DESC LIMIT 1",
       [Sql.Cell.Integer{snap}],1)
-    capture_loop(65537n,ImportState{db,file,provider,source,gen,snap,extent,checkpoint,ord,checkpoint,ord,append_context(first(ctxrows))},
+    capture_loop(65537n,ImportState{db,file,provider,source,gen,snap,extent,checkpoint,ord,checkpoint,ord,append_context(first(ctxrows)),observe},
       checkpoint,[],0,False{})
 
 # The source prefix was already checked against immutable raw records by
 # existing_verified. On seal mismatch, re-read and verify a full same-generation
 # capture; never copy damaged derived events or derive context from them.
-def append_replay(+db: U32,file: File,provider: String,source: String,+extent: U32,previous: List<&2,Sql.Cell>) -> IO(String):
+def append_replay(+db: U32,file: File,provider: String,source: String,+extent: U32,
+  previous: List<&2,Sql.Cell>,observe: ImportObserver) -> IO(String):
   +generation = field(previous,0n)
   do IO<String>:
     exec(db,"INSERT INTO snapshots(generation,extent) VALUES(?,?)",[Sql.Cell.Integer{generation},Sql.Cell.Integer{U32.show(extent)}])
     snapshot : String <- last_id(db)
-    capture_loop(65537n,ImportState{db,file,provider,source,generation,snapshot,extent,0,0,0,0,Context{"","","",""}},0,[],0,False{})
+    capture_loop(65537n,ImportState{db,file,provider,source,generation,snapshot,extent,0,0,0,0,Context{"","","",""},observe},0,[],0,False{})
 
-def append_checked(db: U32,file: File,provider: String,source: String,extent: U32,previous: List<&2,Sql.Cell>,valid: Bool) -> IO(String):
+def append_checked(db: U32,file: File,provider: String,source: String,extent: U32,
+  previous: List<&2,Sql.Cell>,valid: Bool,observe: ImportObserver) -> IO(String):
   match valid:
     case True{}:
-      append_copy(db,file,provider,source,extent,previous)
+      append_copy(db,file,provider,source,extent,previous,observe)
     case False{}:
-      append_replay(db,file,provider,source,extent,previous)
+      append_replay(db,file,provider,source,extent,previous,observe)
 
-def append_capture(+db: U32,file: File,provider: String,source: String,extent: U32,+previous: List<&2,Sql.Cell>) -> IO(String):
+def append_capture(+db: U32,file: File,provider: String,source: String,extent: U32,
+  +previous: List<&2,Sql.Cell>,observe: ImportObserver) -> IO(String):
   do IO<String>:
     projection_ok : Bool <- projection_valid(db,field(previous,1n))
     valid : Bool <- context_prefix_valid(db,previous,projection_ok)
-    append_checked(db,file,provider,source,extent,previous,valid)
+    append_checked(db,file,provider,source,extent,previous,valid,observe)
 
 def existing_same(+db: U32,file: File,provider: String,source: String,extent: U32,
-  previous: List<&2,Sql.Cell>, unchanged: Bool) -> IO(String):
+  previous: List<&2,Sql.Cell>,unchanged: Bool,observe: ImportObserver) -> IO(String):
   match unchanged:
     case True{}:
       do IO<String>:
         File.close(file)
+        commit_observer : ImportObserver <- observe_phase(observe,BeforeCommit{})
         exec(db,"COMMIT",[])
+        finished_observer : ImportObserver <- observe_phase(commit_observer,Committed{})
         return field(previous,1n)
     case False{}:
-      append_capture(db,file,provider,source,extent,previous)
+      append_capture(db,file,provider,source,extent,previous,observe)
 
 def existing_result(+db: U32,file: File,provider: String,source: String,+extent: U32,
-  +previous: List<&2,Sql.Cell>, same: Bool) -> IO(String):
+  +previous: List<&2,Sql.Cell>,same: Bool,observe: ImportObserver) -> IO(String):
   match same:
     case False{}:
-      new_capture(db,file,provider,source,extent)
+      new_capture(db,file,provider,source,extent,observe)
     case True{}:
       existing_same(db,file,provider,source,extent,previous,
-        U32.is_eq(extent,number(field(previous,2n))))
+        U32.is_eq(extent,number(field(previous,2n))),observe)
 
 def existing_verified(db: U32,provider: String,source: String,+extent: U32,
-  +old: List<&2,Sql.Cell>,got: File & Bool) -> IO(String):
+  +old: List<&2,Sql.Cell>,got: File & Bool,observe: ImportObserver) -> IO(String):
   (f,same) = got
   existing_result(db,f,provider,source,extent,old,
-    (same && (extent >= number(field(old,2n)) : U32)))
+    (same && (extent >= number(field(old,2n)) : U32)),observe)
 
 def existing(+db: U32,file: File,+provider: String,+source: String,+extent: U32,
-  rows: List<&2,List<&2,Sql.Cell>>) -> IO(String):
+  rows: List<&2,List<&2,Sql.Cell>>,observe: ImportObserver) -> IO(String):
   match rows:
     case []:
-      new_capture(db,file,provider,source,extent)
+      new_capture(db,file,provider,source,extent,observe)
     case previous <> rest:
       +old = previous
       do IO<String>:
         verified : File & Bool <- verify_loop(4294967295n,db,field(old,1n),0,file)
-        existing_verified(db,provider,source,extent,old,verified)
+        existing_verified(db,provider,source,extent,old,verified,observe)
 
 def import_sized(+db: U32,+provider: String,+path: String,
-  got: File & Result<&1,&1,U32 & String,U32>) -> IO(String):
+  got: File & Result<&1,&1,U32 & String,U32>,observe: ImportObserver) -> IO(String):
   (f,size) = got
   do IO<String>:
     +extent : U32 <- IO.try(U32,IO.pure(Result<&1,&1,U32 & String,U32>,size))
+    transaction_observer : ImportObserver <- observe_phase(observe,BeforeTransaction{})
     exec(db,"BEGIN IMMEDIATE",[])
     +src : String <- source(db,provider,path)
     rows : List<&2,List<&2,Sql.Cell>> <- q(db,
       "SELECT p.generation,p.id,p.extent,p.checkpoint,p.checkpoint_ordinal FROM sources s JOIN snapshots p ON p.id=s.latest AND p.accepted=1 WHERE s.id=?",
       [Sql.Cell.Integer{src}],1)
-    existing(db,f,provider,src,extent,rows)
+    existing(db,f,provider,src,extent,rows,transaction_observer)
 
-def import_canonical(+db: U32,+provider: String,+path: String) -> IO(String):
+def import_canonical(+db: U32,+provider: String,+path: String,
+  observe: ImportObserver) -> IO(String):
   do IO<String>:
     file : File <- IO.try(File,File.open(path,"r"))
     sized : File & Result<&1,&1,U32 & String,U32> <- File.size(file)
-    import_sized(db,provider,path,sized)
+    import_sized(db,provider,path,sized,observe)
 
-def import_file(db: U32,+provider: String,path: String) -> IO(String):
+def import_observed(db: U32,+provider: String,path: String,
+  observe: ImportObserver) -> IO(String):
   do IO<String>:
     checked((String.eq(provider,"claude") || String.eq(provider,"codex")),
       "Provider must be claude or codex")
     canonical : String <- Paths.resolve(path)
-    import_canonical(db,provider,canonical)
+    import_canonical(db,provider,canonical,observe)
+
+def import_file(db: U32,provider: String,path: String) -> IO(String):
+  import_observed(db,provider,path,Unobserved{})
 
 def write_closed(got: File & Result<&1,&1,U32 & String,Unit>) -> IO(Unit):
   (file,result) = got

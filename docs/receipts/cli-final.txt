@@ -1,4 +1,34 @@
-Juice Bend final application CLI integration receipt
+Juice Bend current application CLI integration receipt
+Date: 2026-10-20
+Host: local macOS / Apple Silicon
+Executable: build/juice-bend
+SHA-256: 6a1287727e86e6d956dbfa7bf42bb6a1551d2fe064f110c805e14f6e8b85a32c
+
+A new private synthetic demo library was created by the native Bend executable.
+All nine commands exited 0 and returned valid structured JSON:
+
+--demo status
+history
+search preservation claude "" assistant ""
+session-scope 1 0 4 claude /synthetic/juice-bend-demo assistant 2026-10-20
+usage 1 0 4
+verify 1
+rebuild 1
+export-range-scope 1 0 4 claude /synthetic/juice-bend-demo assistant 2026-10-20 OUTPUT
+export-all 1 RAW_OUTPUT
+
+Every invocation used --data-dir ISOLATED_DIRECTORY. Observed/checked results:
+2 sources/generations/accepted snapshots, 11,532 raw bytes, 32 events; two history
+rows; 21 preservation search hits; exactly three scoped assistant events;
+complete-extent verification and rebuild reported unchanged raw bytes. Raw
+export compared byte-for-byte with the synthetic Claude source. Scoped Markdown
+retained Café and had mode 0600. Outputs remain under ignored build/current-cli.
+The new local bundle contains the identical executable hash and its status
+command returned the same library counts. This is CLI evidence on the latest
+storage-hardening build; the locked Mac
+prevented its desktop launch. The separate earlier file/commit smoke follows.
+
+Earlier desktop-observed application CLI integration receipt
 Date: 2026-10-20
 Host: local macOS / Apple Silicon
 Executable: build/juice-bend-next
@@ -7,7 +37,7 @@ SHA-256: 4ad55c63cb542b68740e032f05ff528c25c3ce7250a6f07c1bfbd0d3f25f5d49
 The library was prepared in a new private temporary directory with the Bend
 synthetic demo and the isolated synthetic Git provenance fixture. No default
 home history, original Juice data or remote attachment was read. The following
-commands all exited 0 on this final binary:
+commands all exited 0 on this identified earlier binary:
 
 history claude /synthetic/juice-bend-demo
 usage 1 0 4

@@ -4,9 +4,11 @@
 Bend runtime. Only synthetic libraries were used. These are observed
 interactions, not automated latency or complete accessibility acceptance.
 
-The final native executable is 4,619,552 bytes, SHA-256
+The last desktop-observed native executable is 4,619,552 bytes, SHA-256
 `4ad55c63cb542b68740e032f05ff528c25c3ce7250a6f07c1bfbd0d3f25f5d49`.
-It is available locally as `build/juice-bend` and in `build/Juice Bend.app`.
+It is preserved locally as `build/juice-bend-next` and in `build/Juice Bend.app`.
+The subsequent storage-hardening build is identified in `progress.md` and
+CLI-tested separately. It has not been observed on the locked desktop.
 The main validation library is `/private/tmp/juice-bend-native-validation`.
 
 ## Observed workflow
@@ -30,7 +32,8 @@ completed this actual native workflow:
 | Large capture | Settings imported the synthetic 100,016-record benchmark source; final library had four accepted snapshots and 125,054 projected events |
 | Close | Native close control closed the window before replacing its executable |
 
-The final executable was then launched against that retained library:
+The later `4ad55c63cb542b68740e032f05ff528c25c3ce7250a6f07c1bfbd0d3f25f5d49`
+executable was then launched against the retained library:
 
 | Interaction | Observed result |
 |---|---|
@@ -41,7 +44,7 @@ The final executable was then launched against that retained library:
 | Verified rebuild | Settings rebuilt snapshot 2 and displayed success while retaining captured evidence |
 | Combined filters | `provider:codex role:assistant after:2026-10-01` returned two results |
 | Scoped reader | Opening the first filtered result showed record 3, exactly two assistant events, the selected date/provider scope and captured model/tool arguments |
-| Close | Final window closed through its native close control |
+| Close | Window closed through its native close control |
 
 Snapshot 2 was created by an earlier development parser. Its old timestamp
 projection initially returned no date-filtered results. The observed rebuild
@@ -74,6 +77,36 @@ The final empty-library launch attempt was blocked because the native
 automation tool reported that the Mac was locked and could not unlock it.
 No OS setting or permission was changed. Empty-library native acceptance
 remains pending until a fresh desktop launch is observed.
+
+## Read-only A20 investigation — 2026-10-20
+
+The source audit at `c6e5d18` verified the installed Bend revision
+`60ca80aedeec9d8f0629b5f10dd19457d8ad67af` against
+`toolchain/bend.sha256`. In `src/gui.bend`, capture and rebuild use
+`start_write` → `IO.fork` → `Process.run`; reader/writer polling uses
+`Chan.try_recv(..., 0)`. The pinned runtime's
+`bend2/base.bend` (`IO.fork`), `bend2/effs/process_run.c`
+(`process_run_run`) and `bend2/comp.ts` (`io_work`, `io_help`) queue the
+child-process wait on helper threads. `bend2/effs/chan.c` (`chan_try`)
+returns immediately when a zero-timeout receive has no result. No direct
+capture/rebuild process wait was found in the GUI tick.
+
+This does not prove responsiveness. Bend's IO scheduler is cooperative:
+`process_pack` reconstructs returned strings, `src/client.bend` parses
+completed JSON, and `src/ui.bend` wraps/renders returned text before the
+next frame. Forking does not preempt those pure computations. Replies are
+capped at 1 MiB, but their completion-time frame cost is unmeasured.
+Copy/paste also await their clipboard command within the GUI tick, with a
+2,000 ms timeout.
+
+CLI workers reuse the GUI executable but dispatch to CLI commands without
+opening a window (`src/main.bend`). Whether automation resolved one of
+those workers instead of the window-owning process remains an unresolved
+hypothesis. A future unlocked-desktop diagnostic should retain the known
+GUI PID/window identity before capture and compare a short sample of that
+exact process with visible input while its child remains active. Tool
+round-trip time is not input/frame latency. No application semantics were
+changed by this audit, and A20 remains unaccepted.
 
 ## Reproduce remaining checks
 

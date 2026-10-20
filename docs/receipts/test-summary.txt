@@ -1,57 +1,52 @@
-Juice Bend native test receipt
+Juice Bend integrated native test receipt
 Date: 2026-10-20
 Host: local macOS / Apple Silicon
-Command: ./scripts/test > build/full-test-final.log 2>&1
+Command: mise run test > build/full-test-validated.log 2>&1
 Exit status: 0
-Completed: 29 Bend test executables
-Named PASS checks: 790
+Completed: 31 Bend test executables
+Named PASS checks: 2007
 
-Counts are derived from the actual completed output. They include explicit
-fixture/setup and successful-return checks. The GUI and UI completion banners
-are excluded. Each executable ran in its own private synthetic data directory.
-The original log remains locally under build/; this summary omits temporary
-paths and fixture contents.
+Counts come from the actual completed output and include explicit fixture/setup
+and successful-return checks. The GUI/UI completion banners are excluded. Each
+executable used its own private synthetic directory. The local raw log is ignored.
 
-tests/append_integrity.bend       49
-tests/cli.bend                     9
-tests/client.bend                  6
-tests/context.bend                22
-tests/coverage_integrity.bend       4
-tests/display.bend                 6
-tests/domain.bend                 53
-tests/evidence.bend               42
-tests/evidence_time.bend            9
-tests/file_evidence.bend           35
-tests/file_limits.bend             7
-tests/git_diff.bend               36
-tests/gui.bend                    32
-tests/integration.bend            21
-tests/maintenance.bend            30
-tests/provenance.bend             36
-tests/providers.bend              61
-tests/query.bend                  48
-tests/scoped_reader.bend           18
-tests/selected_integrity.bend      24
-tests/sources.bend                 24
-tests/sqlite.bend                  49
-tests/storage.bend                  5
-tests/storage_edges.bend           33
-tests/storage_search.bend          28
-tests/store_query.bend             37
-tests/timestamp.bend               18
-tests/ui.bend                      19
-tests/usage.bend                   29
-TOTAL                            790
+tests/append_integrity.bend                 49
+tests/cli.bend                               9
+tests/client.bend                            6
+tests/context.bend                          22
+tests/coverage_integrity.bend                4
+tests/display.bend                           6
+tests/domain.bend                           53
+tests/evidence.bend                         42
+tests/evidence_time.bend                     9
+tests/file_evidence.bend                    35
+tests/file_limits.bend                       7
+tests/git_diff.bend                         36
+tests/gui.bend                              34
+tests/integration.bend                      21
+tests/maintenance.bend                      30
+tests/projection_cursor.bend                12
+tests/provenance.bend                       36
+tests/providers.bend                        61
+tests/publication_crash.bend              1203
+tests/query.bend                            48
+tests/scoped_reader.bend                    18
+tests/selected_integrity.bend               24
+tests/sources.bend                          24
+tests/sqlite.bend                           49
+tests/storage.bend                           5
+tests/storage_edges.bend                    33
+tests/storage_search.bend                   28
+tests/store_query.bend                      37
+tests/timestamp.bend                        18
+tests/ui.bend                               19
+tests/usage.bend                            29
+TOTAL                                     2007
 
-Review follow-up during this run:
-- The final repository-scoped history query and its 37 checks are included.
-- The full run compiled GUI before its two additive history-ordinal checks.
-  A separate final focused GUI run passed 34 assertions on the final source;
-  see gui-final.txt. Do not count those 34 as distinct additional tests.
-- The final application binary was rebuilt after all reviewed fixes. Its
-  history JSON metadata, scoped read/export, Usage and file/commit Why were
-  exercised separately; see cli-final.txt.
+The integrated run includes both history-ordinal GUI regressions, 12 production
+projection-cursor checks and the 1,203-check publication matrix at 27 named
+initial/append/rewrite crash cuts. The latter verifies a fresh marker before
+accepting a timeout of only the owned synthetic child.
 
-This receipt covers native backend/state tests. It does not establish native
-screen/input/clipboard responsiveness, exhaustive fault injection or stronger
-Lean kernel verification. Those boundaries have separate acceptance records.
+This is native backend/state evidence, not a desktop input/latency observation,
+hardware power-loss test or stronger Lean kernel receipt.

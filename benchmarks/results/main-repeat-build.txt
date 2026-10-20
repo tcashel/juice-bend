@@ -1,0 +1,3 @@
+[app] $ ./scripts/app 'build/Juice Bend Current.app'
+Built /Users/tcashel/repositories/juice-bend/build/juice-bend-app.G5vxHf/Contents/MacOS/juice-bend
+elapsed_seconds=62.85s user_seconds=70.29s system_seconds=3.68s maximum_rss_kib=7914448

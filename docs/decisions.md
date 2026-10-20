@@ -25,3 +25,12 @@
   sibling temporary file. `/bin/link` publishes it atomically only if the exact
   destination does not exist; this also rejects dangling symlinks and files
   created after preflight. Bounded text exports use the same publication path.
+- **2026-10-20 — Indexed projection cursor.** Projection verification uses the
+  composite `(ordinal,event)` range to seek beyond its previous page. Native
+  regressions preserve the previous checksum across record and byte limits;
+  the raw/context verification and immutable snapshot contract are unchanged.
+- **2026-10-20 — Explicit linear capture observer.** Fault tests consume and
+  return a Bend observer handle at nine real transaction boundaries. The app
+  supplies `Unobserved`; no environment flag, native hook or alternative capture
+  implementation enables faults. Process timeouts kill only owned synthetic
+  children, and exact boundary markers are required before accepting a case.

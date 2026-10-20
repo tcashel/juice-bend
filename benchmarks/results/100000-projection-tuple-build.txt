@@ -1,0 +1,29 @@
+Benchmark candidate: c6e5d18eea9c900cff9bfccdf1208449330c5c9c plus the
+projection_walk tuple-cursor predicate and matching binding change only.
+The two explanatory source comments do not change executable behavior.
+Capture-publication observer changes were not present in this candidate.
+
+Build command:
+./scripts/build benchmarks/main.bend build/juice-bend-bench
+
+Source SHA-256 after the tuple change:
+src/store.bend
+d61baeaa3e54c6838128de920ffe1af7cde7a1f402998df9deea416751984de8
+benchmarks/main.bend
+00f951077f700f4305fcf8f3b3882c58f935cd1568e210e0a0e7c9a85b0ee9e9
+
+Native executable:
+build/juice-bend-bench
+2263072 bytes
+SHA-256 5c8d0992c7dcde3fe7f81ffc3299334ec99d08c79ddc5a2e08210dbceb1e5531
+
+Generated C:
+build/juice-bend-bench.c
+SHA-256 f23e9e225a30c856e379f7af769e3fb333f476d3e8cb20669339e5f8afd38da4
+
+Run command after changing to a new private mktemp directory:
+/Users/tcashel/repositories/juice-bend/build/juice-bend-bench 100000
+
+The executable generates its synthetic fixture before starting operation
+timers. Native test compilation and the separate read-only SQL cursor
+comparison completed before this benchmark began.

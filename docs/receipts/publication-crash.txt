@@ -1,0 +1,40 @@
+Juice Bend publication interruption receipt
+Date: 2026-10-20
+Host: local macOS / Apple Silicon
+Command: ./scripts/test tests/publication_crash.bend
+Exit status: 0
+Named PASS checks: 1203
+Exact phase markers confirmed: 27
+Owned children killed and reaped by Process.run timeout: 27
+
+Matrix: initial capture, append, rewrite; nine cuts per mode:
+before_transaction, staged, reverified, sealed, accepted, search_removed,
+latest_repointed, before_commit, committed.
+
+Every child runs the real Store.import_observed transaction. The ordinary
+application entry point supplies Unobserved. The explicit linear observer
+returns its next handle at each boundary; no global, environment or database
+flag enables faults and no per-record callback is added.
+
+The child closes a fresh nonce/mode/phase marker and holds. The parent's
+two-second Process.run deadline terminates and reaps only its owned child.
+The test requires both the exact marker and macOS ETIMEDOUT before accepting
+the interruption. It does not treat an early error as a successful crash test.
+
+Before commit, all cells of nine storage tables match the saved baseline in
+both EXCEPT directions, including raw BLOBs and FTS rowids. Old pinned pages,
+citations, latest identity and search remain valid. After commit but before
+acknowledgment, the complete accepted snapshot, raw extent, context, seal and
+independently expected search hits survive. Retry preserves committed identity,
+does not duplicate snapshots, and matches an independent fresh full projection.
+SQLite integrity and foreign-key checks pass on reopen and after recovery.
+
+This is deterministic process termination at named transaction boundaries.
+It is not power-loss, hardware durability or every individual SQLite
+instruction coverage. The separate storage_edges test interrupts an
+in-progress production capture.
+
+src/store.bend SHA-256:
+9f945748d17d2ef0831e53928ea1ad7f4cd51796d97a65cc953f32fa9fbfe0df
+tests/publication_crash.bend SHA-256:
+58638fc09beb949ca40a93c1738fc7798ca3b83b6039b202c6dd2ad3e7f412c8
