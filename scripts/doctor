@@ -1,0 +1,44 @@
+#!/bin/sh
+set -eu
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$ROOT"
+failed=0
+printf 'Juice Bend host: %s %s\n' "$(uname -s)" "$(uname -m)"
+if [ "$(uname -s)" = Darwin ]; then
+  sw_vers
+fi
+for tool in mise clang shasum; do
+  if command -v "$tool" >/dev/null 2>&1; then
+    printf '%s: ' "$tool"
+    "$tool" --version | head -n 1
+  else
+    printf 'MISSING: %s (install explicitly; doctor makes no global changes)\n' "$tool"
+    failed=1
+  fi
+done
+if [ -f .tools/bend/SOURCE_REVISION ]; then
+  printf 'Bend source: %s\n' "$(cat .tools/bend/SOURCE_REVISION)"
+  if shasum -a 256 -c toolchain/bend.sha256 >/dev/null; then
+    printf 'Bend source integrity: verified against toolchain/bend.sha256\n'
+  else
+    printf 'FAILED: pinned Bend source integrity\n'
+    failed=1
+  fi
+  ./scripts/bend version || failed=1
+else
+  printf 'MISSING: pinned Bend source; run ./scripts/setup\n'
+  failed=1
+fi
+if [ -x /usr/bin/sqlite3 ]; then
+  printf 'System SQLite diagnostic (the bridge probe checks the linked engine):\n'
+  /usr/bin/sqlite3 :memory: 'SELECT sqlite_version(); SELECT sqlite_compileoption_used('"'"'ENABLE_FTS5'"'"');'
+else
+  printf 'UNVERIFIED: system SQLite diagnostic executable is unavailable\n'
+fi
+if command -v lean >/dev/null 2>&1; then
+  lean --version
+else
+  printf 'UNAVAILABLE: Lean 4.34.0; the stronger proof kernel requires this exact version\n'
+fi
+printf 'Native UI/input/clipboard acceptance requires an observed ./scripts/smoke-ui run.\n'
+exit "$failed"

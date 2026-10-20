@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$ROOT"
+export BEND_NO_TELEMETRY=1
+export MISE_STATE_DIR="$ROOT/.tools/mise-state"
+export MISE_CACHE_DIR="$ROOT/.cache/mise"
+export MISE_TRUSTED_CONFIG_PATHS="$ROOT"
+exec mise exec -- bun "$ROOT/.tools/bend/bend2/main.ts" "$@"

@@ -1,0 +1,33 @@
+#!/bin/sh
+set -eu
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$ROOT"
+if [ "$#" -gt 2 ]; then
+  printf 'Usage: ./scripts/build [entry.bend [output]]\n' >&2
+  exit 2
+fi
+entry=${1:-src/main.bend}
+output=${2:-build/juice-bend}
+if [ ! -f "$entry" ]; then
+  printf 'Missing Bend entry point: %s\n' "$entry" >&2
+  exit 1
+fi
+case "$output" in
+  *.bend|*.c) printf 'Output must be a native executable path.\n' >&2; exit 2 ;;
+esac
+if [ "$(uname -s)" != Darwin ]; then
+  printf 'This build wrapper targets native macOS; this host is %s.\n' "$(uname -s)" >&2
+  exit 1
+fi
+mkdir -p "$(dirname -- "$output")" build/.module-cache
+./scripts/bend "$entry" -o "$output.c"
+# Match the pinned compiler's CPU flags. Window/audio runtime code contains
+# framework imports and must be compiled as Objective-C; it is upstream code.
+if grep -q '^#import ' "$output.c"; then
+  clang -x objective-c -fobjc-arc -fmodules \
+    "-fmodules-cache-path=$ROOT/build/.module-cache" \
+    -std=c11 -O3 "$output.c" -lpthread -lm -lsqlite3 -o "$output"
+else
+  clang -std=c11 -O3 "$output.c" -lpthread -lm -lsqlite3 -o "$output"
+fi
+printf 'Built %s\n' "$output" >&2
