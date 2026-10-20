@@ -72,6 +72,15 @@ Blame uses an explicitly selected repository and relative path. Recorded tool
 intent and matching content do not by themselves prove a successful change or
 authorship.
 
+Files opens an explicit local checkout at a pinned commit. Paste its absolute
+path and choose Open repo, then select folders or committed source files.
+Prev/Next list pages directory entries; Prev/Next text pages source lines.
+Blame and Why inspect the displayed range. Copy and Export preserve the exact
+displayed text. History restores your retained transcript selection. Files
+does not follow symlinks or show uncommitted changes; Open repo explicitly pins
+the current HEAD again. The `repo-open`, `repo-tree`, `repo-source`, `repo-blame`
+and `repo-why` CLI commands expose the same bounded operations.
+
 ## Validation and current limits
 
 ```sh

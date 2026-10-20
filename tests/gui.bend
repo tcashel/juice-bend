@@ -4,6 +4,7 @@ import ../src/ui.bend as UI
 import ../src/json.bend as Json
 import ../src/query.bend as Query
 import ../src/sql.bend as Sql
+import ../src/gui_files.bend as Files
 
 def require(ok: Bool,name: String) -> IO(Unit):
   match ok:
@@ -15,7 +16,7 @@ def require(ok: Bool,name: String) -> IO(Unit):
 def state() -> Gui.State:
   Gui.State{0,"/tmp/juice-bend-gui-contract","/usr/bin/false",
     UI.set_reader(UI.set_query(UI.init(),"needle"),"Pinned","stable evidence"),
-    Gui.Selection{[],"7",0,3,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"needle","",""},
+    Gui.Selection{[],"7",0,3,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"needle","","",Files.empty()},
     Gui.Jobs{2,None{},None{},None{},False{}},0n,0}
 
 def ui(s: Gui.State) -> UI.State:
@@ -27,7 +28,7 @@ def snapshot(s: Gui.State) -> String:
   snap
 
 def mode(s: Gui.State) -> U32:
-  Gui.State{db,dir,program,ui,selection,Gui.Form{mode,search,source,blame},jobs,refresh_at,serial} = s
+  Gui.State{db,dir,program,ui,selection,Gui.Form{mode,search,source,blame,files},jobs,refresh_at,serial} = s
   mode
 
 def wanted_args(value: Maybe<&2,Gui.Request>) -> String:
@@ -68,24 +69,33 @@ def form_completion() -> IO(Unit):
     Gui.Reply{Done{Json.JObject{[Json.JField{"accepted_snapshot",Json.JString{"8"}}]}}})
   require(String.eq(UI.query(ui(completed)),"/tmp/explicit source.jsonl") && U32.is_eq(mode(completed),1),"import completion retains current form")
 
-def readers() -> IO(Unit):
+def reader_stale() -> IO(Unit):
   +stale = Gui.read_current(state(),Gui.Request{3,["session","8","0","40"],"8",0,"new"},result_text("new evidence"),False{})
+  require(String.eq(UI.reader(ui(stale)),"stable evidence") && String.eq(snapshot(stale),"7"),"stale worker cannot replace pinned evidence")
+
+def reader_fresh() -> IO(Unit):
   +fresh = Gui.read_current(state(),Gui.Request{3,["session","8","0","40"],"8",0,"new"},result_text("new evidence"),True{})
+  require(String.eq(UI.reader(ui(fresh)),"new evidence") && String.eq(snapshot(fresh),"8"),"current worker applies exact requested snapshot")
+
+def reader_pinned() -> IO(Unit):
   +pinned = Gui.with_rows(state(),[Gui.Item{"9",0,"new source extent","claude","/tmp/repo","2",Gui.empty_filters()}])
+  require(String.eq(snapshot(pinned),"7") && String.eq(wanted(pinned),"none"),"browse refresh preserves accepted snapshot")
+
+def readers() -> IO(Unit):
   do IO<Unit>:
-    Unit <- require(String.eq(UI.reader(ui(stale)),"stable evidence") && String.eq(snapshot(stale),"7"),"stale worker cannot replace pinned evidence")
-    Unit <- require(String.eq(UI.reader(ui(fresh)),"new evidence") && String.eq(snapshot(fresh),"8"),"current worker applies exact requested snapshot")
-    require(String.eq(snapshot(pinned),"7") && String.eq(wanted(pinned),"none"),"browse refresh preserves accepted snapshot")
+    reader_stale()
+    reader_fresh()
+    reader_pinned()
 
 def initial() -> IO(Unit):
   +empty = {Gui.State{0,"/tmp/juice-bend-gui-contract","/usr/bin/false",UI.init(),
-    Gui.Selection{[],"",0,0,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"","",""},Gui.Jobs{0,None{},None{},None{},False{}},0n,0} : Gui.State}
+    Gui.Selection{[],"",0,0,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"","","",Files.empty()},Gui.Jobs{0,None{},None{},None{},False{}},0n,0} : Gui.State}
   +next = Gui.with_rows(empty,[Gui.Item{"9",0,"initial source","claude","/tmp/repo","2",Gui.empty_filters()}])
   require(String.eq(wanted(next),"session-scope|9|0|40||||"),"initial unpinned browse opens first accepted snapshot")
 
 def initial_late_hit() -> IO(Unit):
   +empty = {Gui.State{0,"/tmp/juice-bend-gui-contract","/usr/bin/false",UI.init(),
-    Gui.Selection{[],"",0,0,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"","",""},Gui.Jobs{0,None{},None{},None{},False{}},0n,0} : Gui.State}
+    Gui.Selection{[],"",0,0,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"","","",Files.empty()},Gui.Jobs{0,None{},None{},None{},False{}},0n,0} : Gui.State}
   +next = Gui.with_rows(empty,[Gui.Item{"9",500,"late matching record","codex","/tmp/repo","2",
     Query.Filters{"","codex","/tmp/repo","assistant","2026-10-01"}}])
   require(String.eq(wanted(next),"session-scope|9|500|40|codex|/tmp/repo|assistant|2026-10-01"),
@@ -118,7 +128,7 @@ def revision(s: Gui.State) -> U32:
   revision
 
 def ui_status(s: UI.State) -> String:
-  UI.State{UI.Content{query,rows,reader,lines,title,status,scope,+results},input,image,dirty} = s
+  UI.State{UI.Content{query,rows,reader,lines,title,status,scope,+results,files},input,image,dirty} = s
   status
 
 def state_status(s: Gui.State) -> String:
@@ -302,18 +312,18 @@ def reader_pending(+s: Gui.State) -> Gui.State:
 def refresh_writer() -> IO(Unit):
   do IO<Unit>:
     +started : Gui.State <- Gui.auto_refresh(Gui.refresh_deadline(clean(state()),31000n),31000n)
-    +busy : Gui.State <- Gui.auto_refresh(started,90000n)
-    +completed : Gui.State <- Gui.auto_refresh(clean(Gui.clear_writer(busy)),90000n)
     Unit <- require(String.eq(writer_args(started),"refresh-all") && Nat.is_eq(deadline(started),0n),
       "due automatic refresh starts one bounded production writer")
+    +busy : Gui.State <- Gui.auto_refresh(started,90000n)
     Unit <- require(String.eq(writer_args(busy),"refresh-all") && Nat.is_eq(deadline(busy),0n),
       "an outstanding writer prevents another scheduled capture")
-    Unit <- require(Nat.is_eq(deadline(completed),120000n) && Bool.not(has_writer(completed)),
-      "writer completion receives a fresh interval without a catch-up burst")
     Unit <- require(U32.is_eq(Gui.sleep_ms(clean(busy),False{}),1),
       "pending writer keeps the fast polling cadence")
-    require(U32.is_eq(Gui.sleep_ms(clean(reader_pending(busy)),False{}),1),
+    Unit <- require(U32.is_eq(Gui.sleep_ms(clean(reader_pending(busy)),False{}),1),
       "pending reader keeps the fast polling cadence")
+    +completed : Gui.State <- Gui.auto_refresh(clean(Gui.clear_writer(busy)),90000n)
+    require(Nat.is_eq(deadline(completed),120000n) && Bool.not(has_writer(completed)),
+      "writer completion receives a fresh interval without a catch-up burst")
 
 def idle_pacing() -> IO(Unit):
   +settled = clean(state())

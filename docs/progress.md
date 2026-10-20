@@ -4,10 +4,12 @@
 
 The owner's follow-up requests fixing slow append, closing validation gaps,
 matching the SwiftUI Juice feature set without embeddings, and then UI polish.
-This goal is active. PR #1 remains draft and unmerged. This checkpoint builds
-on toolchain commit `edfeadd6bf3149739b3af00a6c92671354208584` and application
-baseline `cf066af054346c2ee900ea8324f3a23f8e81482c`, whose historical results
-remain below.
+This goal is active. PR #1 remains draft and unmerged. The validated paging,
+saved-capture, inventory and append-batching change is published at
+`5cb5f0cd457288414904ed715f1dc949a5682cd8` (tree
+`473c2b2645343cee8178e55cd68c399366f538b0`). It builds on toolchain commit
+`edfeadd6bf3149739b3af00a6c92671354208584` and application baseline
+`cf066af054346c2ee900ea8324f3a23f8e81482c`, whose historical results remain below.
 Current iteration: bounded raw verification/context insertion and bit-identical
 SHA throughput work; bounded result paging and saved-version navigation; owned
 storage inventory. The exact Lean 4.34.0 archive was obtained through the
@@ -22,7 +24,7 @@ recorded separately from the historical baseline below. Root owns integration
 and Tart lifecycle. The owner no longer requires cross-chat VM coordination;
 the runner still checks stopped state and acquires its exclusive lease.
 
-Current candidate `build/juice-bend-parity2` built successfully with all 32 input
+The preceding candidate `build/juice-bend-parity2` built with all 32 input
 hashes unchanged: 5,917,312 bytes, SHA-256
 `98283d91b51229f90eaacb90888466b91ea5ec3570ea96860ac5976ba431decd`.
 It contains bounded result paging, saved-version navigation, Open latest,
@@ -32,8 +34,18 @@ retained export and explicit navigation from capture 306 to 307; see
 `native-validation.md`. The expanded regression suite passed 40 executables
 and 2,960 named checks, with all 74 first-party and 72 pinned-toolchain input
 hashes unchanged. The historical validated binary remains intact.
-The later repository-browser-only range correction separately passed 58 checks;
-it is not a full-suite rerun. That backend is not yet wired into CLI/GUI.
+The subsequent Files integration builds on that published commit. Its CLI/
+browser/export gate passed 167 checks and GUI/Files/UI/trace gate passed 184.
+Current app `build/juice-bend-files` is 8,265,920 bytes, SHA-256
+`0e1d10180fa875ca225a1bae25f60b968689e6d0440ad1a21e82f4b7bbeb1434`;
+all 35 build inputs remained unchanged and 88 upstream hashes passed.
+Actual Tart interaction passed directory/source paging, Blame/Why, exact copy/
+export, unsupported-entry refusal and captured History restoration. Source and
+Why remained byte-identical after HEAD/worktree changes until explicit Open
+repo pinned the new commit. The guest app closed and VM/leases were released.
+Receipts: `docs/receipts/repository-files.txt`, `docs/native-validation.md` and
+`benchmarks/results/tart-files-summary.json`; raw artifacts remain under
+ignored `build/tart/files-f1sdqqfi`.
 The Bend native catalog fixture passed host checks for 206 sources, 306 accepted
 snapshots, 306 current search events and 101 saved versions. The frozen standard
 100k benchmark passed: append 33.392 s, unchanged refresh 4.547 s, search p95
@@ -42,9 +54,12 @@ Git-only source edit are recorded in `performance.md`. The host-only Tart
 session stopped cleanly and released its lease; raw synthetic observations are
 under `build/tart/catalog.U5y5pY/artifacts`.
 The standalone shared-projection prototype is unintegrated and excluded from
-this publication. Its first gate passed 904 checks, but its first engine-only
-profile exposed expensive per-record SQL validation; batching is in progress.
-Preserve the
+this publication. Its expanded gate passed 1,304 checks. Bounded verification
+reduced the engine-only 100k append diagnostic from 44.950 s to 21.446 s;
+the latter exited 0 and passed independent database/event equivalence checks.
+It excludes raw/source verification, FTS and capture, so it does not establish
+an application append improvement. Profiling SQL versus Bend validation is
+next; no production migration is authorized by this diagnostic alone. Preserve the
 working v2 store until migration, one-corpus FTS ranking, typed recovery,
 snapshot reads and all crash boundaries are covered. Engine-only profiles are
 diagnostic measurements, never app append performance.
@@ -59,12 +74,12 @@ below; do not report the entire matrix as passed.
 
 ## Runnable result
 
-The current candidate is `build/juice-bend-parity2`, 5,917,312 bytes,
-SHA-256 `98283d91b51229f90eaacb90888466b91ea5ec3570ea96860ac5976ba431decd`.
+The current candidate is `build/juice-bend-files`, 8,265,920 bytes,
+SHA-256 `0e1d10180fa875ca225a1bae25f60b968689e6d0440ad1a21e82f4b7bbeb1434`.
 The standard executable `build/juice-bend` and new local bundle
-`build/Juice Bend Parity.app` use this same candidate. The bundle launcher passed
-an isolated library status check. The historical `build/juice-bend-validated`
-and `build/Juice Bend Validated.app` remain preserved with SHA-256 `05cdff4f…`.
+`build/Juice Bend Files.app` use this exact candidate. The bundle launcher passed
+an isolated library status check. The previous Parity (`98283d91…`) and
+Validated (`05cdff4f…`) executables/bundles remain preserved.
 Outputs and synthetic data are ignored; use an explicit isolated data directory.
 
 Mise pins Bun 1.4.2 and Bend 2.0.37 revision
@@ -161,6 +176,18 @@ reference-source snapshots.
    Per-source FTS cleanup still scans the current index; many-source and 1M
    stress scaling remain unmeasured. The tuple-cursor and bounded-statement
    fixes are already included; do not repeat them.
+   The unintegrated shared-projection verifier has a frozen SQL-versus-Bend
+   phase diagnostic in `benchmarks/projection_verify.bend`; its isolated run
+   passed at 21.153 s (18.183 s Bend validation, 2.967 s SQL/bridge, remaining
+   metadata/loop overhead), with the database hash unchanged after rollback.
+   A new experimental two-digest record format is being implemented and
+   independently reviewed; preserve the c750 baseline and require the full
+   corruption/fanout/identity gate before a separate timing window. Preserve
+   production v2 and do not promote an engine-only timing into an app result.
+   `src/tool_activity.bend` and its focused tests
+   are another unpublished, unintegrated slice: 65 native checks passed, but
+   no UI/CLI adapter exists yet. It preserves occurrence citations and refuses
+   ambiguous/type-uncertain pairing. Review before integration/publication.
 5. Fresh-machine setup and the remaining acceptance rows retain their explicit
    partial/not-run status in `docs/acceptance.md`. No signing, distribution,
    semantic search, model runtime or existing Juice service is in scope.

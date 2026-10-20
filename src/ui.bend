@@ -8,7 +8,7 @@ type Line is Data:
 
 type Content is Data:
   Content{query: String, rows: List<&2, String>, reader: String,
-    lines: List<&2, Line>, title: String, status: String, scope: String, results: Results}
+    lines: List<&2, Line>, title: String, status: String, scope: String, results: Results, files: Bool}
 
 type Results is Data:
   Results{offset: U32, count: U32, has_more: Bool, ready: Bool}
@@ -42,6 +42,9 @@ type Action is Data:
   Pause{}
   Settings{}
   Storage{}
+  Files{}
+  RepoOpen{}
+  RepoParent{}
   Previous{}
   Next{}
   ListPrevious{}
@@ -85,11 +88,31 @@ def wrap(+s: String) -> List<&2, Line>:
 def init() -> State:
   State{Content{"", [], "Choose a captured session to read its owned evidence.",
     wrap("Choose a captured session to read its owned evidence."),
-    "Transcript", "Ready. Only explicitly enabled sources are scanned.", "all",Results{0,0,False{},False{}}},
+    "Transcript", "Ready. Only explicitly enabled sources are scanned.", "all",Results{0,0,False{},False{}},False{}},
     Input{0, 0, Edit{0, 0, 0, False{}, 0}, False{}, False{}}, Pix{16777215}, True{}}
 
+def is_files(s: State) -> Bool:
+  State{Content{q,rows,reader,lines,title,status,scope,results,+files},input,image,dirty} = s
+  files
+
+def set_files(s: State,files: Bool) -> State:
+  State{Content{q,rows,reader,lines,title,status,scope,results,old},input,image,dirty} = s
+  State{Content{q,rows,reader,lines,title,status,scope,results,files},input,image,True{}}
+
+def title(s: State) -> String:
+  State{Content{q,rows,reader,lines,title,status,scope,results,+files},input,image,dirty} = s
+  title
+
+def focus(s: State) -> U32:
+  State{content,Input{selected,scroll,Edit{focus,caret,anchor,drag,viewport},command,shift},image,dirty} = s
+  focus
+
+def scroll(s: State) -> U32:
+  State{content,Input{selected,scroll,edit,command,shift},image,dirty} = s
+  scroll
+
 def query(+s: State) -> String:
-  State{Content{q, rows, reader, lines, title, status, scope,+results}, input, image, dirty} = s
+  State{Content{q, rows, reader, lines, title, status, scope,+results,+files}, input, image, dirty} = s
   q
 
 def selected(+s: State) -> U32:
@@ -97,26 +120,26 @@ def selected(+s: State) -> U32:
   n
 
 def scope(+s: State) -> String:
-  State{Content{q, rows, reader, lines, title, status, scope,+results}, input, image, dirty} = s
+  State{Content{q, rows, reader, lines, title, status, scope,+results,+files}, input, image, dirty} = s
   scope
 
 def reader(+s: State) -> String:
-  State{Content{q, rows, reader, lines, title, status, scope,+results}, input, image, dirty} = s
+  State{Content{q, rows, reader, lines, title, status, scope,+results,+files}, input, image, dirty} = s
   reader
 
 def set_status(+s: State, +status: String) -> State:
-  State{Content{q, rows, reader, lines, title, old, scope,+results}, input, image, dirty} = s
-  State{Content{q, rows, reader, lines, title, status, scope,results}, input, image, True{}}
+  State{Content{q, rows, reader, lines, title, old, scope,+results,+files}, input, image, dirty} = s
+  State{Content{q, rows, reader, lines, title, status, scope,results,files}, input, image, True{}}
 
 def set_rows(+s: State, rows: List<&2, String>) -> State:
-  State{Content{q, old, reader, lines, title, status, scope,results},
+  State{Content{q, old, reader, lines, title, status, scope,results,files},
     Input{selected, scroll, edit, command, shift}, image, dirty} = s
-  State{Content{q, rows, reader, lines, title, status, scope,results},
+  State{Content{q, rows, reader, lines, title, status, scope,results,files},
     Input{0, scroll, edit, command, shift}, image, True{}}
 
 def set_results(+s: State, results: Results) -> State:
-  State{Content{q,rows,reader,lines,title,status,scope,old},input,image,dirty} = s
-  State{Content{q,rows,reader,lines,title,status,scope,results},input,image,True{}}
+  State{Content{q,rows,reader,lines,title,status,scope,old,+files},input,image,dirty} = s
+  State{Content{q,rows,reader,lines,title,status,scope,results,files},input,image,True{}}
 
 def result_label(results: Results) -> String:
   Results{+offset,+count,more,ready} = results
@@ -141,26 +164,26 @@ def result_action_if(+s: State,+forward: Bool,available: Bool) -> State & Action
       (s,NoAction{})
 
 def result_action(+s: State,+forward: Bool) -> State & Action:
-  State{Content{q,rows,reader,lines,title,status,scope,results},input,image,dirty} = s
+  State{Content{q,rows,reader,lines,title,status,scope,results,+files},input,image,dirty} = s
   result_action_if(s,forward,result_available(results,forward))
 
 def set_reader(+s: State, +title: String, +reader: String) -> State:
-  State{Content{q, rows, old, oldlines, oldtitle, status, scope,results},
+  State{Content{q, rows, old, oldlines, oldtitle, status, scope,results,files},
     Input{selected, scroll, Edit{+focus, caret, anchor, drag, viewport}, command, shift}, image, dirty} = s
-  State{Content{q, rows, reader, wrap(reader), title, status, scope,results},
+  State{Content{q, rows, reader, wrap(reader), title, status, scope,results,files},
     Input{selected, 0, Edit{focus, Bool.pick(U32,U32.is_eq(focus,0),caret,0),
       Bool.pick(U32,U32.is_eq(focus,0),anchor,0),
       Bool.pick(Bool,U32.is_eq(focus,0),drag,False{}),Bool.pick(U32,U32.is_eq(focus,0),viewport,0)}, command, shift}, image, True{}}
 
 def set_scope(+s: State, +scope: String) -> State:
-  State{Content{q, rows, reader, lines, title, status, old,+results}, input, image, dirty} = s
-  State{Content{q, rows, reader, lines, title, status, scope,results}, input, image, True{}}
+  State{Content{q, rows, reader, lines, title, status, old,+results,+files}, input, image, dirty} = s
+  State{Content{q, rows, reader, lines, title, status, scope,results,files}, input, image, True{}}
 
 def set_query(+s: State, +q: String) -> State:
-  State{Content{old, rows, reader, lines, title, status, scope,results},
+  State{Content{old, rows, reader, lines, title, status, scope,results,files},
     Input{selected, scroll, edit, command, shift}, image, dirty} = s
   +n = length(q)
-  State{Content{q, rows, reader, lines, title, status, scope,results},
+  State{Content{q, rows, reader, lines, title, status, scope,results,files},
     Input{selected, scroll, Edit{0, n, n, False{}, 0}, command, shift}, image, True{}}
 
 def set_edit(+s: State, +edit: Edit) -> State:
@@ -178,7 +201,7 @@ def set_modifiers(+s: State, +command: Bool, +shift: Bool) -> State:
 # Search edits are bounded to 512 committed Unicode characters.
 
 def insert(+s: State, +text: String) -> State:
-  State{Content{+q, rows, reader, lines, title, status, scope,results},
+  State{Content{+q, rows, reader, lines, title, status, scope,results,files},
     Input{selected, scroll, Edit{focus, +caret, +anchor, drag, viewport}, command, shift}, image, dirty} = s
   +start = U32.min(caret, anchor)
   +ins = String.take(text, U32.to_nat(minus(512, minus(length(q),
@@ -194,25 +217,25 @@ def backspace(+s: State) -> State:
   insert(set_edit(s, Edit{0, start, U32.max(caret, anchor), False{}, 0}), "")
 
 def select_all(+s: State) -> State:
-  State{Content{q, rows, reader, lines, title, status, scope,results},
+  State{Content{q, rows, reader, lines, title, status, scope,results,files},
     Input{selected, scroll, Edit{+focus, caret, anchor, drag, viewport}, command, shift}, image, dirty} = s
   +n = Bool.pick(U32, U32.is_eq(focus, 0), length(q), length(reader))
   set_edit(s, Edit{Bool.pick(U32, U32.is_eq(focus, 0), 0, 2), n, 0, False{}, 0})
 
 def selection(+s: State) -> String:
-  State{Content{q, rows, reader, lines, title, status, scope,results},
+  State{Content{q, rows, reader, lines, title, status, scope,results,files},
     Input{selected, scroll, Edit{+focus, caret, anchor, drag, viewport}, command, shift}, image, dirty} = s
   span(Bool.pick(String, U32.is_eq(focus, 0), q, reader), caret, anchor)
 
 def move_caret(+s: State, +right: Bool) -> State:
-  State{Content{q, rows, reader, lines, title, status, scope,results},
+  State{Content{q, rows, reader, lines, title, status, scope,results,files},
     Input{selected, scroll, Edit{+focus, +caret, anchor, drag, viewport}, command, +shift}, image, dirty} = s
   +n = Bool.pick(U32, U32.is_eq(focus, 0), length(q), length(reader))
   +pos = Bool.pick(U32, right, U32.min(n, U32.add(caret, 1)), minus(caret, 1))
   set_edit(s, Edit{focus, pos, Bool.pick(U32, shift, anchor, pos), False{}, 0})
 
 def scroll_by(+s: State, +down: Bool, +amount: U32) -> State:
-  State{Content{q, rows, reader, +lines, title, status, scope,results},
+  State{Content{q, rows, reader, +lines, title, status, scope,results,files},
     Input{selected, +scroll, edit, command, shift}, image, dirty} = s
   +limit = minus(U32.from_nat(List.length(&2, Line, lines)), 42)
   +next = Bool.pick(U32, down, U32.min(limit, U32.add(scroll, amount)), minus(scroll, amount))
@@ -235,7 +258,7 @@ def reader_at_line(+line: Line, +x: U32) -> U32:
   U32.add(start, U32.min(length(text), minus(U32.div(x, 16), 38)))
 
 def reader_at(+s: State, +x: U32, +y: U32) -> U32:
-  State{Content{q, rows, reader, +lines, title, status, scope,results},
+  State{Content{q, rows, reader, +lines, title, status, scope,results,files},
     Input{selected, scroll, edit, command, shift}, image, dirty} = s
   reader_at_line(line_at(lines, U32.min(minus(U32.from_nat(List.length(&2, Line, lines)), 1), U32.add(scroll, minus(U32.div(y, 16), 10)))), x)
 
@@ -269,7 +292,7 @@ def arrow_focus(+s: State, +down: Bool, +focus: U32, +count: U32) -> State & Act
       (set_position(set_edit(s, Edit{1, 0, 0, False{}, 0}), next, scroll), Open{next})
 
 def arrow(+s: State, +down: Bool) -> State & Action:
-  State{Content{q, rows, reader, lines, title, status, scope,results},
+  State{Content{q, rows, reader, lines, title, status, scope,results,files},
     Input{selected, scroll, Edit{focus, caret, anchor, drag, viewport}, command, shift}, image, dirty} = s
   arrow_focus(s, down, focus, U32.from_nat(List.length(&2, String, rows)))
 
@@ -390,6 +413,8 @@ def paste_query(+s: State) -> State & Action:
 
 def sidebar_action(+s: State, +row: U32) -> State & Action:
   match row:
+    case 9:
+      (s, Files{})
     case 11:
       (set_scope(s, "all"), Scope{"all"})
     case 14:
@@ -429,8 +454,10 @@ def list_row_click(+s: State,+index: U32,valid: Bool) -> State & Action:
       (s,NoAction{})
 
 def list_click(+s: State,+col: U32,+row: U32) -> State & Action:
-  State{Content{q,rows,reader,lines,title,status,scope,results},input,image,dirty} = s
+  State{Content{q,rows,reader,lines,title,status,scope,results,+files},input,image,dirty} = s
   match row:
+    case 8:
+      (s,Bool.pick(Action,files,RepoParent{},NoAction{}))
     case 52:
       result_action(s,U32.is_ge(col,24))
     case _:
@@ -452,7 +479,7 @@ def mouse_body(+s: State, +x: U32, +y: U32, +col: U32, +row: U32,
 def top_action(+s: State, +group: U32) -> State & Action:
   match group:
     case 0:
-      (s, Refresh{})
+      (s, Bool.pick(Action,is_files(s),RepoOpen{},Refresh{}))
     case 1:
       (s, Pause{})
     case 2:
@@ -650,7 +677,7 @@ def draw_query(+c: Canvas, +text: String, +x: U32, +y: U32, +at: U32,
   draw_line(count, c, text, x, y, at, low, high)
 
 def draw(+s: State) -> Image:
-  State{Content{+q, rows, reader, lines, title, status, +scope,+results},
+  State{Content{+q, rows, reader, lines, title, status, +scope,+results,+files},
     Input{+selected, scroll, Edit{+focus, +caret, +anchor, drag, viewport}, command, shift}, image, dirty} = s
   base = fill(8n, Flat{16777215}, 0, 0, 88n, 15988716)
   side = fill(46n, base, 0, 8, 12n, 15396591)
@@ -658,18 +685,18 @@ def draw(+s: State) -> Image:
   foot = fill(2n, list, 0, 54, 88n, 15396591)
   a = write(16n, foot, "JUICE BEND", 1, 1, 3960107, 15988716)
   b = write(60n, a, "Captured history / lexical search / evidence", 18, 1, 6516081, 15988716)
-  c = write(10n, b, "Search", 1, 4, 6516081, 15988716)
+  c = write(10n, b, Bool.pick(String,files,"Repository","Search"), 1, 4, 6516081, 15988716)
   d = fill(3n, c, 13, 3, 74n, 16777215)
   e = draw_query(d, String.append(String.drop(q, U32.to_nat(query_offset(s))), " "), 14, 4, query_offset(s), Bool.pick(U32, U32.is_eq(focus, 0), U32.min(caret, anchor), 0),
     Bool.pick(U32, U32.is_eq(focus, 0), Bool.pick(U32, U32.is_eq(caret, anchor), U32.add(caret, 1), U32.max(caret, anchor)), 0), 72n)
-  f = write(10n, e, "Refresh", 1, 6, 3960107, 15988716)
+  f = write(10n, e, Bool.pick(String,files,"Open repo","Refresh"), 1, 6, 3960107, 15988716)
   g = write(10n, f, "Pause", 13, 6, 3960107, 15988716)
   blame = write(10n, g, "Blame", 25, 6, 3960107, 15988716)
   h = write(10n, blame, "Why", 38, 6, 3960107, 15988716)
   i = write(10n, h, "Export", 49, 6, 3960107, 15988716)
   j = write(10n, i, "Prev text", 61, 6, 3960107, 15988716)
   k = write(10n, j, "Next text", 73, 6, 3960107, 15988716)
-  l = write(10n, k, "SOURCES", 1, 9, 6516081, 15396591)
+  l = write(10n, k, Bool.pick(String,files,"History","Files"), 1, 9, 6516081, 15396591)
   m = write(10n, l, "All", 1, 11, 3960107, 15396591)
   n = write(10n, m, "Claude", 1, 14, 3960107, 15396591)
   o = write(10n, n, "Codex", 1, 17, 3960107, 15396591)
@@ -685,7 +712,7 @@ def draw(+s: State) -> Image:
   rebuild = write(10n, usage, "Rebuild", 1, 45, 3960107, 15396591)
   versions = write(10n,rebuild,"Versions",1,48,3960107,15396591)
   latest = write(11n,versions,"Open latest",1,51,3960107,15396591)
-  r = write(23n, latest, "SESSIONS / RESULTS", 13, 8, 6516081, 16119544)
+  r = write(23n, latest, Bool.pick(String,files,"Up folder","SESSIONS / RESULTS"), 13, 8, 6516081, 16119544)
   range = write(22n,r,result_label(results),13,9,6516081,16119544)
   previous = write(10n,range,"Prev list",13,52,Bool.pick(U32,result_available(results,False{}),3960107,10066329),16119544)
   next = write(10n,previous,"Next list",25,52,Bool.pick(U32,result_available(results,True{}),3960107,10066329),16119544)

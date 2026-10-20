@@ -16,10 +16,13 @@ objects; no source snapshots or real histories are copied here.
 
 Bounded result paging, saved-version navigation and read-only Storage inventory
 are implemented and observed in the native app. The committed-repository
-browser backend passes 58 focused checks but is not yet connected to the UI.
+browser is connected to CLI and native Files UI, with explicit pinned commits,
+directory/source paging, displayed-range Blame/Why and exact text exports.
+Focused CLI/GUI gates passed 351 checks; native Tart interaction passed commit
+pinning across changed HEAD/dirty worktree and retained History restoration.
 Priority order: finish long-history append improvements; close remaining
-native validation gaps; connect repository/file
-provenance browsing; Settings and recorded activity; richer tool/subagent/archive
+native validation gaps; recorded tool activity/subagent navigation; Settings;
+richer provider/archive
 support; full Usage and deterministic context preparation; owned-storage
 management and explicit opt-in connection/subscription surfaces. UI polish
 follows functional parity. These are outstanding capabilities, not claims that

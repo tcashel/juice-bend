@@ -105,6 +105,12 @@ def navigation_kind(result: UI.State & UI.Action) -> U32:
       7
     case UI.Storage{}:
       8
+    case UI.Files{}:
+      9
+    case UI.RepoOpen{}:
+      10
+    case UI.RepoParent{}:
+      11
     case _:
       0
 
@@ -140,6 +146,21 @@ def result_navigation() -> IO(Unit):
       "saved versions and explicit latest have distinct pointer actions")
     require(U32.is_eq(navigation_kind(UI.event(Mouse{32,400,0,True{}},first)),8),
       "Storage inventory has a dedicated Settings action")
+
+def files_navigation() -> IO(Unit):
+  +files = UI.set_files(UI.init(),True{})
+  do IO<Unit>:
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,144,0,True{}},UI.init())),9) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{32,144,0,True{}},files)),9),
+      "Files and History share a dedicated sidebar target")
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,96,0,True{}},files)),10),
+      "Files exposes explicit Open repo instead of capture Refresh")
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{208,128,0,True{}},files)),11) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{208,128,0,True{}},UI.init())),0),
+      "Up folder occupies only the Files list header")
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,400,0,True{}},files)),8) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{32,768,0,True{}},files)),6),
+      "Files controls preserve Storage and Versions hit targets")
 
 def after_clipboard(result: Result<&1, &1, U32 & String, U32 & (String & String)>, state: UI.State) -> IO(Maybe<UI.State>):
   match result:
@@ -200,6 +221,7 @@ def dispatch(args: List<String>) -> IO(Unit):
         buttons()
         long_drag()
         result_navigation()
+        files_navigation()
 
 def main() -> IO(Unit):
   do IO<Unit>:

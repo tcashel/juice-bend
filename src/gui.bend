@@ -7,6 +7,7 @@ import ./json.bend as Json
 import ./query.bend as Query
 import ./domain.bend as Domain
 import ./provenance.bend as P
+import ./gui_files.bend as Files
 
 # The window owns no effectful database path. Every operation is a bounded call
 # to this same native executable. One reader and one writer can be outstanding;
@@ -35,7 +36,7 @@ type Listing is Data:
     anchor: String}
 
 type Form is Data:
-  Form{mode: U32, search: String, source: String, blame: String}
+  Form{mode: U32, search: String, source: String, blame: String, files: Files.State}
 
 type Jobs is Data:
   Jobs{revision: U32, wanted: Maybe<&2,Request>, reader: Maybe<&2,Pending>,
@@ -229,10 +230,6 @@ def listing_loaded(listing: Listing) -> Bool:
   Listing{kind,full,offset,more,loaded,+anchor} = listing
   loaded
 
-def list_paging(+state: State,forward: Bool) -> State:
-  State{db,dir,program,ui,Selection{items,snap,start,displayed,args,filters,+listing},
-    Form{mode,search,source,blame},jobs,refresh_at,serial} = state
-  list_page_ready(state,listing,forward,U32.is_eq(mode,0) && listing_loaded(listing))
 
 def reload_args(+state: State, +query: String, +provider: String, +repo: String,
   +role: String, +after: String, +history: Bool) -> State:
@@ -270,15 +267,238 @@ def reload_listing(+state: State) -> State:
   State{db,dir,program,ui,Selection{items,snap,start,displayed,args,filters,listing},form,jobs,deadline,serial} = state
   reload_listing_kind(state,listing)
 
+# Files owns a separate pinned Git identity and never mutates Selection.
+def files_model(state: State) -> Files.State:
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files},jobs,deadline,serial} = state
+  files
+
+def files_replace(state: State,files: Files.State) -> State:
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,old},jobs,deadline,serial} = state
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files},jobs,deadline,serial}
+
+def files_active(state: State) -> Bool:
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files},jobs,deadline,serial} = state
+  U32.is_eq(mode,3)
+
+def files_saved_valid(+kind: U32) -> Bool:
+  U32.is_eq(kind,3) || U32.is_eq(kind,4) || U32.is_eq(kind,14)
+
+def files_saved_view(+ui: UI.State,valid: Bool) -> Files.Saved:
+  match valid:
+    case True{}:
+      Files.Saved{UI.title(ui),UI.reader(ui),UI.scroll(ui)}
+    case False{}:
+      Files.Saved{"History","Choose a captured session to read its owned evidence.",0}
+
+def files_saved_for(state: State) -> Files.Saved:
+  State{db,dir,program,ui,Selection{items,snap,start,kind,args,filters,listing},form,jobs,deadline,serial} = state
+  files_saved_view(ui,files_saved_valid(kind))
+
+def files_return_missing(+state: State,+snap: String,+start: U32,+filters: Query.Filters,empty: Bool) -> State:
+  match empty:
+    case True{}:
+      status(state,"History is empty. Choose or capture a session to read retained evidence.")
+    case False{}:
+      queue(state,Request{3,scoped_args("session-scope",snap,start,"40",filters),snap,start,
+        "Transcript | pinned snapshot " ++ snap ++ " | record " ++ U32.show(start)})
+
+def files_return_ready(+state: State,+snap: String,start: U32,filters: Query.Filters,ready: Bool) -> State:
+  match ready:
+    case True{}:
+      status(state,"History restored. The captured reader keeps its exact snapshot and range.")
+    case False{}:
+      files_return_missing(state,snap,start,filters,String.is_empty(snap))
+
+def files_leave(+state: State) -> State:
+  State{db,dir,program,ui,Selection{+items,+snap,+start,+displayed,+args,+filters,Listing{+kind,+full,+offset,+more,+loaded,+anchor}},Form{mode,+search,source,blame,+files},jobs,deadline,serial} = state
+  match mode:
+    case 3:
+      Files.State{input,identity,directory,file_source,saved} = files
+      Files.Saved{title,text,scroll} = saved
+      restored = UI.set_position(UI.set_reader(UI.set_query(UI.set_files(ui,False{}),search),title,text),0,scroll)
+      rows = UI.set_results(UI.set_rows(restored,item_titles(items)),UI.Results{offset,U32.from_nat(List.length(&2,Item,items)),more,loaded})
+      files_return_ready(invalidate(State{db,dir,program,rows,Selection{items,snap,start,Bool.pick(U32,files_saved_valid(displayed),displayed,0),args,filters,Listing{kind,full,offset,more,loaded,anchor}},Form{0,search,source,blame,files},jobs,deadline,serial}),
+        snap,start,filters,files_saved_valid(displayed))
+    case _:
+      state
+
+def files_enter(+state: State) -> State:
+  State{db,dir,program,+ui,selection,Form{mode,search,source,blame,+files},jobs,deadline,serial} = state
+  +next = Files.begin(files,files_saved_for(state))
+  view = UI.set_reader(UI.set_results(UI.set_rows(UI.set_query(UI.set_files(ui,True{}),Files.input(next)),[]),UI.Results{0,0,False{},False{}}),
+    "Files | explicit local repository", "Paste a local checkout path above.\nClick Open repo or press Return to pin HEAD.\n\nDirectory rows open committed folders/files.\nUp folder returns to the parent directory.\nPrev/Next list page directory entries.\nPrev/Next text page committed source lines.\nBlame and Why use the displayed source range.\n\nThe full pinned commit is shown in each result.\nWorking-tree edits are excluded. Symlinks and submodules are listed but never followed.\n\nCopy and Export use exactly displayed text.\nClick History at left to restore the prior captured transcript.\nNo home-folder scan or logged command is run.")
+  status(invalidate(State{db,dir,program,view,selection,Form{3,search,source,blame,next},jobs,0n,serial}),
+    "Enter an explicit checkout path, then Open repo. History selection is retained.")
+
+def files_toggle(+state: State,active: Bool) -> State:
+  match active:
+    case True{}:
+      files_leave(state)
+    case False{}:
+      files_enter(state)
+
+def files_request(+state: State,kind: U32,args: List<&2,String>,start: U32) -> State:
+  status(queue(state,Request{kind,args,"",start,"Pinned repository"}),
+    "Loading requested repository view; the currently displayed revision stays pinned.")
+
+def files_open_valid(+state: State,+path: String,valid: Bool) -> State:
+  match valid:
+    case True{}:
+      files_request(state,20,["repo-open",path],0)
+    case False{}:
+      status(invalidate(state),"Files needs an explicit absolute checkout path; no folder is scanned automatically.")
+
+def files_open_repo(+state: State) -> State:
+  State{db,dir,program,ui,selection,form,jobs,deadline,serial} = state
+  +path = UI.query(ui)
+  files_open_valid(files_replace(state,Files.edit(files_model(state),path)),path,String.starts_with(path,"/"))
+
+def files_tree(+state: State,path: String,+offset: U32) -> State:
+  files_request(state,20,Files.tree_args(Files.identity(files_model(state)),path,offset),offset)
+
+def files_parent_value(+state: State,value: Files.Directory) -> State:
+  Files.Directory{+path,offset,total,next,nodes} = value
+  files_tree(state,Files.parent(path),0)
+
+def files_parent(+state: State) -> State:
+  files_parent_value(state,Files.directory(files_model(state)))
+
+def files_reload_value(+state: State,value: Files.Directory) -> State:
+  Files.Directory{path,offset,total,next,nodes} = value
+  files_tree(state,path,offset)
+
+def files_reload(+state: State) -> State:
+  files_reload_value(state,Files.directory(files_model(state)))
+
+def files_tree_guard(+state: State,parent: Bool,valid: Bool) -> State:
+  match valid:
+    case False{}:
+      status(state,"Open an explicit repository first.")
+    case True{}:
+      Bool.pick(State,parent,files_parent(state),files_reload(state))
+
+def files_page_ready(+state: State,+path: String,+offset: U32,+next: U32,+forward: Bool,valid: Bool) -> State:
+  match valid:
+    case True{}:
+      files_tree(state,path,Bool.pick(U32,forward,next,UI.minus(offset,100)))
+    case False{}:
+      status(state,"No further directory page. The displayed commit is unchanged.")
+
+def files_list_page_value(+state: State,+forward: Bool,value: Files.Directory) -> State:
+  Files.Directory{path,+offset,total,+next,nodes} = value
+  files_page_ready(state,path,offset,next,forward,Files.pinned(Files.identity(files_model(state))) &&
+    Bool.pick(Bool,forward,U32.is_gt(next,0),U32.is_gt(offset,0)))
+
+def files_list_page(+state: State,+forward: Bool) -> State:
+  files_list_page_value(state,forward,Files.directory(files_model(state)))
+
+def files_source(+state: State,path: String,+first: U32) -> State:
+  files_request(state,21,Files.source_args("repo-source",Files.identity(files_model(state)),path,first,40),first)
+
+def files_node(+state: State,node: Maybe<&2,Files.Node>) -> State:
+  match node:
+    case Some{Files.Node{path,"directory"}}:
+      files_tree(state,path,0)
+    case Some{Files.Node{path,"file"}}:
+      files_source(state,path,1)
+    case Some{Files.Node{path,kind}}:
+      status(invalidate(state),"Unsupported " ++ kind ++ " entry; it is not followed: " ++ path)
+    case None{}:
+      status(state,"Choose a listed committed file or directory.")
+
+def files_select_value(+state: State,index: U32,value: Files.Directory) -> State:
+  Files.Directory{path,offset,total,next,nodes} = value
+  files_node(state,Files.node_at(nodes,index))
+
+def files_select(+state: State,index: U32) -> State:
+  files_select_value(state,index,Files.directory(files_model(state)))
+
+def files_source_step(+state: State,+path: String,+first: U32,+next: U32,+forward: Bool,valid: Bool) -> State:
+  match valid:
+    case True{}:
+      files_source(state,path,Bool.pick(U32,forward,next,U32.max(1,UI.minus(first,40))))
+    case False{}:
+      status(state,"No further source page. Choose a regular file to read committed lines.")
+
+def files_page_value(+state: State,+forward: Bool,value: Files.Source) -> State:
+  Files.Source{path,+first,count,+next,+kind} = value
+  files_source_step(state,path,first,next,forward,(kind >= 21 && kind <= 23 : U32) &&
+    Bool.pick(Bool,forward,U32.is_gt(next,0),U32.is_gt(first,1)))
+
+def files_page(+state: State,+forward: Bool) -> State:
+  files_page_value(state,forward,Files.source(files_model(state)))
+
+def files_evidence_ready(+state: State,+why: Bool,+path: String,+first: U32,+count: U32,valid: Bool) -> State:
+  match valid:
+    case True{}:
+      files_request(state,Bool.pick(U32,why,23,22),Files.source_args(Bool.pick(String,why,"repo-why","repo-blame"),
+        Files.identity(files_model(state)),path,first,count),first)
+    case False{}:
+      status(state,"Choose a nonempty committed source range before Blame or Why.")
+
+def files_evidence_value(+state: State,why: Bool,value: Files.Source) -> State:
+  Files.Source{path,first,+count,next,+kind} = value
+  files_evidence_ready(state,why,path,first,count,(kind >= 21 && kind <= 23 && count > 0 : U32))
+
+def files_evidence(+state: State,why: Bool) -> State:
+  files_evidence_value(state,why,Files.source(files_model(state)))
+
+def files_rows(kind: U32,+ui: UI.State,+files: Files.State) -> UI.State:
+  match kind:
+    case 20:
+      Files.State{input,identity,directory,source,saved} = files
+      Files.Directory{path,offset,total,+next,+nodes} = directory
+      UI.set_results(UI.set_rows(ui,Files.node_titles(nodes)),UI.Results{offset,U32.from_nat(List.length(&2,Files.Node,nodes)),U32.is_gt(next,0),True{}})
+    case _:
+      ui
+
+def files_apply(+state: State,+request: Request,+value: Json.Json,valid: Bool) -> State:
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files},jobs,deadline,serial} = state
+  Request{+kind,args,snap,start,title} = request
+  match valid:
+    case False{}:
+      status(state,"Repository reply identity or page metadata did not match the request; current view retained.")
+    case True{}:
+      +next = Files.apply(kind,files,value)
+      view = UI.set_reader(files_rows(kind,ui,next),Files.title(next),Json.get(value,"text"))
+      State{db,dir,program,UI.set_status(view,"Committed view loaded. Copy/export preserve this exact displayed text; History restores the captured reader."),
+        selection,Form{mode,search,source,blame,next},jobs,deadline,serial}
+
+def files_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
+  Request{kind,args,snapshot,start,title} = request
+  match result:
+    case Fail{message}:
+      status(state,"Repository read failed; current view retained: " ++ message)
+    case Done{+value}:
+      files_apply(state,request,value,files_active(state) && Files.valid(kind,files_model(state),args,value))
+
+def list_paging_capture(+state: State,forward: Bool) -> State:
+  State{db,dir,program,ui,Selection{items,snap,start,displayed,args,filters,+listing},
+    Form{mode,search,source,blame,+files},jobs,refresh_at,serial} = state
+  list_page_ready(state,listing,forward,U32.is_eq(mode,0) && listing_loaded(listing))
+
+def list_paging_mode(+state: State,forward: Bool,active: Bool) -> State:
+  match active:
+    case True{}:
+      files_list_page(state,forward)
+    case False{}:
+      list_paging_capture(state,forward)
+
+def list_paging(+state: State,forward: Bool) -> State:
+  list_paging_mode(state,forward,files_active(state))
+
+
 def form_text(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files},+jobs,+refresh_at,+serial} = state
   match mode:
     case 1:
-      State{db,dir,program,ui,selection,Form{1,search,UI.query(ui),blame},jobs,refresh_at,serial}
+      State{db,dir,program,ui,selection,Form{1,search,UI.query(ui),blame,files},jobs,refresh_at,serial}
     case 2:
-      invalidate(State{db,dir,program,ui,selection,Form{2,search,source,UI.query(ui)},jobs,refresh_at,serial})
+      invalidate(State{db,dir,program,ui,selection,Form{2,search,source,UI.query(ui),files},jobs,refresh_at,serial})
+    case 3:
+      invalidate(State{db,dir,program,ui,selection,Form{3,search,source,blame,Files.edit(files,UI.query(ui))},jobs,refresh_at,serial})
     case _:
-      reload(State{db,dir,program,ui,selection,Form{0,UI.query(ui),source,blame},jobs,refresh_at,serial})
+      reload(State{db,dir,program,ui,selection,Form{0,UI.query(ui),source,blame,files},jobs,refresh_at,serial})
 
 def open_item(+state: State,item: Maybe<&2,Item>) -> State:
   match item:
@@ -309,8 +529,8 @@ def why_nonempty(+state: State,+snap: String,+start: U32,+filters: Query.Filters
         "Why | pinned snapshot " ++ snap})
 
 def selected_file_form(+state: State,+text: String) -> State:
-  State{db,dir,program,ui,selection,Form{mode,search,source,old},jobs,refresh_at,serial} = state
-  State{db,dir,program,UI.set_query(ui,text),selection,Form{2,search,source,text},jobs,refresh_at,serial}
+  State{db,dir,program,ui,selection,Form{mode,search,source,old,+files},jobs,refresh_at,serial} = state
+  State{db,dir,program,UI.set_query(ui,text),selection,Form{2,search,source,text,files},jobs,refresh_at,serial}
 
 def why_file(+state: State,args: List<&2,String>) -> State:
   match args:
@@ -329,7 +549,7 @@ def why_commit(+state: State,args: List<&2,String>) -> State:
     case _:
       status(state,"Use /absolute/repository|commit:full40hex in the Blame form.")
 
-def why(+state: State) -> State:
+def why_capture(+state: State) -> State:
   State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters,+listing},+form,+jobs,+refresh_at,+serial} = state
   match displayed:
     case 3:
@@ -347,6 +567,17 @@ def why(+state: State) -> State:
     case _:
       status(state,"Choose a captured transcript or file/range Blame before Why.")
 
+def why_mode(+state: State,active: Bool) -> State:
+  match active:
+    case True{}:
+      files_evidence(state,True{})
+    case False{}:
+      why_capture(state)
+
+def why(+state: State) -> State:
+  why_mode(state,files_active(state))
+
+
 def usage_scope(filters: Query.Filters) -> Bool:
   Query.Filters{query,provider,repo,role,after} = filters
   String.is_empty(repo) && String.is_empty(role) && String.is_empty(after)
@@ -358,7 +589,7 @@ def usage_nonempty(+state: State,+snap: String,+start: U32,+filters: Query.Filte
     case False{}:
       status(state,"Usage needs an unfiltered transcript range. Clear repository, role and date filters, then reopen a result.")
 
-def usage(+state: State) -> State:
+def usage_capture(+state: State) -> State:
   State{db,dir,program,ui,Selection{items,+snap,+start,displayed,args,+filters,+listing},form,jobs,refresh_at,serial} = state
   match displayed:
     case 3:
@@ -369,6 +600,17 @@ def usage(+state: State) -> State:
       usage_nonempty(state,snap,start,filters,usage_scope(filters) && Bool.not(String.is_empty(snap)))
     case _:
       status(state,"Choose a captured transcript to inspect recorded usage.")
+
+def usage_mode(+state: State,active: Bool) -> State:
+  match active:
+    case True{}:
+      status(state,"Return to History before inspecting captured usage.")
+    case False{}:
+      usage_capture(state)
+
+def usage(+state: State) -> State:
+  usage_mode(state,files_active(state))
+
 
 def paging_next(+state: State,kind: U32,+snap: String,+next: U32,+filters: Query.Filters) -> State:
   match kind:
@@ -386,17 +628,36 @@ def paging_kind(+state: State,+kind: U32,+snap: String,+start: U32,+filters: Que
   +next = Bool.pick(U32,forward,U32.add(U32.min(start,U32.sub(4294967295,step)),step),UI.minus(start,step))
   paging_next(state,kind,snap,next,filters)
 
-def paging(+state: State,+forward: Bool) -> State:
+def paging_capture(+state: State,+forward: Bool) -> State:
   State{db,dir,program,ui,Selection{items,snap,start,displayed,args,filters,+listing},form,jobs,refresh_at,serial} = state
   paging_kind(state,displayed,snap,start,filters,forward)
 
-def browse(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
-  reload(State{db,dir,program,UI.set_query(ui,search),selection,Form{0,search,source,blame},jobs,refresh_at,serial})
+def paging_mode(+state: State,forward: Bool,active: Bool) -> State:
+  match active:
+    case True{}:
+      files_page(state,forward)
+    case False{}:
+      paging_capture(state,forward)
 
-def capture_browse(+state: State) -> State:
-  State{db,dir,program,ui,selection,Form{mode,+search,source,blame},jobs,refresh_at,serial} = state
-  State{db,dir,program,UI.set_query(ui,search),selection,Form{0,search,source,blame},jobs,refresh_at,serial}
+def paging(+state: State,forward: Bool) -> State:
+  paging_mode(state,forward,files_active(state))
+
+
+def browse_capture(+state: State) -> State:
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files},+jobs,+refresh_at,+serial} = state
+  reload(State{db,dir,program,UI.set_query(ui,search),selection,Form{0,search,source,blame,files},jobs,refresh_at,serial})
+
+def browse(state: State) -> State:
+  browse_capture(files_leave(state))
+
+
+def capture_browse_capture(+state: State) -> State:
+  State{db,dir,program,ui,selection,Form{mode,+search,source,blame,+files},jobs,refresh_at,serial} = state
+  State{db,dir,program,UI.set_query(ui,search),selection,Form{0,search,source,blame,files},jobs,refresh_at,serial}
+
+def capture_browse(state: State) -> State:
+  capture_browse_capture(files_leave(state))
+
 
 def versions_ready(state: State,snapshot: String,filters: Query.Filters,valid: Bool) -> State:
   match valid:
@@ -454,19 +715,27 @@ def source_rows(+state: State,result: Result<&2,&2,String,List<&2,List<&2,Sql.Ce
       State{db,dir,program,UI.set_status(UI.set_reader(ui,"Settings | explicit sources",settings_text(dir,selection_snapshot(selection)) ++ source_lines(rows)),
         "Explicit source configuration loaded. Disabled roots keep captured evidence."),selection,form,jobs,refresh_at,serial}
 
-def settings(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
+def settings_capture(+state: State) -> State:
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files},+jobs,+refresh_at,+serial} = state
   match mode:
     case 1:
-      browse(State{db,dir,program,ui,selection,Form{mode,search,source,blame},jobs,refresh_at,serial})
+      browse(State{db,dir,program,ui,selection,Form{mode,search,source,blame,files},jobs,refresh_at,serial})
     case _:
       queue(clear_rows(State{db,dir,program,UI.set_reader(UI.set_query(ui,source),"Settings | explicit sources",settings_text(dir,selection_snapshot(selection))),
-        no_display(selection),Form{1,search,source,blame},jobs,refresh_at,serial}),Request{6,["sources"],"",0,"Registered sources"})
+        no_display(selection),Form{1,search,source,blame,files},jobs,refresh_at,serial}),Request{6,["sources"],"",0,"Registered sources"})
 
-def storage(+state: State) -> State:
-  State{db,dir,program,ui,selection,Form{mode,search,+source,blame},jobs,deadline,serial} = state
+def settings(state: State) -> State:
+  settings_capture(files_leave(state))
+
+
+def storage_capture(+state: State) -> State:
+  State{db,dir,program,ui,selection,Form{mode,search,+source,blame,+files},jobs,deadline,serial} = state
   queue(clear_rows(State{db,dir,program,UI.set_query(ui,source),no_display(selection),
-    Form{1,search,source,blame},jobs,deadline,serial}),Request{19,["storage"],"",0,"Storage inventory"})
+    Form{1,search,source,blame,files},jobs,deadline,serial}),Request{19,["storage"],"",0,"Storage inventory"})
+
+def storage(state: State) -> State:
+  storage_capture(files_leave(state))
+
 
 def storage_done(+state: State,result: Result<&2,&2,String,String>) -> State:
   State{db,dir,program,ui,selection,form,jobs,deadline,serial} = state
@@ -478,17 +747,25 @@ def storage_done(+state: State,result: Result<&2,&2,String,String>) -> State:
         "Read-only storage inventory. Click Settings to return to search."),
         no_display(selection),form,jobs,deadline,serial}
 
-def filter_help(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
+def filter_help_capture(+state: State) -> State:
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files},+jobs,+refresh_at,+serial} = state
   invalidate(State{db,dir,program,UI.set_reader(UI.set_query(ui,search),"Search filters | literal terms",
     "Type words or a quoted phrase above.\n\nOptional filters:\nprovider:claude\nprovider:codex\nrepo:\"/absolute/path with spaces\"\nrole:user\nrole:assistant\nrole:tool\nafter:2026-10-01\n\nExample:\ncache role:assistant after:2026-10-01\n\nProvider tokens override the sidebar scope.\nDates are inclusive calendar dates.\nEmpty words with filters browse matching records.\nPunctuation is literal; FTS syntax is not executed.\n\nTyping applies filters. Click a result to read its exact accepted snapshot."),
-    no_display(selection),Form{0,search,source,blame},jobs,refresh_at,serial})
+    no_display(selection),Form{0,search,source,blame,files},jobs,refresh_at,serial})
 
-def blame_help(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
+def filter_help(state: State) -> State:
+  filter_help_capture(files_leave(state))
+
+
+def blame_help_capture(+state: State) -> State:
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files},+jobs,+refresh_at,+serial} = state
   invalidate(State{db,dir,program,UI.set_reader(UI.set_query(ui,blame),"Blame | local repository evidence",
     "Enter literal fields separated by |:\n\n/absolute/repository|relative/file|first|count\n\nOr exact commit Why:\n/absolute/repository|commit:full40hex\n\nExample:\n/tmp/demo-repo|src/cache.txt|1|20\n\nClick Blame again or press Return to run.\nThe final field is a count, from 1 to 100.\nSpaces are allowed in paths. | is reserved.\n\nGit is read-only. No logged command is run.\nMissing or ambiguous evidence remains explicit.\nContent overlap does not prove authorship.\nFile evidence searches captured sources for this repository independently of transcript filters.\n\nClick Filter to return to search."),
-    no_display(selection),Form{2,search,source,blame},jobs,refresh_at,serial})
+    no_display(selection),Form{2,search,source,blame,files},jobs,refresh_at,serial})
+
+def blame_help(state: State) -> State:
+  blame_help_capture(files_leave(state))
+
 
 def blame_valid(+repo: String,+path: String,+first: U32,+count: U32,+valid: Bool) -> Result<&2,&2,String,List<&2,String>>:
   match valid:
@@ -534,19 +811,32 @@ def blame_result(+state: State,result: Result<&2,&2,String,List<&2,String>>) -> 
     case Done{args}:
       blame_request(state,args)
 
-def blame(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+form},+jobs,+refresh_at,+serial} = state
+def blame_capture(+state: State) -> State:
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+form,+files},+jobs,+refresh_at,+serial} = state
   match mode:
     case 2:
       blame_result(state,blame_fields(String.split(UI.query(ui),'|')))
     case _:
       blame_help(state)
 
+def blame_mode(+state: State,active: Bool) -> State:
+  match active:
+    case True{}:
+      files_evidence(state,False{})
+    case False{}:
+      blame_capture(state)
+
+def blame(+state: State) -> State:
+  blame_mode(state,files_active(state))
+
+
 def scope_changed(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files},+jobs,+refresh_at,+serial} = state
   match mode:
     case 0:
       reload(state)
+    case 3:
+      browse(state)
     case _:
       status(state,"Provider scope selected. The current input form is unchanged.")
 
@@ -655,10 +945,12 @@ def refresh_listing(state: State,mode: U32) -> State:
       state
 
 def refresh(+state: State) -> IO(State):
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files},+jobs,+refresh_at,+serial} = state
   match mode:
     case 1:
       import_checked(state,scope(ui),String.trim(UI.query(ui)),writer_of(state))
+    case 3:
+      IO.pure(State,files_tree_guard(state,False{},Files.pinned(Files.identity(files))))
     case _:
       start_write(refresh_listing(state,mode),Request{8,["refresh-all"],"",0,"Refresh registered sources"},writer_of(state))
 
@@ -670,7 +962,7 @@ def rebuild_allowed(+state: State,+snap: String,allowed: Bool) -> IO(State):
       IO.pure(State,status(state,"Select a captured transcript, then open Settings to rebuild that snapshot's derived search rows."))
 
 def rebuild(+state: State) -> IO(State):
-  State{db,dir,program,ui,Selection{items,+snap,start,displayed,args,filters,+listing},Form{mode,search,source,blame},jobs,refresh_at,serial} = state
+  State{db,dir,program,ui,Selection{items,+snap,start,displayed,args,filters,+listing},Form{mode,search,source,blame,+files},jobs,refresh_at,serial} = state
   rebuild_allowed(state,snap,U32.is_eq(mode,1) && Bool.not(String.is_empty(snap)))
 
 def copy_done(+state: State,result: Result<&1,&1,U32 & String,U32 & (String & String)>) -> State:
@@ -725,9 +1017,42 @@ def export_begin(+state: State,+valid: Bool) -> IO(State):
         now : Nat <- IO.now()
         export_at(state,now)
 
-def export(+state: State) -> IO(State):
-  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters,+listing},Form{+mode,+search,+source,+form},+jobs,+refresh_at,+serial} = state
+def export_capture(+state: State) -> IO(State):
+  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters,+listing},Form{+mode,+search,+source,+form,+files},+jobs,+refresh_at,+serial} = state
   export_begin(state,Bool.not(U32.is_eq(mode,1)) && ((displayed >= 3 && displayed <= 4 : U32) || file_kind(displayed) || U32.is_eq(displayed,14)))
+
+def files_export_args(ui: UI.State,path: String) -> List<&2,String>:
+  ["export-displayed",path,UI.reader(ui)]
+
+def files_export_at(+state: State,now: Nat) -> IO(State):
+  State{db,+dir,program,+ui,selection,form,jobs,deadline,+serial} = state
+  +path = dir ++ "/evidence-repository-" ++ Nat.show(now) ++ "-" ++ U32.show(serial) ++ ".md"
+  start_write(State{db,dir,program,ui,selection,form,jobs,deadline,U32.add(serial,1)},
+    Request{9,files_export_args(ui,path),"",0,path},writer_of(state))
+
+def files_export_ready(+state: State,ready: Bool) -> IO(State):
+  match ready:
+    case False{}:
+      IO.pure(State,status(state,"Open a committed repository view before exporting."))
+    case True{}:
+      do IO<State>:
+        now : Nat <- IO.now()
+        files_export_at(state,now)
+
+def files_export_model(state: State,source: Files.Source) -> IO(State):
+  Files.Source{path,first,count,next,+kind} = source
+  files_export_ready(state,(kind >= 20 && kind <= 23 : U32))
+
+def export_mode(+state: State,active: Bool) -> IO(State):
+  match active:
+    case True{}:
+      files_export_model(state,Files.source(files_model(state)))
+    case False{}:
+      export_capture(state)
+
+def export(+state: State) -> IO(State):
+  export_mode(state,files_active(state))
+
 
 def clear_reader(+state: State) -> State:
   State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
@@ -769,7 +1094,7 @@ def rows_done(+state: State,+kind: U32,+filters: Query.Filters,+more: Bool,
         listing_items(kind,rows,Bool.pick(Query.Filters,U32.is_eq(kind,17),full,filters)))
 
 def listing_value(+state: State,request: Request,+value: Json.Json,valid: Bool) -> State:
-  Request{kind,args,snap,start,title} = request
+  Request{+kind,args,snap,start,title} = request
   match valid:
     case False{}:
       status(state,"Result page metadata was invalid; refresh the listing.")
@@ -806,16 +1131,16 @@ def latest_done(+state: State,+request: Request,result: Result<&2,&2,String,Json
         Bool.not(Cmp.is_gt(P.decimal_compare(Json.get(value,"snapshot"),"9223372036854775807"))))
 
 def text_done(+state: State,+request: Request,result: Result<&2,&2,String,String>) -> State:
-  State{+db,+dir,+program,+ui,Selection{+items,+old,+oldstart,+displayed,+blame,+filters,+listing},Form{+mode,+search,+source,+form},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+old,+oldstart,+displayed,+blame,+filters,+listing},Form{+mode,+search,+source,+form,+files},+jobs,+refresh_at,+serial} = state
   Request{+kind,+args,+snap,+start,+title} = request
   match result:
     case Fail{message}:
-      status(State{db,dir,program,ui,Selection{items,old,oldstart,displayed,blame,filters,listing},Form{mode,search,source,form},jobs,refresh_at,serial},message)
+      status(State{db,dir,program,ui,Selection{items,old,oldstart,displayed,blame,filters,listing},Form{mode,search,source,form,files},jobs,refresh_at,serial},message)
     case Done{text}:
       State{db,dir,program,UI.set_status(UI.set_reader(Bool.pick(UI.State,file_kind(kind) || U32.is_eq(mode,0),ui,UI.set_query(ui,search)),title,text),"Captured evidence loaded. Scroll or drag to select; Cmd+C copies."),
         Selection{items,Bool.pick(String,file_kind(kind),old,snap),start,kind,
           Bool.pick(List<&2,String>,file_kind(kind),args,blame),
-          Bool.pick(Query.Filters,file_kind(kind) || U32.is_eq(kind,14),filters,request_filters(args)),listing},Form{Bool.pick(U32,file_kind(kind),2,0),search,source,form},jobs,refresh_at,serial}
+          Bool.pick(Query.Filters,file_kind(kind) || U32.is_eq(kind,14),filters,request_filters(args)),listing},Form{Bool.pick(U32,file_kind(kind),2,0),search,source,form,files},jobs,refresh_at,serial}
 
 def read_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
   Request{+kind,+args,+snap,+start,+title} = request
@@ -832,6 +1157,14 @@ def read_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.J
       storage_done(state,Client.text_result(result))
     case 6:
       source_rows(state,Client.rows_result(result))
+    case 20:
+      files_done(state,request,result)
+    case 21:
+      files_done(state,request,result)
+    case 22:
+      files_done(state,request,result)
+    case 23:
+      files_done(state,request,result)
     case _:
       text_done(state,request,Client.text_result(result))
 
@@ -924,7 +1257,7 @@ def automatic_success(+state: State,mode: U32,+value: Json.Json) -> State:
 def write_success(+state: State,+kind: U32,+title: String,+mode: U32,+value: Json.Json) -> State:
   match kind:
     case 9:
-      status(state,"Exported captured bounded evidence: " ++ title)
+      status(state,"Exported bounded evidence: " ++ title)
     case 10:
       status(state,"Source folder disabled. Retained evidence remains available. Reopen Settings to refresh the list.")
     case 15:
@@ -946,10 +1279,10 @@ def write_value(+state: State,+kind: U32,+title: String,+mode: U32,result: Resul
       write_success(state,kind,title,mode,value)
 
 def write_done(+state: State,+request: Request,+reply: Reply) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files},+jobs,+refresh_at,+serial} = state
   Request{+kind,+args,+snap,+start,+title} = request
   Reply{+value} = reply
-  write_value(State{db,dir,program,ui,selection,Form{mode,search,source,blame},jobs,refresh_at,serial},kind,title,mode,value)
+  write_value(State{db,dir,program,ui,selection,Form{mode,search,source,blame,files},jobs,refresh_at,serial},kind,title,mode,value)
 
 def poll_write_ready(+state: State,+request: Request,chan: Chan(Reply),result: Maybe<&1,Reply>) -> IO(State):
   match result:
@@ -1031,7 +1364,7 @@ def auto_mode(+state: State,mode: U32,now: Nat) -> IO(State):
       IO.pure(State,refresh_deadline(state,0n))
 
 def auto_refresh(+state: State,+now: Nat) -> IO(State):
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame},jobs,refresh_at,serial} = state
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,+files},jobs,refresh_at,serial} = state
   auto_mode(state,mode,now)
 
 def service_start(+state: State) -> IO(State):
@@ -1058,13 +1391,31 @@ def toggle_pause(+state: State) -> State:
   status(State{db,dir,program,ui,selection,form,Jobs{revision,wanted,reader,writer,Bool.not(paused)},0n,serial},
     Bool.pick(String,paused,"Automatic refresh resumed.","Automatic refresh paused. In-flight work finishes safely; manual Refresh still works."))
 
+def files_enter_action(+state: State,index: U32,query: Bool) -> State:
+  match query:
+    case True{}:
+      files_open_repo(state)
+    case False{}:
+      files_select(state,index)
+
+def open_selected(+state: State,index: U32,active: Bool) -> State:
+  State{db,dir,program,ui,Selection{items,snap,start,displayed,args,filters,listing},form,jobs,deadline,serial} = state
+  match active:
+    case True{}:
+      files_select(state,index)
+    case False{}:
+      open_item(state,select_item(items,U32.to_nat(index)))
+
+
 def enter(+state: State,+index: U32) -> IO(State):
-  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+args,+filters,+listing},Form{+mode,+search,+source,+blameform},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+args,+filters,+listing},Form{+mode,+search,+source,+blameform,+files},+jobs,+refresh_at,+serial} = state
   match mode:
     case 1:
       refresh(state)
     case 2:
       IO.pure(State,blame(state))
+    case 3:
+      IO.pure(State,files_enter_action(state,index,U32.is_eq(UI.focus(ui),0)))
     case _:
       IO.pure(State,open_item(state,select_item(items,U32.to_nat(index))))
 
@@ -1078,7 +1429,7 @@ def handle(+state: State,action: UI.Action) -> IO(Maybe<State>):
     case UI.Scope{provider}:
       IO.pure(Maybe<State>,Some{scope_changed(state)})
     case UI.Open{index}:
-      IO.pure(Maybe<State>,Some{open_item(state,select_item(items,U32.to_nat(index)))})
+      IO.pure(Maybe<State>,Some{open_selected(state,index,files_active(state))})
     case UI.Submit{}:
       do IO<Maybe<State>>:
         next : State <- enter(state,UI.selected(ui))
@@ -1095,6 +1446,12 @@ def handle(+state: State,action: UI.Action) -> IO(Maybe<State>):
       IO.pure(Maybe<State>,Some{settings(state)})
     case UI.Storage{}:
       IO.pure(Maybe<State>,Some{storage(state)})
+    case UI.Files{}:
+      IO.pure(Maybe<State>,Some{files_toggle(state,files_active(state))})
+    case UI.RepoOpen{}:
+      IO.pure(Maybe<State>,Some{files_open_repo(state)})
+    case UI.RepoParent{}:
+      IO.pure(Maybe<State>,Some{files_tree_guard(state,True{},Files.pinned(Files.identity(files_model(state))))})
     case UI.Filter{}:
       IO.pure(Maybe<State>,Some{filter_help(state)})
     case UI.Blame{}:
@@ -1209,7 +1566,7 @@ def tick(es: List<Event>,state: State) -> IO(Maybe<State>):
       tick_input(e <> rest,state,True{})
 
 def initial(+db: U32,+dir: String,+program: String) -> State:
-  reload(State{db,dir,program,UI.init(),Selection{[],"",0,0,[],empty_filters(),empty_listing()},Form{0,"","",""},
+  reload(State{db,dir,program,UI.init(),Selection{[],"",0,0,[],empty_filters(),empty_listing()},Form{0,"","","",Files.empty()},
     Jobs{0,None{},None{},None{},False{}},0n,0})
 
 def run(+db: U32,+dir: String,+program: String) -> IO(Unit):

@@ -11,6 +11,11 @@ in isolated directories. See the [sanitized test receipt](receipts/test-summary.
 The new catalog/storage/append candidate passed 40 native executables and 2,960
 named checks with unchanged recorded inputs; see `receipts/test-parity-summary.txt`.
 Its separate native observations are in `native-validation.md`.
+The later Files integration passed 167 CLI/browser/export and 184 GUI/Files/UI/
+trace checks. Native candidate `0e1d1018…` also passed pinned repository/source
+paging, Blame/Why, exact copy/export, unsupported-entry refusal, and History
+restoration in Tart. These focused results do not replace the earlier full
+suite or establish complete feature/UI parity.
 
 | ID | Current result | Evidence and remaining work |
 |---|---|---|

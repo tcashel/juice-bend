@@ -13,6 +13,7 @@ import ./usage.bend as Usage
 import ./query.bend as Query
 import ./catalog.bend as Catalog
 import ./storage_inventory.bend as Inventory
+import ./repository_cli.bend as Repository
 
 type Page is Data:
   Page{offset: U32, rows: List<&2,List<&2,Sql.Cell>>, has_more: Bool}
@@ -517,6 +518,9 @@ def help() -> IO(Unit):
     "\"why SNAPSHOT [START COUNT]\",\"session-scope SNAP START COUNT PROVIDER REPO ROLE AFTER\"," ++
     "\"why-scope SNAP START COUNT PROVIDER REPO ROLE AFTER\",\"blame REPOSITORY FILE START END\"," ++
     "\"why-file REPOSITORY FILE START END\",\"why-commit REPOSITORY SHA\"," ++
+    "\"repo-open REPO\",\"repo-tree REPO COMMIT PATH OFFSET\"," ++
+    "\"repo-source REPO COMMIT PATH FIRST COUNT\",\"repo-blame REPO COMMIT PATH FIRST COUNT\"," ++
+    "\"repo-why REPO COMMIT PATH FIRST COUNT\"," ++
     "\"usage SNAPSHOT [START [COUNT]]\"," ++
     "\"citation JSON\",\"export SNAPSHOT PATH\",\"export-range SNAPSHOT START COUNT PATH\"," ++
     "\"export-why SNAPSHOT START COUNT PATH\",\"export-blame REPOSITORY FILE START END PATH\"," ++
@@ -529,6 +533,16 @@ def help() -> IO(Unit):
 
 def command(db: U32,data_dir: String,cmd: String,args: List<String>) -> IO(Unit):
   match cmd:
+    case "repo-open":
+      Repository.command(db,"repo-open",args)
+    case "repo-tree":
+      Repository.command(db,"repo-tree",args)
+    case "repo-source":
+      Repository.command(db,"repo-source",args)
+    case "repo-blame":
+      Repository.command(db,"repo-blame",args)
+    case "repo-why":
+      Repository.command(db,"repo-why",args)
     case "storage":
       match args:
         case []:

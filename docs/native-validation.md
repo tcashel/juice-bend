@@ -1,5 +1,39 @@
 # Native interaction observations
 
+## Files candidate — pinned repository browsing
+
+Candidate `0e1d10180fa875ca225a1bae25f60b968689e6d0440ad1a21e82f4b7bbeb1434`
+(8,265,920 bytes) ran in the host-only macOS 27.0 arm64 Tart guest. All 35 build
+inputs remained unchanged and all 88 pinned upstream hashes passed. A Bend
+fixture created two captured requests, two commits, a 130-line Unicode-named
+source, a 107-entry directory, a nested Unicode path, binary data and a symlink.
+
+The actual window opened the explicit checkout, paged source through lines
+121–130, displayed Blame/Why with both captured request citations, and copied
+and exported the displayed page. After the fixture created a third commit and
+dirtied the worktree, source and Why clipboard bytes remained identical at the
+old pinned commit. Binary and symlink errors preserved that reader. Directory
+paging reached entries 101–107; Previous, Up folder and the nested Unicode file
+worked. History restored the exact prior captured transcript, including after
+entering Files from Settings. Explicit Open repo then showed the new committed
+value `314`, excluding the dirty worktree value `999`.
+
+The mode-0600 export was 755 bytes, including the exact 584-byte displayed body.
+SQLite quick_check returned `ok`, foreign-key checks returned no violations,
+and the library retained two accepted snapshots and four searchable events.
+Command+Q closed the owned window. The runner stopped its VM and released both
+leases. The standard executable and `build/Juice Bend Files.app` now contain
+this exact binary; older validated executables/bundles remain preserved.
+
+The first fixture attempt failed during Git initialization before app launch.
+The exact command subsequently succeeded and a fresh fixture retry passed;
+the initial cause is not established. Unsupported glyphs still display boxes,
+while copied/exported Unicode remains intact. No new input-latency or scroll
+cadence measurement is claimed. Focused CLI and GUI gates passed 167 and 184
+checks respectively; these are not a full-suite rerun. See
+`receipts/repository-files.txt` and `benchmarks/results/tart-files-summary.json`.
+Raw synthetic observations remain under ignored `build/tart/files-f1sdqqfi`.
+
 ## Parity candidate — catalog and storage
 
 The native candidate SHA-256

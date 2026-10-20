@@ -84,6 +84,37 @@ def open(repo: String) -> IO(Result<&2,&2,Problem,View>):
     resolved : Result<&2,&2,String,Scope.Scope> <- Scope.resolve(repo)
     open_scope(resolved)
 
+# Subsequent worker commands reconstruct canonical scope while retaining the
+# exact requested commit. A tag/tree/blob or missing object is not repinned.
+def at_object(result: Result<&2,&2,String,String>,scope: Scope.Scope,id: String) -> Result<&2,&2,Problem,View>:
+  match result:
+    case Done{text}:
+      Bool.pick(Result<&2,&2,Problem,View>,String.eq(String.trim(text),"commit"),
+        Done{View{scope,id}},Fail{Problem{"invalid_commit","Requested object is not a commit"}})
+    case Fail{_}:
+      Fail{Problem{"missing_commit","Requested commit is unavailable in this repository"}}
+
+def at_scope(result: Result<&2,&2,String,Scope.Scope>,+id: String) -> IO(Result<&2,&2,Problem,View>):
+  match result:
+    case Fail{detail}:
+      IO.pure(Result<&2,&2,Problem,View>,Fail{Problem{"invalid_repository",detail}})
+    case Done{+resolved}:
+      do IO<Result<&2,&2,Problem,View>>:
+        result : Result<&2,&2,String,String> <- Evidence.git(Scope.checkout(resolved),["cat-file","-t",id])
+        return at_object(result,resolved,id)
+
+def at_valid(valid: Bool,repo: String,id: String) -> IO(Result<&2,&2,Problem,View>):
+  match valid:
+    case False{}:
+      IO.pure(Result<&2,&2,Problem,View>,Fail{Problem{"invalid_commit","Require an exact nonzero lowercase SHA-1 commit identity"}})
+    case True{}:
+      do IO<Result<&2,&2,Problem,View>>:
+        resolved : Result<&2,&2,String,Scope.Scope> <- Scope.resolve(repo)
+        at_scope(resolved,id)
+
+def open_at(repo: String,+id: String) -> IO(Result<&2,&2,Problem,View>):
+  at_valid(P.valid_sha(id) && Bool.not(P.uncommitted(id)),repo,id)
+
 def words(xs: List<&2,String>) -> List<&2,String>:
   match xs:
     case []:
