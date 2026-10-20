@@ -135,13 +135,13 @@ C outputs are included in application source counts.
 |---|---:|---:|---:|
 | First-party Bend application, excluding bitmap asset below | 24 | 8,628 | 371,239 |
 | First-party Bend tests | 31 | 4,683 | 254,423 |
-| First-party Bend benchmarks | 2 | 391 | 16,826 |
+| First-party Bend benchmarks and native diagnostic | 3 | 610 | 25,302 |
 | First-party Bend laws/proofs | 2 | 165 | 4,206 |
 | SQLite C bridge | 1 | 418 | 14,863 |
-| Build/run/test shell wrappers | 10 | 281 | 9,652 |
+| Build/run/test and VM orchestration shell wrappers | 11 | 403 | 15,909 |
 | Hand-authored bitmap asset and its Bend accessors | 1 | 222 | 4,695 |
 | Synthetic JSONL fixture assets | 2 | 11 | 2,723 |
-| mise configuration and compiler hash manifest | 2 | 125 | 9,530 |
+| mise configuration and compiler hash manifest | 2 | 138 | 10,024 |
 | Retained upstream license text | 1 | 202 | 11,344 |
 | Vendored dependency implementation | 0 | 0 | 0 |
 | Ignored upstream compiler/Base/runtime cache, including guides and inventory | 90 | 27,050 | 907,029 |
@@ -149,7 +149,7 @@ C outputs are included in application source counts.
 | Generated C for the current application | 1 | 447,692 | 22,736,145 |
 
 Application Bend including its bitmap asset is 8,850 lines. All maintained Bend
-including tests, benchmarks, laws and assets is 14,089 lines. The 418-line bridge
+including tests, benchmarks, laws and assets is 14,308 lines. The 418-line bridge
 contains SQLite bindings; generated C also contains the upstream runtime and
 compiler expansion. It is not an additional maintained native application
 implementation. SQLite is the system library and is not vendored. All 88 pinned
@@ -162,9 +162,9 @@ are identical: 4,621,176 bytes, SHA-256
 The generated C is SHA-256
 `6eb99af678e235c7be063f67c48e16aa00dd706fc60b0489905747f1e2cb3593`.
 These are file sizes, not filesystem allocation or process memory. The previous
-desktop-observed executable is retained separately and identified in
-[native validation](native-validation.md); the Mac locked before the current
-build could be desktop-tested.
+desktop-observed executable is retained separately. The current build's
+subsequent fresh-library capture/search/copy/Why/export observations are recorded
+in [native validation](native-validation.md).
 
 Two final builds used the frozen source and pinned installed compiler. The
 first started with an empty Clang module-cache directory; the previous cache
@@ -242,8 +242,61 @@ The exact measurement commands, from the repository directory, were:
 /bin/zsh -f -c 'TIMEFMT="elapsed_seconds=%E user_seconds=%U system_seconds=%S maximum_rss_kib=%M"; time /Users/tcashel/repositories/juice-bend/build/juice-bend-measured --data-dir /tmp/juice-bend-resource.856lHU search lemon claude /synthetic/bend/repoA user 2026-01-10'
 ```
 
-Native startup-to-interactive, input latency during indexing, scroll cadence,
-and GUI idle/active CPU were **not measured here**. `ps` and the requested
-hardware `sysctl` reads were denied; no GUI resource figures are inferred from
-the backend commands. Render/input acceptance belongs to the separate observed
-native UI checks. The 1M-record stress corpus was not run.
+Native startup-to-interactive, actual input-to-photon latency, uninstrumented
+scroll cadence and GUI idle/active CPU/RSS remain unmeasured. `ps` and the
+requested hardware `sysctl` reads were denied; no GUI resource figures are
+inferred from the backend commands. The separate trace below measures bounded
+instrumented loop progress. The 1M-record stress corpus was not run.
+
+## Instrumented native capture trace — 2026-10-20
+
+The diagnostic [Bend entry point](../benchmarks/native_trace.bend) reuses
+production `Gui.view` and `Gui.tick`, including the ordinary native writer
+commands. Its source SHA-256 is
+`1595e9b528d9f986fac5b2f9b7cfdfb10e083d13e5465b99401ed62b41eea5b7`;
+the diagnostic executable is
+`537145d12c3442e073fda1325e64dcf42e2cfdfdfff3da9fd8f89cb8a6585328`.
+The production executable remained unchanged at `6a128772…` and contains no
+trace entry point. The diagnostic creates a private trace directory, logs at
+most 12,000 paired ticks and omits query text unless explicitly enabled.
+This run enabled query logging only for the synthetic interaction.
+
+The native run produced 9,061 complete entry/exit pairs and a final close
+event. The analyzed interval is frames 3,005–8,073, whose tick exits retain an
+active writer. An earlier three-tick empty automatic refresh is excluded.
+The worker-state observation interval, from the first active tick exit to
+the first cleared tick exit at frame 8,074, was 61.909 seconds. This is not a
+standalone import timer. The final isolated library held one accepted snapshot
+with 100,016 physical records and 125,020 normalized events.
+
+| Observation during the writer-active interval | Samples | Median | p95 | Maximum |
+|---|---:|---:|---:|---:|
+| Production `Gui.tick` call, after entry logging | 5,069 | 2 ms | 3 ms | 3 ms |
+| Successive frame-return/tick-entry observations | 5,069 | 12 ms | 18 ms | 45 ms |
+| Tick exit to next frame-return/tick-entry observation | 5,069 | 10 ms | 16 ms | 42 ms |
+
+No sample in these three series exceeded 100 ms. Percentiles use nearest-rank
+ordering of this single run's observations; these are not independent trials.
+The query became `active-capture-check` at tick exit 4,379 while the writer
+remained active. The next frame-return observation occurred 9 ms later.
+Pause first became true at tick exit 4,385, also with the writer active.
+The completed capture and final query were subsequently visible, and native
+close ended the run. Accessibility and screenshot calls still timed out
+during capture; that transport behavior remains unexplained.
+
+The upstream loop calls `Gui.view`, then `Window.frame`, then the tick callback.
+Thus tick entry follows a frame return; it does not timestamp a visible pixel.
+The trace adds two file writes, three clock reads, event counting, formatting
+and retained state per tick. Tick duration excludes the entry log write, but
+the instrumentation can change scheduling, allocation and frame cost. These
+numbers establish progress of the instrumented event loop and acceptance of
+query/Pause state while capture was pending. They do not establish input
+injection-to-paint, input-to-photon, uninstrumented performance or GUI resources.
+
+The [sanitized summary](../benchmarks/results/native-trace-summary.json)
+records exact identities, distributions and witnesses. An independent review
+recomputed all three distributions, paired-frame coverage and witnesses from
+the retained raw trace, SHA-256
+`7e35936723160537a877668ca2500604bbff96479237a707ad20e7e49df78270`.
+The raw trace and synthetic library remain in the private temporary directory;
+only the diagnostic source and sanitized summary are published.

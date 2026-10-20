@@ -10,11 +10,14 @@ specific boundaries below; do not report the whole matrix as passed.
 The current `build/juice-bend` and `build/Juice Bend Current.app` contain the
 same 4,621,176-byte native executable, SHA-256
 `6a1287727e86e6d956dbfa7bf42bb6a1551d2fe064f110c805e14f6e8b85a32c`.
-Both passed isolated native CLI smoke checks. The desktop-observed earlier
+Both passed isolated native CLI smoke checks. The current bundle also passed
+fresh empty-library launch, explicit capture, search, transcript selection/copy,
+Why and export on the unlocked desktop. The desktop-observed earlier
 4ad55c63 build remains in `build/juice-bend-next` and `build/Juice Bend.app`;
 that test bundle uses only `/private/tmp/juice-bend-native-validation`.
-All build outputs and data are ignored. The current bundle has the ordinary
-launcher; pass an explicit isolated data directory for further testing.
+All build outputs and data are ignored. Both validation windows were closed
+and the current production bundle's ordinary launcher restored. Use an explicit
+isolated data directory for further testing.
 
 Mise pins Bun 1.4.2 and selects Bend 2.0.37 revision
 `60ca80aedeec9d8f0629b5f10dd19457d8ad67af`; all 88 source hashes verify.
@@ -44,8 +47,10 @@ Bend workers have no dependency on the existing Juice process.
 - Actual desktop: browse/search/open/scroll, query and reader copy/paste,
   explicit synthetic capture, file Blame/Why/export, Pause, Usage, verified
   rebuild and combined filters. Exact candidates and limitations are in
-  `docs/native-validation.md`. The newest storage-hardening build is CLI-tested
-  but has not been observed on the locked desktop.
+  `docs/native-validation.md`. The current storage-hardening build also passed
+  the fresh-library capture/search/copy/Why/export workflow. A subsequent
+  100,016-record capture published 125,020 events while retaining the first
+  snapshot. The desktop later relocked; timing and physical input remain open.
 - Twelve production laws pass ordinary checking and BendTT translation.
   Final `mise run prove` again passed ordinary checking then exited 1 because
   exact Lean/leanc 4.34.0 is unavailable. Stronger-kernel verification did not run.
@@ -65,17 +70,21 @@ Bend workers have no dependency on the existing Juice process.
 1. Inspect Git status and branch/PR state; preserve all local work. Keep PR #1
    draft while acceptance gaps remain. Original Juice and its pre-existing edits
    are read-only. Publication is authorized only in `tcashel/juice-bend`.
-2. Unlock the Mac. Automation still reported a locked desktop at the final
-   check. Launch the current bundle with a new private directory and no demo:
-   `DATA=$(mktemp -d /tmp/juice-bend-empty.XXXXXX)` then
-   `open "build/Juice Bend Current.app" --args --data-dir "$DATA"`.
-   Verify the empty state, then explicit synthetic capture/search/reader/export.
-   Do not scan private provider homes.
-3. Reproduce indexing interaction with `mise run bench -- 100000` synthetic
-   output. Accessibility calls previously timed out during large capture and
-   small rebuild. Resolve same-executable-worker targeting versus an event-loop
-   stall; read the A20 audit in `native-validation.md`. Measure startup, actual
-   input/frame latency, settled/active GUI CPU and aggregate worker/GUI RSS.
+2. The current build's empty-library workflow and a bounded diagnostic capture
+   are observed. `benchmarks/native_trace.bend` reuses production GUI callbacks;
+   its 5,069 capture ticks had frame-return p95 18 ms / max 45 ms while input
+   and Pause were processed. This rules out a continuous callback freeze in
+   that instrumented run, not screen-paint delay. See `native-validation.md`.
+3. The owner authorized the installed external-SSD Tart VM for further native
+   automation. “Add app storage management” confirmed its handoff: `juice-tests`
+   is stopped and its runner/cleanup locks are absent. The current sandbox
+   denied creation of the shared lease. A narrow sandbox exception was requested
+   because AGENTS.md otherwise prohibits permission escalation; it is pending.
+   `scripts/vm-session` and `mise run build-vm` are ready. The isolated payload
+   location is recorded in ignored `build/tart-run-path.txt`; it contains only
+   the separate macOS 26 executable and synthetic fixtures. No VM has started.
+   With authorization, reserve the shared lease through that runner, then finish
+   startup, input-to-visible and GUI CPU/RSS measurements inside the Mac guest.
 4. Verify physical Command/Shift and Unicode/IME input. Automation produced
    ambiguous modifier events and truncated non-ASCII committed input. Pointer
    clipboard roundtrips worked; do not weaken modifier handling to fit the tool.

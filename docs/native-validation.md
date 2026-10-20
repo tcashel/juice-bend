@@ -4,14 +4,13 @@
 Bend runtime. Only synthetic libraries were used. These are observed
 interactions, not automated latency or complete accessibility acceptance.
 
-The last desktop-observed native executable is 4,619,552 bytes, SHA-256
-`4ad55c63cb542b68740e032f05ff528c25c3ce7250a6f07c1bfbd0d3f25f5d49`.
-It is preserved locally as `build/juice-bend-next` and in `build/Juice Bend.app`.
-The subsequent storage-hardening build is identified in `progress.md` and
-CLI-tested separately. It has not been observed on the locked desktop.
-The main validation library is `/private/tmp/juice-bend-native-validation`.
+The current desktop-observed executable is 4,621,176 bytes, SHA-256
+`6a1287727e86e6d956dbfa7bf42bb6a1551d2fe064f110c805e14f6e8b85a32c`.
+The dated unlocked follow-up below records its fresh-library workflow.
+Earlier observations belong to the separate candidates identified below;
+their results are not silently transferred to the current build.
 
-## Observed workflow
+## Historical workflow — earlier candidates
 
 The preceding integrated candidate
 `426ae88331e52b0f9cecc93fc23e29d23ec0b4e79c44d3856ce6bc26c0fc13be`
@@ -52,6 +51,35 @@ verified raw bytes and regenerated the current projection, after which the
 combined filter returned the expected two events. Historical bytes and capture
 identity did not change.
 
+## Unlocked follow-up — 2026-10-20
+
+The current `6a1287727e86e6d956dbfa7bf42bb6a1551d2fe064f110c805e14f6e8b85a32c`
+production executable was observed on the unlocked desktop using a new private
+synthetic library. Settings displayed the isolated data root.
+
+| Interaction | Observed result |
+|---|---|
+| Fresh launch | Empty-library native state displayed before explicit capture |
+| Explicit capture | Settings imported the selected synthetic source: 24 physical records and 25 normalized events |
+| Search and transcript | `preservation` returned 21 results; opening a result displayed physical record 1 |
+| Reader clipboard | Drag-selection, Copy and Paste returned the exact word `snapshot` |
+| Why | Displayed captured evidence with its selected scope |
+| Export | Created an 11,866-byte evidence file with mode 0600; SHA-256 `d6dc211b682bae98af26d74af83e986429683d3d9fead6ec300dccad02ee1fd3` |
+| Large capture | The synthetic 100,016-record source became accepted snapshot 2 with 125,020 events; both snapshots together held 125,045 events |
+
+Accessibility and screenshot calls timed out at about five seconds while the
+large capture was active. A later observation showed the retained query
+`during-capture-1`; this establishes neither when it was painted nor input
+latency during capture. The GUI process identity was retained, but process
+inspection and sampling were denied. The bounded Bend trace below subsequently
+supplied callback timing evidence; A20's full input-to-visible and resource
+acceptance remains incomplete.
+
+The desktop temporarily relocked, then the owner unlocked it for the diagnostic.
+The owner did not complete the requested physical keyboard check; no physical
+modifier or IME success is inferred. Both validation windows were subsequently
+closed and the production bundle's ordinary launcher restored.
+
 ## Unverified input and timing boundaries
 
 Unsupported glyphs display boxes; backend tests and inspected exports preserve
@@ -66,17 +94,17 @@ Shell `pbpaste` comparisons did not observe the desktop clipboard. Clipboard
 acceptance above is based on the visible in-app copy/clear/paste roundtrip,
 not on a successful process exit or those failed shell comparisons.
 
-During the large capture, several native accessibility/action calls timed out
-after about five seconds. A later screenshot showed the typed query and
+During the earlier large capture, several native accessibility/action calls
+timed out after about five seconds. A later screenshot showed the typed query and
 completed results; that does not establish when input became visible.
-Similar tool timeouts occurred around a small rebuild. Whether this is target
-selection around same-executable workers or a real event-loop stall remains
-unresolved. A20 and input latency p95 are not accepted.
+Similar tool timeouts occurred around a small rebuild. The later callback trace
+rules out a continuous callback freeze during its capture, while the cause of
+automation timeouts remains unresolved. A20 and input-to-visible p95 are not
+accepted.
 
-The final empty-library launch attempt was blocked because the native
-automation tool reported that the Mac was locked and could not unlock it.
-No OS setting or permission was changed. Empty-library native acceptance
-remains pending until a fresh desktop launch is observed.
+An earlier empty-library attempt was blocked by the locked desktop. The
+unlocked follow-up above subsequently observed that state on the current
+production build. No OS setting or permission was changed.
 
 ## Read-only A20 investigation — 2026-10-20
 
@@ -102,11 +130,54 @@ Copy/paste also await their clipboard command within the GUI tick, with a
 CLI workers reuse the GUI executable but dispatch to CLI commands without
 opening a window (`src/main.bend`). Whether automation resolved one of
 those workers instead of the window-owning process remains an unresolved
-hypothesis. A future unlocked-desktop diagnostic should retain the known
-GUI PID/window identity before capture and compare a short sample of that
-exact process with visible input while its child remains active. Tool
-round-trip time is not input/frame latency. No application semantics were
-changed by this audit, and A20 remains unaccepted.
+hypothesis. The subsequent bounded diagnostic below provides timing evidence
+from the GUI callbacks while capture is pending. Tool round-trip time is not
+input/frame latency. No application semantics were changed by this audit;
+remaining pixel-display and resource measurements are still required.
+
+## Bounded native callback trace — 2026-10-20
+
+`benchmarks/native_trace.bend` wraps the production `Gui.view` and `Gui.tick`
+callbacks without modifying them. Its 4,821,704-byte executable has SHA-256
+`537145d12c3442e073fda1325e64dcf42e2cfdfdfff3da9fd8f89cb8a6585328`.
+It ran in a separately identified local bundle against a fresh private library.
+The current production executable's hash remained unchanged.
+
+The native window imported the 100,016-record synthetic source, accepted one
+35,607,307-byte snapshot and projected 125,020 events. While capture was pending,
+automated input changed the Settings field to `active-capture-check` and toggled
+Pause. The trace recorded the completed query at frame 4,379, a subsequent frame
+return 9 ms later, and Pause at frame 4,385. All still had a pending writer.
+External read-only SQLite observations also saw zero accepted snapshots then;
+the later screenshot showed the completed capture and retained input.
+
+The capture's pending-writer interval spanned 5,069 ticks and 61,909 ms. Frame
+return intervals were median 12 ms, p95 18 ms, maximum 45 ms, with none over
+100 ms. Production tick duration was median 2 ms, p95/max 3 ms. The complete
+trace contained 9,061 paired ticks and an observed normal close. An earlier
+three-tick empty automatic refresh is excluded from capture statistics.
+[Machine-readable summary and witnesses](../benchmarks/results/native-trace-summary.json)
+identify the source, binaries and retained raw trace hash.
+
+Accessibility and screenshot requests still timed out at about five seconds
+during this interval. The trace rules out a continuous callback freeze in this
+instrumented run. It does not identify the automation timeout's cause, establish
+input-arrival or pixel-display timing, or measure uninstrumented performance.
+Each traced tick adds two file writes, three clock reads and formatting work;
+`writer_present` means a pending GUI job, not a direct OS child-process sample.
+
+The harness requires an explicit absolute data directory, logs query text only
+with `--trace-query`, and stops logging after 12,000 paired ticks while the app
+continues. These bounds and callback reuse were source-reviewed. Native build,
+missing/relative-directory rejection and real CLI worker dispatch passed.
+The 12,000-tick cutoff was not reached in this run.
+
+Build with `./scripts/build benchmarks/native_trace.bend build/juice-bend-native-trace`.
+Launch `build/juice-bend-native-trace --trace-ui --data-dir /absolute/isolated-dir`
+from an unlocked desktop terminal, or use a coordinated Tart guest. Trace files
+are private under a fresh `native-trace.XXXXXX` directory in that root.
+Add `--trace-query` only for explicitly synthetic input. Raw traces remain
+local; the public summary includes only synthetic input and timing witnesses.
 
 ## Reproduce remaining checks
 
@@ -116,7 +187,7 @@ IME. Use Settings with a synthetic benchmark JSONL, then type and scroll
 while capture is active; record actual input/frame timestamps and UI CPU/RSS.
 Pause must stop new automatic work while an in-flight capture finishes safely.
 
-For the empty-state check, launch `build/juice-bend --data-dir` with a new
-private temporary directory and no `--demo`. No provider scan or network
+To reproduce the observed empty state, launch `build/juice-bend --data-dir`
+with a new private temporary directory and no `--demo`. No provider scan or network
 request should occur. The restricted shell has no display access; use a
 desktop terminal or the local `.app`.

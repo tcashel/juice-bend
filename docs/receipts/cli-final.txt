@@ -24,9 +24,9 @@ complete-extent verification and rebuild reported unchanged raw bytes. Raw
 export compared byte-for-byte with the synthetic Claude source. Scoped Markdown
 retained Café and had mode 0600. Outputs remain under ignored build/current-cli.
 The new local bundle contains the identical executable hash and its status
-command returned the same library counts. This is CLI evidence on the latest
-storage-hardening build; the locked Mac
-prevented its desktop launch. The separate earlier file/commit smoke follows.
+command returned the same library counts. This is CLI evidence on the latest storage-hardening build. Its subsequent
+unlocked-desktop workflow is recorded separately in native-validation.md.
+The separate earlier file/commit smoke follows.
 
 Earlier desktop-observed application CLI integration receipt
 Date: 2026-10-20

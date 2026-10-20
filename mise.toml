@@ -35,3 +35,16 @@ run = "./scripts/bench"
 
 [tasks.smoke-ui]
 run = "./scripts/smoke-ui"
+
+[tasks.build-trace]
+description = "Build the bounded native GUI callback diagnostic"
+run = "./scripts/build benchmarks/native_trace.bend build/juice-bend-native-trace"
+
+[tasks.build-vm]
+description = "Build a separate native executable targeting macOS 26"
+env.MACOSX_DEPLOYMENT_TARGET = "26.0"
+run = "./scripts/build src/main.bend build/juice-bend-vm"
+
+[tasks.vm-session]
+description = "Reserve and run the coordinated local Tart VM with explicit isolated shares"
+run = "./scripts/vm-session"

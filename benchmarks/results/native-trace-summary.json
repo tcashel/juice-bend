@@ -1,0 +1,118 @@
+{
+  "date": "2026-10-20",
+  "diagnostic_binary_sha256": "537145d12c3442e073fda1325e64dcf42e2cfdfdfff3da9fd8f89cb8a6585328",
+  "diagnostic_source_sha256": "1595e9b528d9f986fac5b2f9b7cfdfb10e083d13e5465b99401ed62b41eea5b7",
+  "production_binary_unchanged_sha256": "6a1287727e86e6d956dbfa7bf42bb6a1551d2fe064f110c805e14f6e8b85a32c",
+  "raw_trace_sha256": "7e35936723160537a877668ca2500604bbff96479237a707ad20e7e49df78270",
+  "paired_ticks": 9061,
+  "closed": true,
+  "all_writer_intervals": [
+    [
+      1801,
+      1803
+    ],
+    [
+      3005,
+      8073
+    ]
+  ],
+  "analysis_interval": "final writer interval; explicit synthetic 100016-record capture; earlier empty automatic refresh excluded",
+  "writer_first_frame": 3005,
+  "writer_last_frame": 8073,
+  "writer_interval_ms": 61909,
+  "writer_tick_duration": {
+    "n": 5069,
+    "min_ms": 1,
+    "median_ms": 2,
+    "p95_ms": 3,
+    "max_ms": 3,
+    "over_100_ms": 0
+  },
+  "writer_frame_return_interval": {
+    "n": 5069,
+    "min_ms": 2,
+    "median_ms": 12,
+    "p95_ms": 18,
+    "max_ms": 45,
+    "over_100_ms": 0
+  },
+  "writer_next_frame_after_tick": {
+    "n": 5069,
+    "min_ms": 1,
+    "median_ms": 10,
+    "p95_ms": 16,
+    "max_ms": 42,
+    "over_100_ms": 0
+  },
+  "input_to_photon_measured": false,
+  "query_changed_witnesses": [
+    {
+      "phase": "tick_exit",
+      "frame": 4379,
+      "monotonic_ms": 1131597636,
+      "gui_tick_start_ms": 1131597633,
+      "event_count": 10,
+      "query_scalars": 20,
+      "writer_present": true,
+      "paused": false,
+      "query_changed": "active-capture-check",
+      "closed": false
+    },
+    {
+      "phase": "tick_exit",
+      "frame": 7150,
+      "monotonic_ms": 1131631561,
+      "gui_tick_start_ms": 1131631558,
+      "event_count": 1,
+      "query_scalars": 20,
+      "writer_present": true,
+      "paused": true,
+      "query_changed": "active-capture-check",
+      "closed": false
+    }
+  ],
+  "pause_first_witness": {
+    "phase": "tick_exit",
+    "frame": 4385,
+    "monotonic_ms": 1131597711,
+    "gui_tick_start_ms": 1131597708,
+    "event_count": 1,
+    "query_scalars": 20,
+    "writer_present": true,
+    "paused": true,
+    "closed": false
+  },
+  "completion_witness": {
+    "phase": "tick_exit",
+    "frame": 8074,
+    "monotonic_ms": 1131642486,
+    "gui_tick_start_ms": 1131642484,
+    "event_count": 0,
+    "query_scalars": 20,
+    "writer_present": false,
+    "paused": true,
+    "closed": false
+  },
+  "initial_empty_state_observed": true,
+  "postcapture_query_observed": "active-capture-check",
+  "accessibility_and_screenshot_timeout_while_capture": true,
+  "instrumentation": "two file writes, three clock reads, formatting, event count and state retention per tick; production Gui.view and Gui.tick reused",
+  "next_frame_after_query": {
+    "phase": "frame_return_tick_entry",
+    "frame": 4380,
+    "monotonic_ms": 1131597645,
+    "event_count": 1,
+    "query_scalars": 20,
+    "writer_present": true,
+    "paused": false
+  },
+  "final_accepted_snapshots": [
+    [
+      1,
+      35607307,
+      100016,
+      1
+    ]
+  ],
+  "final_events": 125020
+}

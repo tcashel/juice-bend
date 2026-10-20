@@ -7,6 +7,7 @@ is recorded in `acceptance.md`.
 |---|---|
 | Native CPU compilation | `scripts/build` compiled upstream hello and window examples to arm64 Mach-O; hello ran and printed `Hello, world!` |
 | Native runtime | Actual macOS arm64 app launched and interacted with; browse/search/transcript, explicit capture, Blame/Why/export, Pause, Usage, rebuild and filters observed. See `native-validation.md` for build identities and remaining checks |
+| Instrumented capture scheduling | The separate Bend trace entry point reuses production GUI callbacks. During 5,069 writer-active ticks, tick duration p95/max was 3 ms and frame-return interval p95/max was 18/45 ms. Query and Pause state changed before capture completed. This is instrumented loop progress; input-to-photon, uninstrumented timing and GUI CPU/RSS remain unmeasured. See `performance.md` and `benchmarks/results/native-trace-summary.json` |
 | Compiler host | `scripts/bend version` executes Bend through mise-pinned Bun |
 | Integrated native tests | `mise run test` completed 31 executables and 2,007 named checks, including 34 GUI-state checks and 27 publication crash cuts. See `receipts/test-summary.txt` for exact scope and counts |
 | SQLite boundary / FTS5 | Native boundary suite covers typed/NUL/binary/exact-integer round trips, FTS5, rollback/reopen, stale handles, statement failure cleanup, BUSY, cancellation, registry exhaustion/reuse and timer responsiveness; current integrated counts belong in `acceptance.md` |

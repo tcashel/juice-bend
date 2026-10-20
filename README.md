@@ -85,6 +85,14 @@ mise run smoke-ui
 The latter requires Lean 4.34.0 and has not run on the implementation host.
 Tests, fixture generators, benchmarks and proof logic are Bend.
 
+`mise run build-trace` builds the optional bounded GUI callback diagnostic;
+its measurements and limits are in [native validation](docs/native-validation.md).
+`mise run build-vm` produces a separate macOS 26-compatible executable.
+The optional `mise run vm-session -- PAYLOAD NEW_ARTIFACTS` reserves the existing
+external-SSD `juice-tests` VM with isolated shares. Coordinate with other VM
+users first; it starts a VM session only, not an app or test, and refuses an
+active VM or existing lease.
+
 Implementation and native acceptance are still in progress. See
 [acceptance](docs/acceptance.md), [performance](docs/performance.md),
 [capabilities](docs/capabilities.md), and the exact
