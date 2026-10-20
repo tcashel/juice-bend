@@ -4,6 +4,11 @@ set -euo pipefail
 umask 077
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)
 [[ $# == 2 ]] || { echo 'Usage: scripts/vm-session EXISTING_PAYLOAD NEW_ARTIFACTS' >&2; exit 2; }
+network=${JUICE_BEND_VM_NETWORK:-host}
+case "$network" in
+  host|shared) ;;
+  *) echo 'JUICE_BEND_VM_NETWORK must be host (default) or shared.' >&2; exit 2 ;;
+esac
 export TART_HOME=/Volumes/VM_disks/tart
 tart="$HOME/.local/bin/tart"
 vm=juice-tests
@@ -21,6 +26,7 @@ case "$payload:$artifacts" in *$'\n'*|*$'\r'*) echo 'Newlines are not allowed in
 nonce=$(cat "$payload/run-id")
 [[ "$nonce" =~ ^[A-Fa-f0-9]{32}$ || "$nonce" =~ ^[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$ ]] || exit 2
 mkdir "$artifacts"
+printf '%s\n' "$network" > "$artifacts/network-mode.txt"
 owner=$(printf '{"protocol":1,"nonce":"%s","pid":%s,"repository":"juice-bend"}' "$nonce" "$$")
 vm_pid= probe_pid= lease=0
 
@@ -96,7 +102,10 @@ printf '%s\n' "$owner" > "$lock/owner.json"
 lease=1
 [[ ! -e "$TART_HOME/.juice-cleanup-lock" && ! -L "$TART_HOME/.juice-cleanup-lock" ]] || exit 2
 stopped || { echo 'VM state changed while acquiring lease.' >&2; exit 2; }
-"$tart" run "$vm" --no-graphics --no-audio --no-usb-accessories --no-clipboard --net-host \
+run_args=(run "$vm" --no-graphics --no-audio --no-usb-accessories --no-clipboard)
+if [[ "$network" == host ]]; then run_args+=(--net-host); fi
+# Shared NAT is opt-in for dependency downloads; normal native validation uses host-only.
+"$tart" "${run_args[@]}" \
   "--dir=juice-bend-payload:$payload:ro" "--dir=juice-bend-results:$artifacts" \
   </dev/null > "$artifacts/tart.log" 2>&1 &
 vm_pid=$!
@@ -114,7 +123,7 @@ while (( SECONDS - started < 300 )); do
 done
 [[ "$ready" == 1 ]] || { echo 'Guest payload nonce was not confirmed within the bounded boot wait.' >&2; exit 2; }
 running "$vm_pid" || { echo 'Owned Tart process exited at readiness.' >&2; exit 2; }
-printf 'READY vm=%s nonce=%s owned_tart_pid=%s artifacts=%s\n' "$vm" "$nonce" "$vm_pid" "$artifacts"
+printf 'READY vm=%s network=%s nonce=%s owned_tart_pid=%s artifacts=%s\n' "$vm" "$network" "$nonce" "$vm_pid" "$artifacts"
 echo 'Session only; no app/test has run. Keep this process alive; Ctrl-C stops its owned VM.'
 status=0
 wait "$vm_pid" || status=$?

@@ -1,0 +1,57 @@
+Observed 2026-10-20 on Darwin arm64, macOS 27.0.1 (26A434).
+
+Official release: https://github.com/leanprover/lean4/releases/tag/v4.34.0
+Metadata: https://api.github.com/repos/leanprover/lean4/releases/tags/v4.34.0
+Tag commit: 293d5d0c0c3f3dded4688b3ccd6a33939ac5102b
+Asset: https://github.com/leanprover/lean4/releases/download/v4.34.0/lean-4.34.0-darwin_aarch64.tar.zst
+Exact archive bytes: 561666156
+Published and locally verified SHA256:
+69f263fa6e21bbc2466bbfb1affcd92479ee2714c883a07de548e099a5922932
+
+Shell DNS could not resolve github.com. The integration owner downloaded the
+official asset through its coordinated isolated Tart session and transferred it
+to build/tart/lean-3f57b9fb/artifacts/lean-4.34.0-darwin_aarch64.tar.zst.part.
+The receiving host independently rechecked size and SHA256. Archive inspection
+found 18342 entries, one lean-4.34.0-darwin_aarch64 root, and no absolute or
+parent-traversal paths. No upstream source or binary is committed.
+
+Installation command:
+./scripts/setup-lean build/tart/lean-3f57b9fb/artifacts/lean-4.34.0-darwin_aarch64.tar.zst.part
+
+Installed only under .tools/lean-4.34.0. The optional mise task is:
+mise run setup-lean
+It can also receive a previously downloaded official archive. This task is not
+part of baseline setup, does not change global tools/settings, and requires
+zstd on PATH. The existing host decompressor was Zstandard CLI v1.5.6 at
+/opt/homebrew/Caskroom/miniconda/base/bin/zstd; no decompressor was installed.
+Downloads use curl --disable and a fixed official URL/digest.
+
+Observed runtime identity:
+Lean (version 4.34.0, arm64-apple-darwin24.6.0, commit 293d5d0c0c3f3dded4688b3ccd6a33939ac5102b, Release)
+
+./scripts/prove compiled the pinned, unmodified upstream BendTT source under
+.tools/bendtt, then ran the real --verdict kernel check. The ordinary checker
+and kernel both printed ALL PROOFS CHECK and exited 0. First-run elapsed time
+including kernel compilation was 19.68 seconds; the cached repeat was 0.58
+seconds. These are individual /usr/bin/time -p observations on the shared host.
+
+Receipts: prove-first-run.{stdout,stderr,exit}.txt and
+prove.{stdout,stderr,exit}.txt. The earlier unavailable-kernel result is retained
+as prove-before-lean.{stdout,stderr,exit}.txt. prove-inputs.sha256 binds the exact
+laws, proof implementations, production Domain module, upstream kernel source,
+compiled kernel, and Lean/leanc binaries used by the successful cached run.
+
+All twelve existing laws passed unchanged: pinned_snapshot_survives_append,
+generation_isolation, page_within_request, page_within_snapshot,
+excluded_provider, excluded_repository, missing_not_exact, ambiguous_not_exact,
+empty_hunk_never_matches, threshold_below_never_matches,
+lower_score_never_wins, stable_tie_policy. These are the pure production
+guarantees stated in LAWS.bend; they do not prove filesystem capture coherence,
+SQLite transaction behavior, FFI/compiler lowering, full SHA256 correctness,
+or native UI behavior. Those remain separate test/observation boundaries.
+
+Local tooling sanity passed: shell syntax, optional mise setup-lean --check,
+idempotent existing-install check, scripts/doctor, and invalid-archive refusal
+in an isolated build directory with no installed destination. No law, proof,
+Bend revision, system PATH, global tool configuration, or OS security setting
+was changed. scripts/prove changes PATH only within its own process tree.

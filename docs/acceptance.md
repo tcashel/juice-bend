@@ -32,7 +32,7 @@ in isolated directories. See the [sanitized test receipt](receipts/test-summary.
 | A19 | Passed named native paths; physical input/IME unverified | Final guest explicit Command+A/C/V preserved exact `café 中文 🙂`; ASCII replacement produced `keyboard-ok`, and Shift+Arrow copied `ok`. Reader drag copied exact eight-byte `[assista`, and scrolling worked. Direct Unicode keystroke automation instead delivered corrupted Text, so physical Unicode typing and IME remain unverified. Earlier ambiguous host-tool modifiers are not treated as equivalent evidence. See `native-validation.md`. |
 | A20 | Partial native responsiveness and resource evidence | Final guest GUI visibly accepted `live-capture-ok` and Pause during the 100,016-record capture. Final GUI physical footprint was 41.1M (peak 41.5M) before rebuild and 46.2M (peak 46.2M) afterward. The 80 ms scheduler measured 1.55% of one core on intermediate `0a6243d5…`, which shares the final GUI source hash; this is not final-binary CPU evidence. The earlier callback trace retains its identified instrumented-build timing results. No input-to-photon percentile or sustained 60 Hz scroll result is claimed. |
 | A21 | Passed scoped audit | Wrappers use private temporary roots and `umask 077`; source/process audit confirms explicit roots, bounded read-only Git and no implicit provider-home scan. Publication inventory contains synthetic tests/receipts, no private logs, databases or reference-source snapshots. Original Juice was used read-only and its pre-existing edits remain present. |
-| A22 | Partial | Twelve production laws pass ordinary Bend checking and BendTT translation. Stronger kernel execution is **not run** because exact Lean 4.34.0 is unavailable. See the production mapping below. |
+| A22 | Passed named law scope | Twelve production laws pass ordinary Bend checking and the pinned BendTT kernel through Lean 4.34.0. `scripts/prove` exits 0. Exact source/tool hashes and archive provenance are recorded in `receipts/prove-inputs.sha256` and `receipts/lean-toolchain.txt`. The pure laws do not establish foreign effects, UI or hashing correctness. |
 | A23 | Passed tested boundaries | Exact decimal/SQLite boundaries, U32 overflow rejection and large timestamp comparisons pass. Seven native sparse-file tests confirm exact maximum size/addressing, explicit overflow at 2^32 and 2^32+1, and production capture refusal with no publication. A complete UINT32_MAX-sized import and total-library maximum are not measured. |
 | A24 | Passed implementation/review scope | Provider/repository/role/date scopes cross parser, storage, CLI, reader and GUI through frozen selection metadata. Independent review found and corrected an unscoped history excerpt and a lost initial hit ordinal; mixed-repository history and late-hit GUI regressions pass. See the maintainability record below; native interactions retain their separate acceptance status. No native bridge change was needed. |
 
@@ -66,7 +66,7 @@ Observed commands include:
 - `./scripts/test tests/sql_batches.bend`: 131 checks cover bounded projection copies/publication/deletion, signed FTS keys, large payloads, legacy migration and rollback/retry after a later batch fails.
 - `./scripts/bend PROOF.bend --check-only`: `ALL PROOFS CHECK`.
 - `./scripts/bend PROOF.bend -o /tmp/juice-bend-domain-laws.bendtt`: translation succeeds.
-- `./scripts/prove`: exits 1 after ordinary checking because the stronger kernel prerequisites are unavailable. Exact [stdout](receipts/prove.stdout.txt), [stderr](receipts/prove.stderr.txt) and [exit status](receipts/prove.exit.txt) are retained.
+- `./scripts/prove`: exits 0 after ordinary checking and the pinned BendTT kernel verdict. Exact [stdout](receipts/prove.stdout.txt), [stderr](receipts/prove.stderr.txt), [exit status](receipts/prove.exit.txt) and [input hashes](receipts/prove-inputs.sha256) are retained. The previous missing-prerequisite result is preserved separately as `prove-before-lean.*`.
 
 The current completed `./scripts/test` run is recorded in
 [test-summary.txt](receipts/test-summary.txt). GUI and CLI
@@ -116,10 +116,13 @@ events or macOS clipboard delivery. Those boundaries require their independent
 tests and observations. No unsafe proof or separate proof-only algorithm is
 used. `scripts/prove` fails visibly when the stronger kernel prerequisite is
 missing; ordinary checking is not represented as kernel verification.
-The local mise registry has no Lean entry. An explicit
-`github:leanprover/lean4@4.34.0` install dry run with all mise data/state/cache
-paths inside this repository fails DNS resolution. No global installation,
-permission escalation or substitute kernel version was attempted.
+The local mise registry has no Lean entry. The optional `setup-lean` task now
+downloads the exact official arm64 archive or accepts an existing local copy,
+verifies its pinned SHA-256, and installs only under `.tools/lean-4.34.0`.
+The observed installation used the authorized Tart guest for the official
+download after host DNS failed. No global tool installation or substitute
+kernel version was used. Twelve laws passed with the original domain source
+hash recorded in the receipt; later domain changes require a new verdict.
 
 ## Size and coverage boundaries
 

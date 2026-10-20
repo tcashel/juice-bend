@@ -35,7 +35,9 @@ if [ -x /usr/bin/sqlite3 ]; then
 else
   printf 'UNVERIFIED: system SQLite diagnostic executable is unavailable\n'
 fi
-if command -v lean >/dev/null 2>&1; then
+if [ -e .tools/lean-4.34.0 ] || [ -L .tools/lean-4.34.0 ]; then
+  ./scripts/setup-lean --check || failed=1
+elif command -v lean >/dev/null 2>&1; then
   lean --version
 else
   printf 'UNAVAILABLE: Lean 4.34.0; the stronger proof kernel requires this exact version\n'

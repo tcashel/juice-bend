@@ -14,6 +14,11 @@ done
 # Upstream otherwise caches the kernel under ~/.bend. Build the identical
 # pinned upstream source locally, without changing HOME or the runtime.
 if [ -z "${BENDTT:-}" ]; then
+  if [ -e "$ROOT/.tools/lean-4.34.0" ] || [ -L "$ROOT/.tools/lean-4.34.0" ]; then
+    ./scripts/setup-lean --check
+    PATH="$ROOT/.tools/lean-4.34.0/bin:$PATH"
+    export PATH
+  fi
   if ! command -v lean >/dev/null 2>&1 || ! command -v leanc >/dev/null 2>&1; then
     printf 'Ordinary checking passed; kernel NOT RUN: Lean and leanc 4.34.0 are required.\n' >&2
     exit 1
@@ -24,9 +29,11 @@ if [ -z "${BENDTT:-}" ]; then
   esac
   kernel="$ROOT/.tools/bendtt"
   mkdir -p "$kernel"
-  if [ ! -x "$kernel/bendtt" ] || [ "$ROOT/.tools/bend/bend2/bendtt.lean" -nt "$kernel/bendtt" ]; then
+  source_digest=$(shasum -a 256 "$ROOT/.tools/bend/bend2/bendtt.lean" | awk '{print $1}')
+  if [ ! -x "$kernel/bendtt" ] || [ "$(cat "$kernel/SOURCE_SHA256" 2>/dev/null || true)" != "$source_digest" ]; then
     cp "$ROOT/.tools/bend/bend2/bendtt.lean" "$kernel/bendtt.lean"
     (cd "$kernel" && lean -c bendtt.c bendtt.lean && leanc -O3 -DNDEBUG bendtt.c -o bendtt)
+    printf '%s\n' "$source_digest" > "$kernel/SOURCE_SHA256"
   fi
   export BENDTT="$kernel/bendtt"
 fi

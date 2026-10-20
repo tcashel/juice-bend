@@ -1,5 +1,24 @@
 # Implementation checkpoint
 
+## Active parity goal
+
+The owner's follow-up requests fixing slow append, closing validation gaps,
+matching the SwiftUI Juice feature set without embeddings, and then UI polish.
+This goal is active. The published baseline is PR #1 commit
+`cf066af054346c2ee900ea8324f3a23f8e81482c`; its measured results follow below.
+Current iteration: bounded raw verification/context insertion and bit-identical
+SHA throughput work; bounded result paging and saved-version navigation; owned
+storage inventory. The exact Lean 4.34.0 archive was obtained through the
+authorized Tart guest, independently hash-checked and installed locally.
+The pinned BendTT kernel now passes all twelve production laws. Its exact input
+hashes are in `docs/receipts/prove-inputs.sha256`; SHA optimization will require
+a fresh verdict. New uncommitted application changes
+are not covered by the baseline test counts until rerun. Root owns integration
+and Tart lifecycle. The owner no longer requires cross-chat VM coordination;
+the runner still checks stopped state and acquires its exclusive lease.
+
+## Published baseline
+
 2026-10-20, local macOS 27.0.1 arm64. Branch:
 `codex/juice-bend-implementation`; existing draft PR #1. The native core workflow
 is implemented and observed on both the host and the coordinated local Tart
@@ -67,9 +86,10 @@ Same-executable Bend workers do not depend on the existing Juice process.
   p95 **8 ms**, repository-scoped late page p95 **18 ms**. All assertions and
   31 frozen source/build-input hashes passed. Five-trial p95 is the observed
   maximum. See `docs/performance.md`; long-history append remains slow.
-- Twelve production laws pass ordinary checking and BendTT translation.
-  `scripts/prove` again exited 1 after ordinary checking because exact
-  Lean/leanc 4.34.0 is unavailable. Stronger-kernel verification did not run.
+- At this baseline, twelve production laws passed ordinary checking and BendTT
+  translation. The subsequent local Lean installation closes the stronger
+  kernel gap: `scripts/prove` exits 0 with `ALL PROOFS CHECK`. Historical
+  unavailability receipts are preserved as `prove-before-lean.*`.
 - Independent review found no blocking source/ownership/publication regression.
   No app source, bridge or upstream runtime changed after the full suite.
 
@@ -91,10 +111,12 @@ reference-source snapshots.
 
 1. Inspect Git status and branch/PR state; preserve local changes. PR #1 remains
    draft, with publication authorized only in `tcashel/juice-bend`. No merge.
-2. Obtain exact Lean/leanc 4.34.0 through the pinned upstream path and run
-   `mise run prove`. Local discovery and the official download DNS check failed;
-   do not substitute a kernel or claim ordinary checking is a verdict.
-3. Coordinate a new Tart lease before further guest work. Current native
+2. Re-run `mise run prove` after domain changes. Exact Lean/leanc 4.34.0 and the
+   pinned upstream kernel are now installed under `.tools`; no global install.
+3. Acquire a new Tart lease before further guest work. The owner no longer
+   requires cross-chat coordination. The dependency-download guest used
+   explicit shared networking and is stopped with its lease removed. Normal
+   native validation still defaults to host-only networking. Current native
    Command/Shift/clipboard checks are complete; remaining input work is direct
    Unicode typing/IME plus precise input-to-display and scroll measurements.
    Use the diagnostic's opt-in native event log to distinguish injected events

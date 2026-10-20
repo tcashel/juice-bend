@@ -82,7 +82,11 @@ mise run smoke-ui
 ```
 
 `prove` distinguishes ordinary Bend checking from the stronger kernel.
-The latter requires Lean 4.34.0 and has not run on the implementation host.
+Both now pass for the twelve production laws on the implementation host.
+The optional `mise run setup-lean` installs the exact Lean 4.34.0 archive into
+`.tools` after SHA-256 verification; it needs `zstd` on PATH. An already
+downloaded official archive can be supplied as its only argument. No global
+tool installation is performed. See the [toolchain receipt](docs/receipts/lean-toolchain.txt).
 Tests, fixture generators, benchmarks and proof logic are Bend.
 
 `mise run build-trace` builds the optional bounded GUI callback diagnostic;
@@ -92,6 +96,10 @@ The optional `mise run vm-session -- PAYLOAD NEW_ARTIFACTS` reserves the existin
 external-SSD `juice-tests` VM with isolated shares. Coordinate with other VM
 users first; it starts a VM session only, not an app or test, and refuses an
 active VM or existing lease.
+Networking defaults to host-only. For an explicit toolchain download session,
+`JUICE_BEND_VM_NETWORK=shared mise run vm-session -- PAYLOAD NEW_ARTIFACTS`
+uses Tart's shared NAT; the selected mode is recorded in the artifacts. Native
+app validation should normally keep the host-only default.
 
 Implementation and native acceptance are still in progress. See
 [acceptance](docs/acceptance.md), [performance](docs/performance.md),

@@ -14,7 +14,7 @@ Observed locally on 2026-10-20:
 | System SQLite diagnostic | `/usr/bin/sqlite3`: 3.54.0, FTS5 enabled; bridge probe is authoritative for the linked library |
 | Owned library schema | SQLite `user_version=2`; latest-only FTS rowids, with additive `projection_checks` and `snapshot_context` tables |
 | Derived parser state | `providers-v4-utc-context-relay`; context seals add `incoming-context-v1`. Missing or stale state requires verified replay |
-| Stronger proof kernel | Pinned upstream requires Lean 4.34.0; not installed at initial inspection |
+| Stronger proof kernel | Lean 4.34.0 arm64, commit `293d5d0c0c3f3dded4688b3ccd6a33939ac5102b`; repository-local install from the SHA-256-pinned official archive. Twelve production laws pass pinned BendTT `--verdict`. See `receipts/lean-toolchain.txt` |
 | Juice baseline | `ca66da7d9cc56f665900ba71ee9d97c37787c77d` from the specification |
 | Read-only Juice checkout HEAD | `a9767a7296886301bf813fd3d3f99fa03fea05d0` at inspection |
 

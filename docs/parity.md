@@ -5,6 +5,32 @@ Inspected read-only Juice revision:
 to its source tree. No reference source or personal history is copied here.
 This matrix records contracts and current evidence, not a completed port.
 
+## Expanded owner goal — 2026-10-20
+
+The owner now requests feature parity with the SwiftUI app, excluding embeddings,
+followed by UI polish. The current comparison uses the immutable, already-cached
+Juice commit `829ff9b50c6583b1f5b2f5fa663920bdda316b5a` (including Storage
+settings). The original checkout remains at `a9767a7296886301bf813fd3d3f99fa03fea05d0`
+with its existing edits untouched. Reference inspection uses read-only Git
+objects; no source snapshots or real histories are copied here.
+
+Priority order: fix long-history append; close native/proof validation gaps;
+complete bounded result paging and saved-version navigation; repository/file
+provenance browsing; Settings and recorded activity; richer tool/subagent/archive
+support; full Usage and deterministic context preparation; owned-storage
+management and explicit opt-in connection/subscription surfaces. UI polish
+follows functional parity. These are outstanding capabilities, not claims that
+the current app implements them. Existing language, privacy, no-inference and
+no-distribution boundaries remain in force. Tests use synthetic providers and
+must not query real accounts or alter provider configuration by default.
+
+The pinned upstream window API cannot resize windows or expose font shaping.
+An upstream-supported compatible revision may resolve that boundary; first-party
+native UI adapters remain excluded. Complete shaping/accessibility parity is
+not established by the current bitmap reader.
+
+## Existing core behavior
+
 | Behavior | Reference location | Bend contract / status | Evidence or difference |
 |---|---|---|---|
 | Separate owned history | `docs/adr/0037-preserve-search-and-provenance.md` | Raw capture authority; original logs and Juice storage remain read-only | Storage integration acceptance recorded in `acceptance.md` |
@@ -30,9 +56,10 @@ This matrix records contracts and current evidence, not a completed port.
 | Native reading/search | Reference native History and transcript views | Native Bend UI; no Swift process, webview or inference dependency | Native interaction evidence recorded in `acceptance.md` |
 | Retained rebuild and capture responsiveness | Preserve/search ADRs | Atomic bounded SQL publication with immutable raw ownership; monotonic refresh and idle scheduling | Final Tart build captured 100,016 records, accepted visible input/Pause during capture, and rebuilt 125,020 search events after the source was moved away. Direct IME and input-to-display latency remain unverified |
 
-Reference-only upgrade migration, subscription monitoring, remote access,
-semantic search, signed releases and retired advice features are intentionally
-outside Juice Bend's scope.
+Migration from the original Juice database, semantic/model features, signed
+releases and retired inference-based advice remain excluded. The expanded
+parity goal includes explicit opt-in connection/subscription behavior; those
+surfaces are still unimplemented and must not read private accounts by default.
 
 Backend evidence: `tests/provenance.bend` passes 36 assertions;
 `tests/evidence.bend` passes 38 assertions and four isolated fixture commands.

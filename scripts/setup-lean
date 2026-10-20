@@ -1,0 +1,59 @@
+#!/bin/sh
+set -eu
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+VERSION=4.34.0
+SHA256=69f263fa6e21bbc2466bbfb1affcd92479ee2714c883a07de548e099a5922932
+ARCHIVE=lean-4.34.0-darwin_aarch64.tar.zst
+INSTALL="$ROOT/.tools/lean-$VERSION"
+check_install() {
+  if [ -L "$INSTALL" ] || [ ! -f "$INSTALL/SOURCE_SHA256" ] ||
+     [ "$(cat "$INSTALL/SOURCE_SHA256" 2>/dev/null || true)" != "$SHA256" ] ||
+     [ ! -x "$INSTALL/bin/lean" ] || [ ! -x "$INSTALL/bin/leanc" ]; then
+    printf 'Local Lean has no matching archive receipt; preserve it and inspect: %s\n' "$INSTALL" >&2
+    return 1
+  fi
+  version=$("$INSTALL/bin/lean" --version)
+  case "$version" in
+    'Lean (version 4.34.0,'*|'Lean (version 4.34.0)'*) printf '%s\n' "$version" ;;
+    *) printf 'Expected Lean 4.34.0: %s\n' "$version" >&2; return 1 ;;
+  esac
+}
+if [ "$#" -gt 1 ]; then
+  printf 'Usage: ./scripts/setup-lean [--check | official-archive.tar.zst]\n' >&2
+  exit 2
+fi
+if [ "${1:-}" = --check ] || [ -e "$INSTALL" ] || [ -L "$INSTALL" ]; then
+  check_install
+  exit
+fi
+if [ "$(uname -s)" != Darwin ] || [ "$(uname -m)" != arm64 ]; then
+  printf 'This optional pinned Lean package targets macOS arm64.\n' >&2
+  exit 1
+fi
+if ! command -v zstd >/dev/null 2>&1; then
+  printf 'The official archive needs zstd on PATH; no global tools were changed.\n' >&2
+  exit 1
+fi
+mkdir -p "$ROOT/.tools"
+stage=$(mktemp -d "$ROOT/.tools/lean-install.XXXXXX")
+archive=${1:-"$stage/$ARCHIVE"}
+if [ "$#" -eq 0 ]; then
+  curl --disable --fail --location --proto '=https' --tlsv1.2 \
+    "https://github.com/leanprover/lean4/releases/download/v$VERSION/$ARCHIVE" -o "$archive"
+fi
+actual=$(shasum -a 256 "$archive" | awk '{print $1}')
+if [ "$actual" != "$SHA256" ]; then
+  printf 'Lean archive checksum mismatch; nothing installed. Staging: %s\n' "$stage" >&2
+  exit 1
+fi
+# The digest pins the official archive before any extraction or execution.
+zstd -dc "$archive" | tar -xf - -C "$stage"
+unpacked="$stage/lean-$VERSION-darwin_aarch64"
+printf '%s\n' "$SHA256" > "$unpacked/SOURCE_SHA256"
+if [ -e "$INSTALL" ] || [ -L "$INSTALL" ]; then
+  printf 'Lean destination appeared during extraction; preserved staging: %s\n' "$stage" >&2
+  exit 1
+fi
+mv "$unpacked" "$INSTALL"
+check_install
+printf 'Installed only in %s\n' "$INSTALL"

@@ -21,7 +21,7 @@ is recorded in `acceptance.md`.
 | Current application CLI | Final executable passed isolated demo/status/search/scoped-read/verify/rebuild and identical-bundle launcher status. Earlier broader export/Usage/file/commit checks retain their separate build identities in `receipts/cli-final.txt` |
 | Read-only processes | Pinned Base exposes bounded output and timeout; application allowlist remains a Bend responsibility |
 | Clipboard / Unicode / modifiers | Final native Command+A/C/V, exact `café 中文 🙂` clipboard roundtrip, replacement and Shift+Arrow selection passed in Tart with explicit modifier events. Direct Unicode typing/IME remains unverified: the automation transport itself delivered altered native Text events |
-| Stronger kernel | Requires exact Lean 4.34.0 or an explicit built `BENDTT`; missing prerequisites fail `scripts/prove` |
+| Stronger kernel | Twelve production laws pass the pinned BendTT kernel with exact Lean 4.34.0 on macOS arm64. Optional repository-local setup verifies the official archive; missing prerequisites still fail `scripts/prove`. See `receipts/lean-toolchain.txt` and `receipts/prove-inputs.sha256` |
 
 `scripts/test` builds Bend test entry points and launches each from its own
 temporary directory. `scripts/bench` executes Bend workload logic from an

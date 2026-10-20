@@ -11,6 +11,10 @@ BEND_REVISION = "60ca80aedeec9d8f0629b5f10dd19457d8ad67af"
 description = "Fetch the pinned Bend compiler into .tools"
 run = "./scripts/setup"
 
+[tasks.setup-lean]
+description = "Optionally install exact Lean 4.34.0 locally for proof kernel checks"
+run = "./scripts/setup-lean"
+
 [tasks.doctor]
 run = "./scripts/doctor"
 

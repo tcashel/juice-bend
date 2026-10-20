@@ -1,1 +1,3 @@
-Ordinary checking passed; kernel NOT RUN: Lean and leanc 4.34.0 are required.
+real 0.58
+user 0.77
+sys 0.05
