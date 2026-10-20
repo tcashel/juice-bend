@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+umask 077
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$ROOT"
+entry=benchmarks/main.bend
+if [ ! -f "$entry" ]; then
+  printf 'Benchmark implementation missing: %s; no performance result is available.\n' "$entry" >&2
+  exit 1
+fi
+./scripts/build "$entry" build/juice-bend-bench
+data=$(mktemp -d "${TMPDIR:-/tmp}/juice-bend-bench.XXXXXX")
+printf 'Benchmark data directory: %s\n' "$data" >&2
+# Workload generation, timing, statistics and JSON encoding belong to Bend.
+cd "$data"
+exec "$ROOT/build/juice-bend-bench" "$@"

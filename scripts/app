@@ -1,0 +1,51 @@
+#!/bin/sh
+set -eu
+umask 077
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$ROOT"
+if [ "$#" -gt 1 ]; then
+  printf 'Usage: ./scripts/app [new-output.app]\n' >&2
+  exit 2
+fi
+bundle=${1:-"$ROOT/build/Juice Bend.app"}
+case "$bundle" in
+  *.app) ;;
+  *) printf 'Output must end in .app\n' >&2; exit 2 ;;
+esac
+if [ -e "$bundle" ]; then
+  printf 'Bundle already exists; choose a new output path so a running app is preserved: %s\n' "$bundle" >&2
+  exit 1
+fi
+mkdir -p "$(dirname -- "$bundle")" build
+stage=$(mktemp -d "$ROOT/build/juice-bend-app.XXXXXX")
+mkdir -p "$stage/Contents/MacOS"
+./scripts/build src/main.bend "$stage/Contents/MacOS/juice-bend"
+cat > "$stage/Contents/Info.plist" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleExecutable</key><string>launch</string>
+<key>CFBundleIdentifier</key><string>dev.cinderworks.juice-bend</string>
+<key>CFBundleName</key><string>Juice Bend</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+<key>NSHighResolutionCapable</key><true/>
+</dict></plist>
+PLIST
+cat > "$stage/Contents/MacOS/launch" <<'LAUNCH'
+#!/bin/sh
+umask 077
+exec "$(dirname -- "$0")/juice-bend" "$@"
+LAUNCH
+chmod +x "$stage/Contents/MacOS/launch"
+/usr/bin/plutil -lint "$stage/Contents/Info.plist"
+# The output was required to be absent; never replace an active existing bundle.
+if [ -e "$bundle" ]; then
+  printf 'Output appeared while compiling; staged bundle retained at %s\n' "$stage" >&2
+  exit 1
+fi
+mv -n "$stage" "$bundle"
+if [ -d "$stage" ]; then
+  printf 'Output appeared while packaging; staged bundle retained at %s\n' "$stage" >&2
+  exit 1
+fi
+printf 'Local app: %s\n' "$bundle"

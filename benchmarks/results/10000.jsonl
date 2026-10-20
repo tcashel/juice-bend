@@ -1,0 +1,15 @@
+{"benchmark":"juice-bend-backend","generator":1,"seed":1337,"raw_records":10000,"expected_normalized_events":12500,"session_count":1,"ui_timings":"not_measured","memory":"not_measured"}
+{"fixture_ready":true,"source_bytes":3545358}
+{"operation":"empty_library_open","duration_ms":8}
+{"operation":"first_import","duration_ms":3004}
+{"operation":"unchanged_refresh","duration_ms":637}
+{"operation":"append_16_raw_records","duration_ms":1238}
+{"operation":"first_search_after_import","duration_ms":27}
+{"operation":"warm_scoped_search","trials_ms":[24,24,24,24,26],"median_ms":24,"p95_ms":26,"trials":5}
+{"operation":"first_page_beginning_100_raw_records","duration_ms":8}
+{"operation":"first_page_middle_100_raw_records","duration_ms":9}
+{"operation":"first_page_late_100_raw_records","duration_ms":8}
+{"operation":"warm_late_page_100_raw_records","trials_ms":[8,7,7,7,8],"median_ms":7,"p95_ms":8,"trials":5}
+{"sqlite_logical_page_bytes":19480576,"accepted_snapshots":2,"raw_records_latest":10016,"normalized_events_latest":12520}
+{"operation":"existing_library_open_and_status","duration_ms":4}
+{"benchmark_complete":true}

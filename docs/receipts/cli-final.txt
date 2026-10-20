@@ -1,0 +1,37 @@
+Juice Bend final application CLI integration receipt
+Date: 2026-10-20
+Host: local macOS / Apple Silicon
+Executable: build/juice-bend-next
+SHA-256: 4ad55c63cb542b68740e032f05ff528c25c3ce7250a6f07c1bfbd0d3f25f5d49
+
+The library was prepared in a new private temporary directory with the Bend
+synthetic demo and the isolated synthetic Git provenance fixture. No default
+home history, original Juice data or remote attachment was read. The following
+commands all exited 0 on this final binary:
+
+history claude /synthetic/juice-bend-demo
+usage 1 0 4
+session-scope 1 0 4 claude /synthetic/juice-bend-demo assistant 2026-10-20
+export-range-scope 1 0 4 claude /synthetic/juice-bend-demo assistant 2026-10-20 OUTPUT
+why-file SYNTHETIC_GIT_REPOSITORY a.bend 1 1
+why-commit SYNTHETIC_GIT_REPOSITORY FIXTURE_HEAD
+
+Each invocation used an explicit --data-dir ISOLATED_DIRECTORY. Placeholder
+paths above omit temporary local names; OUTPUT was a new file in that directory.
+
+Observed results:
+- History returned ten column labels and ten row fields, including
+  first_event_ordinal, with the selected repository's excerpt.
+- Usage identified the selected physical range and quoted recorded token
+  counters. The demo lacks a message.id, so deduplicated subtotals correctly
+  remained unknown rather than claiming a total.
+- The scoped reader returned exactly three assistant events, preserving
+  provider/repository/role/date scope and full captured citations.
+- The new Markdown export had the same three visible events and explicitly
+  labeled its bounded physical-record range.
+- File Why and commit Why returned the fixture's unique explicit-trailer
+  association and captured request. They did not infer tool success or rationale.
+
+Raw JSON and the exported synthetic Markdown remain under ignored build/
+and the private temporary fixture directory. This is CLI integration evidence;
+it is not a native window or input observation.

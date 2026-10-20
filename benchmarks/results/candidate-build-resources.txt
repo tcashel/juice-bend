@@ -1,0 +1,3 @@
+Built build/juice-bend-measured
+       69.59 real        78.52 user         4.43 sys
+time: sysctl kern.clockrate: Operation not permitted

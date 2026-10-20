@@ -180,6 +180,43 @@ def codex_output(value: Json.Json) -> String:
     case _:
       value_text(value)
 
+def encrypted_key(fields: List<&2,Json.Field>) -> Bool:
+  match fields:
+    case []:
+      False{}
+    case Json.JField{name,_} <> rest:
+      String.eq(name,"encrypted_content") || encrypted_key(rest)
+
+def field_values(fields: List<&2,Json.Field>) -> List<&2,Json.Json>:
+  match fields:
+    case []:
+      []
+    case Json.JField{_,value} <> rest:
+      value <> field_values(rest)
+
+def encrypted_step(value: Json.Json,pending: List<&2,Json.Json>,
+  next: List<&2,Json.Json> -> Bool) -> Bool:
+  match value:
+    case Json.JObject{+fields}:
+      encrypted_key(fields) || next(List.append(&2,Json.Json,field_values(fields),pending))
+    case Json.JArray{items}:
+      next(List.append(&2,Json.Json,items,pending))
+    case _:
+      next(pending)
+
+def encrypted_scan(fuel: Nat,pending: List<&2,Json.Json>) -> Bool:
+  match fuel pending:
+    case _ Nil{}:
+      False{}
+    case 0n _:
+      True{}
+    case 1n+left Con{value,rest}:
+      encrypted_step(value,rest,next => encrypted_scan(left,next))
+
+def relay_readable(+payload: Json.Json) -> Bool:
+  String.eq(content_coverage(Json.field(payload,"content")),"complete") &&
+    Bool.not(encrypted_scan(1048576n,[payload]))
+
 def agent_relay(root: Json.Json, +payload: Json.Json, readable: Bool) -> List<&2, Record>:
   match readable:
     case True{}:
@@ -192,7 +229,7 @@ def codex_response(kind: String, root: Json.Json, +payload: Json.Json) -> List<&
     case "":
       [codex_make(root, payload, Json.get(payload, "role"), content(Json.field(payload, "content"), "\n\n"), "", "", "", "", content_coverage(Json.field(payload, "content")))]
     case "agent_message":
-      agent_relay(root, payload, text_blocks(Json.items(Json.field(payload, "content"))))
+      agent_relay(root, payload, relay_readable(payload))
     case "message":
       [codex_make(root, payload, Json.get(payload, "role"), content(Json.field(payload, "content"), "\n\n"), "", "", "", "", content_coverage(Json.field(payload, "content")))]
     case "function_call":

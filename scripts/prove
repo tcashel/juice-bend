@@ -1,0 +1,33 @@
+#!/bin/sh
+set -eu
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$ROOT"
+for source in LAWS.bend PROOF.bend; do
+  if [ ! -f "$source" ]; then
+    printf 'Missing required proof source: %s\n' "$source" >&2
+    exit 1
+  fi
+done
+# Unfilled LAWS.bend alone intentionally fails the checker. PROOF imports and
+# fulfills those same laws; checking that complete book is the ordinary gate.
+./scripts/bend PROOF.bend --check-only
+# Upstream otherwise caches the kernel under ~/.bend. Build the identical
+# pinned upstream source locally, without changing HOME or the runtime.
+if [ -z "${BENDTT:-}" ]; then
+  if ! command -v lean >/dev/null 2>&1 || ! command -v leanc >/dev/null 2>&1; then
+    printf 'Ordinary checking passed; kernel NOT RUN: Lean and leanc 4.34.0 are required.\n' >&2
+    exit 1
+  fi
+  case "$(lean --version)" in
+    'Lean (version 4.34.0,'*|'Lean (version 4.34.0)'*) ;;
+    *) printf 'Kernel NOT RUN: expected Lean 4.34.0.\n' >&2; exit 1 ;;
+  esac
+  kernel="$ROOT/.tools/bendtt"
+  mkdir -p "$kernel"
+  if [ ! -x "$kernel/bendtt" ] || [ "$ROOT/.tools/bend/bend2/bendtt.lean" -nt "$kernel/bendtt" ]; then
+    cp "$ROOT/.tools/bend/bend2/bendtt.lean" "$kernel/bendtt.lean"
+    (cd "$kernel" && lean -c bendtt.c bendtt.lean && leanc -O3 -DNDEBUG bendtt.c -o bendtt)
+  fi
+  export BENDTT="$kernel/bendtt"
+fi
+exec ./scripts/bend PROOF.bend --verdict
