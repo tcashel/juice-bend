@@ -16,18 +16,18 @@ def state() -> Gui.State:
   Gui.State{0,"/tmp/juice-bend-gui-contract","/usr/bin/false",
     UI.set_reader(UI.set_query(UI.init(),"needle"),"Pinned","stable evidence"),
     Gui.Selection{[],"7",0,3,[],Gui.empty_filters()},Gui.Form{0,"needle","",""},
-    Gui.Jobs{2,None{},None{},None{},False{}},0,0}
+    Gui.Jobs{2,None{},None{},None{},False{}},0n,0}
 
 def ui(s: Gui.State) -> UI.State:
-  Gui.State{db,dir,program,ui,selection,form,jobs,ticks,serial} = s
+  Gui.State{db,dir,program,ui,selection,form,jobs,refresh_at,serial} = s
   ui
 
 def snapshot(s: Gui.State) -> String:
-  Gui.State{db,dir,program,ui,Gui.Selection{items,snap,start,displayed,args,filters},form,jobs,ticks,serial} = s
+  Gui.State{db,dir,program,ui,Gui.Selection{items,snap,start,displayed,args,filters},form,jobs,refresh_at,serial} = s
   snap
 
 def mode(s: Gui.State) -> U32:
-  Gui.State{db,dir,program,ui,selection,Gui.Form{mode,search,source,blame},jobs,ticks,serial} = s
+  Gui.State{db,dir,program,ui,selection,Gui.Form{mode,search,source,blame},jobs,refresh_at,serial} = s
   mode
 
 def wanted_args(value: Maybe<&2,Gui.Request>) -> String:
@@ -38,7 +38,7 @@ def wanted_args(value: Maybe<&2,Gui.Request>) -> String:
       String.join(args,"|")
 
 def wanted(s: Gui.State) -> String:
-  Gui.State{db,dir,program,ui,selection,form,Gui.Jobs{revision,wanted,reader,writer,paused},ticks,serial} = s
+  Gui.State{db,dir,program,ui,selection,form,Gui.Jobs{revision,wanted,reader,writer,paused},refresh_at,serial} = s
   wanted_args(wanted)
 
 def result_text(text: String) -> Gui.Reply:
@@ -74,13 +74,13 @@ def readers() -> IO(Unit):
 
 def initial() -> IO(Unit):
   +empty = {Gui.State{0,"/tmp/juice-bend-gui-contract","/usr/bin/false",UI.init(),
-    Gui.Selection{[],"",0,0,[],Gui.empty_filters()},Gui.Form{0,"","",""},Gui.Jobs{0,None{},None{},None{},False{}},0,0} : Gui.State}
+    Gui.Selection{[],"",0,0,[],Gui.empty_filters()},Gui.Form{0,"","",""},Gui.Jobs{0,None{},None{},None{},False{}},0n,0} : Gui.State}
   +next = Gui.with_rows(empty,[Gui.Item{"9",0,"initial source","claude","/tmp/repo","2",Gui.empty_filters()}])
   require(String.eq(wanted(next),"session-scope|9|0|40||||"),"initial unpinned browse opens first accepted snapshot")
 
 def initial_late_hit() -> IO(Unit):
   +empty = {Gui.State{0,"/tmp/juice-bend-gui-contract","/usr/bin/false",UI.init(),
-    Gui.Selection{[],"",0,0,[],Gui.empty_filters()},Gui.Form{0,"","",""},Gui.Jobs{0,None{},None{},None{},False{}},0,0} : Gui.State}
+    Gui.Selection{[],"",0,0,[],Gui.empty_filters()},Gui.Form{0,"","",""},Gui.Jobs{0,None{},None{},None{},False{}},0n,0} : Gui.State}
   +next = Gui.with_rows(empty,[Gui.Item{"9",500,"late matching record","codex","/tmp/repo","2",
     Query.Filters{"","codex","/tmp/repo","assistant","2026-10-01"}}])
   require(String.eq(wanted(next),"session-scope|9|500|40|codex|/tmp/repo|assistant|2026-10-01"),
@@ -105,11 +105,11 @@ def filters() -> IO(Unit):
     require(String.eq(blame_result(Gui.blame_fields(String.split("/tmp/repo|../escape|x|4",'|'))),"error"),"invalid Blame quantities are rejected")
 
 def result_items(s: Gui.State) -> List<&2,Gui.Item>:
-  Gui.State{db,dir,program,ui,Gui.Selection{items,snap,start,displayed,args,filters},form,jobs,ticks,serial} = s
+  Gui.State{db,dir,program,ui,Gui.Selection{items,snap,start,displayed,args,filters},form,jobs,refresh_at,serial} = s
   items
 
 def revision(s: Gui.State) -> U32:
-  Gui.State{db,dir,program,ui,selection,form,Gui.Jobs{revision,wanted,reader,writer,paused},ticks,serial} = s
+  Gui.State{db,dir,program,ui,selection,form,Gui.Jobs{revision,wanted,reader,writer,paused},refresh_at,serial} = s
   revision
 
 def ui_status(s: UI.State) -> String:
@@ -166,7 +166,7 @@ def export_selection() -> IO(Unit):
     "export-displayed|/tmp/export.md|immutable displayed evidence"),"Blame export carries exact displayed evidence without rerunning Git")
 
 def selected_filters(s: Gui.State) -> Query.Filters:
-  Gui.State{db,dir,program,ui,Gui.Selection{items,snap,start,displayed,args,filters},form,jobs,ticks,serial} = s
+  Gui.State{db,dir,program,ui,Gui.Selection{items,snap,start,displayed,args,filters},form,jobs,refresh_at,serial} = s
   filters
 
 def scope_values() -> Query.Filters:
@@ -207,12 +207,12 @@ def writer_pending(value: Maybe<&2,Gui.Pending>) -> Bool:
       True{}
 
 def has_writer(s: Gui.State) -> Bool:
-  Gui.State{db,dir,program,ui,selection,form,Gui.Jobs{revision,wanted,reader,writer,paused},ticks,serial} = s
+  Gui.State{db,dir,program,ui,selection,form,Gui.Jobs{revision,wanted,reader,writer,paused},refresh_at,serial} = s
   writer_pending(writer)
 
 def automatic_forms() -> IO(Unit):
   do IO<Unit>:
-    next : Gui.State <- Gui.auto_refresh(Gui.settings(state()),True{})
+    next : Gui.State <- Gui.auto_refresh(Gui.settings(state()),60000n)
     require(Bool.not(has_writer(next)),"automatic refresh never starts from a source form")
 
 def automatic_notice() -> IO(Unit):
@@ -235,7 +235,7 @@ def writer_command(value: Maybe<&2,Gui.Pending>) -> String:
       String.join(args,"|")
 
 def writer_args(s: Gui.State) -> String:
-  Gui.State{db,dir,program,ui,selection,form,Gui.Jobs{revision,wanted,reader,writer,paused},ticks,serial} = s
+  Gui.State{db,dir,program,ui,selection,form,Gui.Jobs{revision,wanted,reader,writer,paused},refresh_at,serial} = s
   writer_command(writer)
 
 def rebuild_gate() -> IO(Unit):
@@ -247,6 +247,81 @@ def rebuild_snapshot() -> IO(Unit):
   do IO<Unit>:
     next : Gui.State <- Gui.rebuild(Gui.settings(state()))
     require(String.eq(writer_args(next),"rebuild|7"),"Settings rebuild binds the shown captured snapshot")
+
+def deadline(s: Gui.State) -> Nat:
+  Gui.State{db,dir,program,ui,selection,form,jobs,refresh_at,serial} = s
+  refresh_at
+
+def clean(s: Gui.State) -> Gui.State:
+  Gui.State{db,dir,program,UI.State{content,input,image,dirty},selection,form,jobs,refresh_at,serial} = s
+  Gui.State{db,dir,program,UI.State{content,input,image,False{}},selection,form,jobs,refresh_at,serial}
+
+def refresh_clock() -> IO(Unit):
+  do IO<Unit>:
+    +armed : Gui.State <- Gui.auto_refresh(clean(state()),1000n)
+    +same_time : Gui.State <- Gui.auto_refresh(armed,1000n)
+    +early : Gui.State <- Gui.auto_refresh(same_time,30999n)
+    +large : Gui.State <- Gui.auto_refresh(clean(state()),Nat.add(4294967295n,1n))
+    Unit <- require(Nat.is_eq(deadline(armed),31000n) && Bool.not(has_writer(armed)),
+      "automatic refresh arms a thirty second monotonic deadline")
+    Unit <- require(Nat.is_eq(deadline(same_time),31000n) && Nat.is_eq(deadline(early),31000n) && Bool.not(has_writer(early)),
+      "render frequency does not advance or postpone the refresh deadline")
+    Unit <- require(Nat.is_eq(deadline(large),Nat.add(4294967295n,30001n)),
+      "refresh timestamps retain milliseconds beyond the U32 boundary")
+    Unit <- require(Bool.not(Gui.refresh_due(31000n,30999n)) && Gui.refresh_due(31000n,31000n),
+      "refresh is due exactly at its deadline")
+    require(U32.is_eq(Gui.sleep_ms(armed,False{}),80),
+      "arming a refresh deadline does not dirty the settled view")
+
+def refresh_resume() -> IO(Unit):
+  +armed = Gui.refresh_deadline(clean(state()),31000n)
+  do IO<Unit>:
+    +paused : Gui.State <- Gui.auto_refresh(Gui.toggle_pause(armed),90000n)
+    +resumed : Gui.State <- Gui.auto_refresh(Gui.toggle_pause(paused),100000n)
+    +source : Gui.State <- Gui.auto_refresh(Gui.settings(armed),90000n)
+    +blame : Gui.State <- Gui.auto_refresh(Gui.selected_file_form(armed,"/tmp/repo|file|1|1"),90000n)
+    +backwards : Gui.State <- Gui.auto_refresh(Gui.refresh_deadline(armed,50000n),1000n)
+    Unit <- require(Nat.is_eq(deadline(paused),0n) && Bool.not(has_writer(paused)),
+      "pause disarms automatic refresh even after the deadline")
+    Unit <- require(Nat.is_eq(deadline(resumed),130000n) && Bool.not(has_writer(resumed)),
+      "resume starts a full interval rather than catching up missed refreshes")
+    Unit <- require(Nat.is_eq(deadline(source),0n) && Nat.is_eq(deadline(blame),0n) && Bool.not(has_writer(blame)),
+      "source and Blame forms disarm automatic refresh")
+    require(Nat.is_eq(deadline(backwards),31000n) && Bool.not(has_writer(backwards)),
+      "a reversed clock rearms conservatively")
+
+def reader_pending(+s: Gui.State) -> Gui.State:
+  Gui.State{db,dir,program,ui,selection,form,Gui.Jobs{revision,wanted,reader,+writer,paused},refresh_at,serial} = s
+  Gui.State{db,dir,program,ui,selection,form,Gui.Jobs{revision,wanted,writer,None{},paused},refresh_at,serial}
+
+def refresh_writer() -> IO(Unit):
+  do IO<Unit>:
+    +started : Gui.State <- Gui.auto_refresh(Gui.refresh_deadline(clean(state()),31000n),31000n)
+    +busy : Gui.State <- Gui.auto_refresh(started,90000n)
+    +completed : Gui.State <- Gui.auto_refresh(clean(Gui.clear_writer(busy)),90000n)
+    Unit <- require(String.eq(writer_args(started),"refresh-all") && Nat.is_eq(deadline(started),0n),
+      "due automatic refresh starts one bounded production writer")
+    Unit <- require(String.eq(writer_args(busy),"refresh-all") && Nat.is_eq(deadline(busy),0n),
+      "an outstanding writer prevents another scheduled capture")
+    Unit <- require(Nat.is_eq(deadline(completed),120000n) && Bool.not(has_writer(completed)),
+      "writer completion receives a fresh interval without a catch-up burst")
+    Unit <- require(U32.is_eq(Gui.sleep_ms(clean(busy),False{}),1),
+      "pending writer keeps the fast polling cadence")
+    require(U32.is_eq(Gui.sleep_ms(clean(reader_pending(busy)),False{}),1),
+      "pending reader keeps the fast polling cadence")
+
+def idle_pacing() -> IO(Unit):
+  +settled = clean(state())
+  +queued = clean(Gui.queue(settled,Gui.Request{1,["history","",""],"",0,"History"}))
+  do IO<Unit>:
+    Unit <- require(U32.is_eq(Gui.sleep_ms(settled,False{}),80),
+      "only a settled event-free view uses the bounded idle delay")
+    Unit <- require(U32.is_eq(Gui.sleep_ms(settled,True{}),1),
+      "input batches retain the fast cadence even without a dirty view")
+    Unit <- require(U32.is_eq(Gui.sleep_ms(Gui.status(settled,"reply arrived"),False{}),1),
+      "a worker reply requiring repaint bypasses the idle delay")
+    require(U32.is_eq(Gui.sleep_ms(queued,False{}),1),
+      "queued reader work bypasses the idle delay")
 
 def main() -> IO(Unit):
   do IO<Unit>:
@@ -276,4 +351,8 @@ def main() -> IO(Unit):
     usage_scope_guard()
     rebuild_gate()
     rebuild_snapshot()
+    refresh_clock()
+    refresh_resume()
+    refresh_writer()
+    idle_pacing()
     IO.print("PASS GUI coordinator contracts; native interaction is separate")

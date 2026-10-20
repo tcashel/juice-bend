@@ -154,27 +154,163 @@ def schema_base(+db: U32) -> IO(Unit):
 # events stay intact; their immutable evidence keys do not use events.rowid.
 # FTS rowid mirrors the current event rowid to avoid unindexed virtual-column
 # conversions and a composite-index lookup for every candidate.
-def index_search_snapshot(db: U32,snapshot: String) -> IO(Unit):
-  exec(db,
-    "INSERT INTO search(rowid,body,arguments,result,tool,snapshot,ordinal,event) SELECT e.rowid,e.body,e.arguments,e.result,e.tool,e.snapshot,e.ordinal,e.event FROM events e JOIN snapshots p ON p.id=e.snapshot AND p.accepted=1 JOIN sources s ON s.latest=p.id WHERE e.snapshot=?",
-    [Sql.Cell.Integer{snapshot}])
+def batch_last(rows: List<&2,List<&2,Sql.Cell>>,last: List<&2,Sql.Cell>) -> List<&2,Sql.Cell>:
+  match rows:
+    case []:
+      last
+    case row <> rest:
+      batch_last(rest,row)
+
+# SQL writes share the caller's transaction, but each statement has bounded
+# work. The bridge retains its two-second progress deadline. Only keys cross
+# the bridge; payloads stay in SQLite and keep their exact cell types.
+def event_batch(db: U32,snapshot: String,ordinal: String,event: String,stop: String) ->
+  IO(List<&2,List<&2,Sql.Cell>>):
+  q(db,
+    "SELECT ordinal,event FROM (SELECT e.*,row_number() OVER (ORDER BY ordinal,event) AS rn,sum(payload_bytes) OVER (ORDER BY ordinal,event) AS total_bytes FROM (SELECT ordinal,event,length(CAST(role AS BLOB))+length(CAST(body AS BLOB))+length(CAST(tool AS BLOB))+length(CAST(call_id AS BLOB))+length(CAST(arguments AS BLOB))+length(CAST(result AS BLOB))+length(CAST(repository AS BLOB))+length(CAST(session AS BLOB))+length(CAST(timestamp AS BLOB))+length(CAST(model AS BLOB))+length(CAST(usage AS BLOB))+length(CAST(parent AS BLOB))+length(CAST(coverage AS BLOB))+256 AS payload_bytes FROM events WHERE snapshot=? AND (ordinal,event)>(?,?) AND ordinal<? ORDER BY ordinal,event LIMIT 64) e) WHERE total_bytes<=1048576 OR rn=1 ORDER BY ordinal,event",
+    [Sql.Cell.Integer{snapshot},Sql.Cell.Integer{ordinal},Sql.Cell.Integer{event},Sql.Cell.Integer{stop}],64)
+
+def index_search_batch(db: U32,snapshot: String,ordinal: String,event: String,
+  rows: List<&2,List<&2,Sql.Cell>>,next: String -> String -> IO(Unit)) -> IO(Unit):
+  match rows:
+    case []:
+      IO.pure(Unit,Unit{})
+    case row <> more:
+      +last = batch_last(row <> more,[])
+      do IO<Unit>:
+        exec(db,
+          "INSERT INTO search(rowid,body,arguments,result,tool,snapshot,ordinal,event) SELECT e.rowid,e.body,e.arguments,e.result,e.tool,e.snapshot,e.ordinal,e.event FROM events e JOIN snapshots p ON p.id=e.snapshot AND p.accepted=1 JOIN sources s ON s.latest=p.id WHERE e.snapshot=? AND (e.ordinal,e.event)>(?,?) AND (e.ordinal,e.event)<=(?,?) ORDER BY e.ordinal,e.event",
+          [Sql.Cell.Integer{snapshot},Sql.Cell.Integer{ordinal},Sql.Cell.Integer{event},
+           Sql.Cell.Integer{field(last,0n)},Sql.Cell.Integer{field(last,1n)}])
+        next(field(last,0n),field(last,1n))
+
+def index_search_walk(fuel: Nat,+db: U32,+snapshot: String,+ordinal: String,+event: String) -> IO(Unit):
+  match fuel:
+    case 0n:
+      IO.die(Unit,1,"Search publication batch budget exhausted")
+    case 1n+rest:
+      do IO<Unit>:
+        rows : List<&2,List<&2,Sql.Cell>> <- event_batch(db,snapshot,ordinal,event,"4294967295")
+        index_search_batch(db,snapshot,ordinal,event,rows,
+          ord => evt => index_search_walk(rest,db,snapshot,ord,evt))
+
+def index_search_current(db: U32,snapshot: String,current: Bool) -> IO(Unit):
+  match current:
+    case False{}:
+      IO.pure(Unit,Unit{})
+    case True{}:
+      index_search_walk(4294967295n,db,snapshot,"-1","-1")
+
+def index_search_snapshot(+db: U32,+snapshot: String) -> IO(Unit):
+  do IO<Unit>:
+    rows : List<&2,List<&2,Sql.Cell>> <- q(db,
+      "SELECT p.id FROM snapshots p JOIN sources s ON s.latest=p.id WHERE p.id=? AND p.accepted=1",
+      [Sql.Cell.Integer{snapshot}],1)
+    index_search_current(db,snapshot,Bool.not(List.is_empty(&2,List<&2,Sql.Cell>,rows)))
+
+def search_key_batch(db: U32,cursor: Maybe<&2,String>) -> IO(List<&2,List<&2,Sql.Cell>>):
+  match cursor:
+    case None{}:
+      q(db,"SELECT key FROM (SELECT e.*,row_number() OVER (ORDER BY key) AS rn,sum(payload_bytes) OVER (ORDER BY key) AS total_bytes FROM (SELECT rowid AS key,coalesce(length(CAST(body AS BLOB)),0)+coalesce(length(CAST(arguments AS BLOB)),0)+coalesce(length(CAST(result AS BLOB)),0)+coalesce(length(CAST(tool AS BLOB)),0)+128 AS payload_bytes FROM search ORDER BY rowid LIMIT 128) e) WHERE total_bytes<=1048576 OR rn=1 ORDER BY key",[],128)
+    case Some{key}:
+      q(db,"SELECT key FROM (SELECT e.*,row_number() OVER (ORDER BY key) AS rn,sum(payload_bytes) OVER (ORDER BY key) AS total_bytes FROM (SELECT rowid AS key,coalesce(length(CAST(body AS BLOB)),0)+coalesce(length(CAST(arguments AS BLOB)),0)+coalesce(length(CAST(result AS BLOB)),0)+coalesce(length(CAST(tool AS BLOB)),0)+128 AS payload_bytes FROM search WHERE rowid>? ORDER BY rowid LIMIT 128) e) WHERE total_bytes<=1048576 OR rn=1 ORDER BY key",[Sql.Cell.Integer{key}],128)
+
+def delete_search_range(db: U32,snapshot: Maybe<&2,String>,start: String,stop: String) -> IO(Unit):
+  match snapshot:
+    case None{}:
+      exec(db,"DELETE FROM search WHERE rowid>=? AND rowid<=?",
+        [Sql.Cell.Integer{start},Sql.Cell.Integer{stop}])
+    case Some{snap}:
+      exec(db,"DELETE FROM search WHERE rowid>=? AND rowid<=? AND snapshot=?",
+        [Sql.Cell.Integer{start},Sql.Cell.Integer{stop},Sql.Cell.Integer{snap}])
+
+# Scan the FTS rowid key once, including orphaned entries. Looking up deletions
+# through events would leave stale FTS rows after projection corruption.
+def clear_search_batch(db: U32,snapshot: Maybe<&2,String>,rows: List<&2,List<&2,Sql.Cell>>,
+  next: String -> IO(Unit)) -> IO(Unit):
+  match rows:
+    case []:
+      IO.pure(Unit,Unit{})
+    case +row <> more:
+      +last = batch_last(row <> more,[])
+      do IO<Unit>:
+        delete_search_range(db,snapshot,field(row,0n),field(last,0n))
+        next(field(last,0n))
+
+def clear_search_walk(fuel: Nat,+db: U32,+snapshot: Maybe<&2,String>,cursor: Maybe<&2,String>) -> IO(Unit):
+  match fuel:
+    case 0n:
+      IO.die(Unit,1,"Search removal batch budget exhausted")
+    case 1n+rest:
+      do IO<Unit>:
+        rows : List<&2,List<&2,Sql.Cell>> <- search_key_batch(db,cursor)
+        clear_search_batch(db,snapshot,rows,
+          key => clear_search_walk(rest,db,snapshot,Some{key}))
+
+def clear_search_snapshot(db: U32,snapshot: String) -> IO(Unit):
+  clear_search_walk(4294967295n,db,Some{snapshot},None{})
+
+def clear_source_cell(db: U32,latest: Sql.Cell) -> IO(Unit):
+  match latest:
+    case Sql.Cell.Null{}:
+      IO.pure(Unit,Unit{})
+    case Sql.Cell.Integer{snapshot}:
+      clear_search_snapshot(db,snapshot)
+    case _:
+      IO.die(Unit,1,"Source latest snapshot identity is corrupt")
+
+def clear_source_search(+db: U32,source: String) -> IO(Unit):
+  do IO<Unit>:
+    rows : List<&2,List<&2,Sql.Cell>> <- q(db,"SELECT latest FROM sources WHERE id=?",
+      [Sql.Cell.Integer{source}],1)
+    clear_source_cell(db,cell(first(rows),0n))
 
 # Caller owns the transaction. Used after verified projection replay, including
 # an old snapshot: only a still-current accepted snapshot is made searchable.
 def refresh_search(+db: U32,+snapshot: String) -> IO(Unit):
   do IO<Unit>:
-    exec(db,"DELETE FROM search WHERE snapshot=?",[Sql.Cell.Integer{snapshot}])
+    clear_search_snapshot(db,snapshot)
     index_search_snapshot(db,snapshot)
 
+def index_source_rows(rows: List<&2,List<&2,Sql.Cell>>,+db: U32) -> IO(Unit):
+  match rows:
+    case []:
+      IO.pure(Unit,Unit{})
+    case row <> rest:
+      do IO<Unit>:
+        index_search_snapshot(db,field(row,0n))
+        index_source_rows(rest,db)
+
+def index_sources_batch(db: U32,rows: List<&2,List<&2,Sql.Cell>>,next: String -> IO(Unit)) -> IO(Unit):
+  match rows:
+    case []:
+      IO.pure(Unit,Unit{})
+    case row <> more:
+      +batch : List<&2,List<&2,Sql.Cell>> = row <> more
+      last = batch_last(batch,[])
+      do IO<Unit>:
+        index_source_rows(batch,db)
+        next(field(last,0n))
+
+def index_sources_walk(fuel: Nat,+db: U32,cursor: String) -> IO(Unit):
+  match fuel:
+    case 0n:
+      IO.die(Unit,1,"Search migration batch budget exhausted")
+    case 1n+rest:
+      do IO<Unit>:
+        rows : List<&2,List<&2,Sql.Cell>> <- q(db,
+          "SELECT id FROM snapshots WHERE id>? AND accepted=1 AND EXISTS(SELECT 1 FROM sources WHERE latest=snapshots.id) ORDER BY id LIMIT 64",
+          [Sql.Cell.Integer{cursor}],64)
+        index_sources_batch(db,rows,key => index_sources_walk(rest,db,key))
+
 def migrate_search(+db: U32) -> IO(Unit):
-  statements([
-    "BEGIN IMMEDIATE",
-    "DROP TRIGGER IF EXISTS event_search",
-    "DELETE FROM search",
-    "INSERT INTO search(rowid,body,arguments,result,tool,snapshot,ordinal,event) SELECT e.rowid,e.body,e.arguments,e.result,e.tool,e.snapshot,e.ordinal,e.event FROM sources s JOIN snapshots p ON p.id=s.latest AND p.accepted=1 JOIN events e ON e.snapshot=p.id",
-    "PRAGMA user_version=2",
-    "COMMIT"
-  ],db)
+  do IO<Unit>:
+    exec(db,"BEGIN IMMEDIATE",[])
+    exec(db,"DROP TRIGGER IF EXISTS event_search",[])
+    clear_search_walk(4294967295n,db,None{},None{})
+    index_sources_walk(4294967295n,db,"0")
+    exec(db,"PRAGMA user_version=2",[])
+    exec(db,"COMMIT",[])
 
 def schema_version(db: U32,version: String) -> IO(Unit):
   match version:
@@ -788,9 +924,7 @@ def finish_verified(+db: U32,+source: String,+snap: String,got: File & Bool,
     sealed_observer : ImportObserver <- observe_phase(verified_observer,Sealed{})
     exec(db,"UPDATE snapshots SET accepted=1 WHERE id=?",[Sql.Cell.Integer{snap}])
     accepted_observer : ImportObserver <- observe_phase(sealed_observer,Accepted{})
-    exec(db,
-      "DELETE FROM search WHERE snapshot IN (SELECT latest FROM sources WHERE id=?)",
-      [Sql.Cell.Integer{source}])
+    clear_source_search(db,source)
     removed_observer : ImportObserver <- observe_phase(accepted_observer,SearchRemoved{})
     exec(db,"UPDATE sources SET latest=? WHERE id=?",[Sql.Cell.Integer{snap},Sql.Cell.Integer{source}])
     latest_observer : ImportObserver <- observe_phase(removed_observer,LatestRepointed{})
@@ -965,6 +1099,51 @@ def copy_context_walk(fuel: Nat,+db: U32,+old: String,+snapshot: String,+extent:
         copy_context_rows(rows,db,snapshot,extent)
         copy_context_walk(rest,db,old,snapshot,extent,count,next,U32.is_ge(next,count))
 
+def copy_record_batch(db: U32,old: String,snapshot: String,count: U32,+ordinal: U32,
+  done: Bool,next: U32 -> IO(Unit)) -> IO(Unit):
+  match done:
+    case True{}:
+      IO.pure(Unit,Unit{})
+    case False{}:
+      +stop = U32.add(ordinal,U32.min(256,U32.sub(count,ordinal)))
+      do IO<Unit>:
+        exec(db,"INSERT INTO records SELECT ?,ordinal,raw FROM records WHERE snapshot=? AND ordinal>=? AND ordinal<? ORDER BY ordinal",
+          [Sql.Cell.Integer{snapshot},Sql.Cell.Integer{old},Sql.Cell.Integer{U32.show(ordinal)},Sql.Cell.Integer{U32.show(stop)}])
+        next(stop)
+
+def copy_record_walk(fuel: Nat,+db: U32,+old: String,+snapshot: String,+count: U32,+ordinal: U32) -> IO(Unit):
+  match fuel:
+    case 0n:
+      IO.die(Unit,1,"Record map copy batch budget exhausted")
+    case 1n+rest:
+      copy_record_batch(db,old,snapshot,count,ordinal,U32.is_ge(ordinal,count),
+        stop => copy_record_walk(rest,db,old,snapshot,count,stop))
+
+def copy_event_batch(db: U32,old: String,snapshot: String,ordinal: String,event: String,
+  rows: List<&2,List<&2,Sql.Cell>>,next: String -> String -> IO(Unit)) -> IO(Unit):
+  match rows:
+    case []:
+      IO.pure(Unit,Unit{})
+    case row <> more:
+      +last = batch_last(row <> more,[])
+      do IO<Unit>:
+        exec(db,
+          "INSERT INTO events SELECT ?,ordinal,event,role,body,tool,call_id,arguments,result,repository,session,timestamp,model,usage,parent,coverage FROM events WHERE snapshot=? AND (ordinal,event)>(?,?) AND (ordinal,event)<=(?,?) ORDER BY ordinal,event",
+          [Sql.Cell.Integer{snapshot},Sql.Cell.Integer{old},Sql.Cell.Integer{ordinal},Sql.Cell.Integer{event},
+           Sql.Cell.Integer{field(last,0n)},Sql.Cell.Integer{field(last,1n)}])
+        next(field(last,0n),field(last,1n))
+
+def copy_event_walk(fuel: Nat,+db: U32,+old: String,+snapshot: String,+count: String,
+  +ordinal: String,+event: String) -> IO(Unit):
+  match fuel:
+    case 0n:
+      IO.die(Unit,1,"Event copy batch budget exhausted")
+    case 1n+rest:
+      do IO<Unit>:
+        rows : List<&2,List<&2,Sql.Cell>> <- event_batch(db,old,ordinal,event,count)
+        copy_event_batch(db,old,snapshot,ordinal,event,rows,
+          ord => evt => copy_event_walk(rest,db,old,snapshot,count,ord,evt))
+
 def append_copy(+db: U32,file: File,provider: String,source: String,+extent: U32,
   +previous: List<&2,Sql.Cell>,observe: ImportObserver) -> IO(String):
   +gen = field(previous,0n)
@@ -975,10 +1154,8 @@ def append_copy(+db: U32,file: File,provider: String,source: String,+extent: U32
     exec(db,"INSERT INTO snapshots(generation,extent) VALUES(?,?)",
       [Sql.Cell.Integer{gen},Sql.Cell.Integer{U32.show(extent)}])
     +snap : String <- last_id(db)
-    exec(db,"INSERT INTO records SELECT ?,ordinal,raw FROM records WHERE snapshot=? AND ordinal<?",
-      [Sql.Cell.Integer{snap},Sql.Cell.Integer{old},Sql.Cell.Integer{U32.show(ord)}])
-    exec(db,"INSERT INTO events SELECT ?,ordinal,event,role,body,tool,call_id,arguments,result,repository,session,timestamp,model,usage,parent,coverage FROM events WHERE snapshot=? AND ordinal<?",
-      [Sql.Cell.Integer{snap},Sql.Cell.Integer{old},Sql.Cell.Integer{U32.show(ord)}])
+    copy_record_walk(4294967295n,db,old,snap,ord,0)
+    copy_event_walk(4294967295n,db,old,snap,U32.show(ord),"-1","-1")
     copy_context_walk(4294967295n,db,old,snap,extent,ord,0,U32.is_eq(ord,0))
     ctxrows : List<&2,List<&2,Sql.Cell>> <- q(db,
       "SELECT repository,session,model,parent FROM events WHERE snapshot=? ORDER BY ordinal DESC,event DESC LIMIT 1",

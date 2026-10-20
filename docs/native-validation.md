@@ -1,14 +1,64 @@
 # Native interaction observations
 
-2026-10-20, macOS 27.0.1 arm64, actual desktop windows through the pinned
-Bend runtime. Only synthetic libraries were used. These are observed
-interactions, not automated latency or complete accessibility acceptance.
+2026-10-20. Native windows used the pinned Bend runtime on the host desktop
+(macOS 27.0.1 arm64) and a coordinated Tart guest (macOS 27.0 arm64,
+Tart 2.40.1). All libraries and sources were synthetic. These are observed
+interactions, not input-to-photon or complete accessibility acceptance.
 
-The current desktop-observed executable is 4,621,176 bytes, SHA-256
-`6a1287727e86e6d956dbfa7bf42bb6a1551d2fe064f110c805e14f6e8b85a32c`.
-The dated unlocked follow-up below records its fresh-library workflow.
-Earlier observations belong to the separate candidates identified below;
-their results are not silently transferred to the current build.
+The final guest-observed executable is 4,708,120 bytes, SHA-256
+`05cdff4f599edcd16646fc3363e27c3856bda4b073f52a92f23264887ef5ba35`.
+Earlier observations and timing measurements retain their separate build
+identities below; they are not silently transferred to this executable.
+
+## Final Tart workflow — 2026-10-20
+
+The final executable ran in its own local bundle with a fresh isolated library.
+Guest automation supplied explicit native modifier down/up events through
+`cliclick`; clipboard contents were compared inside the guest.
+
+| Interaction | Observed result |
+|---|---|
+| Fresh launch | Empty-library window opened before any source was enabled |
+| Large capture | Settings captured 100,016 physical records into accepted snapshot 1: 35,607,307 bytes and 125,020 normalized events |
+| Input during capture | `live-capture-ok` became visible and Pause worked while the capture was active; the in-flight capture subsequently completed |
+| Source unavailable | The original synthetic JSONL was renamed away within the experiment's owned root; its configured path remained absent for retained reads and rebuild |
+| Retained search and reader | Search, result opening, scrolling and drag selection worked from the owned library |
+| Reader clipboard | Drag-selection copied the exact eight bytes `[assista` |
+| Why and export | Why displayed retained evidence; export produced 11,796 bytes with mode 0600 and SHA-256 `2639d7ef4eed2580e813f355b73f9286faccd00190afecafc7d36885101ff0d2` |
+| Verified rebuild | Settings displayed “Verified search rows rebuilt for Snapshot 1. Captured evidence remains retained.” while the source path was absent |
+| Post-rebuild storage | Snapshot 1 remained accepted with 100,016 records and extent 35,607,307; events and FTS each held 125,020 rows, `preservation` had 75,012 hits, and `quick_check` returned `ok` |
+| Command clipboard | Explicit Command+A/C/V preserved exact `café 中文 🙂` through the guest clipboard |
+| Replacement and Shift | Keyboard replacement produced `keyboard-ok`; Shift+Arrow selection copied exact `ok` |
+
+Direct Unicode keystroke injection through the automation tool produced
+corrupted committed text (`cafa aa aa`). The exact Unicode clipboard roundtrip
+therefore establishes paste/copy behavior, not correct direct Unicode typing.
+Physical-keyboard input and IME remain unverified. Unsupported glyphs still
+render as boxes while copy/export retain their underlying text.
+
+The final GUI's `vmmap` physical footprint was 41.1M, with a 41.5M peak before
+rebuild, and 46.2M with a 46.2M peak afterward. These are the GUI process's
+reported physical-footprint values, not total worker memory or virtual size.
+The owned GUI/workers were closed, the VM stopped, and the shared lease and
+cleanup locks released after validation. Local screenshots and raw receipts
+remain in the ignored `build/tart/native-c6dldcyb/session-artifacts` directory.
+
+## Tart timing boundaries — intermediate builds
+
+The 80 ms idle scheduler was measured on intermediate executable
+`0a6243d583e3ebc4dcb0200e4d45b7a50b64c2bc85f27d5bffce3820894452f0`:
+settled CPU was 1.55% of one core. Its GUI source hash matches the final
+executable's GUI source, but this is not a final-binary CPU measurement.
+The earlier 60 ms candidate measured 3.4%; the original settled loop measured
+15.25%. The active input/dirty/pending-work path retains its 1 ms sleep.
+
+The 60 ms executable
+`6c5ee83b4a9326c210dac874079b953c901ffe5644a5bdebbd4bfb011128161a`
+had a 1,308 ms observed startup upper bound that includes an intentional
+one-second observation wait. This is not an exact startup-to-interactive
+duration or a repeated-trial percentile. Input-to-photon latency and sustained
+60 Hz scrolling have not been measured; neither is claimed by the visible
+interaction results or callback traces.
 
 ## Historical workflow — earlier candidates
 
@@ -51,11 +101,12 @@ verified raw bytes and regenerated the current projection, after which the
 combined filter returned the expected two events. Historical bytes and capture
 identity did not change.
 
-## Unlocked follow-up — 2026-10-20
+## Historical unlocked follow-up — 2026-10-20
 
-The current `6a1287727e86e6d956dbfa7bf42bb6a1551d2fe064f110c805e14f6e8b85a32c`
-production executable was observed on the unlocked desktop using a new private
-synthetic library. Settings displayed the isolated data root.
+The 4,621,176-byte
+`6a1287727e86e6d956dbfa7bf42bb6a1551d2fe064f110c805e14f6e8b85a32c`
+production executable was observed on the unlocked host desktop using a new
+private synthetic library. Settings displayed the isolated data root.
 
 | Interaction | Observed result |
 |---|---|
@@ -72,39 +123,41 @@ large capture was active. A later observation showed the retained query
 `during-capture-1`; this establishes neither when it was painted nor input
 latency during capture. The GUI process identity was retained, but process
 inspection and sampling were denied. The bounded Bend trace below subsequently
-supplied callback timing evidence; A20's full input-to-visible and resource
-acceptance remains incomplete.
+supplied callback timing evidence. The final Tart run above adds visible input
+and resource observations; input-to-photon acceptance remains incomplete.
 
 The desktop temporarily relocked, then the owner unlocked it for the diagnostic.
 The owner did not complete the requested physical keyboard check; no physical
 modifier or IME success is inferred. Both validation windows were subsequently
 closed and the production bundle's ordinary launcher restored.
 
-## Unverified input and timing boundaries
+## Historical automation limits
 
 Unsupported glyphs display boxes; backend tests and inspected exports preserve
 the original Unicode. The UI tool's attempted committed text
 `Unicode café 你好 🙂` stopped after the ASCII prefix. A separate input probe
 also showed its `super+a`/`Meta_L+a` events carried ambiguous native key code
 zero rather than the documented Command codes. Full Unicode commit, IME and
-physical Command/Shift interaction therefore remain **unverified**. The app
-does not guess which modifier an ambiguous event represents.
+physical Command/Shift interaction were therefore unverified in those host
+runs. The later Tart run supplied reliable explicit Command/Shift events and
+exact Unicode clipboard comparisons; physical typing and IME remain unverified.
+The app does not guess which modifier an ambiguous event represents.
 
-Shell `pbpaste` comparisons did not observe the desktop clipboard. Clipboard
-acceptance above is based on the visible in-app copy/clear/paste roundtrip,
-not on a successful process exit or those failed shell comparisons.
+Host-shell `pbpaste` comparisons did not observe the host desktop clipboard.
+Those historical clipboard observations rely on the visible in-app roundtrip.
+The final Tart clipboard comparisons ran inside the guest and succeeded.
 
 During the earlier large capture, several native accessibility/action calls
 timed out after about five seconds. A later screenshot showed the typed query and
 completed results; that does not establish when input became visible.
 Similar tool timeouts occurred around a small rebuild. The later callback trace
 rules out a continuous callback freeze during its capture, while the cause of
-automation timeouts remains unresolved. A20 and input-to-visible p95 are not
-accepted.
+automation timeouts remains unresolved. The later Tart observation establishes
+visible input during capture; input-to-visible p95 remains unmeasured.
 
 An earlier empty-library attempt was blocked by the locked desktop. The
-unlocked follow-up above subsequently observed that state on the current
-production build. No OS setting or permission was changed.
+unlocked follow-up subsequently observed that state on its identified build.
+No OS setting or permission was changed in those host runs.
 
 ## Read-only A20 investigation — 2026-10-20
 
@@ -133,7 +186,8 @@ those workers instead of the window-owning process remains an unresolved
 hypothesis. The subsequent bounded diagnostic below provides timing evidence
 from the GUI callbacks while capture is pending. Tool round-trip time is not
 input/frame latency. No application semantics were changed by this audit;
-remaining pixel-display and resource measurements are still required.
+pixel-display timing remained unmeasured by this audit. The final Tart run
+above separately records physical footprint and intermediate-build idle CPU.
 
 ## Bounded native callback trace — 2026-10-20
 
@@ -141,7 +195,7 @@ remaining pixel-display and resource measurements are still required.
 callbacks without modifying them. Its 4,821,704-byte executable has SHA-256
 `537145d12c3442e073fda1325e64dcf42e2cfdfdfff3da9fd8f89cb8a6585328`.
 It ran in a separately identified local bundle against a fresh private library.
-The current production executable's hash remained unchanged.
+The then-current production executable's hash remained unchanged.
 
 The native window imported the 100,016-record synthetic source, accepted one
 35,607,307-byte snapshot and projected 125,020 events. While capture was pending,
@@ -181,11 +235,12 @@ local; the public summary includes only synthetic input and timing witnesses.
 
 ## Reproduce remaining checks
 
-Run `mise run build`, then `./scripts/run --demo` in an unlocked desktop
-session. Verify physical Command/Shift selection, Unicode paste/commit and
-IME. Use Settings with a synthetic benchmark JSONL, then type and scroll
-while capture is active; record actual input/frame timestamps and UI CPU/RSS.
-Pause must stop new automatic work while an in-flight capture finishes safely.
+Build with `mise run build`, then launch `./scripts/run --demo` in an unlocked
+desktop session or use the coordinated `mise run vm-session` workflow.
+Remaining acceptance requires physical-keyboard/IME observations and actual
+input-to-visible/scroll timestamps. Final-binary idle CPU and total active
+worker memory remain separate from the intermediate-build idle and final GUI
+footprint measurements above. Use only synthetic sources and isolated roots.
 
 To reproduce the observed empty state, launch `build/juice-bend --data-dir`
 with a new private temporary directory and no `--demo`. No provider scan or network

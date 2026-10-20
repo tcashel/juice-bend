@@ -209,7 +209,7 @@ def replay_walk(fuel: Nat,+db: U32,+snapshot: String,+h: Header,
 def rebuild_header(+db: U32,+snapshot: String,+h: Header) -> IO(Unit):
   Header{_,_,records,_} = h
   do IO<Unit>:
-    Store.exec(db,"DELETE FROM search WHERE snapshot=?",[Sql.Cell.Integer{snapshot}])
+    Store.clear_search_snapshot(db,snapshot)
     Store.exec(db,"DELETE FROM events WHERE snapshot=?",[Sql.Cell.Integer{snapshot}])
     Store.exec(db,"DELETE FROM snapshot_context WHERE snapshot=?",[Sql.Cell.Integer{snapshot}])
     replay_walk(U32.to_nat(records),db,snapshot,h,0,0,False{},Store.Context{"","","",""})

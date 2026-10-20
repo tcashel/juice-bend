@@ -1,52 +1,47 @@
 Juice Bend integrated native test receipt
 Date: 2026-10-20
-Host: local macOS / Apple Silicon
-Command: mise run test > build/full-test-validated.log 2>&1
+Host: local macOS 27.0.1 / Apple Silicon
+Command: ./scripts/test > build/tart-full-test.log 2>&1
 Exit status: 0
-Completed: 31 Bend test executables
-Named PASS checks: 2007
+Completed: 33 Bend test executables
+Named PASS checks: 2166
 
-Counts come from the actual completed output and include explicit fixture/setup
-and successful-return checks. The GUI/UI completion banners are excluded. Each
-executable used its own private synthetic directory. The local raw log is ignored.
+Counts come from actual completed output and include explicit fixture/setup
+and successful-return checks. GUI/UI completion banners are excluded. Each
+executable used its own private synthetic directory. The raw log is ignored.
 
-tests/append_integrity.bend                 49
-tests/cli.bend                               9
-tests/client.bend                            6
-tests/context.bend                          22
-tests/coverage_integrity.bend                4
-tests/display.bend                           6
-tests/domain.bend                           53
-tests/evidence.bend                         42
-tests/evidence_time.bend                     9
-tests/file_evidence.bend                    35
-tests/file_limits.bend                       7
-tests/git_diff.bend                         36
-tests/gui.bend                              34
-tests/integration.bend                      21
-tests/maintenance.bend                      30
-tests/projection_cursor.bend                12
-tests/provenance.bend                       36
-tests/providers.bend                        61
-tests/publication_crash.bend              1203
-tests/query.bend                            48
-tests/scoped_reader.bend                    18
-tests/selected_integrity.bend               24
-tests/sources.bend                          24
-tests/sqlite.bend                           49
-tests/storage.bend                           5
-tests/storage_edges.bend                    33
-tests/storage_search.bend                   28
-tests/store_query.bend                      37
-tests/timestamp.bend                        18
-tests/ui.bend                               19
-tests/usage.bend                            29
-TOTAL                                     2007
+tests/append_integrity.bend                   49
+tests/cli.bend                                 9
+tests/client.bend                              6
+tests/context.bend                            22
+tests/coverage_integrity.bend                  4
+tests/display.bend                             6
+tests/domain.bend                             53
+tests/evidence.bend                           42
+tests/evidence_time.bend                       9
+tests/file_evidence.bend                      35
+tests/file_limits.bend                         7
+tests/git_diff.bend                           36
+tests/gui.bend                                52
+tests/integration.bend                        21
+tests/maintenance.bend                        30
+tests/native_trace.bend                       10
+tests/projection_cursor.bend                  12
+tests/provenance.bend                         36
+tests/providers.bend                          61
+tests/publication_crash.bend                1203
+tests/query.bend                              48
+tests/scoped_reader.bend                      18
+tests/selected_integrity.bend                 24
+tests/sources.bend                            24
+tests/sql_batches.bend                       131
+tests/sqlite.bend                             49
+tests/storage.bend                             5
+tests/storage_edges.bend                      33
+tests/storage_search.bend                     28
+tests/store_query.bend                        37
+tests/timestamp.bend                          18
+tests/ui.bend                                 19
+tests/usage.bend                              29
 
-The integrated run includes both history-ordinal GUI regressions, 12 production
-projection-cursor checks and the 1,203-check publication matrix at 27 named
-initial/append/rewrite crash cuts. The latter verifies a fresh marker before
-accepting a timeout of only the owned synthetic child.
-
-This is native backend/state evidence, not a desktop input/latency observation,
-hardware power-loss test or stronger Lean kernel receipt.
+Raw log SHA-256: f2bb5cf950aae924b55d72a3c572b39aa711cb545a1114fa338e18c57bc445b9

@@ -1,9 +1,9 @@
 Juice Bend final focused GUI coordinator receipt
 Date: 2026-10-20
 Host: local macOS / Apple Silicon
-Command: ./scripts/test tests/gui.bend
+Command: ./scripts/test (integrated run; tests/gui.bend included)
 Result: native executable built; isolated synthetic test run exited 0.
-Named assertion results: 34 PASS, excluding the final suite-completion banner.
+Named assertion results: 52 PASS, excluding the final suite-completion banner.
 
 This is a concise receipt of the observed run, not a replacement stdout log.
 The temporary test path is omitted because its exact name is not required to
@@ -17,7 +17,7 @@ Final regression checks observed passing:
   The additive history column 9 carries record 500 into the selected item.
 - History rows without an ordinal retain the record zero fallback.
 
-The other 31 assertions cover source forms, stale worker rejection, pinned
+The earlier 31 assertions cover source forms, stale worker rejection, pinned
 snapshots, literal filters and file/range parsing, stale row invalidation,
 query caret preservation, file/commit Why, bounded paging, exact displayed
 exports, frozen selected scopes, automatic refresh notices, Usage scope
@@ -26,3 +26,7 @@ restrictions, and Settings-only rebuild of the selected snapshot.
 These are native coordinator tests. On-screen pointer, keyboard, rendering,
 clipboard and responsiveness observations are recorded separately by the
 primary agent in docs/native-validation.md.
+
+The added 18 assertions cover monotonic refresh deadlines, pause/form/writer
+disarming, completion/resume rearming, clean idle sleep and active/input work
+remaining on the short path. All passed in the 33-executable, 2,166-check run.

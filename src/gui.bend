@@ -37,15 +37,15 @@ type Jobs is Data:
 
 type State is Data:
   State{db: U32, dir: String, program: String, ui: UI.State,
-    selection: Selection, form: Form, jobs: Jobs, ticks: U32, serial: U32}
+    selection: Selection, form: Form, jobs: Jobs, refresh_at: Nat, serial: U32}
 
 def status(+state: State, +message: String) -> State:
-  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+ticks,+serial} = state
-  State{db,dir,program,UI.set_status(ui,message),selection,form,jobs,ticks,serial}
+  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+refresh_at,+serial} = state
+  State{db,dir,program,UI.set_status(ui,message),selection,form,jobs,refresh_at,serial}
 
 def replace_ui(+state: State,+ui: UI.State) -> State:
-  State{+db,+dir,+program,+old,+selection,+form,+jobs,+ticks,+serial} = state
-  State{db,dir,program,ui,selection,form,jobs,ticks,serial}
+  State{+db,+dir,+program,+old,+selection,+form,+jobs,+refresh_at,+serial} = state
+  State{db,dir,program,ui,selection,form,jobs,refresh_at,serial}
 
 def linear_args(args: List<&2,String>) -> List<String>:
   match args:
@@ -140,13 +140,13 @@ def first_snapshot(items: List<&2,Item>) -> String:
       snapshot
 
 def queue(+state: State, +request: Request) -> State:
-  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
   State{db,dir,program,UI.set_status(ui,"Loading captured evidence..."),selection,form,
-    Jobs{U32.add(revision,1),Some{request},reader,writer,paused},ticks,serial}
+    Jobs{U32.add(revision,1),Some{request},reader,writer,paused},refresh_at,serial}
 
 def invalidate(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+ticks,+serial} = state
-  State{db,dir,program,ui,selection,form,Jobs{U32.add(revision,1),None{},reader,writer,paused},ticks,serial}
+  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
+  State{db,dir,program,ui,selection,form,Jobs{U32.add(revision,1),None{},reader,writer,paused},refresh_at,serial}
 
 def reload_args(+state: State, +query: String, +provider: String, +repo: String,
   +role: String, +after: String, +history: Bool) -> State:
@@ -157,32 +157,32 @@ def reload_args(+state: State, +query: String, +provider: String, +repo: String,
       queue(state,Request{2,["search",query,provider,repo,role,after],"",0,"Search"})
 
 def reload_filters(+state: State, result: Result<&2,&2,String,Query.Filters>) -> State:
-  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+refresh_at,+serial} = state
   match result:
     case Fail{message}:
-      status(invalidate(State{db,dir,program,ui,selection,form,jobs,ticks,serial}),message)
+      status(invalidate(State{db,dir,program,ui,selection,form,jobs,refresh_at,serial}),message)
     case Done{Query.Filters{+query,+provider,+repo,+role,+after}}:
       chosen = Store.nonempty(provider,scope(ui))
-      reload_args(State{db,dir,program,ui,selection,form,jobs,ticks,serial},
+      reload_args(State{db,dir,program,ui,selection,form,jobs,refresh_at,serial},
         query,chosen,repo,role,after,String.is_empty(query) && String.is_empty(role) && String.is_empty(after))
 
 def clear_rows(+state: State) -> State:
-  State{+db,+dir,+program,+ui,Selection{items,snap,start,displayed,blame,filters},+form,+jobs,+ticks,+serial} = state
-  State{db,dir,program,UI.set_rows(ui,[]),Selection{[],snap,start,displayed,blame,filters},form,jobs,ticks,serial}
+  State{+db,+dir,+program,+ui,Selection{items,snap,start,displayed,blame,filters},+form,+jobs,+refresh_at,+serial} = state
+  State{db,dir,program,UI.set_rows(ui,[]),Selection{[],snap,start,displayed,blame,filters},form,jobs,refresh_at,serial}
 
 def reload(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+refresh_at,+serial} = state
   reload_filters(clear_rows(state),Query.parse_ui(UI.query(ui)))
 
 def form_text(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
   match mode:
     case 1:
-      State{db,dir,program,ui,selection,Form{1,search,UI.query(ui),blame},jobs,ticks,serial}
+      State{db,dir,program,ui,selection,Form{1,search,UI.query(ui),blame},jobs,refresh_at,serial}
     case 2:
-      invalidate(State{db,dir,program,ui,selection,Form{2,search,source,UI.query(ui)},jobs,ticks,serial})
+      invalidate(State{db,dir,program,ui,selection,Form{2,search,source,UI.query(ui)},jobs,refresh_at,serial})
     case _:
-      reload(State{db,dir,program,ui,selection,Form{0,UI.query(ui),source,blame},jobs,ticks,serial})
+      reload(State{db,dir,program,ui,selection,Form{0,UI.query(ui),source,blame},jobs,refresh_at,serial})
 
 def open_item(+state: State,item: Maybe<&2,Item>) -> State:
   match item:
@@ -201,7 +201,7 @@ def page_nonempty(+state: State,+snap: String,+start: U32,+filters: Query.Filter
         "Transcript | pinned snapshot " ++ snap ++ " | record " ++ U32.show(start)})
 
 def page_at(+state: State, +start: U32) -> State:
-  State{+db,+dir,+program,+ui,Selection{+items,+snap,+old,+displayed,+blame,+filters},+form,+jobs,+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+snap,+old,+displayed,+blame,+filters},+form,+jobs,+refresh_at,+serial} = state
   page_nonempty(state,snap,start,filters,String.is_empty(snap))
 
 def why_nonempty(+state: State,+snap: String,+start: U32,+filters: Query.Filters,+empty: Bool) -> State:
@@ -213,8 +213,8 @@ def why_nonempty(+state: State,+snap: String,+start: U32,+filters: Query.Filters
         "Why | pinned snapshot " ++ snap})
 
 def selected_file_form(+state: State,+text: String) -> State:
-  State{db,dir,program,ui,selection,Form{mode,search,source,old},jobs,ticks,serial} = state
-  State{db,dir,program,UI.set_query(ui,text),selection,Form{2,search,source,text},jobs,ticks,serial}
+  State{db,dir,program,ui,selection,Form{mode,search,source,old},jobs,refresh_at,serial} = state
+  State{db,dir,program,UI.set_query(ui,text),selection,Form{2,search,source,text},jobs,refresh_at,serial}
 
 def why_file(+state: State,args: List<&2,String>) -> State:
   match args:
@@ -234,7 +234,7 @@ def why_commit(+state: State,args: List<&2,String>) -> State:
       status(state,"Use /absolute/repository|commit:full40hex in the Blame form.")
 
 def why(+state: State) -> State:
-  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters},+form,+jobs,+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters},+form,+jobs,+refresh_at,+serial} = state
   match displayed:
     case 3:
       why_nonempty(state,snap,start,filters,String.is_empty(snap))
@@ -263,7 +263,7 @@ def usage_nonempty(+state: State,+snap: String,+start: U32,+filters: Query.Filte
       status(state,"Usage needs an unfiltered transcript range. Clear repository, role and date filters, then reopen a result.")
 
 def usage(+state: State) -> State:
-  State{db,dir,program,ui,Selection{items,+snap,+start,displayed,args,+filters},form,jobs,ticks,serial} = state
+  State{db,dir,program,ui,Selection{items,+snap,+start,displayed,args,+filters},form,jobs,refresh_at,serial} = state
   match displayed:
     case 3:
       usage_nonempty(state,snap,start,filters,usage_scope(filters) && Bool.not(String.is_empty(snap)))
@@ -291,12 +291,12 @@ def paging_kind(+state: State,+kind: U32,+snap: String,+start: U32,+filters: Que
   paging_next(state,kind,snap,next,filters)
 
 def paging(+state: State,+forward: Bool) -> State:
-  State{db,dir,program,ui,Selection{items,snap,start,displayed,args,filters},form,jobs,ticks,serial} = state
+  State{db,dir,program,ui,Selection{items,snap,start,displayed,args,filters},form,jobs,refresh_at,serial} = state
   paging_kind(state,displayed,snap,start,filters,forward)
 
 def browse(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+ticks,+serial} = state
-  reload(State{db,dir,program,UI.set_query(ui,search),selection,Form{0,search,source,blame},jobs,ticks,serial})
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
+  reload(State{db,dir,program,UI.set_query(ui,search),selection,Form{0,search,source,blame},jobs,refresh_at,serial})
 
 def no_display(+selection: Selection) -> Selection:
   Selection{items,snap,start,displayed,blame,filters} = selection
@@ -320,34 +320,34 @@ def source_lines(rows: List<&2,List<&2,Sql.Cell>>) -> String:
       "\n" ++ Store.field(row,1n) ++ "\n\n" ++ source_lines(rest)
 
 def source_rows(+state: State,result: Result<&2,&2,String,List<&2,List<&2,Sql.Cell>>>) -> State:
-  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+refresh_at,+serial} = state
   match result:
     case Fail{message}:
       status(state,message)
     case Done{rows}:
       State{db,dir,program,UI.set_status(UI.set_reader(ui,"Settings | explicit sources",settings_text(dir,selection_snapshot(selection)) ++ source_lines(rows)),
-        "Explicit source configuration loaded. Disabled roots keep captured evidence."),selection,form,jobs,ticks,serial}
+        "Explicit source configuration loaded. Disabled roots keep captured evidence."),selection,form,jobs,refresh_at,serial}
 
 def settings(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
   match mode:
     case 1:
-      browse(State{db,dir,program,ui,selection,Form{mode,search,source,blame},jobs,ticks,serial})
+      browse(State{db,dir,program,ui,selection,Form{mode,search,source,blame},jobs,refresh_at,serial})
     case _:
       queue(clear_rows(State{db,dir,program,UI.set_reader(UI.set_query(ui,source),"Settings | explicit sources",settings_text(dir,selection_snapshot(selection))),
-        no_display(selection),Form{1,search,source,blame},jobs,ticks,serial}),Request{6,["sources"],"",0,"Registered sources"})
+        no_display(selection),Form{1,search,source,blame},jobs,refresh_at,serial}),Request{6,["sources"],"",0,"Registered sources"})
 
 def filter_help(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
   invalidate(State{db,dir,program,UI.set_reader(UI.set_query(ui,search),"Search filters | literal terms",
     "Type words or a quoted phrase above.\n\nOptional filters:\nprovider:claude\nprovider:codex\nrepo:\"/absolute/path with spaces\"\nrole:user\nrole:assistant\nrole:tool\nafter:2026-10-01\n\nExample:\ncache role:assistant after:2026-10-01\n\nProvider tokens override the sidebar scope.\nDates are inclusive calendar dates.\nEmpty words with filters browse matching records.\nPunctuation is literal; FTS syntax is not executed.\n\nTyping applies filters. Click a result to read its exact accepted snapshot."),
-    no_display(selection),Form{0,search,source,blame},jobs,ticks,serial})
+    no_display(selection),Form{0,search,source,blame},jobs,refresh_at,serial})
 
 def blame_help(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
   invalidate(State{db,dir,program,UI.set_reader(UI.set_query(ui,blame),"Blame | local repository evidence",
     "Enter literal fields separated by |:\n\n/absolute/repository|relative/file|first|count\n\nOr exact commit Why:\n/absolute/repository|commit:full40hex\n\nExample:\n/tmp/demo-repo|src/cache.txt|1|20\n\nClick Blame again or press Return to run.\nThe final field is a count, from 1 to 100.\nSpaces are allowed in paths. | is reserved.\n\nGit is read-only. No logged command is run.\nMissing or ambiguous evidence remains explicit.\nContent overlap does not prove authorship.\nFile evidence searches captured sources for this repository independently of transcript filters.\n\nClick Filter to return to search."),
-    no_display(selection),Form{2,search,source,blame},jobs,ticks,serial})
+    no_display(selection),Form{2,search,source,blame},jobs,refresh_at,serial})
 
 def blame_valid(+repo: String,+path: String,+first: U32,+count: U32,+valid: Bool) -> Result<&2,&2,String,List<&2,String>>:
   match valid:
@@ -394,7 +394,7 @@ def blame_result(+state: State,result: Result<&2,&2,String,List<&2,String>>) -> 
       blame_request(state,args)
 
 def blame(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+form},+jobs,+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+form},+jobs,+refresh_at,+serial} = state
   match mode:
     case 2:
       blame_result(state,blame_fields(String.split(UI.query(ui),'|')))
@@ -402,7 +402,7 @@ def blame(+state: State) -> State:
       blame_help(state)
 
 def scope_changed(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
   match mode:
     case 0:
       reload(state)
@@ -461,17 +461,17 @@ def write_job(+program: String,+dir: String,args: List<&2,String>) -> IO(Reply):
       run_write(program,dir,other)
 
 def start_write(+state: State,+request: Request,busy: Maybe<&2,Pending>) -> IO(State):
-  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
   Request{+kind,+args,+snap,+start,+title} = request
   match busy:
     case Some{pending}:
-      IO.pure(State,status(State{db,dir,program,ui,selection,form,Jobs{revision,wanted,reader,writer,paused},ticks,serial},
+      IO.pure(State,status(State{db,dir,program,ui,selection,form,Jobs{revision,wanted,reader,writer,paused},refresh_at,serial},
         "A capture or export is already running. Browsing stays available."))
     case None{}:
       do IO<State>:
         channel : Chan(Reply) <- IO.fork(Reply,write_job(program,dir,args))
         return State{db,dir,program,UI.set_status(ui,"Updating captures or exporting evidence. Browsing stays available."),selection,form,
-          Jobs{revision,wanted,reader,Some{Pending{revision,Request{kind,args,snap,start,title},channel}},paused},0,serial}
+          Jobs{revision,wanted,reader,Some{Pending{revision,Request{kind,args,snap,start,title},channel}},paused},0n,serial}
 
 def import_path(state: State,provider: String,path: String,writer: Maybe<&2,Pending>,file: Bool) -> IO(State):
   match file:
@@ -499,11 +499,11 @@ def import_checked(+state: State,+provider: String,+path: String,writer: Maybe<&
     Query.provider_valid(provider) && Bool.not(String.is_empty(path)))
 
 def writer_of(+state: State) -> Maybe<&2,Pending>:
-  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
   writer
 
 def refresh(+state: State) -> IO(State):
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
   match mode:
     case 1:
       import_checked(state,scope(ui),String.trim(UI.query(ui)),writer_of(state))
@@ -518,7 +518,7 @@ def rebuild_allowed(+state: State,+snap: String,allowed: Bool) -> IO(State):
       IO.pure(State,status(state,"Select a captured transcript, then open Settings to rebuild that snapshot's derived search rows."))
 
 def rebuild(+state: State) -> IO(State):
-  State{db,dir,program,ui,Selection{items,+snap,start,displayed,args,filters},Form{mode,search,source,blame},jobs,ticks,serial} = state
+  State{db,dir,program,ui,Selection{items,+snap,start,displayed,args,filters},Form{mode,search,source,blame},jobs,refresh_at,serial} = state
   rebuild_allowed(state,snap,U32.is_eq(mode,1) && Bool.not(String.is_empty(snap)))
 
 def copy_done(+state: State,result: Result<&1,&1,U32 & String,U32 & (String & String)>) -> State:
@@ -531,12 +531,12 @@ def copy_done(+state: State,result: Result<&1,&1,U32 & String,U32 & (String & St
       status(state,"Clipboard unavailable or timed out; copy was not confirmed.")
 
 def paste_done(+state: State,result: Result<&1,&1,U32 & String,U32 & (String & String)>) -> State:
-  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+refresh_at,+serial} = state
   match result:
     case Done{(0,(text,error))}:
-      form_text(State{db,dir,program,UI.insert(ui,text),selection,form,jobs,ticks,serial})
+      form_text(State{db,dir,program,UI.insert(ui,text),selection,form,jobs,refresh_at,serial})
     case _:
-      status(State{db,dir,program,ui,selection,form,jobs,ticks,serial},"Clipboard unavailable or paste failed.")
+      status(State{db,dir,program,ui,selection,form,jobs,refresh_at,serial},"Clipboard unavailable or paste failed.")
 
 # Blame depends on the inspected Git state and candidate set. Export the exact
 # already-rendered immutable evidence through stdin, never re-run attribution.
@@ -558,10 +558,10 @@ def export_args(+kind: U32,+snap: String,+start: U32,+filters: Query.Filters,+te
 
 def export_at(+state: State,+now: Nat) -> IO(State):
   State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters},+form,
-    Jobs{+revision,+wanted,+reader,+writer,+paused},+ticks,+serial} = state
+    Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
   +path = dir ++ "/evidence-" ++ Store.nonempty(Bool.pick(String,file_kind(displayed),"file",snap),"selection") ++ "-" ++ Nat.show(now) ++ "-" ++ U32.show(serial) ++ ".md"
   start_write(State{db,dir,program,ui,Selection{items,snap,start,displayed,blame,filters},form,
-    Jobs{revision,wanted,reader,writer,paused},ticks,U32.add(serial,1)},
+    Jobs{revision,wanted,reader,writer,paused},refresh_at,U32.add(serial,1)},
     Request{9,export_args(displayed,snap,start,filters,UI.reader(ui),path),snap,start,path},writer)
 
 def export_begin(+state: State,+valid: Bool) -> IO(State):
@@ -574,16 +574,16 @@ def export_begin(+state: State,+valid: Bool) -> IO(State):
         export_at(state,now)
 
 def export(+state: State) -> IO(State):
-  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters},Form{+mode,+search,+source,+form},+jobs,+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters},Form{+mode,+search,+source,+form},+jobs,+refresh_at,+serial} = state
   export_begin(state,Bool.not(U32.is_eq(mode,1)) && ((displayed >= 3 && displayed <= 4 : U32) || file_kind(displayed) || U32.is_eq(displayed,14)))
 
 def clear_reader(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+ticks,+serial} = state
-  State{db,dir,program,ui,selection,form,Jobs{revision,wanted,None{},writer,paused},ticks,serial}
+  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
+  State{db,dir,program,ui,selection,form,Jobs{revision,wanted,None{},writer,paused},refresh_at,serial}
 
 def clear_writer(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+ticks,+serial} = state
-  State{db,dir,program,ui,selection,form,Jobs{revision,wanted,reader,None{},paused},ticks,serial}
+  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
+  State{db,dir,program,ui,selection,form,Jobs{revision,wanted,reader,None{},paused},refresh_at,serial}
 
 def initial_page(+state: State,+snap: String,+start: U32,+filters: Query.Filters,+initial: Bool) -> State:
   match initial:
@@ -593,11 +593,11 @@ def initial_page(+state: State,+snap: String,+start: U32,+filters: Query.Filters
       state
 
 def with_rows(+state: State,+items: List<&2,Item>) -> State:
-  State{+db,+dir,+program,+ui,Selection{+old,+snap,+start,+displayed,+blame,+filters},+form,+jobs,+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+old,+snap,+start,+displayed,+blame,+filters},+form,+jobs,+refresh_at,+serial} = state
   +chosen = Domain.select_snapshot(maybe_snapshot(snap),first_snapshot(items))
   +next = {State{db,dir,program,UI.set_status(UI.set_rows(ui,item_titles(items)),
     U32.show(U32.from_nat(List.length(&2,Item,items))) ++ " results. Existing reader stays pinned to its accepted snapshot."),
-    Selection{items,snap,start,displayed,blame,filters},form,jobs,ticks,serial} : State}
+    Selection{items,snap,start,displayed,blame,filters},form,jobs,refresh_at,serial} : State}
   initial_page(next,chosen,first_ordinal(items),first_filters(items),String.is_empty(snap) && Bool.not(String.is_empty(chosen)))
 
 def rows_done(+state: State,+kind: U32,+filters: Query.Filters,result: Result<&2,&2,String,List<&2,List<&2,Sql.Cell>>>) -> State:
@@ -608,16 +608,16 @@ def rows_done(+state: State,+kind: U32,+filters: Query.Filters,result: Result<&2
       with_rows(state,Bool.pick(List<&2,Item>,U32.is_eq(kind,1),history_items(rows,filters),search_items(rows,filters)))
 
 def text_done(+state: State,+request: Request,result: Result<&2,&2,String,String>) -> State:
-  State{+db,+dir,+program,+ui,Selection{+items,+old,+oldstart,+displayed,+blame,+filters},Form{+mode,+search,+source,+form},+jobs,+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+old,+oldstart,+displayed,+blame,+filters},Form{+mode,+search,+source,+form},+jobs,+refresh_at,+serial} = state
   Request{+kind,+args,+snap,+start,+title} = request
   match result:
     case Fail{message}:
-      status(State{db,dir,program,ui,Selection{items,old,oldstart,displayed,blame,filters},Form{mode,search,source,form},jobs,ticks,serial},message)
+      status(State{db,dir,program,ui,Selection{items,old,oldstart,displayed,blame,filters},Form{mode,search,source,form},jobs,refresh_at,serial},message)
     case Done{text}:
       State{db,dir,program,UI.set_status(UI.set_reader(Bool.pick(UI.State,file_kind(kind) || U32.is_eq(mode,0),ui,UI.set_query(ui,search)),title,text),"Captured evidence loaded. Scroll or drag to select; Cmd+C copies."),
         Selection{items,Bool.pick(String,file_kind(kind),old,snap),start,kind,
           Bool.pick(List<&2,String>,file_kind(kind),args,blame),
-          Bool.pick(Query.Filters,file_kind(kind) || U32.is_eq(kind,14),filters,request_filters(args))},Form{Bool.pick(U32,file_kind(kind),2,0),search,source,form},jobs,ticks,serial}
+          Bool.pick(Query.Filters,file_kind(kind) || U32.is_eq(kind,14),filters,request_filters(args))},Form{Bool.pick(U32,file_kind(kind),2,0),search,source,form},jobs,refresh_at,serial}
 
 def read_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
   Request{+kind,+args,+snap,+start,+title} = request
@@ -640,7 +640,7 @@ def read_current(+state: State,+request: Request,+reply: Reply,+current: Bool) -
       read_done(clear_reader(state),request,value)
 
 def poll_read_ready(+state: State,+ticket: U32,+request: Request,chan: Chan(Reply),result: Maybe<&1,Reply>) -> IO(State):
-  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
   match result:
     case None{}:
       do IO<State>:
@@ -675,7 +675,7 @@ def refresh_idle(+state: State,wanted: Maybe<&2,Request>,reader: Maybe<&2,Pendin
       status(state,"Capture finished. Your current view stays pinned.")
 
 def refresh_finished(+state: State) -> State:
-  State{db,dir,program,ui,selection,form,Jobs{revision,wanted,reader,writer,paused},ticks,serial} = state
+  State{db,dir,program,ui,selection,form,Jobs{revision,wanted,reader,writer,paused},refresh_at,serial} = state
   refresh_idle(state,wanted,reader)
 
 def refresh_error_kind(failed: String,discovery: Json.Json,partial: Bool,bad_discovery: Bool) -> String:
@@ -742,10 +742,10 @@ def write_value(+state: State,+kind: U32,+title: String,+mode: U32,result: Resul
       write_success(state,kind,title,mode,value)
 
 def write_done(+state: State,+request: Request,+reply: Reply) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
   Request{+kind,+args,+snap,+start,+title} = request
   Reply{+value} = reply
-  write_value(State{db,dir,program,ui,selection,Form{mode,search,source,blame},jobs,ticks,serial},kind,title,mode,value)
+  write_value(State{db,dir,program,ui,selection,Form{mode,search,source,blame},jobs,refresh_at,serial},kind,title,mode,value)
 
 def poll_write_ready(+state: State,+request: Request,chan: Chan(Reply),result: Maybe<&1,Reply>) -> IO(State):
   match result:
@@ -775,60 +775,87 @@ def poll_write(+state: State,pending: Maybe<&2,Pending>) -> IO(State):
         poll_write_result(state,request,chan,result)
 
 def start_read(+state: State,wanted: Maybe<&2,Request>,busy: Maybe<&2,Pending>) -> IO(State):
-  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+old,+reader,+writer,+paused},+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+old,+reader,+writer,+paused},+refresh_at,+serial} = state
   match wanted busy:
     case Some{Request{+kind,+args,+snap,+start,+title}} None{}:
       do IO<State>:
         chan : Chan(Reply) <- IO.fork(Reply,read_job(program,dir,args))
-        return State{db,dir,program,ui,selection,form,Jobs{revision,None{},Some{Pending{revision,Request{kind,args,snap,start,title},chan}},writer,paused},ticks,serial}
+        return State{db,dir,program,ui,selection,form,Jobs{revision,None{},Some{Pending{revision,Request{kind,args,snap,start,title},chan}},writer,paused},refresh_at,serial}
     case _ _:
-      IO.pure(State,State{db,dir,program,ui,selection,form,Jobs{revision,old,reader,writer,paused},ticks,serial})
+      IO.pure(State,State{db,dir,program,ui,selection,form,Jobs{revision,old,reader,writer,paused},refresh_at,serial})
 
-def auto_active(+state: State,+due: Bool) -> IO(State):
-  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+ticks,+serial} = state
-  match writer paused due:
-    case None{} False{} True{}:
-      start_write(State{db,dir,program,ui,selection,form,Jobs{revision,wanted,reader,None{},paused},0,serial},
+# The deadline is monotonic milliseconds, never a count of rendered frames.
+# Unarmed while paused, editing a form or writing: resume/completion gets a full
+# interval instead of immediately repeating a long capture. Nat avoids uptime
+# truncation at the U32 millisecond boundary.
+def refresh_deadline(+state: State,deadline: Nat) -> State:
+  State{db,dir,program,ui,selection,form,jobs,old,serial} = state
+  State{db,dir,program,ui,selection,form,jobs,deadline,serial}
+
+def next_refresh(now: Nat) -> Nat:
+  Nat.add(now,30000n)
+
+def refresh_due(+deadline: Nat,+now: Nat) -> Bool:
+  Bool.not(Nat.is_eq(deadline,0n)) && Nat.is_ge(now,deadline)
+
+def refresh_unarmed(+deadline: Nat,+now: Nat) -> Bool:
+  Nat.is_eq(deadline,0n) || Nat.is_gt(deadline,next_refresh(now))
+
+def auto_due(+state: State,+now: Nat,+unarmed: Bool,+due: Bool) -> IO(State):
+  match unarmed due:
+    case True{} _:
+      IO.pure(State,refresh_deadline(state,next_refresh(now)))
+    case False{} True{}:
+      start_write(refresh_deadline(state,0n),
         Request{15,["refresh-all"],"",0,"Automatic registered-source refresh"},None{})
-    case _ _ _:
-      IO.pure(State,State{db,dir,program,ui,selection,form,Jobs{revision,wanted,reader,writer,paused},U32.add(ticks,1),serial})
-
-def auto_mode(+state: State,mode: U32,due: Bool) -> IO(State):
-  match mode:
-    case 0:
-      auto_active(state,due)
-    case _:
+    case _ _:
       IO.pure(State,state)
 
-def auto_refresh(+state: State,+due: Bool) -> IO(State):
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame},jobs,ticks,serial} = state
-  auto_mode(state,mode,due)
+def auto_active(+state: State,+now: Nat) -> IO(State):
+  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
+  match writer paused:
+    case None{} False{}:
+      auto_due(state,now,refresh_unarmed(refresh_at,now),refresh_due(refresh_at,now))
+    case _ _:
+      IO.pure(State,refresh_deadline(state,0n))
+
+def auto_mode(+state: State,mode: U32,now: Nat) -> IO(State):
+  match mode:
+    case 0:
+      auto_active(state,now)
+    case _:
+      IO.pure(State,refresh_deadline(state,0n))
+
+def auto_refresh(+state: State,+now: Nat) -> IO(State):
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame},jobs,refresh_at,serial} = state
+  auto_mode(state,mode,now)
 
 def service_start(+state: State) -> IO(State):
-  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
   do IO<State>:
     next : State <- start_read(state,wanted,reader)
-    auto_refresh(next,U32.is_ge(ticks,1800))
+    now : Nat <- IO.now()
+    auto_refresh(next,now)
 
 def service_write(+state: State) -> IO(State):
-  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
   do IO<State>:
     next : State <- poll_write(state,writer)
     service_start(next)
 
 def service(+state: State) -> IO(State):
-  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
   do IO<State>:
     next : State <- poll_read(state,reader)
     service_write(next)
 
 def toggle_pause(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+ticks,+serial} = state
-  status(State{db,dir,program,ui,selection,form,Jobs{revision,wanted,reader,writer,Bool.not(paused)},0,serial},
+  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
+  status(State{db,dir,program,ui,selection,form,Jobs{revision,wanted,reader,writer,Bool.not(paused)},0n,serial},
     Bool.pick(String,paused,"Automatic refresh resumed.","Automatic refresh paused. In-flight work finishes safely; manual Refresh still works."))
 
 def enter(+state: State,+index: U32) -> IO(State):
-  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+args,+filters},Form{+mode,+search,+source,+blameform},+jobs,+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+args,+filters},Form{+mode,+search,+source,+blameform},+jobs,+refresh_at,+serial} = state
   match mode:
     case 1:
       refresh(state)
@@ -838,7 +865,7 @@ def enter(+state: State,+index: U32) -> IO(State):
       IO.pure(State,open_item(state,select_item(items,U32.to_nat(index))))
 
 def handle(+state: State,action: UI.Action) -> IO(Maybe<State>):
-  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+args,+filters},+form,+jobs,+ticks,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+args,+filters},+form,+jobs,+refresh_at,+serial} = state
   match action:
     case UI.Quit{}:
       IO.pure(Maybe<State>,None{})
@@ -907,7 +934,7 @@ def events(es: List<Event>,+state: State) -> IO(Maybe<State>):
     case []:
       IO.pure(Maybe<State>,Some{state})
     case e <> rest:
-      State{+db,+dir,+program,+ui,+selection,+form,+jobs,+ticks,+serial} = state
+      State{+db,+dir,+program,+ui,+selection,+form,+jobs,+refresh_at,+serial} = state
       do IO<Maybe<State>>:
         result : Maybe<State> <- event(state,UI.event(e,ui))
         events_next(result,s => events(rest,s))
@@ -917,30 +944,59 @@ def view_result(+state: State,result: UI.State & Image) -> State & Image:
   (replace_ui(state,ui),image)
 
 def view_inner(+current: State) -> State & Image:
-  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+ticks,+serial} = current
+  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+refresh_at,+serial} = current
   view_result(current,UI.view(ui))
 
 def view(state: State) -> State & Image:
   view_inner(state)
 
-def tick_result(result: Maybe<State>) -> IO(Maybe<State>):
+def pending_request(value: Maybe<&2,Request>) -> Bool:
+  match value:
+    case None{}:
+      False{}
+    case Some{request}:
+      True{}
+
+def pending_job(value: Maybe<&2,Pending>) -> Bool:
+  match value:
+    case None{}:
+      False{}
+    case Some{pending}:
+      True{}
+
+# Window.frame is also the upstream native event pump. Cap settled sleep at
+# 80ms, and keep input, dirty frames and all outstanding work on the 1ms path.
+# Inspect the state after service so a newly arrived reply repaints promptly.
+def sleep_ms(+state: State,+had_events: Bool) -> U32:
+  State{db,dir,program,UI.State{content,input,image,dirty},selection,form,
+    Jobs{revision,wanted,reader,writer,paused},refresh_at,serial} = state
+  Bool.pick(U32,had_events || dirty || pending_request(wanted) || pending_job(reader) || pending_job(writer),1,80)
+
+def tick_result(had_events: Bool,result: Maybe<State>) -> IO(Maybe<State>):
   match result:
     case None{}:
       IO.pure(Maybe<State>,None{})
     case Some{state}:
       do IO<Maybe<State>>:
-        next : State <- service(state)
-        IO.sleep(1)
+        +next : State <- service(state)
+        IO.sleep(sleep_ms(next,had_events))
         return Some{next}
 
-def tick(es: List<Event>,state: State) -> IO(Maybe<State>):
+def tick_input(es: List<Event>,state: State,had_events: Bool) -> IO(Maybe<State>):
   do IO<Maybe<State>>:
     result : Maybe<State> <- events(es,state)
-    tick_result(result)
+    tick_result(had_events,result)
+
+def tick(es: List<Event>,state: State) -> IO(Maybe<State>):
+  match es:
+    case []:
+      tick_input([],state,False{})
+    case e <> rest:
+      tick_input(e <> rest,state,True{})
 
 def initial(+db: U32,+dir: String,+program: String) -> State:
   reload(State{db,dir,program,UI.init(),Selection{[],"",0,0,[],empty_filters()},Form{0,"","",""},
-    Jobs{0,None{},None{},None{},False{}},0,0})
+    Jobs{0,None{},None{},None{},False{}},0n,0})
 
 def run(+db: U32,+dir: String,+program: String) -> IO(Unit):
   App.run(~State,~App{view,tick},"Juice Bend",1408,896,initial(db,dir,program))

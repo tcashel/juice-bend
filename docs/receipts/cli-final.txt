@@ -1,4 +1,21 @@
-Juice Bend current application CLI integration receipt
+Juice Bend final Tart-validated application host smoke receipt
+Date: 2026-10-20
+Host: local macOS 27.0.1 / Apple Silicon
+Executable: build/juice-bend
+SHA-256: 05cdff4f599edcd16646fc3363e27c3856bda4b073f52a92f23264887ef5ba35
+
+Using a new isolated synthetic library, --demo status, search preservation,
+scoped transcript, verify and rebuild returned valid JSON and exited 0. Status:
+2 sources, 2 generations, 2 accepted snapshots, 11532 raw bytes, 32 events.
+The local bundle launcher returned byte-identical status from the same library.
+The exact Tart-tested binary is packaged in build/Juice Bend Validated.app.
+A fresh packaging compile produced identical generated C but a different Mach-O
+hash/UUID; that link result is preserved separately in ignored build/. It is
+not substituted for the exact UI-tested binary. No deterministic-link claim.
+
+Earlier broader CLI receipts follow with their own binary identities.
+
+Juice Bend earlier application CLI integration receipt
 Date: 2026-10-20
 Host: local macOS / Apple Silicon
 Executable: build/juice-bend
@@ -24,7 +41,7 @@ complete-extent verification and rebuild reported unchanged raw bytes. Raw
 export compared byte-for-byte with the synthetic Claude source. Scoped Markdown
 retained Café and had mode 0600. Outputs remain under ignored build/current-cli.
 The new local bundle contains the identical executable hash and its status
-command returned the same library counts. This is CLI evidence on the latest storage-hardening build. Its subsequent
+command returned the same library counts. This is historical CLI evidence on the identified earlier storage-hardening build. Its subsequent
 unlocked-desktop workflow is recorded separately in native-validation.md.
 The separate earlier file/commit smoke follows.
 

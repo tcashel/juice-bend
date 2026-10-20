@@ -10,7 +10,8 @@ import ../src/json.bend as Json
 # App calls Window.frame before tick: entry observes its return, not when a
 # pixel became visible. The log adds file IO and scheduling overhead. It must
 # not be treated as uninstrumented input latency or input-to-photon evidence.
-# Query text is omitted unless --trace-query explicitly opts into logging it.
+# Query text and ordered native events are omitted unless --trace-query opts
+# into synthetic input logging. Event details stop after 64 events per frame.
 type Book is Data:
   Book{frame: U32, last_query: String, trace_query: Bool}
 
@@ -43,10 +44,48 @@ def query_field(+query: String,last: String,enabled: Bool) -> String:
   Bool.pick(String,enabled && Bool.not(String.eq(query,last)),
     ",\"query_changed\":" ++ Json.quote(query),"")
 
-def entry_line(frame: U32,now: Nat,events: Nat,gui: Gui.State) -> String:
+def event_json(event: Event) -> String:
+  match event:
+    case Text{text}:
+      "{\"type\":\"Text\",\"text\":" ++ Json.quote(text) ++ "}"
+    case Key{code,down}:
+      "{\"type\":\"Key\",\"code\":" ++ U32.show(code) ++ ",\"down\":" ++ bool_json(down) ++ "}"
+    case Mouse{x,y,button,down}:
+      "{\"type\":\"Mouse\",\"x\":" ++ U32.show(x) ++ ",\"y\":" ++ U32.show(y) ++
+      ",\"button\":" ++ U32.show(button) ++ ",\"down\":" ++ bool_json(down) ++ "}"
+    case Move{x,y}:
+      "{\"type\":\"Move\",\"x\":" ++ U32.show(x) ++ ",\"y\":" ++ U32.show(y) ++ "}"
+    case Look{dx,dy}:
+      "{\"type\":\"Look\",\"dx\":" ++ Json.quote(F32.show(dx)) ++ ",\"dy\":" ++ Json.quote(F32.show(dy)) ++ "}"
+    case Scroll{x,y,dx,dy}:
+      "{\"type\":\"Scroll\",\"x\":" ++ U32.show(x) ++ ",\"y\":" ++ U32.show(y) ++
+      ",\"dx\":" ++ Json.quote(F32.show(dx)) ++ ",\"dy\":" ++ Json.quote(F32.show(dy)) ++ "}"
+    case Close{}:
+      "{\"type\":\"Close\"}"
+
+def event_entries(events: List<&2,Event>,fuel: Nat,separator: String) -> String:
+  match events fuel:
+    case [] _:
+      ""
+    case _ 0n:
+      ""
+    case event <> tail 1n+rest:
+      separator ++ event_json(event) ++ event_entries(tail,rest,",")
+
+def event_fields(events: List<&2,Event>,count: Nat,enabled: Bool) -> String:
+  match enabled:
+    case False{}:
+      ""
+    case True{}:
+      ",\"native_events\":[" ++ event_entries(events,64n,"") ++
+      "],\"native_events_omitted\":" ++ Nat.show(Nat.sub(count,64n))
+
+def entry_line(frame: U32,now: Nat,+count: Nat,gui: Gui.State,
+  events: List<&2,Event>,enabled: Bool) -> String:
   "{\"phase\":\"frame_return_tick_entry\",\"frame\":" ++ U32.show(frame) ++
   ",\"monotonic_ms\":" ++ Nat.show(now) ++
-  ",\"event_count\":" ++ Nat.show(events) ++ state_fields(gui) ++ "}\n"
+  ",\"event_count\":" ++ Nat.show(count) ++ state_fields(gui) ++
+  event_fields(events,count,enabled) ++ "}\n"
 
 def exit_line(frame: U32,now: Nat,start: Nat,events: Nat,+gui: Gui.State,
   last: String,enabled: Bool,closed: Bool) -> String:
@@ -116,7 +155,7 @@ def traced_tick(events: List<Event>,+gui: Gui.State,+book: Book,log: File,entry:
   +captured = copy_events(events)
   +count = List.length(&2,Event,captured)
   do IO<Maybe<State>>:
-    log : File <- write(log,entry_line(frame,entry,count,gui))
+    log : File <- write(log,entry_line(frame,entry,count,gui,captured,enabled))
     start : Nat <- IO.now()
     result : Maybe<Gui.State> <- Gui.tick(linear_events(captured),gui)
     end : Nat <- IO.now()
@@ -148,9 +187,10 @@ def tick(events: List<Event>,state: State) -> IO(Maybe<State>):
   Book{frame,last,enabled} = book
   tick_bounded(events,gui,book,log,U32.is_le(frame,12000))
 
-def header(enabled: Bool) -> String:
-  "{\"phase\":\"trace_header\",\"version\":1,\"clock\":\"CLOCK_MONOTONIC milliseconds\"," ++
+def header(+enabled: Bool) -> String:
+  "{\"phase\":\"trace_header\",\"version\":2,\"clock\":\"CLOCK_MONOTONIC milliseconds\"," ++
   "\"max_paired_ticks\":12000,\"query_logging\":" ++ bool_json(enabled) ++
+  ",\"native_event_logging\":" ++ bool_json(enabled) ++ ",\"max_events_per_frame\":64" ++
   ",\"production_callbacks\":\"Gui.view,Gui.tick\",\"input_to_photon\":false," ++
   "\"entry_before_trace_write\":true,\"tick_start_after_trace_write\":true," ++
   "\"instrumentation\":\"two log writes and three clock reads per traced tick\"}\n"

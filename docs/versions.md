@@ -5,6 +5,7 @@ Observed locally on 2026-10-20:
 | Component | Selection / observation |
 |---|---|
 | Host | macOS 27.0.1 (26A434), arm64 |
+| Local Tart validation guest | macOS 27.0 (26A428), arm64; installed Tart 2.40.1; guest SQLite 3.54.0 |
 | mise | 2026.9.12; repository `mise.toml` |
 | Bun, compiler host only | 1.4.2, pinned through mise |
 | Bend | 2.0.37, upstream `60ca80aedeec9d8f0629b5f10dd19457d8ad67af` |

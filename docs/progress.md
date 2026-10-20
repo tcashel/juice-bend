@@ -2,29 +2,25 @@
 
 2026-10-20, local macOS 27.0.1 arm64. Branch:
 `codex/juice-bend-implementation`; existing draft PR #1. The native core workflow
-is implemented and observed. **Full M0–M5 acceptance remains incomplete** at the
-specific boundaries below; do not report the whole matrix as passed.
+is implemented and observed on both the host and the coordinated local Tart
+Mac guest. **Full M0–M5 acceptance remains incomplete** at the specific limits
+below; do not report the entire matrix as passed.
 
 ## Runnable result
 
-The current `build/juice-bend` and `build/Juice Bend Current.app` contain the
-same 4,621,176-byte native executable, SHA-256
-`6a1287727e86e6d956dbfa7bf42bb6a1551d2fe064f110c805e14f6e8b85a32c`.
-Both passed isolated native CLI smoke checks. The current bundle also passed
-fresh empty-library launch, explicit capture, search, transcript selection/copy,
-Why and export on the unlocked desktop. The desktop-observed earlier
-4ad55c63 build remains in `build/juice-bend-next` and `build/Juice Bend.app`;
-that test bundle uses only `/private/tmp/juice-bend-native-validation`.
-All build outputs and data are ignored. Both validation windows were closed
-and the current production bundle's ordinary launcher restored. Use an explicit
-isolated data directory for further testing.
+The final native candidate is `build/juice-bend-validated`, 4,708,120 bytes,
+SHA-256 `05cdff4f599edcd16646fc3363e27c3856bda4b073f52a92f23264887ef5ba35`.
+The standard executable `build/juice-bend` and local bundle
+`build/Juice Bend Validated.app` use this same candidate. Earlier bundles remain
+preserved and are not the current candidate. Outputs and synthetic data are
+ignored; use an explicit isolated data directory for validation.
 
-Mise pins Bun 1.4.2 and selects Bend 2.0.37 revision
+Mise pins Bun 1.4.2 and Bend 2.0.37 revision
 `60ca80aedeec9d8f0629b5f10dd19457d8ad67af`; all 88 source hashes verify.
-Use `mise run run -- --demo` from an unlocked desktop terminal. It builds and
-opens a fresh synthetic demo. Bun is only the compiler host, not an application
-runtime. `mise run app -- "build/Juice Bend Local.app"` creates a new local
-bundle; choose an unused path. SQLite 3.54.0 with FTS5 was verified on this Mac.
+From a desktop terminal, `mise run run -- --demo` builds and opens a fresh
+synthetic library. `mise run app -- "build/Juice Bend Local.app"` creates a new
+bundle; choose an unused path. Bun hosts the compiler only. System SQLite
+3.54.0 with FTS5 was observed on host and guest.
 
 The app captures explicit Claude/Codex JSONL into owned SQLite raw records,
 retains immutable generations/snapshots, searches lexical FTS, pages verified
@@ -32,72 +28,98 @@ transcripts, copies selections, filters provider/repository/role/date, displays
 bounded usage facts, performs conservative file/commit Blame and Why, and
 exports retained evidence. Settings supports bounded root discovery, refresh,
 pause and verified derived-index rebuild. All maintained application/UI logic
-is Bend. The 418-line SQLite bridge is the native exception; same-executable
-Bend workers have no dependency on the existing Juice process.
+is Bend; the unchanged 418-line SQLite bridge is the native exception.
+Same-executable Bend workers do not depend on the existing Juice process.
 
 ## Completed validation
 
-- Final integrated `mise run test`: 31 executables, 2,007 named checks, exit 0,
-  including 34 GUI-state checks. See `docs/receipts/test-summary.txt`.
-- Deterministic process recovery: 27 exact initial/append/rewrite cuts across
-  nine production transaction boundaries, 1,203 checks. Closed nonce markers
-  distinguish a reached cut from an early failure; only owned synthetic child
-  processes are terminated. Precommit rollback, postcommit survival, retry,
-  old pinned evidence and fresh-replay equivalence pass. This is not power loss.
-- Actual desktop: browse/search/open/scroll, query and reader copy/paste,
-  explicit synthetic capture, file Blame/Why/export, Pause, Usage, verified
-  rebuild and combined filters. Exact candidates and limitations are in
-  `docs/native-validation.md`. The current storage-hardening build also passed
-  the fresh-library capture/search/copy/Why/export workflow. A subsequent
-  100,016-record capture published 125,020 events while retaining the first
-  snapshot. The desktop later relocked; timing and physical input remain open.
+- Full native suite: **33 executables, 2,166 named checks**, exit 0. Includes
+  52 GUI-state, 131 SQL-batch and 10 diagnostic checks; exact counts are in
+  `docs/receipts/test-summary.txt`.
+- Crash recovery: 27 initial/append/rewrite cuts across nine real transaction
+  boundaries, 1,203 checks. Nonce markers verify reached cuts; only owned
+  synthetic children are terminated. Rollback, postcommit survival, retry,
+  pinned evidence and independent fresh replay pass. This is not power loss.
+- Final native Tart build: fresh empty launch; capture of **100,016 physical
+  records / 125,020 events**; visible query input and Pause while capture ran;
+  retained search/open/scroll/selection/copy/Why/export after moving the source
+  away; verified rebuild with source still absent. Rebuilt index count was
+  125,020, and SQLite quick_check returned `ok`. Export was inspected mode-0600
+  Markdown with retained citations. Earlier host observations cover file Blame,
+  Usage and combined filters; candidate boundaries remain explicit in
+  `docs/native-validation.md`.
+- Final native Command+A/C/V, exact `café 中文 🙂` clipboard roundtrip,
+  replacement with `keyboard-ok`, and Shift+Arrow selection passed. Direct
+  Unicode typing/IME remains unverified: external automation delivered altered
+  native Text events. The app's input logic was not weakened to fit the tool.
+- Large guest capture exposed an interrupted bulk FTS statement in the earlier
+  candidate. Bend now bounds SQL row/payload batches inside the existing
+  transaction. Final capture and retained rebuild passed without changing the
+  bridge deadline. New tests cover multi-event boundaries, oversized fields,
+  signed rowids, late-failure rollback and retry.
+- Monotonic 30-second refresh and an 80 ms settled idle delay replace frame-count
+  scheduling. An intermediate build with the final GUI measured **1.55% of one
+  core** at idle, versus 15.25% initially. Final GUI physical footprint after
+  capture/rebuild was **46.2M**, not aggregate GUI-plus-worker memory. Precise
+  input-to-display latency and scroll cadence remain unmeasured.
+- Fresh final-source 100k benchmark: first import **35.570 s**, unchanged
+  **6.831 s**, append 16 records **40.103 s**, search p95 **39 ms**, late page
+  p95 **8 ms**, repository-scoped late page p95 **18 ms**. All assertions and
+  31 frozen source/build-input hashes passed. Five-trial p95 is the observed
+  maximum. See `docs/performance.md`; long-history append remains slow.
 - Twelve production laws pass ordinary checking and BendTT translation.
-  Final `mise run prove` again passed ordinary checking then exited 1 because
-  exact Lean/leanc 4.34.0 is unavailable. Stronger-kernel verification did not run.
-- Final fresh 100k benchmark: first import 36.381 s; unchanged 7.019 s; append
-  16 records 39.945 s; search p95 51 ms; late page p95 8 ms; repository-scoped
-  late page p95 19 ms. All correctness assertions and frozen-input checks pass.
-  Append remains materially slow. See `docs/performance.md` for receipts,
-  sample sizes, source inventory and separate earlier backend RSS observations.
-- Final build: 63.89 s with a fresh Clang module cache; repeat full build/local
-  packaging: 62.85 s, identical executable. True incremental compilation is
-  not implemented. No signing or distribution project was added.
-- Independent review verified final source invariants and public receipt safety.
-  All captures/fixtures are synthetic; original Juice checkout/data stayed read-only.
+  `scripts/prove` again exited 1 after ordinary checking because exact
+  Lean/leanc 4.34.0 is unavailable. Stronger-kernel verification did not run.
+- Independent review found no blocking source/ownership/publication regression.
+  No app source, bridge or upstream runtime changed after the full suite.
 
-## Exact continuation
+## VM handoff and exact continuation
 
-1. Inspect Git status and branch/PR state; preserve all local work. Keep PR #1
-   draft while acceptance gaps remain. Original Juice and its pre-existing edits
-   are read-only. Publication is authorized only in `tcashel/juice-bend`.
-2. The current build's empty-library workflow and a bounded diagnostic capture
-   are observed. `benchmarks/native_trace.bend` reuses production GUI callbacks;
-   its 5,069 capture ticks had frame-return p95 18 ms / max 45 ms while input
-   and Pause were processed. This rules out a continuous callback freeze in
-   that instrumented run, not screen-paint delay. See `native-validation.md`.
-3. The owner authorized the installed external-SSD Tart VM for further native
-   automation. “Add app storage management” confirmed its handoff: `juice-tests`
-   is stopped and its runner/cleanup locks are absent. The current sandbox
-   denied creation of the shared lease. A narrow sandbox exception was requested
-   because AGENTS.md otherwise prohibits permission escalation; it is pending.
-   `scripts/vm-session` and `mise run build-vm` are ready. The isolated payload
-   location is recorded in ignored `build/tart-run-path.txt`; it contains only
-   the separate macOS 26 executable and synthetic fixtures. No VM has started.
-   With authorization, reserve the shared lease through that runner, then finish
-   startup, input-to-visible and GUI CPU/RSS measurements inside the Mac guest.
-4. Verify physical Command/Shift and Unicode/IME input. Automation produced
-   ambiguous modifier events and truncated non-ASCII committed input. Pointer
-   clipboard roundtrips worked; do not weaken modifier handling to fit the tool.
-5. Obtain exact Lean 4.34.0 through the pinned upstream path and run
-   `mise run prove`. DNS/network restrictions blocked installation; no substitute
-   kernel, permission escalation or blanket OS setting change was used.
-6. Investigate remaining linear raw-prefix verification and immutable projection
-   copying in long-history append without weakening raw durability, stable
-   evidence identity or corruption detection. The tuple-cursor rescan fix is
-   already included and has 12 regression checks; do not repeat that fix.
+The owner authorized Tart and its required sandbox exception. The chat
+“Add app storage management” released `juice-tests` before our run. The runner
+used isolated synthetic shares and host-only networking. Our app/workers closed
+normally; the runner stopped only its owned Tart child and exited 130 after
+Ctrl-C. `juice-tests` is **stopped**, both shared runner/cleanup locks are
+**absent**, and the other chat was notified. No live VM/process lease remains.
+Original Juice checkout/data and prior VM results were left untouched.
+
+Raw screenshots, traces and isolated payloads are ignored under
+`build/tart/native-c6dldcyb/session-artifacts`; the guest synthetic root is
+`/private/tmp/juice-bend-tart.oMg430yg`. The committed sanitized summary is
+`benchmarks/results/tart-native-summary.json`. Never publish real history or
+reference-source snapshots.
+
+1. Inspect Git status and branch/PR state; preserve local changes. PR #1 remains
+   draft, with publication authorized only in `tcashel/juice-bend`. No merge.
+2. Obtain exact Lean/leanc 4.34.0 through the pinned upstream path and run
+   `mise run prove`. Local discovery and the official download DNS check failed;
+   do not substitute a kernel or claim ordinary checking is a verdict.
+3. Coordinate a new Tart lease before further guest work. Current native
+   Command/Shift/clipboard checks are complete; remaining input work is direct
+   Unicode typing/IME plus precise input-to-display and scroll measurements.
+   Use the diagnostic's opt-in native event log to distinguish injected events
+   from application behavior. Do not ask the owner to repeat an unexplained
+   physical-keyboard ritual. Unsupported glyphs still display boxes while
+   copy/export retain Unicode; complete shaping/accessibility are not claimed.
+4. Investigate linear raw-prefix verification and immutable projection copying
+   in long-history append without weakening integrity or stable citations.
+   Per-source FTS cleanup still scans the current index; many-source and 1M
+   stress scaling remain unmeasured. The tuple-cursor and bounded-statement
+   fixes are already included; do not repeat them.
+5. Fresh-machine setup and the remaining acceptance rows retain their explicit
+   partial/not-run status in `docs/acceptance.md`. No signing, distribution,
+   semantic search, model runtime or existing Juice service is in scope.
 
 Repeatable gates: `mise run test`, `mise run prove`, `mise run bench -- 100000`.
-SSH publication failed DNS; the GitHub connector can publish the exact verified
-Git tree using a fast-forward expected-head check. Preserve local commit identities
-on backup branches when reconciling connector commits. No force push, merge,
-release, private history or reference-source snapshot belongs in this work.
+The GitHub connector can publish the exact verified tree with a fast-forward
+expected-head check when shell DNS is unavailable. Preserve local commit
+identities on backup branches when reconciling connector commits; no force push.
+
+This session's checkout `.git` metadata is read-only (`index.lock` creation was
+denied). Publication therefore uses the ignored `build/publication.git` object
+store and a separate index, preserving a coherent local commit without changing
+the checkout metadata. The working files contain the published tree; the local
+implementation-branch ref still points at `b647310636e59543668ecadb27571b9a7c5ae9e4`
+until it can be reconciled with the remote. Do not discard these apparent local
+changes. Verify the remote tree and preserve the local publication commit before
+advancing the checkout's ref in a session with ordinary Git write access.

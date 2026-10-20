@@ -34,3 +34,21 @@
   supplies `Unobserved`; no environment flag, native hook or alternative capture
   implementation enables faults. Process timeouts kill only owned synthetic
   children, and exact boundary markers are required before accepting a case.
+- **2026-10-20 — Bounded SQL publication.** Native guest capture exposed a
+  SQLite interrupt during large FTS publication. Bend now publishes/copies at
+  most 64 event rows and approximately 1 MiB per statement, deletes FTS rows in
+  at most 128-row/1 MiB batches, and copies record mappings in 256-row batches.
+  One oversized row can advance a batch. Existing outer transactions, exact
+  cursors and the bridge's two-second deadline remain unchanged. A final native
+  100,016-record capture and retained rebuild passed; 131 new checks cover batch
+  boundaries, signed rowids and rollback after a late failure.
+- **2026-10-20 — Monotonic refresh and idle scheduling.** Automatic refresh uses
+  a 30-second monotonic deadline, disarmed during forms, pause and writer work.
+  Only event-free, clean, work-free GUI ticks sleep 80 ms; active ticks retain
+  1 ms. This reduced measured settled guest CPU use, but does not establish
+  input-to-display latency. No native runtime/input adapter was changed.
+- **2026-10-20 — Coordinated local Tart validation.** The owner authorized the
+  installed external-SSD VM and its required sandbox exception. The existing
+  VM user released it before our nonce-owned lease; only synthetic payload and
+  results were shared, with host-only networking. The app closed, the owned VM
+  stopped, both shared locks were absent, and the other chat was notified.
