@@ -320,6 +320,26 @@ def advance(+root: String) -> IO(Unit):
     IO.try(Unit,Sql.close(db))
     IO.print("{\"advanced\":true,\"root\":" ++ Json.quote(root) ++ ",\"snapshots\":[\"1\",\"2\"],\"records\":[43,45]}")
 
+# Pause app automatic refresh before this command when proving that a later
+# manual GUI Refresh publishes the append. The original standalone capture is
+# already eligible for refresh; this command registers no source root and calls
+# neither Store.schema nor Store.import_file. The reader connection closes
+# before the synthetic source append, so it cannot hold a read transaction over
+# the app's subsequent capture.
+def append_only(+root: String) -> IO(Unit):
+  do IO<Unit>:
+    owned(root)
+    exact_file(source(root),initial())
+    absent(source(root) ++ ".retained")
+    +db : U32 <- IO.try(U32,Sql.open(database(root)))
+    state(db,root,"1",43)
+    IO.try(Unit,Sql.close(db))
+    exact_file(source(root),initial())
+    Store.write_text(source(root),"a",appended())
+    exact_file(source(root),initial() ++ appended())
+    IO.print("{\"appended_only\":true,\"root\":" ++ Json.quote(root) ++
+      ",\"source_records\":45,\"prior_snapshot\":\"1\",\"prior_records\":43,\"capture_requested\":false}")
+
 def hide(+root: String) -> IO(Unit):
   do IO<Unit>:
     owned(root)
@@ -345,10 +365,12 @@ def arguments(args: List<String>) -> IO(Unit):
       prepare(root)
     case _ <> "advance" <> root <> []:
       advance(root)
+    case _ <> "append-only" <> root <> []:
+      append_only(root)
     case _ <> "hide" <> root <> []:
       hide(root)
     case _:
-      IO.die(Unit,2,"Usage: native-activity fixture NEW_ROOT | advance ROOT | hide ROOT (after advance)")
+      IO.die(Unit,2,"Usage: native-activity fixture NEW_ROOT | advance ROOT | append-only ROOT | hide ROOT (after snapshot 2 is captured)")
 
 def main() -> IO(Unit):
   do IO<Unit>:

@@ -1,0 +1,34 @@
+Event-seal standard backend benchmark, local macOS 27.0.1 (26A434) arm64.
+Date: 2026-10-20. Application publication base: 3e9d9d5938d3a6bb4d49e2f113bb18cb3749f306.
+Bend 2.0.37 revision 60ca80aedeec9d8f0629b5f10dd19457d8ad67af; mise-pinned Bun 1.4.2.
+Apple clang 21.0.0, standard repository -O3 native build flags.
+
+Build: ./scripts/build benchmarks/main.bend build/juice-bend-bench-event-seal
+Exit 0; all 19 transitive source/build input hashes unchanged; all 88 pinned
+upstream hashes verified before/after. No build-time performance claim.
+Input manifest: 100000-event-seal-sources.sha256.
+Executable bytes: 3032536
+Executable SHA256: 28d47af5f8b8f0f96090df70850247c13496ef29167b415a3c33909cf5ae915b
+Generated C SHA256: 30824a643e6312e4def45278ce4e7a1d4046e6b240ebe879e749b0bb3fc3dd9b
+Store SHA256: 31b7f8d5752dce4da6420ea2bc27f7e476998377eb44c07b240dec13fc6d341e
+Event seal SHA256: eba657f6476109b035a3c4daf0ffdb87e0017524425caecb572b3af39d688b30
+Domain SHA256: f2f68a4a9781ea102f3e275781380a885e3057e178d75c8d45b310c3c5002191
+Unchanged benchmark SHA256: 00f951077f700f4305fcf8f3b3882c58f935cd1568e210e0a0e7c9a85b0ee9e9
+
+Run: frozen executable with argument 100000 in a fresh private temporary directory.
+Child exit 0; orchestration exit 0; benchmark_complete=true; stderr empty.
+All 19 inputs, executable identity and all 88 upstream hashes unchanged pre/post.
+No task builds/tests/benchmarks/Tart overlapped the operation timers. Other
+host activity was uncontrolled. Fixture generation is outside operation timers.
+Raw results: 100000-event-seal.jsonl
+Raw result SHA256: f065f0a89821d089459f5ba76ca1d95a994918fc16ba21d6a52c297b33a6753d
+First import 32940 ms; unchanged 4519 ms; append 16 physical records 28226 ms.
+Warm search/late/scoped-late p95: 41/8/17 ms (five trials; observed maxima).
+
+Independent read-only SQLite postflight outside timers passed quick_check,
+foreign keys, exact table counts, latest-only FTS and both directions of full
+old/new prefix-event equality. Both snapshots carry event-seal-v1. See
+100000-event-seal-db-check.json. Schema 2 and raw/snapshot ownership are unchanged.
+This is application backend code, not the unintegrated shared-projection engine.
+Compared with earlier 33392 ms, append fell 15.5% in these observations; it remains
+slow. No statistical speed guarantee, native UI latency or memory claim.

@@ -1,0 +1,105 @@
+{
+  "receipt_version": 1,
+  "date": "2026-10-20",
+  "host": "macOS 27.0.1 arm64",
+  "guest": "macOS 27.0 (26A428) arm64",
+  "tart": "2.40.1",
+  "network": "host-only",
+  "application_sha256": "5ef9603de4cb1f618476e7885170ea0ac174370ceef2fa30023cea1d5b3a87ca",
+  "application_bytes": 9091528,
+  "build_inputs_verified": 39,
+  "upstream_hashes_verified": 88,
+  "fixture_sha256": "f93f68c3a51b93881987690544be4f4681de4745abe5c51051951191d357c0f8",
+  "fixture": {
+    "initial_records": 43,
+    "final_records": 45,
+    "accepted_snapshots": 2,
+    "source_absent": true
+  },
+  "observed": [
+    "Initial Tools viewport shows recorded arguments and results before evidence details",
+    "Tools physical pages contain 40 and 3 records; explicit error and missing-page counterpart are visible",
+    "Exact Unicode clipboard matches frozen CLI text on both original pages",
+    "Automatic refresh paused; append-only fixture leaves the database at snapshot 1 with 43 records",
+    "Native Refresh publishes snapshot 2 with 45 records through the application worker",
+    "Pinned original Tools page stays byte-identical after Refresh",
+    "Original synthetic source hidden; Open latest opens the retained five-record final page",
+    "Wheel events expose evidence details; subsequent copy preserves the complete latest page",
+    "Two Markdown exports contain exact displayed original and latest bodies with mode 0600",
+    "Native Command+Q closes the owned window"
+  ],
+  "clipboard": {
+    "first-copy": {
+      "bytes": 3904,
+      "exact": true,
+      "selection": "first"
+    },
+    "last-copy": {
+      "bytes": 3890,
+      "exact": true,
+      "selection": "last"
+    },
+    "pinned-after-refresh": {
+      "bytes": 3904,
+      "exact": true,
+      "selection": "first"
+    },
+    "latest-copy": {
+      "bytes": 5623,
+      "exact": true,
+      "selection": "latest"
+    },
+    "after-wheel-copy": {
+      "bytes": 5623,
+      "exact": true,
+      "selection": "latest"
+    }
+  },
+  "exports": [
+    {
+      "file": "export-1.md",
+      "selection": "first",
+      "bytes": 4075,
+      "body_bytes": 3904,
+      "mode": "0600",
+      "sha256": "00aa75d34aad29f150429328220857008aa0877081046ae8ed5786d63eb3aa95"
+    },
+    {
+      "file": "export-2.md",
+      "selection": "latest",
+      "bytes": 5794,
+      "body_bytes": 5623,
+      "mode": "0600",
+      "sha256": "e9e4c1af0769cb2a2196e8f1c57753331b66e4df1b882310294ce00e75bcd78c"
+    }
+  ],
+  "database": {
+    "quick_check": "ok",
+    "foreign_key_violations": 0,
+    "accepted_snapshots": 2,
+    "raw_records": 45,
+    "retained_events": 88,
+    "current_search_events": 45,
+    "projection_seals": {
+      "count": 2,
+      "version": "providers-v4-utc-context-relay|event-seal-v1"
+    }
+  },
+  "cleanup": {
+    "app_windows_after_close": 0,
+    "vm_state": "stopped",
+    "runner_exit": 130,
+    "leases_absent": true
+  },
+  "promotion": {
+    "exact_binary": true,
+    "prior_named_artifacts_preserved": true,
+    "isolated_empty_library_launcher_status": "passed"
+  },
+  "limitations": [
+    "Unsupported glyphs display boxes; clipboard and exports retain Unicode",
+    "No input-to-display latency or scrolling performance measurement in this receipt",
+    "This focused native workflow is not a full-suite rerun",
+    "No signing, notarization, or distribution validation"
+  ]
+}

@@ -24,6 +24,10 @@ Recorded Tools now has a retained, scoped reader, CLI and native control.
 Its 435 focused checks and actual Tart observations cover page boundaries,
 old snapshots after append/source removal, explicit latest and exact exports.
 Pairing is page-local and conservative; child/subagent navigation remains open.
+The combined event-seal/readability candidate passed 2,262 storage and 219
+presentation checks, plus actual native Refresh, retained text and exports.
+Payloads now precede their full citations. Standard 100k append improved from
+33.392 to 28.226 seconds in single observations; it still needs work.
 Priority order: finish long-history append improvements; close remaining
 native validation gaps; child/subagent navigation; Settings;
 richer provider/archive

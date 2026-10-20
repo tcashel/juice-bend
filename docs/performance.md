@@ -16,7 +16,74 @@ repositories, timestamps, tool arguments/results and usage. Each four physical
 JSONL records yield five normalized events. Events include tools and are not
 presented as five independent human/assistant messages.
 
-## Current backend candidate — bounded verification and aligned SHA
+## Current backend candidate — reusable verified event prefix
+
+The new event-seal candidate appended 16 records in **28,226 ms**, versus the
+preceding 33,392 ms observation: a 15.5% reduction. Append remains slow. This is
+one observation per version, not a statistical or Swift Juice comparison. The
+same unchanged generator, 100k workload and assertions were used. Both full
+raw/source verification passes remain; a freshly verified event-chain prefix
+is reused only within one uninterrupted write transaction, after typed equality
+checks of the copied prefix. Legacy or damaged seals use verified full replay.
+
+| Observation | Event-seal candidate |
+|---|---:|
+| First import | 32,940 ms |
+| Unchanged refresh | 4,519 ms |
+| Append 16 raw records / 20 events | 28,226 ms |
+| Warm scoped search median / p95 | 39 / 41 ms |
+| Warm late page median / p95 | 7 / 8 ms |
+| Warm repository-scoped late page median / p95 | 16 / 17 ms |
+| Existing database reopen and status | 16 ms |
+
+The native executable is `28d47af5f8b8f0f96090df70850247c13496ef29167b415a3c33909cf5ae915b`
+(3,032,536 bytes). All 19 transitive source/build inputs and 88 upstream hashes
+were verified before/after build and execution. No task build, test or Tart
+workload overlapped operation timers; unrelated host activity was uncontrolled.
+The child and orchestration both exited 0. Independent read-only SQLite checks
+passed integrity, foreign keys, exact raw/map/event/context/current-FTS counts,
+and old/new prefix-event equality in both directions. There were two accepted
+snapshots and 125,020 current search events; logical page bytes stayed 216,109,056.
+Five-trial p95 is the observed maximum. UI latency and memory are not measured.
+
+See [raw results](../benchmarks/results/100000-event-seal.jsonl),
+[build receipt](../benchmarks/results/100000-event-seal-build.txt),
+[database checks](../benchmarks/results/100000-event-seal-db-check.json) and
+[correctness gate](receipts/event-seal-native.txt).
+
+The subsequent [production observer diagnostic](../benchmarks/append_observed.bend)
+measured 28,352 ms from import entry through commit on a fresh 100k fixture.
+It calls the unchanged production import path, accumulates nine boundary clock
+samples, and prints them only at commit. There are no per-record clock calls.
+
+| Interval ending at | Duration |
+|---|---:|
+| Before transaction | 1 ms |
+| Staged | 20,466 ms |
+| Raw reverified | 4,446 ms |
+| Projection sealed | 1,022 ms |
+| Accepted | 0 ms |
+| Old search removed | 875 ms |
+| Latest repointed | 0 ms |
+| Before commit | 1,166 ms |
+| Committed | 376 ms |
+
+These are aggregate production phases, including callback overhead. Staging
+includes old-capture verification, copied projection/context work and tail
+parsing; it is not a SHA-only measurement. Sealing includes header, trigger and
+prefix comparisons. The nine deltas sum to the observed total. Fixture setup,
+independent preflight and postflight checks were outside the timer. The native
+binary `ef008e1f…`, 20 inputs and 88 upstream hashes stayed unchanged. Both event
+seals, 100k shared raw IDs, all old typed capture fingerprints, database counts,
+foreign keys and integrity passed. No task build, test or Tart workload overlapped
+the timer. One observed run identifies the next profiling target, not a latency
+guarantee. The 400-record correctness mode has timing disabled; its zero values
+are not measurements. See [raw phases](../benchmarks/results/100000-append-observed.jsonl),
+[build receipt](../benchmarks/results/100000-append-observed-build.txt) and
+[postflight](../benchmarks/results/100000-append-observed-db-check.json).
+The shared-projection prototype remains unintegrated.
+
+## Preceding backend candidate — bounded verification and aligned SHA
 
 The immutable optimized candidate appended 16 records in **33,392 ms**, compared
 with the published baseline's 40,103 ms. This is an observed 16.7% reduction,
@@ -216,13 +283,15 @@ expected counts of 9 and 25 visible events at physical record 99,900.
 Its copied database was 199,024,640 logical bytes after rebuilding one snapshot;
 it is distinct from the historical fresh database with both snapshots checkpointed.
 
-## Source size and native builds
+## Historical baseline source size and native builds
 
-The source audit at 2026-10-20 20:00:46 UTC uses physical newline counts,
+This historical source audit at 2026-10-20 20:00:46 UTC uses physical newline counts,
 including comments and blank lines, and exact file bytes. The
 [per-file inventory](receipts/code-size.tsv) records every counted path and
 SHA-256; categories do not overlap. No cached test binaries or repeated generated
-C outputs are included in application source counts.
+C outputs are included in application source counts. These counts predate the
+current combined app; its 9,091,528-byte build is recorded separately in
+[the combined receipt](receipts/seal-tools-native.txt).
 
 | Category | Files | Lines | Bytes |
 |---|---:|---:|---:|
@@ -239,7 +308,7 @@ C outputs are included in application source counts.
 | Vendored dependency implementation | 0 | 0 | 0 |
 | Ignored upstream compiler/Base/runtime cache, including guides and inventory | 90 | 27,050 | 907,029 |
 | Local upstream toolchain patches | 0 | 0 | 0 |
-| Generated C for the current application | 1 | 452,274 | 22,950,088 |
+| Generated C for this historical application | 1 | 452,274 | 22,950,088 |
 
 Application Bend including its bitmap asset is 9,083 lines. All maintained Bend
 including tests, benchmarks, laws and assets is 15,047 lines. The 418-line bridge
@@ -249,7 +318,7 @@ implementation. SQLite is the system library and is not vendored. All 88 pinned
 upstream files passed the [hash verification](receipts/toolchain-integrity.txt);
 the cache's two additional files are source revision/inventory metadata.
 
-The final guest-validated executable, `build/juice-bend-validated`, is
+This baseline's guest-validated executable, `build/juice-bend-validated`, is
 4,708,120 bytes, SHA-256
 `05cdff4f599edcd16646fc3363e27c3856bda4b073f52a92f23264887ef5ba35`.
 The generated C is SHA-256
@@ -292,8 +361,10 @@ isolated copy of the original 100k v1 database took 3,020 ms, retaining all
 One full wrapper build of this target with the installed toolchain took
 13.05 seconds (`/usr/bin/time -p ./scripts/build benchmarks/main.bend build/juice-bend-bench`).
 The wrapper emits C and recompiles; this is not a measured clean/incremental
-application build pair. Ordinary proof checking took 0.46 seconds. Stronger
-kernel checking remains unavailable pending the exact Lean 4.34.0 toolchain.
+application build pair. Ordinary proof checking took 0.46 seconds. At that
+attempt, the exact Lean 4.34.0 toolchain was unavailable. Subsequent local setup
+closed that gap; [the kernel receipt](receipts/prove.stdout.txt) records all
+twelve production laws passing.
 
 An earlier application candidate, including native window support, was built
 with `/usr/bin/time -l ./scripts/build src/main.bend build/juice-bend-measured`.

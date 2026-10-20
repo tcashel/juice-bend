@@ -8,6 +8,8 @@ import ../src/maintenance.bend as Maintenance
 import ../src/evidence.bend as Evidence
 import ../src/providers.bend as Providers
 import ../src/json.bend as Json
+import ../src/ui.bend as UI
+import ../benchmarks/native_activity.bend as Native
 
 def assert(ok: Bool,name: String) -> IO(Unit):
   match ok:
@@ -107,6 +109,23 @@ def read(+db: U32,snapshot: String,start: U32,count: U32,scope: Scoped.Scope) ->
 def rendered(page: Reader.Page) -> IO(String):
   need(String,Reader.render(page))
 
+def viewport_lines(lines: List<&2,UI.Line>,fuel: Nat) -> String:
+  match lines fuel:
+    case UI.Line{start,text} <> rest 1n+n:
+      text ++ viewport_lines(rest,n)
+    case _ _:
+      ""
+
+def viewport(text: String) -> String:
+  viewport_lines(UI.wrap(text),42n)
+
+def precedes(+text: String,+first: String,+second: String) -> Bool:
+  match text:
+    case SNil{}:
+      False{}
+    case SCon{c,tail}:
+      String.starts_with(text,first) || (Bool.not(String.starts_with(text,second)) && precedes(tail,first,second))
+
 def basic(+db: U32,+snapshot: String) -> IO(Unit):
   do IO<Unit>:
     +page : Reader.Page <- read(db,snapshot,0,100,scope())
@@ -116,7 +135,7 @@ def basic(+db: U32,+snapshot: String) -> IO(Unit):
     assert(String.contains(text,"visible argument") && String.contains(text,"visible result") &&
       Bool.not(String.contains(text,"excluded")),"repository and date scope excludes payloads before pairing and rendering")
     assert(String.contains(text,"Frozen scope: {\"provider\":\"claude\",\"repository\":\"/synthetic/a\",\"role\":\"\",\"after\":\"2026-10-02\"}") &&
-      String.contains(text,"Source: ") && String.contains(text,"Generation: ") && String.contains(text,"Captured extent bytes:"),"rendered header includes immutable identity and exact frozen scope")
+      String.contains(text,"Source: ") && String.contains(text,"Generation: ") && String.contains(text,"Captured extent bytes:"),"rendered evidence includes immutable identity and exact frozen scope")
     assert(String.contains(text,"complete snapshot were not reverified"),"selected raw verification is not claimed as whole-snapshot verification")
     +citation : String = first_citation(page)
     assert(String.contains(citation,"\"record\":\"0\"") && String.contains(citation,"\"event\":\"1\""),"filtered activity retains original event ordinal after preceding ordinary text")
@@ -251,6 +270,10 @@ def budget_tests(+db: U32) -> IO(Unit):
     assert(failed(Reader.Page,too_large,"524288 UTF-8 bytes"),"multiple legal raw records cannot bypass cumulative selected UTF-8 budget")
     +small : Reader.Page <- read(db,bytes,0,1,all())
     assert(Nat.is_gt(String.length(Providers.arguments(first_record(small))),210000n),"smaller bounded range retains the complete large tool payload")
+    +large_text : String <- rendered(small)
+    assert(String.contains(large_text,Json.quote(Providers.arguments(first_record(small)))) &&
+      precedes(large_text,"Captured arguments","Captured identity and verification") &&
+      String.contains(large_text,"Earlier raw ranges and the complete snapshot were not reverified."),"long payload-first output retains the entire argument and complete verification footer")
     filtered : Reader.Page <- read(db,bytes,0,3,Scoped.Scope{"","","tool",""})
     assert(String.eq(counts(filtered),"0|0|0|0|0|0|0"),"excluded payloads do not consume selected budgets or leak into activity")
     Store.write_text("unsupported.jsonl","w","{malformed\n" ++ repeat(270000n,"x") ++ "\n")
@@ -264,6 +287,42 @@ def budget_tests(+db: U32) -> IO(Unit):
     checked : Reader.Page <- read(db,uncertain,0,100,all())
     +rendered_uncertain : String <- rendered(checked)
     assert(String.contains(rendered_uncertain,"raw field type is unavailable") && String.contains(rendered_uncertain,"Ambiguous in this selected page"),"verified adapter preserves duplicate and normalized-type uncertainty")
+
+def readability(+db: U32) -> IO(Unit):
+  do IO<Unit>:
+    Store.write_text("readability.jsonl","w",Native.initial())
+    +snapshot : String <- Store.import_file(db,"claude","readability.jsonl")
+    +page : Reader.Page <- read(db,snapshot,0,40,all())
+    +text : String <- rendered(page)
+    +visible : String = viewport(text)
+    assert(String.contains(visible,"Tool: \"Bash\"") && String.contains(visible,"Paired within this selected page.") &&
+      String.contains(visible,"printf 'café 中文 🙂'") && String.contains(visible,"alpha result café 中文 🙂"),"actual native activity fixture exposes first tool name status arguments and result within production 42-line viewport")
+    assert(String.contains(visible,"selected page only") && String.contains(visible,"Absent here may exist elsewhere.") &&
+      String.contains(visible,"Recorded results do not prove success.") && String.contains(visible,"never executed"),"initial viewport keeps limited-observation and non-execution meaning conspicuous")
+    assert(String.starts_with(text,"Tools | snapshot " ++ snapshot ++ " | raw 0+40/43\nScope: ") &&
+      precedes(text,"alpha result café 中文 🙂","Evidence details") &&
+      precedes(text,"Evidence details","Captured identity and verification"),"compact snapshot range header leads complete occurrence bodies then citations then verification footer")
+    assert(String.contains(text,first_citation(page)) && String.contains(text,"Source: ") && String.contains(text,"Generation: ") &&
+      String.contains(text,"Total physical records in snapshot: 43") && String.contains(text,"Requested records: 40") &&
+      String.contains(text,"Actual selected records: 40") && String.contains(text,"Verified selected records: 40") &&
+      String.contains(text,"Frozen scope: {\"provider\":\"\",\"repository\":\"\",\"role\":\"\",\"after\":\"\"}"),"payload-first canonical text retains full identity citation physical counts verification and exact scope")
+    +last : Reader.Page <- read(db,snapshot,40,40,all())
+    +last_text : String <- rendered(last)
+    +last_visible : String = viewport(last_text)
+    assert(String.contains(last_visible,"Recorded tool_error: true") && String.contains(last_visible,"synthetic failure: permission denied"),"actual fixture final-page recorded error and failure payload reach initial viewport")
+    assert(String.contains(last_text,"counterpart is not in this selected page; it may exist elsewhere") &&
+      String.contains(last_text,"Unique counterpart in this selected page: "),"full unmatched and exact counterpart evidence survives compact status labels")
+    +filtered : Reader.Page <- read(db,snapshot,0,40,Scoped.Scope{"claude","/synthetic/activity","user","2026-10-20"})
+    +filtered_text : String <- rendered(filtered)
+    assert(String.contains(viewport(filtered_text),"No tool or coverage occurrences in this selected page.") &&
+      Bool.not(String.contains(filtered_text,"printf")) && String.contains(filtered_text,"\"repository\":\"/synthetic/activity\",\"role\":\"user\",\"after\":\"2026-10-20\""),"filtered empty activity is visible and retains complete exact scope without excluded payloads")
+    +mismatch : Reader.Page <- read(db,snapshot,0,40,Scoped.Scope{"codex","","",""})
+    +mismatch_text : String <- rendered(mismatch)
+    assert(String.contains(viewport(mismatch_text),"No tool or coverage occurrences") && String.contains(mismatch_text,"No selected records were read.") &&
+      String.contains(mismatch_text,"Verified selected records: 0"),"provider-mismatched empty rendering retains truthful zero-read verification")
+    +empty : Reader.Page <- read(db,snapshot,4294967295,40,all())
+    +empty_text : String <- rendered(empty)
+    assert(String.contains(viewport(empty_text),"raw 4294967295+0/43") && String.contains(empty_text,"Actual selected records: 0"),"empty beyond-EOF header is readable without overflow or invented records")
 
 def child_result(result: U32 & (String & String),expected: String,name: String) -> IO(Unit):
   (code,(_,err)) = result
@@ -323,6 +382,7 @@ def suite(+self: String) -> IO(Unit):
     retained(db)
     codex(db)
     budget_tests(db)
+    readability(db)
     output_budget(db)
     corruption(db,self)
     consistent_snapshot(db,self)

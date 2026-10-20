@@ -1,0 +1,13 @@
+{"diagnostic":"actual-import-observer-v1","raw_records_before":100000,"tail_raw_records":16,"preflight_and_postflight_outside_timer":true,"per_record_clock_calls":0,"timing_enabled":true}
+{"end_phase":"before_transaction","segment_ms":1}
+{"end_phase":"staged","segment_ms":20466}
+{"end_phase":"reverified","segment_ms":4446}
+{"end_phase":"sealed","segment_ms":1022}
+{"end_phase":"accepted","segment_ms":0}
+{"end_phase":"search_removed","segment_ms":875}
+{"end_phase":"latest_repointed","segment_ms":0}
+{"end_phase":"before_commit","segment_ms":1166}
+{"end_phase":"committed","segment_ms":376}
+{"operation":"observed_append_to_committed","duration_ms":28352,"callbacks":9}
+{"operation":"observed_append_until_import_return","duration_ms":28352,"includes_terminal_sample_printing":true,"timing_interval_ended":true}
+{"diagnostic_complete":true,"both_event_seals_valid":true,"prefix_raw_ids_shared":100000}

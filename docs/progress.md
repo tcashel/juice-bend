@@ -5,6 +5,8 @@
 The owner's follow-up requests fixing slow append, closing validation gaps,
 matching the SwiftUI Juice feature set without embeddings, and then UI polish.
 This goal is active. PR #1 remains draft and unmerged. The native-validated
+Tools integration is published at `3e9d9d5938d3a6bb4d49e2f113bb18cb3749f306`
+(tree `2337f14ba9473b6826ddaae7b4d29dabcdc0325b`). The preceding
 Files integration is published at `40e22d92bbebac93dc1d1c4fe47ca3a91e5b0747`
 (tree `0f4d0503cb7621e97496d3ac9bd32c2846197130`). The preceding paging,
 saved-capture, inventory and append-batching change is published at
@@ -12,8 +14,9 @@ saved-capture, inventory and append-batching change is published at
 `473c2b2645343cee8178e55cd68c399366f538b0`). It builds on toolchain commit
 `edfeadd6bf3149739b3af00a6c92671354208584` and application baseline
 `cf066af054346c2ee900ea8324f3a23f8e81482c`, whose historical results remain below.
-Current iteration: this change publishes the native-validated retained Tools;
-the append event-seal optimization is still under implementation and test.
+Current iteration: the append event-seal optimization passed its backend gates
+and actual combined native interaction. Tools payloads now precede full citations.
+This validated change is prepared for publication over the Tools commit above.
 The exact Lean 4.34.0 archive was obtained through the
 authorized Tart guest, independently hash-checked and installed locally.
 The pinned BendTT kernel now passes all twelve production laws. Its exact input
@@ -79,8 +82,26 @@ passed page boundaries, exact copy, retained old pages after append/source
 removal, Why/Files return, explicit Open latest, wheel scrolling and two exact
 displayed-body exports. The app closed, VM stopped and leases were released.
 See `docs/receipts/recorded-activity.txt` and `docs/native-validation.md`.
-The first viewport remains metadata-heavy; payload-first presentation is the
-next small polish slice. No new latency/scroll-cadence claim is made.
+This preceding app's first viewport was metadata-heavy. The new payload-first
+presentation passed 219 focused checks and actual combined native interaction.
+No new latency/scroll-cadence claim is made.
+
+The frozen event-seal candidate passed 2,262 native checks, including 27 crash
+cuts, actual old-writer/old-open-connection compatibility and retained readers.
+Store `31b7f8d5…` and Seal `eba657f6…` remain frozen. Standard 100k benchmark
+`28d47af5…` passed append **28.226 s**, first import 32.940 s, unchanged 4.519 s,
+and search/late/scoped-late p95 41/8/17 ms. All 19 inputs and 88 upstream hashes
+remained unchanged; independent database counts and old/new prefix equivalence
+passed. This is a 15.5% observed reduction from 33.392 s, still slow. A real
+nine-callback production diagnostic passed at 28.352 s: staging 20.466 s,
+raw recheck 4.446 s, sealing 1.022 s, search removal 0.875 s, search population
+1.166 s and commit 0.376 s. All old typed capture fingerprints stayed unchanged;
+both seals, raw sharing, counts and database integrity passed. See performance.md.
+The combined app `5ef9603d…` passed actual Refresh (43→45 records), unchanged
+selected old Tools text, explicit latest after source removal, payload-first
+viewports, wheel scrolling, exact Unicode copies and two mode-0600 exports.
+App windows closed, Tart stopped and leases were released. The working Tools
+executable remains preserved. Relations backend work remains unintegrated.
 
 ## Published baseline
 
@@ -92,11 +113,12 @@ below; do not report the entire matrix as passed.
 
 ## Runnable result
 
-The current candidate is `build/juice-bend-activity`, 8,823,088 bytes,
-SHA-256 `68d221e24b7aed7635d2986783f4567c31004a14ff5424ed79a8b510780104db`.
-The standard executable `build/juice-bend` and new local bundle
-`build/Juice Bend Activity.app` use this exact candidate. The bundle launcher passed
-an isolated library status check. Files (`0e1d1018…`), Parity (`98283d91…`) and
+The current validated candidate is `build/juice-bend-seal-tools`, 9,091,528 bytes,
+SHA-256 `5ef9603de4cb1f618476e7885170ea0ac174370ceef2fa30023cea1d5b3a87ca`.
+All 39 transitive build inputs remained unchanged. The standard executable
+`build/juice-bend` and new `build/Juice Bend Seal Tools.app` contain this exact
+binary. Its bundle launcher passed an isolated empty-library status check.
+Tools (`68d221e2…`), Files (`0e1d1018…`), Parity (`98283d91…`) and
 Validated (`05cdff4f…`) executables/bundles remain preserved.
 Outputs and synthetic data are ignored; use an explicit isolated data directory.
 
@@ -206,19 +228,20 @@ reference-source snapshots.
    in three paired trials and was not promoted. It remains confined to ignored
    `build/hash-partial-candidate`; production Domain remains unchanged. Preserve
    production v2 and do not promote an engine-only timing into an app result.
-   The narrower `event-seal-v1` optimization is in progress in
-   `src/projection_seal.bend`, `src/store.bend` and focused tests. Keep it out of
-   the Tools publication until typed corruption, copied-prefix equality,
-   trigger fallback, old-writer compatibility and all 27 crash cuts pass.
+   The narrower `event-seal-v1` optimization passed validation in
+   `src/projection_seal.bend`, `src/store.bend` and focused tests. Typed corruption,
+   copied-prefix equality, trigger compatibility, actual old-writer
+   compatibility, all 27 crash cuts, reader gates and the frozen 100k production
+   workload have passed. Preserve validated Store/Seal while profiling cost.
    IDs remain exact decimal strings; event counts are checked U32. Reuse is
    confined to one uninterrupted write transaction after fresh verification.
-   Then freeze and measure the actual application workload; prototype timings
-   do not establish a production improvement.
-   Tools is now native-validated; its explicit publication over the Files
-   commit excludes the evolving seal/projection experiments. Preserve
-   frozen app `68d221e2…` and its input manifest. Next presentation change:
-   recorded arguments/results before full citations, retaining one canonical
-   display/copy/export string. Child navigation, full Usage and remaining
+   The combined native app interaction check also passed. Publish this coherent
+   seal/readability slice over `3e9d9d59…`, preserving frozen apps and manifests;
+   exclude the separate shared-projection prototype and unintegrated Relations.
+   The production observer isolates staging as the largest remaining append
+   phase. Analyze it without weakening raw verification or immutable snapshots.
+   Tools displays recorded arguments/results before full citations, retaining
+   one canonical display/copy/export string. Child navigation, full Usage and remaining
    Settings/provider/connection surfaces remain in the parity backlog.
 5. Fresh-machine setup and the remaining acceptance rows retain their explicit
    partial/not-run status in `docs/acceptance.md`. No signing, distribution,

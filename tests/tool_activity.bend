@@ -26,6 +26,13 @@ def failed(-A: Kind(&2),result: Result<&2,&2,String,A>,expected: String) -> Bool
     case Done{_}:
       False{}
 
+def precedes(+text: String,+first: String,+second: String) -> Bool:
+  match text:
+    case SNil{}:
+      False{}
+    case SCon{c,tail}:
+      String.starts_with(text,first) || (Bool.not(String.starts_with(text,second)) && precedes(tail,first,second))
+
 def key(provider: String,source: String,generation: String,snapshot: String,extent: String,+ordinal: U32,+event: U32) -> Evidence.Descriptor:
   Evidence.Descriptor{Domain.EvidenceKey{provider,source,generation,snapshot,U32.show(ordinal),U32.show(event)},extent,ordinal,event}
 
@@ -101,6 +108,10 @@ def paired() -> IO(Unit):
     assert(String.eq(link(row(page,1n)),"unique:" ++ Activity.descriptor_text(key("claude","/synthetic/alpha.jsonl","1","7","9000",4,0))),"result peer points back to the exact call event")
     +text : String <- need(String,Activity.render(page))
     assert(String.contains(text,Json.quote(arguments)) && String.contains(text,Json.quote(output)),"readable output contains complete escaped captured payloads")
+    assert(precedes(text,Json.quote(arguments),"Evidence details") && precedes(text,Json.quote(output),"Evidence details"),"both complete call and result payloads precede repeated citation details")
+    assert(String.contains(text,"Occurrence 1\nRecorded tool call | Tool: \"Bash\"") &&
+      String.contains(text,"Occurrence 2\nRecorded tool result") && String.contains(text,"Evidence for occurrence 1\nCitation: " ++ Activity.descriptor_text(key("claude","/synthetic/alpha.jsonl","1","7","9000",4,0))) &&
+      String.contains(text,"Evidence for occurrence 2\nCitation: " ++ Activity.descriptor_text(key("claude","/synthetic/alpha.jsonl","1","7","9000",4,1))),"numbered occurrence bodies map to their exact immutable evidence without relying on pairing")
     assert(String.contains(text,"selected page only") && String.contains(text,"not a complete session") &&
       String.contains(text,"never executed"),"presentation discloses page counts and does not claim successful tool execution")
     again : String <- need(String,Activity.render(page))
@@ -162,8 +173,10 @@ def coverage() -> IO(Unit):
     assert(String.eq(link(row(page,2n)),"coverage") && String.eq(Providers.arguments(Activity.record(occurrence(row(page,2n)))),"{raw}"),"unsupported occurrence retains payload and citation")
     +error_page : Activity.Page <- need(Activity.Page,Activity.analyze([at(0,0,call("e","{}")),at(1,0,result("e","failed","tool_error"))]))
     assert(String.eq(counts(error_page),"2|1|1|1|1|0|0"),"recorded tool_error can be uniquely linked without becoming successful execution")
-    error_text : String <- need(String,Activity.render(error_page))
+    +error_text : String <- need(String,Activity.render(error_page))
     assert(String.contains(error_text,"Recorded tool_error: true"),"recorded provider error is visibly explicit")
+    assert(precedes(error_text,"Recorded tool_error: true","Captured result (JSON string): \"failed\"") &&
+      precedes(error_text,"Captured result (JSON string): \"failed\"","Evidence details"),"recorded error status precedes its complete result before evidence details")
     +partial : Activity.Page <- need(Activity.Page,Activity.analyze([at(0,0,call("p","{}")),at(1,0,result("p","retained supported text","partial_content"))]))
     assert(String.eq(counts(partial),"2|1|1|1|0|1|0"),"partial result coverage survives a unique identity match")
 
@@ -280,6 +293,28 @@ def bounds() -> IO(Unit):
     +escaped : Activity.Page <- need(Activity.Page,Activity.analyze([at(0,0,call("escaped",repeat(180000n,"\0")))]))
     assert(failed(String,Activity.render(escaped),"1048576-byte worker limit"),"escaped final output over one MiB is an explicit failure without truncating input")
 
+def detail_preservation() -> IO(Unit):
+  +event = {Providers.ProviderEvent{"unsupported","full captured text café\n🙂","named tool","call-id","full args\t\0","full result  ",
+    "/synthetic/space repo","session-id","timestamp-value","model-value","{\"count\":9007199254740993}","parent-id","partial_content; explicit reason"} : Providers.Record}
+  do IO<Unit>:
+    page : Activity.Page <- need(Activity.Page,Activity.analyze([at(8,3,event)]))
+    +text : String <- need(String,Activity.render(page))
+    assert(String.contains(text,"Tool: \"named tool\"") && String.contains(text,Json.quote("full captured text café\n🙂")) &&
+      String.contains(text,Json.quote("full args\t\0")) && String.contains(text,Json.quote("full result  ")),"payload-first layout preserves every captured text argument result and recorded tool name")
+    assert(String.contains(text,"Recorded role: \"unsupported\"") && String.contains(text,"Session: \"session-id\"") &&
+      String.contains(text,"Repository: \"/synthetic/space repo\"") && String.contains(text,"Call ID: \"call-id\""),"evidence details retain full recorded role actor repository and call identity")
+    assert(String.contains(text,"Coverage: \"partial_content; explicit reason\"") && String.contains(text,"Recorded timestamp: \"timestamp-value\"") &&
+      String.contains(text,"Recorded model: \"model-value\"") && String.contains(text,"Recorded parent: \"parent-id\"") &&
+      String.contains(text,Json.quote("{\"count\":9007199254740993}")),"details retain coverage time model parent and unsummed exact usage")
+    assert(precedes(text,"Unsupported/partial captured occurrence.","Captured arguments") &&
+      String.contains(text,"Unsupported or partial occurrence retained; no tool pairing was inferred."),"compact coverage status retains its complete non-attribution explanation")
+    +empty : Activity.Page <- need(Activity.Page,Activity.analyze([]))
+    +empty_text : String <- need(String,Activity.render(empty))
+    assert(String.contains(empty_text,"No tool or coverage occurrences in this selected page.") &&
+      String.contains(empty_text,"Absent here may exist elsewhere.") && String.contains(empty_text,"not a complete session"),"empty page explicitly reports limited observation rather than nonexistent activity")
+    assert(precedes(empty_text,"Recorded results do not prove success.","Evidence details") &&
+      String.contains(empty_text,"Captured payload strings are untruncated; empty stays empty."),"page-local success and empty-string limitations survive compact ordering")
+
 def main() -> IO(Unit):
   do IO<Unit>:
     paired()
@@ -292,3 +327,4 @@ def main() -> IO(Unit):
     typed_identity()
     provider_type_collisions()
     bounds()
+    detail_preservation()

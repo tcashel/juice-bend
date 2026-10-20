@@ -173,9 +173,21 @@ def read_valid(valid: Bool,+db: U32,snapshot: String,start: U32,count: U32,scope
 def read(db: U32,+snapshot: String,start: U32,+count: U32,+scope: Scoped.Scope) -> IO(Result<&2,&2,String,Page>):
   read_valid(Evidence.positive_id(snapshot) && Scoped.valid(scope) && U32.is_gt(count,0) && U32.is_le(count,100),db,snapshot,start,count,scope)
 
+def scope_summary(scope: Scoped.Scope) -> String:
+  Scoped.Scope{provider,+repository,role,+after} = scope
+  "Scope: " ++ Store.nonempty(provider,"all providers") ++
+    " | repo: " ++ Bool.pick(String,String.is_empty(repository),"all","filtered") ++
+    " | role: " ++ Store.nonempty(role,"all") ++
+    " | date: " ++ Bool.pick(String,String.is_empty(after),"all","filtered")
+
 def header(page: Page) -> String:
+  Page{_,_,_,snapshot,_,total,start,_,selected,_,scope,_} = page
+  "Tools | snapshot " ++ snapshot ++ " | raw " ++ U32.show(start) ++ "+" ++ U32.show(selected) ++
+    "/" ++ U32.show(total) ++ "\n" ++ scope_summary(scope) ++ "\n\n"
+
+def details(page: Page) -> String:
   Page{provider,source,generation,snapshot,extent,total,start,count,selected,+verified,scope,_} = page
-  "Juice Bend · retained tool activity\nProvider: " ++ Json.quote(provider) ++ "\nSource: " ++ Json.quote(source) ++
+  "Captured identity and verification\nProvider: " ++ Json.quote(provider) ++ "\nSource: " ++ Json.quote(source) ++
     "\nGeneration: " ++ generation ++ "\nSnapshot: " ++ snapshot ++ "\nCaptured extent bytes: " ++ U32.show(extent) ++
     "\nTotal physical records in snapshot: " ++ U32.show(total) ++ "\nPhysical start: " ++ U32.show(start) ++
     "\nRequested records: " ++ U32.show(count) ++ "\nActual selected records: " ++ U32.show(selected) ++
@@ -188,5 +200,5 @@ def render(+page: Page) -> Result<&2,&2,String,String>:
   Page{_,_,_,_,_,_,_,_,_,_,_,activity} = page
   do Result<&2,&2,String,String>:
     body : String <- Activity.render(activity)
-    +text : String = header(page) ++ body
+    +text : String = header(page) ++ body ++ details(page)
     Activity.rendered(text,Activity.consume(text,1048575))

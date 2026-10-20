@@ -23,6 +23,18 @@ navigation and two exact-body exports. See `receipts/recorded-activity.txt` and
 `native-validation.md`. This is a bounded recorded-activity view; complete
 session activity, child navigation and polished typography remain outstanding.
 
+The event-seal storage candidate subsequently passed 2,262 named checks across
+17 maintained native test executables and one actual-old-worker compatibility
+driver, including all 27 crash cuts. Its frozen standard 100k workload passed
+at 28.226 s append, with all 19 inputs and independent database checks intact.
+See `receipts/event-seal-native.txt` and `performance.md`. The combined app
+`5ef9603d…` separately passed actual native Refresh append, pinned old/latest
+navigation after source removal, payload-first viewport, wheel scrolling and
+exact copy/export. Its rendering gates passed 219 distinct checks across
+separate receipts; see `receipts/seal-tools-native.txt` for the initial stale
+presentation assertion failure and final recheck. These do not establish full
+feature, font or accessibility parity.
+
 | ID | Current result | Evidence and remaining work |
 |---|---|---|
 | A01 | Partial | The final `05cdff4f…` native executable opened a fresh empty library in the macOS 27.0 arm64 Tart guest, then captured and browsed the explicit synthetic source. Host desktop launches were observed on separately identified earlier builds. Fresh network setup remains unobserved. |

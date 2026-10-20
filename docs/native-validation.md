@@ -1,5 +1,33 @@
 # Native interaction observations
 
+## Event-seal and readable Tools candidate
+
+App `5ef9603de4cb1f618476e7885170ea0ac174370ceef2fa30023cea1d5b3a87ca`
+(9,091,528 bytes) ran in the host-only macOS 27.0 arm64 Tart guest. All 39 build
+inputs were unchanged and 88 upstream hashes passed. The first viewport now
+shows the first call's arguments, its result and an unpaired call before full
+citation details. The final page shows the recorded error with its result.
+The canonical text still includes all numbered evidence details and limits.
+
+With automatic refresh paused, the Bend fixture appended two source records
+without capturing them. SQLite still had one accepted 43-record snapshot.
+Clicking the actual Refresh control accepted snapshot 2 with 45 records; the
+open snapshot-1 Tools page remained byte-identical. After the fixture removed
+its source path, explicit Open latest displayed the new final five records.
+All page copies matched the exact app CLI text: 3,904 / 3,890 bytes for the old
+pages and 5,623 for the latest page. Wheel scrolling visibly reached numbered
+evidence details; a subsequent copy retained the complete 5,623 bytes.
+
+Both mode-0600 exports contained the exact displayed text (4,075 / 5,794 bytes
+including export headers). Database integrity/FK checks passed, with 45 raw
+records, 88 retained event rows, 45 current search events and both new-format
+seals. Command+Q closed the owned window; Tart stopped and leases were released.
+The previous Tools binary remains preserved. No latency or scroll-cadence
+measurement was made, and unsupported Unicode glyphs still display boxes.
+See `receipts/seal-tools-native.txt` and
+`benchmarks/results/tart-seal-tools-summary.json`; raw synthetic artifacts are
+under ignored `build/tart/seal-tools-vyyhmmsm`.
+
 ## Tools candidate — retained recorded activity
 
 Candidate `68d221e24b7aed7635d2986783f4567c31004a14ff5424ed79a8b510780104db`

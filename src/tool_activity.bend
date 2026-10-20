@@ -387,33 +387,82 @@ def optional(label: String,value: String) -> String:
     case text:
       label ++ ": " ++ Json.quote(text) ++ "\n"
 
-def row_text(row: Row) -> String:
-  Row{Occurrence{+key,+value},+kind,link} = row
-  Providers.ProviderEvent{role,text,tool,id,args,result,repo,session,time,model,usage,parent,+coverage} = value
-  kind_text(kind) ++ "\nCitation: " ++ descriptor_text(key) ++ "\n" ++ link_text(link) ++ "\n" ++
-    "Recorded role: " ++ Json.quote(role) ++ "\nSession: " ++ Json.quote(session) ++ "\nRepository: " ++ Json.quote(repo) ++
-    "\nTool: " ++ Json.quote(tool) ++ "\nCall ID: " ++ Json.quote(id) ++ "\nCoverage: " ++ Json.quote(coverage) ++ "\n" ++
-    Bool.pick(String,explicit_error(coverage),"Recorded tool_error: true\n","") ++
-    optional("Recorded timestamp",time) ++ optional("Recorded model",model) ++ optional("Recorded parent",parent) ++
-    optional("Recorded usage (not summed)",usage) ++ optional("Captured text",text) ++
-    "Captured arguments (JSON string; empty stays empty): " ++ Json.quote(args) ++ "\n" ++
-    "Captured result (JSON string; empty stays empty): " ++ Json.quote(result) ++ "\n\n"
+# A short status precedes payloads. The complete explanation and immutable
+# counterpart descriptor remain in the numbered evidence section below.
+def link_summary(link: Link) -> String:
+  match link:
+    case Unique{_}:
+      "Paired within this selected page."
+    case NoId{}:
+      "Unpaired: no recorded call ID."
+    case UnknownIdentity{}:
+      "Unpaired: actor/repository incomplete."
+    case UncertainId{}:
+      "Unpaired: recorded ID type uncertain."
+    case CounterpartAbsent{}:
+      "Unpaired: counterpart not in this page."
+    case Ambiguous{calls,results}:
+      "Ambiguous: " ++ U32.show(calls) ++ " calls / " ++ U32.show(results) ++ " results in page."
+    case UncertainShape{occurrences}:
+      "Unpaired: " ++ U32.show(occurrences) ++ " unsupported same-ID occurrences."
+    case OrderConflict{}:
+      "Unpaired: result precedes call."
+    case CoverageOnly{}:
+      "Unsupported/partial captured occurrence."
 
-def rows_text(rows: List<&2,Row>) -> String:
+def row_text(row: Row) -> String:
+  Row{Occurrence{key,value},kind,link} = row
+  Providers.ProviderEvent{role,text,tool,id,args,result,repo,session,time,model,usage,parent,coverage} = value
+  kind_text(kind) ++ " | Tool: " ++ Json.quote(tool) ++ "\n" ++ link_summary(link) ++ "\n" ++
+    Bool.pick(String,explicit_error(coverage),"Recorded tool_error: true\n","") ++
+    "Captured arguments (JSON string): " ++ Json.quote(args) ++ "\n" ++
+    "Captured result (JSON string): " ++ Json.quote(result) ++ "\n" ++
+    optional("Captured text",text) ++ "\n"
+
+def row_details(row: Row) -> String:
+  Row{Occurrence{key,value},kind,link} = row
+  Providers.ProviderEvent{role,text,tool,id,args,result,repo,session,time,model,usage,parent,+coverage} = value
+  "Citation: " ++ descriptor_text(key) ++ "\n" ++ link_text(link) ++ "\n" ++
+    "Recorded role: " ++ Json.quote(role) ++ "\nSession: " ++ Json.quote(session) ++ "\nRepository: " ++ Json.quote(repo) ++
+    "\nCall ID: " ++ Json.quote(id) ++ "\nCoverage: " ++ Json.quote(coverage) ++ "\n" ++
+    optional("Recorded timestamp",time) ++ optional("Recorded model",model) ++ optional("Recorded parent",parent) ++
+    optional("Recorded usage (not summed)",usage) ++ "\n"
+
+def rows_text_at(rows: List<&2,Row>,+index: U32) -> String:
   match rows:
     case []:
       ""
     case row <> rest:
-      row_text(row) ++ rows_text(rest)
+      "Occurrence " ++ U32.show(index) ++ "\n" ++ row_text(row) ++ rows_text_at(rest,U32.inc(index))
+
+def rows_text(rows: List<&2,Row>) -> String:
+  match rows:
+    case []:
+      "No tool or coverage occurrences in this selected page.\n\n"
+    case other:
+      rows_text_at(other,1)
+
+def rows_details(rows: List<&2,Row>,+index: U32) -> String:
+  match rows:
+    case []:
+      ""
+    case row <> rest:
+      "Evidence for occurrence " ++ U32.show(index) ++ "\n" ++ row_details(row) ++ rows_details(rest,U32.inc(index))
 
 def summary(value: Stats) -> String:
   Stats{events,calls,results,pairs,errors,coverage,unpaired} = value
-  "Recorded tool activity — selected page only\n" ++
-    "Selected events: " ++ U32.show(events) ++ "; calls: " ++ U32.show(calls) ++ "; results: " ++ U32.show(results) ++
-    "; unique pairs: " ++ U32.show(pairs) ++ "; unpaired tool occurrences: " ++ U32.show(unpaired) ++
-    "; explicit tool_error occurrences: " ++ U32.show(errors) ++ "; coverage issues: " ++ U32.show(coverage) ++ "\n" ++
+  "Recorded Tools | selected page only\n" ++
+    "Selected events: " ++ U32.show(events) ++ "; calls: " ++ U32.show(calls) ++ "; results: " ++ U32.show(results) ++ "\n" ++
+    "Unique pairs: " ++ U32.show(pairs) ++ " | unpaired: " ++ U32.show(unpaired) ++ "\n" ++
+    "Explicit tool_error: " ++ U32.show(errors) ++ " | coverage issues: " ++ U32.show(coverage) ++ "\n" ++
+    "Absent here may exist elsewhere.\nRecorded results do not prove success.\nCommands are data, never executed.\n\n"
+
+def limitations() -> String:
+  "Page interpretation\n" ++
     "Counts describe this page, not a complete session. Absence here does not prove no call/result exists.\n" ++
-    "Recorded results do not prove successful execution. Captured commands are displayed as data and never executed.\n\n"
+    "Unpaired counts are tool occurrences; unique pairs are counted once.\n" ++
+    "Recorded results do not prove successful execution. Captured commands are displayed as data and never executed.\n" ++
+    "Captured payload strings are untruncated; empty stays empty. Evidence numbers identify occurrences in this page only.\n\n"
 
 def rendered(text: String,remaining: Maybe<&2,U32>) -> Result<&2,&2,String,String>:
   match remaining:
@@ -423,6 +472,6 @@ def rendered(text: String,remaining: Maybe<&2,U32>) -> Result<&2,&2,String,Strin
       Done{text}
 
 def render(page: Page) -> Result<&2,&2,String,String>:
-  Page{rows,stats} = page
-  +text = summary(stats) ++ rows_text(rows)
+  Page{+rows,stats} = page
+  +text = summary(stats) ++ rows_text(rows) ++ "Evidence details\n\n" ++ rows_details(rows,1) ++ limitations()
   rendered(text,consume(text,1048575))

@@ -1,0 +1,131 @@
+Observed native Darwin arm64, macOS 27.0.1 (26A434), 2026-10-20.
+Event-seal correctness gate: exit 0 for 17 maintained native test executables
+and one separate compatibility driver; 2,262 named checks total. No app/UI
+acceptance or performance result is claimed by this receipt.
+
+Change: projection_checks uses providers-v4-utc-context-relay|event-seal-v1.
+The library schema remains 2; parser and incoming-context versions are unchanged.
+Full old actual-event verification creates a fresh in-transaction prefix.
+Bidirectional type-sensitive equality checks copied events before extending
+the chain over the new tail. Snapshot/source/generation/header/checkpoint and
+event totals remain committed; both raw/source verification passes remain.
+Missing, legacy or damaged old seals use verified replay. Invalid fresh data
+fails and rolls back. Main/temp SQL triggers select full fresh-target sealing.
+Prefix lifetime assumes one uninterrupted write transaction and unchanged old
+rows. Exported Bend constructors are not an opaque security boundary; privileged
+same-connection callbacks rewriting both the verified anchor and copy are outside
+that internal caller contract.
+
+Commands and results (each scripts/test run uses private synthetic data roots):
+./scripts/test tests/projection_seal.bend
+exit 0; projection_seal=76; total=76
+log: build/projection-seal-test.log; SHA256 1be69ac33f7afa962bae474ed552b1eb60d091fc19068aa4a8ce0b2b125c0ac5
+./scripts/test tests/storage.bend tests/append_integrity.bend tests/context.bend
+exit 0; storage=5, append_integrity=49, context=22; total=76
+log: build/event-seal-focused.log; SHA256 5a477df142308ef22d6a0941ec16d8231b6756d02217bc9605fd235afd11b334
+./scripts/test tests/event_seal_append.bend
+exit 0; event_seal_append=283; total=283
+log: build/event-seal-append-test.log; SHA256 2ba5b00c37b62b3d590c75bc7cf783d89a198413dcd4fc2c19868c2fd3dc6b3d
+./scripts/test tests/publication_crash.bend tests/append_batches.bend tests/sql_batches.bend tests/projection_cursor.bend tests/maintenance.bend
+exit 0; publication_crash=1203, append_batches=226, sql_batches=131, projection_cursor=12, maintenance=30; total=1602
+log: build/event-seal-regression.log; SHA256 9d09d4961193a5f7eb1f3e1c6c7237740b7cfd6256e1e56acd2c6fae62faa3fe
+./scripts/test tests/integration.bend tests/scoped_reader.bend tests/evidence.bend tests/store_query.bend tests/storage_search.bend tests/storage_edges.bend tests/selected_integrity.bend
+exit 0; integration=21, scoped_reader=18, evidence=42, store_query=37, storage_search=28, storage_edges=33, selected_integrity=24; total=203
+log: build/event-seal-readers.log; SHA256 0b3fa3aab6c7f6c432b51f1b9b23da361260896e41902f14b40e2ee35bb18727
+
+Publication crash gate: 1,203 checks cover initial/append/rewrite x 9 real capture
+boundaries (all 27 cuts). Fault injection terminates only the suite-owned native
+worker over synthetic data, checks exact transaction-table rollback/publication,
+and retries capture. These are process-crash boundaries, not a power-loss test.
+projection_cursor remains the 12-check legacy traversal diagnostic; production
+acceptance uses the new event-seal codec, covered separately above.
+
+Actual frozen old-worker compatibility: 22 checks, exit 0.
+./scripts/build build/event-seal-baseline/legacy_worker.bend build/event-seal-baseline/legacy-worker
+./scripts/build build/event-seal-baseline/compat.bend build/event-seal-baseline/compat
+From a fresh private temporary directory:
+/Users/tcashel/repositories/juice-bend/build/event-seal-baseline/compat /Users/tcashel/repositories/juice-bend/build/event-seal-baseline/legacy-worker
+The old worker was built before Store edits against copied first-party baseline
+sources. Actual old/new writers replay unknown seal versions in both directions;
+a following current-to-current append reuses the verified prefix. Exact event
+equivalence with independent raw replay passed in both directions.
+For an already-open old connection, exact READY preceded parent BEGIN; the
+parent staged a new seal under its write lock, observed the real BeforeTransaction
+marker, then committed. The old writer saw the committed version and replayed.
+This proves observed connection/callback ordering, not a kernel lock-wait duration.
+
+Query-plan diagnostic: /usr/bin/sqlite3 3.54.0 in -readonly mode, EXPLAIN QUERY PLAN with
+bound late cursor 99935,0 on the owned compatibility fixture. SQL was reconstructed
+from frozen page_query/equality_page_query expressions and saved in the receipt.
+Full scan and both equality candidate branches use composite snapshot/ordinal/event
+range seeks; payload joins use indexed point lookups. Sorts follow bounded 64-row
+candidate branches/global 64 pairs. This is plan evidence, not runtime measurement.
+The equality 1 MiB window limits returned-page progression: up to 64 payload pairs
+are compared internally before that window. The bridge receives only keys and
+equality bits; its 4 MiB output cap does not bound internal compared payload bytes.
+The existing 2-second statement deadline remains unchanged.
+
+Initial native codec probe FAILED after two checks with the exact diagnostic:
+bend: a Nat past the largest immediate 2^48-1
+Raw receipt retained: build/projection-seal-before-count-bound.log.
+Repair: event totals are explicitly capped at U32_MAX (4,294,967,295) before
+increment or decimal-to-Nat conversion; limit/overflow cases pass in the final
+76-check codec gate. Signed 64-bit identity IDs remain exact decimal strings, including
+actual production capture/append IDs above 2^53. The failed run is not counted
+as successful validation. The pre-integration 76-check receipt was also retained
+at build/projection-seal-codec-before-integration.log before final-code rerun.
+
+SHA256 source and compatibility manifests:
+31b7f8d5752dce4da6420ea2bc27f7e476998377eb44c07b240dec13fc6d341e  src/store.bend
+eba657f6476109b035a3c4daf0ffdb87e0017524425caecb572b3af39d688b30  src/projection_seal.bend
+f2f68a4a9781ea102f3e275781380a885e3057e178d75c8d45b310c3c5002191  src/domain.bend
+e3bf2ed16fd237a9422a30fc06716159fa093308219ad0426949d293929b817d  src/maintenance.bend
+919cb2abd8bad19a3e8cdf12c676f586717121a9c7222a557345ade8f7ab753e  native/sqlite.c
+2cfbba20290138d1e86d5c60005f96986ea462fbf333669cbe2174e9c3057d24  build/event-seal-baseline/src/store.bend
+00b779515e1a2878485ab6449a3507d004d2510f2b53b8b6fc28b2870c6f8257  build/event-seal-baseline/input.sha256
+72bba27b75cd3d4bd2c4ea2992c84df3a2e2294f0b6af04ceaeaa4b82f69c648  build/event-seal-baseline/legacy_worker.bend
+369050d85f546792c969f480532f6108bb8d686b6934c80cbca5519492dc5c22  build/event-seal-baseline/legacy-worker
+59c8e2eb8ea78278d56cb253d1b8722e9eb7d725688c2cdf4db3def524547ff7  build/event-seal-baseline/build.log
+3c19d282362690b276c5c3cde816c5170cab144da7a7a19c76c764717c2633a5  build/event-seal-baseline/compat.bend
+b4c426e6406d3cb9e6e43bc609443ed5757e1194ea9a89ea6d03e012971881f5  build/event-seal-baseline/compat
+67d42caa61efc5c8716c9b160868279ad325f3bbe24a9ab9005fbd05c30950be  build/event-seal-baseline/compat-build.log
+a59c774267fd2b700de50a73c268bb17aa1313b06ecff3da0e63120e1bdf6dfe  build/event-seal-baseline/compat-run.log
+9e671d80dc2ed4ef0cfcb33a105253fa8fb0271981610142fb393908f15f64da  build/event-seal-baseline/query-plan.txt
+62f379ebf85452ba893ab2fef8742721706b9743c34d1e114c68c0079432ac05  build/projection-seal-before-count-bound.log
+f2229d714416e260a371bea12139c3e2852bc3cba06ec5863a323f27537301fb  build/projection-seal-codec-before-integration.log
+
+SHA256 maintained test sources and native executables:
+12a6b7e6839e53890255dc9996decafd6538ac374199cfa24433dfe0e44779ce  tests/projection_seal.bend
+ed57f10fe32a31f267629cf0b24050f8830637f058ebd267f86e7b15048b03e2  build/tests/projection_seal
+1b12888e280741fadbd3648f6c5f43bc2f8579a3f33aeb6f351731093aa5a317  tests/storage.bend
+d496a9c66986991a05c34210b7bb207eec1a3d1d5c711f923897a72be7c4b1a6  build/tests/storage
+41a133946aace732b8549de390d2ce38fd230625760e8d0c5785140eb19c26f0  tests/append_integrity.bend
+e2448d6456814d540f9b2ec4baac87326b06f5b2773c3509b85df4c546cdf685  build/tests/append_integrity
+2bdeff8cb7d467730eda959935581984d8cda17a3075aa64c4f8bf159430c97e  tests/context.bend
+8613dbb2e5c21d75c8a5fcbc04c56b646754f257bf9e83396d467ffcebf7e682  build/tests/context
+1a21f4b3e12505836c4aa5929ffc05d44678ffaf9244c88bd9b749a4acb010a5  tests/event_seal_append.bend
+d5e237234a80fa0beb1872b9a131d40c3a77ecc78cf2f9986515f93e759ba6a7  build/tests/event_seal_append
+58638fc09beb949ca40a93c1738fc7798ca3b83b6039b202c6dd2ad3e7f412c8  tests/publication_crash.bend
+f8695beafed835f88ff642742ca5fa715edb2fcbae54ac6315b8dfe94ecafcaf  build/tests/publication_crash
+66e1e27c42f512fd09c0fb1e9cd0285e59044f8e990b3b4dbc4f5490a1e4464a  tests/append_batches.bend
+7e53141c44f932b89e61742bcedc2b35a4df35cbb3800cc2da6eb9d5e4df80ba  build/tests/append_batches
+d1493d2a0404c89a4aa283259c4f2a6f943f6c8a35a27a7e01387eba2b63e3b3  tests/sql_batches.bend
+1ec72c14a03af72425b412b651f072a4a879be5ba1002a59a41841bc50e75b84  build/tests/sql_batches
+c9a318ed02c64a5d89347c94574453611fec825bd2bc0ecd50d1ee4e58585067  tests/projection_cursor.bend
+7652844cbdf3d9098f6d7dcac753a403261f550696a2af36cf9343e418be8fd9  build/tests/projection_cursor
+a7bb7428776b02cb71215d4d3f6fec5fe37644b6cff9410ebfc08a8e41a47aa1  tests/maintenance.bend
+6d4bc5835ea8e4841a2af361951aeee1e256f5d308846e80035daa755418ca05  build/tests/maintenance
+f13271b02f90231be34fec006ebe3bc9e0a2d18d2eebb9a831ac5e498610d4e3  tests/integration.bend
+80f132afc766f11a88af29a2cfb67d27a776235fca0adfc1b995e2e808b5b817  build/tests/integration
+a1850553f5031a0c5dca85b15028bd7421c132217dd20f6e588aece9b2504de7  tests/scoped_reader.bend
+952c3cd9b25262ca4ee4e716e0bdb659622f9fb5207b5f0eb8d19add617ce64b  build/tests/scoped_reader
+c59b2fb8989f975dac828e0ad272df4f5a6e5d0b8fa506ce92c6cef7f009e819  tests/evidence.bend
+1f74125ec6f3b16f0add0b15e00b60ce7ded7821bf387a2caec216fb80c6000c  build/tests/evidence
+a8a6665aa9bd3baf386ba6cdd66568dae652f52fb1a9e71b3bd105c89cbd516c  tests/store_query.bend
+a02abcd261aedd1eda1e98fb66c9664ba9bb52c1cda04a8fc95f1b82d28516b7  build/tests/store_query
+41e92bd0b335ec861d9824253dcac67a606fd74f15309ccf5dce132ffad7425f  tests/storage_search.bend
+59fef6f521d98605e67220e38d50296d938fe9c15daaacf8f78b47607304e49d  build/tests/storage_search
+25ed3caf0b7c77595aaf1b3350cf2b3008925097099d79286405dac78aea2e0a  tests/storage_edges.bend
+510191864022119b38846355a49e5b1506d1c8e404ee1e96bebb69434d20a124  build/tests/storage_edges
+bc72e10a789c3b2e28bb43e6ceee62d967a445ba82afc1d6c8360d81a2e486fe  tests/selected_integrity.bend
+a50b37cab8b62d36acfcf2f4e053f06fa9f7db34fa2491e8ffea46d139369c47  build/tests/selected_integrity

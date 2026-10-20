@@ -91,7 +91,7 @@ def pages(+self: String,+snapshot: String,source: String,extent: String) -> IO(U
     field(whole,"next","null","complete range has no continuation")
     field(whole,"scope","{\"provider\":\"\",\"repository\":\"\",\"role\":\"\",\"after\":\"\"}","empty scope is explicit and nested")
     +text : String = Json.text(Json.field(whole,"text"))
-    Fixture.assert(String.contains(text,"unique pairs: 1") && String.contains(text,"explicit tool_error occurrences: 1"),
+    Fixture.assert(String.contains(text,"Unique pairs: 1") && String.contains(text,"Explicit tool_error: 1"),
       "production reader resolves one captured pair and explicit error fact")
     Fixture.assert(String.contains(text,Json.quote(content())) && String.contains(text,"safe "),
       "nested JSON preserves exact Unicode and escaped captured result")
@@ -128,7 +128,8 @@ def filters(+self: String,+snapshot: String) -> IO(Unit):
     +tools : Json.Json <- good(self,args(snapshot,"0","100","claude","/synthetic/activity/repository","tool","2026-10-20"))
     field(tools,"scope","{\"provider\":\"claude\",\"repository\":\"/synthetic/activity/repository\",\"role\":\"tool\",\"after\":\"2026-10-20\"}",
       "all scope fields round-trip without widening")
-    Fixture.assert(String.contains(Json.text(Json.field(tools,"text")),"calls: 0; results: 1; unique pairs: 0"),
+    Fixture.assert(String.contains(Json.text(Json.field(tools,"text")),"calls: 0; results: 1") &&
+      String.contains(Json.text(Json.field(tools,"text")),"Unique pairs: 0"),
       "role-filtered result does not reveal an excluded counterpart")
     +later : Json.Json <- good(self,args(snapshot,"0","100","","","","2026-10-21"))
     field(later,"verified_count","5","empty date scope still reports performed raw verification")

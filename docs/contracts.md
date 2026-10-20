@@ -14,6 +14,17 @@ creates a new generation. Raw chunks and publication are transactional; normaliz
 events and FTS are projections, never authority. A selected snapshot never follows
 latest implicitly.
 
+The derivative event seal is `event-seal-v1`; schema version 2, parser and
+incoming-context formats remain unchanged. A full typed scan binds actual event
+rows, exact snapshot/source/generation identities, extent, checkpoint and counts.
+Its freshly verified complete-record prefix may be carried only through the
+same uninterrupted write transaction. Before reuse, copied maps/events must
+match in both directions, including SQLite storage types; the unfinished tail
+is parsed again. Main/temp triggers force full fresh sealing. Missing, damaged
+or older seals take verified raw replay; malformed new state fails/rolls back.
+Older writers safely treat the new version as unfamiliar and replay too.
+IDs remain signed-64-bit decimal strings; bounded event counts are checked U32.
+
 Listing pages contain at most 100 rows and a same-transaction one-row
 lookahead. CLI `offset` and `limit` are JSON numbers; `has_more` is Boolean.
 Identifiers and SQLite quantities remain exact decimal strings in row cells.
