@@ -1,0 +1,223 @@
+Built /Users/tcashel/repositories/juice-bend/build/tests/hash
+Running tests/hash.bend in isolated directory /var/folders/kg/pxh413gd2dv04fn_788ycmvw0000gn/T//juice-bend-test-hash.1DGFKO
+PASS independent SHA256 patterned bytes length 0
+PASS independent SHA256 patterned bytes length 1
+PASS independent SHA256 patterned bytes length 55
+PASS independent SHA256 patterned bytes length 56
+PASS independent SHA256 patterned bytes length 63
+PASS independent SHA256 patterned bytes length 64
+PASS independent SHA256 patterned bytes length 65
+PASS independent SHA256 patterned bytes length 127
+PASS independent SHA256 patterned bytes length 128
+PASS independent SHA256 patterned bytes length 129
+PASS independent SHA256 patterned bytes length 256
+PASS independent SHA256 patterned bytes length 262144
+PASS every byte value including NUL and invalid UTF8 is preserved
+PASS fixed binary NUL vector remains compatible
+PASS fixed retained-record identity preimage has its prior digest
+PASS stream split preserves exact digest at byte 0
+PASS stream split preserves exact digest at byte 1
+PASS stream split preserves exact digest at byte 2
+PASS stream split preserves exact digest at byte 3
+PASS stream split preserves exact digest at byte 4
+PASS stream split preserves exact digest at byte 5
+PASS stream split preserves exact digest at byte 6
+PASS stream split preserves exact digest at byte 7
+PASS stream split preserves exact digest at byte 8
+PASS stream split preserves exact digest at byte 9
+PASS stream split preserves exact digest at byte 10
+PASS stream split preserves exact digest at byte 11
+PASS stream split preserves exact digest at byte 12
+PASS stream split preserves exact digest at byte 13
+PASS stream split preserves exact digest at byte 14
+PASS stream split preserves exact digest at byte 15
+PASS stream split preserves exact digest at byte 16
+PASS stream split preserves exact digest at byte 17
+PASS stream split preserves exact digest at byte 18
+PASS stream split preserves exact digest at byte 19
+PASS stream split preserves exact digest at byte 20
+PASS stream split preserves exact digest at byte 21
+PASS stream split preserves exact digest at byte 22
+PASS stream split preserves exact digest at byte 23
+PASS stream split preserves exact digest at byte 24
+PASS stream split preserves exact digest at byte 25
+PASS stream split preserves exact digest at byte 26
+PASS stream split preserves exact digest at byte 27
+PASS stream split preserves exact digest at byte 28
+PASS stream split preserves exact digest at byte 29
+PASS stream split preserves exact digest at byte 30
+PASS stream split preserves exact digest at byte 31
+PASS stream split preserves exact digest at byte 32
+PASS stream split preserves exact digest at byte 33
+PASS stream split preserves exact digest at byte 34
+PASS stream split preserves exact digest at byte 35
+PASS stream split preserves exact digest at byte 36
+PASS stream split preserves exact digest at byte 37
+PASS stream split preserves exact digest at byte 38
+PASS stream split preserves exact digest at byte 39
+PASS stream split preserves exact digest at byte 40
+PASS stream split preserves exact digest at byte 41
+PASS stream split preserves exact digest at byte 42
+PASS stream split preserves exact digest at byte 43
+PASS stream split preserves exact digest at byte 44
+PASS stream split preserves exact digest at byte 45
+PASS stream split preserves exact digest at byte 46
+PASS stream split preserves exact digest at byte 47
+PASS stream split preserves exact digest at byte 48
+PASS stream split preserves exact digest at byte 49
+PASS stream split preserves exact digest at byte 50
+PASS stream split preserves exact digest at byte 51
+PASS stream split preserves exact digest at byte 52
+PASS stream split preserves exact digest at byte 53
+PASS stream split preserves exact digest at byte 54
+PASS stream split preserves exact digest at byte 55
+PASS stream split preserves exact digest at byte 56
+PASS stream split preserves exact digest at byte 57
+PASS stream split preserves exact digest at byte 58
+PASS stream split preserves exact digest at byte 59
+PASS stream split preserves exact digest at byte 60
+PASS stream split preserves exact digest at byte 61
+PASS stream split preserves exact digest at byte 62
+PASS stream split preserves exact digest at byte 63
+PASS stream split preserves exact digest at byte 64
+PASS stream split preserves exact digest at byte 65
+PASS stream split preserves exact digest at byte 66
+PASS stream split preserves exact digest at byte 67
+PASS stream split preserves exact digest at byte 68
+PASS stream split preserves exact digest at byte 69
+PASS stream split preserves exact digest at byte 70
+PASS stream split preserves exact digest at byte 71
+PASS stream split preserves exact digest at byte 72
+PASS stream split preserves exact digest at byte 73
+PASS stream split preserves exact digest at byte 74
+PASS stream split preserves exact digest at byte 75
+PASS stream split preserves exact digest at byte 76
+PASS stream split preserves exact digest at byte 77
+PASS stream split preserves exact digest at byte 78
+PASS stream split preserves exact digest at byte 79
+PASS stream split preserves exact digest at byte 80
+PASS stream split preserves exact digest at byte 81
+PASS stream split preserves exact digest at byte 82
+PASS stream split preserves exact digest at byte 83
+PASS stream split preserves exact digest at byte 84
+PASS stream split preserves exact digest at byte 85
+PASS stream split preserves exact digest at byte 86
+PASS stream split preserves exact digest at byte 87
+PASS stream split preserves exact digest at byte 88
+PASS stream split preserves exact digest at byte 89
+PASS stream split preserves exact digest at byte 90
+PASS stream split preserves exact digest at byte 91
+PASS stream split preserves exact digest at byte 92
+PASS stream split preserves exact digest at byte 93
+PASS stream split preserves exact digest at byte 94
+PASS stream split preserves exact digest at byte 95
+PASS stream split preserves exact digest at byte 96
+PASS stream split preserves exact digest at byte 97
+PASS stream split preserves exact digest at byte 98
+PASS stream split preserves exact digest at byte 99
+PASS stream split preserves exact digest at byte 100
+PASS stream split preserves exact digest at byte 101
+PASS stream split preserves exact digest at byte 102
+PASS stream split preserves exact digest at byte 103
+PASS stream split preserves exact digest at byte 104
+PASS stream split preserves exact digest at byte 105
+PASS stream split preserves exact digest at byte 106
+PASS stream split preserves exact digest at byte 107
+PASS stream split preserves exact digest at byte 108
+PASS stream split preserves exact digest at byte 109
+PASS stream split preserves exact digest at byte 110
+PASS stream split preserves exact digest at byte 111
+PASS stream split preserves exact digest at byte 112
+PASS stream split preserves exact digest at byte 113
+PASS stream split preserves exact digest at byte 114
+PASS stream split preserves exact digest at byte 115
+PASS stream split preserves exact digest at byte 116
+PASS stream split preserves exact digest at byte 117
+PASS stream split preserves exact digest at byte 118
+PASS stream split preserves exact digest at byte 119
+PASS stream split preserves exact digest at byte 120
+PASS stream split preserves exact digest at byte 121
+PASS stream split preserves exact digest at byte 122
+PASS stream split preserves exact digest at byte 123
+PASS stream split preserves exact digest at byte 124
+PASS stream split preserves exact digest at byte 125
+PASS stream split preserves exact digest at byte 126
+PASS stream split preserves exact digest at byte 127
+PASS stream split preserves exact digest at byte 128
+PASS stream split preserves exact digest at byte 129
+PASS maximum captured fragment streamed in chunks of 1
+PASS maximum captured fragment streamed in chunks of 63
+PASS maximum captured fragment streamed in chunks of 64
+PASS maximum captured fragment streamed in chunks of 65
+PASS HashContext exact pending bytes and length after 0
+PASS HashContext exact pending bytes and length after 1
+PASS HashContext exact pending bytes and length after 63
+PASS HashContext exact pending bytes and length after 64
+PASS HashContext exact pending bytes and length after 65
+PASS HashContext exact pending bytes and length after 127
+PASS HashContext exact pending bytes and length after 128
+PASS HashContext exact pending bytes and length after 129
+PASS padding exact 64-bit bit length for byte count 55
+PASS padding exact 64-bit bit length for byte count 56
+PASS padding exact 64-bit bit length for byte count 536870911
+PASS padding exact 64-bit bit length for byte count 536870912
+PASS padding exact 64-bit bit length for byte count 1073741824
+PASS padding exact 64-bit bit length for byte count 2147483648
+PASS padding exact 64-bit bit length for byte count 4294967295
+Built /Users/tcashel/repositories/juice-bend/build/tests/domain
+Running tests/domain.bend in isolated directory /var/folders/kg/pxh413gd2dv04fn_788ycmvw0000gn/T//juice-bend-test-domain.84pkJI
+PASS SHA256 empty
+PASS SHA256 abc
+PASS SHA256 multi-block FIPS vector
+PASS SHA256 pad boundary 55
+PASS SHA256 pad boundary 56
+PASS SHA256 block boundary 63
+PASS SHA256 block boundary 64
+PASS SHA256 block boundary 65
+PASS SHA256 binary NUL
+PASS UTF8 independent emoji bytes
+PASS UTF8 decode nonASCII
+PASS UTF8 embedded NUL
+PASS UTF8 overlong
+PASS UTF8 overlong three
+PASS UTF8 surrogate
+PASS UTF8 beyond max scalar
+PASS UTF8 truncated
+PASS UTF8 bad continuation
+PASS UTF8 invalid byte integer
+PASS UTF8 max scalar
+PASS match empty rejected
+PASS match one exact
+PASS match one missing
+PASS match sixty percent
+PASS match below threshold
+PASS match invalid counts
+PASS match two minimum
+PASS bounded read normal
+PASS bounded read clips
+PASS bounded read beyond extent
+PASS bounded read max U32
+PASS bounded read no addition overflow
+PASS snapshot remains pinned
+PASS generation isolation
+PASS provider isolation
+PASS event occurrence isolation
+PASS scope provider excluded
+PASS scope repository excluded
+PASS scope wildcards explicit
+PASS missing evidence never exact
+PASS ambiguous evidence never exact
+PASS distinct identities ambiguous
+PASS tie uses key
+PASS tie rejects greater key
+PASS score precedes key
+PASS parse U32 zero
+PASS parse U32 max
+PASS parse U32 2^32 rejects
+PASS parse U32 beyond 2^53 rejects
+PASS parse U32 negative rejects
+PASS parse U32 empty rejects
+PASS parse U32 leading zero rejects
+PASS parse U32 nondigit rejects
+domain tests passed
+Completed 2 Bend test executables.

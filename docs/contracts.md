@@ -14,6 +14,21 @@ creates a new generation. Raw chunks and publication are transactional; normaliz
 events and FTS are projections, never authority. A selected snapshot never follows
 latest implicitly.
 
+Listing pages contain at most 100 rows and a same-transaction one-row
+lookahead. CLI `offset` and `limit` are JSON numbers; `has_more` is Boolean.
+Identifiers and SQLite quantities remain exact decimal strings in row cells.
+The maximum listing offset is 4294967195 so the lookahead cannot wrap U32.
+Saved versions are anchored to one exact source across its generations, ordered
+by descending accepted snapshot ID. `latest SNAPSHOT` resolves an explicit
+navigation target; a missing or foreign pointer is an error. The GUI retains
+the prior reader until the newly requested snapshot passes its normal read.
+
+`storage` returns a structured inventory plus readable text. Its row/page
+counts share one SQLite read transaction; main/WAL/SHM file lengths are later
+non-atomic samples. Logical sizes and reusable pages overlap and cannot be
+summed into physical reclaimable storage. Inventory never changes selection,
+purges raw data, checkpoints, or runs VACUUM.
+
 Provider interface: `Providers.parse(provider: String, raw: String)` returns
 `List<&2, Providers.Record>`; its `ProviderEvent` constructor has role, text, tool, call_id, arguments, result, repository,
 session, timestamp, model, usage, parent, coverage (all String). Unknown fields

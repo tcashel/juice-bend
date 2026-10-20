@@ -427,7 +427,7 @@ def git_blame_valid(repo: String, path: String, +start: U32, +end: U32, valid: B
       do IO<Result<&2, &2, String, List<&2, Region>>>:
         result : Result<&1, &1, U32 & String, U32 & (String & String)> <-
           Process.run("/usr/bin/git",
-            ["--no-pager", "--no-optional-locks",
+            ["--no-pager", "--no-optional-locks", "--no-replace-objects", "--no-lazy-fetch", "--literal-pathspecs",
              "-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false",
              "-c", "diff.external=", "-c", "core.attributesFile=/dev/null",
              "-c", "color.ui=false", "-C", repo,

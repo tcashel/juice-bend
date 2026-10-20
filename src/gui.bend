@@ -26,7 +26,13 @@ type Pending is Data:
 
 type Selection is Data:
   Selection{items: List<&2,Item>, snapshot: String, start: U32,
-    displayed: U32, blame_args: List<&2,String>, filters: Query.Filters}
+    displayed: U32, blame_args: List<&2,String>, filters: Query.Filters, listing: Listing}
+
+# List navigation is independent of the immutable reader selection. The full
+# parsed listing filters include the lexical query; reader filters omit it.
+type Listing is Data:
+  Listing{kind: U32, filters: Query.Filters, offset: U32, has_more: Bool, loaded: Bool,
+    anchor: String}
 
 type Form is Data:
   Form{mode: U32, search: String, source: String, blame: String}
@@ -57,11 +63,20 @@ def linear_args(args: List<&2,String>) -> List<String>:
 def empty_filters() -> Query.Filters:
   Query.Filters{"","","","",""}
 
+def empty_listing() -> Listing:
+  Listing{1,empty_filters(),0,False{},False{},""}
+
 def request_filters(args: List<&2,String>) -> Query.Filters:
   match args:
     case "history" <> provider <> repo <> []:
       Query.Filters{"",provider,repo,"",""}
+    case "history" <> provider <> repo <> offset <> []:
+      Query.Filters{"",provider,repo,"",""}
     case "search" <> query <> provider <> repo <> role <> after <> []:
+      Query.Filters{"",provider,repo,role,after}
+    case "search" <> query <> provider <> repo <> role <> after <> offset <> []:
+      Query.Filters{"",provider,repo,role,after}
+    case "latest-view" <> snap <> provider <> repo <> role <> after <> []:
       Query.Filters{"",provider,repo,role,after}
     case cmd <> snap <> start <> count <> provider <> repo <> role <> after <> []:
       Query.Filters{"",provider,repo,role,after}
@@ -116,6 +131,25 @@ def search_items(rows: List<&2,List<&2,Sql.Cell>>,+filters: Query.Filters) -> Li
       Item{Store.field(r,0n),Store.number(Store.field(r,1n)),Store.field(r,5n),
         Store.field(r,3n),Store.field(r,6n),Store.field(r,9n),filters} <> search_items(rest,filters)
 
+def version_items(rows: List<&2,List<&2,Sql.Cell>>,+filters: Query.Filters) -> List<&2,Item>:
+  match rows:
+    case []:
+      []
+    case +row <> rest:
+      Item{Store.field(row,0n),0,"Snap " ++ Store.field(row,0n) ++ " gen " ++ Store.field(row,1n) ++
+        " | " ++ Store.field(row,3n) ++ " records | " ++ Store.field(row,2n) ++ "B" ++
+        Bool.pick(String,String.eq(Store.field(row,4n),"1")," | latest",""),
+        "capture","",Store.field(row,1n),filters} <> version_items(rest,filters)
+
+def listing_items(kind: U32,rows: List<&2,List<&2,Sql.Cell>>,filters: Query.Filters) -> List<&2,Item>:
+  match kind:
+    case 1:
+      history_items(rows,filters)
+    case 17:
+      version_items(rows,filters)
+    case _:
+      search_items(rows,filters)
+
 def select_item(items: List<&2,Item>, +n: Nat) -> Maybe<&2,Item>:
   match items n:
     case [] _:
@@ -148,13 +182,61 @@ def invalidate(+state: State) -> State:
   State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
   State{db,dir,program,ui,selection,form,Jobs{U32.add(revision,1),None{},reader,writer,paused},refresh_at,serial}
 
+def list_args(kind: U32,filters: Query.Filters,offset: U32) -> List<&2,String>:
+  match kind:
+    case 1:
+      Query.Filters{query,provider,repo,role,after} = filters
+      ["history",provider,repo,U32.show(offset)]
+    case _:
+      Query.Filters{query,provider,repo,role,after} = filters
+      ["search",query,provider,repo,role,after,U32.show(offset)]
+
+def anchored_list_args(+kind: U32,filters: Query.Filters,offset: U32,anchor: String) -> List<&2,String>:
+  match kind:
+    case 17:
+      ["versions",anchor,U32.show(offset)]
+    case _:
+      list_args(kind,filters,offset)
+
+def list_request_at(+state: State,+kind: U32,+filters: Query.Filters,+offset: U32,+anchor: String) -> State:
+  State{db,dir,program,ui,Selection{items,snap,start,displayed,args,reader_filters,old},form,jobs,refresh_at,serial} = state
+  queue(State{db,dir,program,UI.set_results(UI.set_rows(ui,[]),UI.Results{offset,0,False{},False{}}),
+    Selection{[],snap,start,displayed,args,reader_filters,Listing{kind,filters,offset,False{},False{},anchor}},
+    form,jobs,refresh_at,serial},Request{kind,anchored_list_args(kind,filters,offset,anchor),anchor,offset,
+      Bool.pick(String,U32.is_eq(kind,17),"Saved captures",Bool.pick(String,U32.is_eq(kind,1),"History","Search"))})
+
+def list_request(state: State,kind: U32,filters: Query.Filters,offset: U32) -> State:
+  list_request_at(state,kind,filters,offset,"")
+
+def list_step(+state: State,+kind: U32,+filters: Query.Filters,+offset: U32,+anchor: String,+forward: Bool,available: Bool) -> State:
+  match available:
+    case True{}:
+      list_request_at(state,kind,filters,Bool.pick(U32,forward,U32.add(offset,100),UI.minus(offset,100)),anchor)
+    case False{}:
+      status(state,Bool.pick(String,forward,"End of the current results. Refresh restarts the live listing.",
+        "Already at the first result page."))
+
+def list_page_ready(+state: State,+listing: Listing,+forward: Bool,+ready: Bool) -> State:
+  Listing{kind,filters,+offset,more,loaded,+anchor} = listing
+  match ready:
+    case False{}:
+      status(state,"Result navigation is available after the current listing loads.")
+    case True{}:
+      list_step(state,kind,filters,offset,anchor,forward,
+        Bool.pick(Bool,forward,more && U32.is_le(offset,4294967095),U32.is_gt(offset,0)))
+
+def listing_loaded(listing: Listing) -> Bool:
+  Listing{kind,full,offset,more,loaded,+anchor} = listing
+  loaded
+
+def list_paging(+state: State,forward: Bool) -> State:
+  State{db,dir,program,ui,Selection{items,snap,start,displayed,args,filters,+listing},
+    Form{mode,search,source,blame},jobs,refresh_at,serial} = state
+  list_page_ready(state,listing,forward,U32.is_eq(mode,0) && listing_loaded(listing))
+
 def reload_args(+state: State, +query: String, +provider: String, +repo: String,
   +role: String, +after: String, +history: Bool) -> State:
-  match history:
-    case True{}:
-      queue(state,Request{1,["history",provider,repo],"",0,"History"})
-    case False{}:
-      queue(state,Request{2,["search",query,provider,repo,role,after],"",0,"Search"})
+  list_request(state,Bool.pick(U32,history,1,2),Query.Filters{query,provider,repo,role,after},0)
 
 def reload_filters(+state: State, result: Result<&2,&2,String,Query.Filters>) -> State:
   State{+db,+dir,+program,+ui,+selection,+form,+jobs,+refresh_at,+serial} = state
@@ -167,12 +249,26 @@ def reload_filters(+state: State, result: Result<&2,&2,String,Query.Filters>) ->
         query,chosen,repo,role,after,String.is_empty(query) && String.is_empty(role) && String.is_empty(after))
 
 def clear_rows(+state: State) -> State:
-  State{+db,+dir,+program,+ui,Selection{items,snap,start,displayed,blame,filters},+form,+jobs,+refresh_at,+serial} = state
-  State{db,dir,program,UI.set_rows(ui,[]),Selection{[],snap,start,displayed,blame,filters},form,jobs,refresh_at,serial}
+  State{+db,+dir,+program,+ui,Selection{items,snap,start,displayed,blame,filters,+listing},+form,+jobs,+refresh_at,+serial} = state
+  Listing{kind,full,offset,more,loaded,+anchor} = listing
+  State{db,dir,program,UI.set_results(UI.set_rows(ui,[]),UI.Results{0,0,False{},False{}}),
+    Selection{[],snap,start,displayed,blame,filters,Listing{kind,full,0,False{},False{},""}},form,jobs,refresh_at,serial}
 
 def reload(+state: State) -> State:
   State{+db,+dir,+program,+ui,+selection,+form,+jobs,+refresh_at,+serial} = state
   reload_filters(clear_rows(state),Query.parse_ui(UI.query(ui)))
+
+def reload_listing_kind(state: State,listing: Listing) -> State:
+  Listing{kind,filters,offset,more,loaded,anchor} = listing
+  match kind:
+    case 17:
+      list_request_at(state,17,filters,0,anchor)
+    case _:
+      reload(state)
+
+def reload_listing(+state: State) -> State:
+  State{db,dir,program,ui,Selection{items,snap,start,displayed,args,filters,listing},form,jobs,deadline,serial} = state
+  reload_listing_kind(state,listing)
 
 def form_text(+state: State) -> State:
   State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
@@ -201,7 +297,7 @@ def page_nonempty(+state: State,+snap: String,+start: U32,+filters: Query.Filter
         "Transcript | pinned snapshot " ++ snap ++ " | record " ++ U32.show(start)})
 
 def page_at(+state: State, +start: U32) -> State:
-  State{+db,+dir,+program,+ui,Selection{+items,+snap,+old,+displayed,+blame,+filters},+form,+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+snap,+old,+displayed,+blame,+filters,+listing},+form,+jobs,+refresh_at,+serial} = state
   page_nonempty(state,snap,start,filters,String.is_empty(snap))
 
 def why_nonempty(+state: State,+snap: String,+start: U32,+filters: Query.Filters,+empty: Bool) -> State:
@@ -234,7 +330,7 @@ def why_commit(+state: State,args: List<&2,String>) -> State:
       status(state,"Use /absolute/repository|commit:full40hex in the Blame form.")
 
 def why(+state: State) -> State:
-  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters},+form,+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters,+listing},+form,+jobs,+refresh_at,+serial} = state
   match displayed:
     case 3:
       why_nonempty(state,snap,start,filters,String.is_empty(snap))
@@ -263,7 +359,7 @@ def usage_nonempty(+state: State,+snap: String,+start: U32,+filters: Query.Filte
       status(state,"Usage needs an unfiltered transcript range. Clear repository, role and date filters, then reopen a result.")
 
 def usage(+state: State) -> State:
-  State{db,dir,program,ui,Selection{items,+snap,+start,displayed,args,+filters},form,jobs,refresh_at,serial} = state
+  State{db,dir,program,ui,Selection{items,+snap,+start,displayed,args,+filters,+listing},form,jobs,refresh_at,serial} = state
   match displayed:
     case 3:
       usage_nonempty(state,snap,start,filters,usage_scope(filters) && Bool.not(String.is_empty(snap)))
@@ -291,19 +387,49 @@ def paging_kind(+state: State,+kind: U32,+snap: String,+start: U32,+filters: Que
   paging_next(state,kind,snap,next,filters)
 
 def paging(+state: State,+forward: Bool) -> State:
-  State{db,dir,program,ui,Selection{items,snap,start,displayed,args,filters},form,jobs,refresh_at,serial} = state
+  State{db,dir,program,ui,Selection{items,snap,start,displayed,args,filters,+listing},form,jobs,refresh_at,serial} = state
   paging_kind(state,displayed,snap,start,filters,forward)
 
 def browse(+state: State) -> State:
   State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
   reload(State{db,dir,program,UI.set_query(ui,search),selection,Form{0,search,source,blame},jobs,refresh_at,serial})
 
+def capture_browse(+state: State) -> State:
+  State{db,dir,program,ui,selection,Form{mode,+search,source,blame},jobs,refresh_at,serial} = state
+  State{db,dir,program,UI.set_query(ui,search),selection,Form{0,search,source,blame},jobs,refresh_at,serial}
+
+def versions_ready(state: State,snapshot: String,filters: Query.Filters,valid: Bool) -> State:
+  match valid:
+    case True{}:
+      list_request_at(capture_browse(state),17,filters,0,snapshot)
+    case False{}:
+      status(state,"Choose a captured transcript before browsing saved versions.")
+
+def versions(+state: State) -> State:
+  State{db,dir,program,ui,Selection{items,+snap,start,displayed,args,filters,listing},form,jobs,deadline,serial} = state
+  versions_ready(state,snap,filters,Bool.not(String.is_empty(snap)))
+
+def latest_args(snapshot: String,filters: Query.Filters) -> List<&2,String>:
+  Query.Filters{query,provider,repo,role,after} = filters
+  ["latest-view",snapshot,provider,repo,role,after]
+
+def latest_ready(state: State,+snapshot: String,filters: Query.Filters,valid: Bool) -> State:
+  match valid:
+    case True{}:
+      queue(capture_browse(state),Request{18,latest_args(snapshot,filters),snapshot,0,"Open latest capture"})
+    case False{}:
+      status(state,"Choose a captured transcript before opening its latest capture.")
+
+def open_latest(+state: State) -> State:
+  State{db,dir,program,ui,Selection{items,+snap,start,displayed,args,filters,listing},form,jobs,deadline,serial} = state
+  latest_ready(state,snap,filters,Bool.not(String.is_empty(snap)))
+
 def no_display(+selection: Selection) -> Selection:
-  Selection{items,snap,start,displayed,blame,filters} = selection
-  Selection{items,snap,start,0,blame,filters}
+  Selection{items,snap,start,displayed,blame,filters,+listing} = selection
+  Selection{items,snap,start,0,blame,filters,listing}
 
 def selection_snapshot(selection: Selection) -> String:
-  Selection{items,snap,start,displayed,args,filters} = selection
+  Selection{items,snap,start,displayed,args,filters,+listing} = selection
   snap
 
 def settings_text(dir: String,snapshot: String) -> String:
@@ -336,6 +462,21 @@ def settings(+state: State) -> State:
     case _:
       queue(clear_rows(State{db,dir,program,UI.set_reader(UI.set_query(ui,source),"Settings | explicit sources",settings_text(dir,selection_snapshot(selection))),
         no_display(selection),Form{1,search,source,blame},jobs,refresh_at,serial}),Request{6,["sources"],"",0,"Registered sources"})
+
+def storage(+state: State) -> State:
+  State{db,dir,program,ui,selection,Form{mode,search,+source,blame},jobs,deadline,serial} = state
+  queue(clear_rows(State{db,dir,program,UI.set_query(ui,source),no_display(selection),
+    Form{1,search,source,blame},jobs,deadline,serial}),Request{19,["storage"],"",0,"Storage inventory"})
+
+def storage_done(+state: State,result: Result<&2,&2,String,String>) -> State:
+  State{db,dir,program,ui,selection,form,jobs,deadline,serial} = state
+  match result:
+    case Fail{message}:
+      status(state,message)
+    case Done{text}:
+      State{db,dir,program,UI.set_status(UI.set_reader(ui,"Settings | storage inventory",text),
+        "Read-only storage inventory. Click Settings to return to search."),
+        no_display(selection),form,jobs,deadline,serial}
 
 def filter_help(+state: State) -> State:
   State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
@@ -417,6 +558,10 @@ def read_scoped(program: String,dir: String,args: List<&2,String>) -> IO(Reply):
 
 def read_job(+program: String,+dir: String,args: List<&2,String>) -> IO(Reply):
   match args:
+    case "latest-view" <> snapshot <> provider <> repo <> role <> after <> []:
+      do IO<Reply>:
+        result : Result<&2,&2,String,Json.Json> <- Client.call(program,dir,["latest",snapshot])
+        return Reply{result}
     case "session-scope" <> rest:
       read_scoped(program,dir,"session-scope" <> rest)
     case "why-scope" <> rest:
@@ -502,13 +647,20 @@ def writer_of(+state: State) -> Maybe<&2,Pending>:
   State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
   writer
 
+def refresh_listing(state: State,mode: U32) -> State:
+  match mode:
+    case 0:
+      reload_listing(state)
+    case _:
+      state
+
 def refresh(+state: State) -> IO(State):
   State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame},+jobs,+refresh_at,+serial} = state
   match mode:
     case 1:
       import_checked(state,scope(ui),String.trim(UI.query(ui)),writer_of(state))
     case _:
-      start_write(state,Request{8,["refresh-all"],"",0,"Refresh registered sources"},writer_of(state))
+      start_write(refresh_listing(state,mode),Request{8,["refresh-all"],"",0,"Refresh registered sources"},writer_of(state))
 
 def rebuild_allowed(+state: State,+snap: String,allowed: Bool) -> IO(State):
   match allowed:
@@ -518,7 +670,7 @@ def rebuild_allowed(+state: State,+snap: String,allowed: Bool) -> IO(State):
       IO.pure(State,status(state,"Select a captured transcript, then open Settings to rebuild that snapshot's derived search rows."))
 
 def rebuild(+state: State) -> IO(State):
-  State{db,dir,program,ui,Selection{items,+snap,start,displayed,args,filters},Form{mode,search,source,blame},jobs,refresh_at,serial} = state
+  State{db,dir,program,ui,Selection{items,+snap,start,displayed,args,filters,+listing},Form{mode,search,source,blame},jobs,refresh_at,serial} = state
   rebuild_allowed(state,snap,U32.is_eq(mode,1) && Bool.not(String.is_empty(snap)))
 
 def copy_done(+state: State,result: Result<&1,&1,U32 & String,U32 & (String & String)>) -> State:
@@ -557,10 +709,10 @@ def export_args(+kind: U32,+snap: String,+start: U32,+filters: Query.Filters,+te
       List.append(&2,String,scoped_args("export-range-scope",snap,start,"40",filters),[path])
 
 def export_at(+state: State,+now: Nat) -> IO(State):
-  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters},+form,
+  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters,listing},+form,
     Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
   +path = dir ++ "/evidence-" ++ Store.nonempty(Bool.pick(String,file_kind(displayed),"file",snap),"selection") ++ "-" ++ Nat.show(now) ++ "-" ++ U32.show(serial) ++ ".md"
-  start_write(State{db,dir,program,ui,Selection{items,snap,start,displayed,blame,filters},form,
+  start_write(State{db,dir,program,ui,Selection{items,snap,start,displayed,blame,filters,listing},form,
     Jobs{revision,wanted,reader,writer,paused},refresh_at,U32.add(serial,1)},
     Request{9,export_args(displayed,snap,start,filters,UI.reader(ui),path),snap,start,path},writer)
 
@@ -574,7 +726,7 @@ def export_begin(+state: State,+valid: Bool) -> IO(State):
         export_at(state,now)
 
 def export(+state: State) -> IO(State):
-  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters},Form{+mode,+search,+source,+form},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters,+listing},Form{+mode,+search,+source,+form},+jobs,+refresh_at,+serial} = state
   export_begin(state,Bool.not(U32.is_eq(mode,1)) && ((displayed >= 3 && displayed <= 4 : U32) || file_kind(displayed) || U32.is_eq(displayed,14)))
 
 def clear_reader(+state: State) -> State:
@@ -593,39 +745,91 @@ def initial_page(+state: State,+snap: String,+start: U32,+filters: Query.Filters
       state
 
 def with_rows(+state: State,+items: List<&2,Item>) -> State:
-  State{+db,+dir,+program,+ui,Selection{+old,+snap,+start,+displayed,+blame,+filters},+form,+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+old,+snap,+start,+displayed,+blame,+filters,+listing},+form,+jobs,+refresh_at,+serial} = state
+  Listing{kind,full,+offset,+more,loaded,+anchor} = listing
+  +results = {UI.Results{offset,U32.from_nat(List.length(&2,Item,items)),more,True{}} : UI.Results}
   +chosen = Domain.select_snapshot(maybe_snapshot(snap),first_snapshot(items))
-  +next = {State{db,dir,program,UI.set_status(UI.set_rows(ui,item_titles(items)),
-    U32.show(U32.from_nat(List.length(&2,Item,items))) ++ " results. Existing reader stays pinned to its accepted snapshot."),
-    Selection{items,snap,start,displayed,blame,filters},form,jobs,refresh_at,serial} : State}
+  +next = {State{db,dir,program,UI.set_status(UI.set_results(UI.set_rows(ui,item_titles(items)),results),
+    Bool.pick(String,U32.is_eq(kind,17),"Saved captures ","") ++ UI.result_label(results) ++
+      Bool.pick(String,U32.is_eq(kind,17),". Choose a version or Open latest; reader stays pinned.",
+        ". Reader remains pinned; Refresh restarts the live listing.")),
+    Selection{items,snap,start,displayed,blame,filters,Listing{kind,full,offset,more,True{},anchor}},form,jobs,refresh_at,serial} : State}
   initial_page(next,chosen,first_ordinal(items),first_filters(items),String.is_empty(snap) && Bool.not(String.is_empty(chosen)))
 
-def rows_done(+state: State,+kind: U32,+filters: Query.Filters,result: Result<&2,&2,String,List<&2,List<&2,Sql.Cell>>>) -> State:
+def rows_done(+state: State,+kind: U32,+filters: Query.Filters,+more: Bool,
+  result: Result<&2,&2,String,List<&2,List<&2,Sql.Cell>>>) -> State:
+  State{db,dir,program,ui,Selection{old,snap,start,displayed,args,reader_filters,
+    Listing{listing_kind,full,offset,oldmore,loaded,+anchor}},form,jobs,refresh_at,serial} = state
   match result:
     case Fail{message}:
       status(state,message)
     case Done{+rows}:
-      with_rows(state,Bool.pick(List<&2,Item>,U32.is_eq(kind,1),history_items(rows,filters),search_items(rows,filters)))
+      with_rows(State{db,dir,program,ui,Selection{old,snap,start,displayed,args,reader_filters,
+        Listing{listing_kind,full,offset,more,True{},anchor}},form,jobs,refresh_at,serial},
+        listing_items(kind,rows,Bool.pick(Query.Filters,U32.is_eq(kind,17),full,filters)))
+
+def listing_value(+state: State,request: Request,+value: Json.Json,valid: Bool) -> State:
+  Request{kind,args,snap,start,title} = request
+  match valid:
+    case False{}:
+      status(state,"Result page metadata was invalid; refresh the listing.")
+    case True{}:
+      rows_done(state,kind,request_filters(args),String.eq(Json.get(value,"has_more"),"true"),
+        Client.rows_result(Done{value}))
+
+def listing_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
+  Request{kind,args,snap,+start,title} = request
+  match result:
+    case Fail{message}:
+      status(state,message)
+    case Done{+value}:
+      listing_value(state,request,value,String.eq(Json.get(value,"offset"),U32.show(start)) &&
+        String.eq(Json.get(value,"limit"),"100") &&
+        (String.eq(Json.get(value,"has_more"),"true") || String.eq(Json.get(value,"has_more"),"false")))
+
+def latest_value(+state: State,+request: Request,+value: Json.Json,valid: Bool) -> State:
+  Request{kind,args,snapshot,start,title} = request
+  match valid:
+    case True{}:
+      page_nonempty(state,Json.get(value,"snapshot"),0,request_filters(args),False{})
+    case False{}:
+      status(state,"Latest capture response did not match its requested source; reader remains pinned.")
+
+def latest_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
+  Request{kind,args,snapshot,start,title} = request
+  match result:
+    case Fail{message}:
+      status(state,message)
+    case Done{+value}:
+      latest_value(state,request,value,String.eq(Json.get(value,"anchor_snapshot"),snapshot) &&
+        P.decimal_valid(Json.get(value,"snapshot")) && Bool.not(String.eq(Json.get(value,"snapshot"),"0")) &&
+        Bool.not(Cmp.is_gt(P.decimal_compare(Json.get(value,"snapshot"),"9223372036854775807"))))
 
 def text_done(+state: State,+request: Request,result: Result<&2,&2,String,String>) -> State:
-  State{+db,+dir,+program,+ui,Selection{+items,+old,+oldstart,+displayed,+blame,+filters},Form{+mode,+search,+source,+form},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+old,+oldstart,+displayed,+blame,+filters,+listing},Form{+mode,+search,+source,+form},+jobs,+refresh_at,+serial} = state
   Request{+kind,+args,+snap,+start,+title} = request
   match result:
     case Fail{message}:
-      status(State{db,dir,program,ui,Selection{items,old,oldstart,displayed,blame,filters},Form{mode,search,source,form},jobs,refresh_at,serial},message)
+      status(State{db,dir,program,ui,Selection{items,old,oldstart,displayed,blame,filters,listing},Form{mode,search,source,form},jobs,refresh_at,serial},message)
     case Done{text}:
       State{db,dir,program,UI.set_status(UI.set_reader(Bool.pick(UI.State,file_kind(kind) || U32.is_eq(mode,0),ui,UI.set_query(ui,search)),title,text),"Captured evidence loaded. Scroll or drag to select; Cmd+C copies."),
         Selection{items,Bool.pick(String,file_kind(kind),old,snap),start,kind,
           Bool.pick(List<&2,String>,file_kind(kind),args,blame),
-          Bool.pick(Query.Filters,file_kind(kind) || U32.is_eq(kind,14),filters,request_filters(args))},Form{Bool.pick(U32,file_kind(kind),2,0),search,source,form},jobs,refresh_at,serial}
+          Bool.pick(Query.Filters,file_kind(kind) || U32.is_eq(kind,14),filters,request_filters(args)),listing},Form{Bool.pick(U32,file_kind(kind),2,0),search,source,form},jobs,refresh_at,serial}
 
 def read_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
   Request{+kind,+args,+snap,+start,+title} = request
   match kind:
     case 1:
-      rows_done(state,1,request_filters(args),Client.rows_result(result))
+      listing_done(state,request,result)
     case 2:
-      rows_done(state,2,request_filters(args),Client.rows_result(result))
+      listing_done(state,request,result)
+    case 17:
+      listing_done(state,request,result)
+    case 18:
+      latest_done(state,request,result)
+    case 19:
+      storage_done(state,Client.text_result(result))
     case 6:
       source_rows(state,Client.rows_result(result))
     case _:
@@ -670,7 +874,7 @@ def poll_read(+state: State,pending: Maybe<&2,Pending>) -> IO(State):
 def refresh_idle(+state: State,wanted: Maybe<&2,Request>,reader: Maybe<&2,Pending>) -> State:
   match wanted reader:
     case None{} None{}:
-      reload(state)
+      reload_listing(state)
     case _ _:
       status(state,"Capture finished. Your current view stays pinned.")
 
@@ -855,7 +1059,7 @@ def toggle_pause(+state: State) -> State:
     Bool.pick(String,paused,"Automatic refresh resumed.","Automatic refresh paused. In-flight work finishes safely; manual Refresh still works."))
 
 def enter(+state: State,+index: U32) -> IO(State):
-  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+args,+filters},Form{+mode,+search,+source,+blameform},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+args,+filters,+listing},Form{+mode,+search,+source,+blameform},+jobs,+refresh_at,+serial} = state
   match mode:
     case 1:
       refresh(state)
@@ -865,7 +1069,7 @@ def enter(+state: State,+index: U32) -> IO(State):
       IO.pure(State,open_item(state,select_item(items,U32.to_nat(index))))
 
 def handle(+state: State,action: UI.Action) -> IO(Maybe<State>):
-  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+args,+filters},+form,+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+args,+filters,+listing},+form,+jobs,+refresh_at,+serial} = state
   match action:
     case UI.Quit{}:
       IO.pure(Maybe<State>,None{})
@@ -889,6 +1093,8 @@ def handle(+state: State,action: UI.Action) -> IO(Maybe<State>):
         return Some{paste_done(state,result)}
     case UI.Settings{}:
       IO.pure(Maybe<State>,Some{settings(state)})
+    case UI.Storage{}:
+      IO.pure(Maybe<State>,Some{storage(state)})
     case UI.Filter{}:
       IO.pure(Maybe<State>,Some{filter_help(state)})
     case UI.Blame{}:
@@ -903,6 +1109,10 @@ def handle(+state: State,action: UI.Action) -> IO(Maybe<State>):
       IO.pure(Maybe<State>,Some{paging(state,False{})})
     case UI.Next{}:
       IO.pure(Maybe<State>,Some{paging(state,True{})})
+    case UI.ListPrevious{}:
+      IO.pure(Maybe<State>,Some{list_paging(state,False{})})
+    case UI.ListNext{}:
+      IO.pure(Maybe<State>,Some{list_paging(state,True{})})
     case UI.Why{}:
       IO.pure(Maybe<State>,Some{why(state)})
     case UI.Usage{}:
@@ -911,6 +1121,10 @@ def handle(+state: State,action: UI.Action) -> IO(Maybe<State>):
       do IO<Maybe<State>>:
         next : State <- rebuild(state)
         return Some{next}
+    case UI.Versions{}:
+      IO.pure(Maybe<State>,Some{versions(state)})
+    case UI.OpenLatest{}:
+      IO.pure(Maybe<State>,Some{open_latest(state)})
     case UI.Export{}:
       do IO<Maybe<State>>:
         next : State <- export(state)
@@ -995,7 +1209,7 @@ def tick(es: List<Event>,state: State) -> IO(Maybe<State>):
       tick_input(e <> rest,state,True{})
 
 def initial(+db: U32,+dir: String,+program: String) -> State:
-  reload(State{db,dir,program,UI.init(),Selection{[],"",0,0,[],empty_filters()},Form{0,"","",""},
+  reload(State{db,dir,program,UI.init(),Selection{[],"",0,0,[],empty_filters(),empty_listing()},Form{0,"","",""},
     Jobs{0,None{},None{},None{},False{}},0n,0})
 
 def run(+db: U32,+dir: String,+program: String) -> IO(Unit):

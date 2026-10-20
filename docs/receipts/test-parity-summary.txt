@@ -1,0 +1,213 @@
+Juice Bend parity native regression receipt
+Date: 2026-10-20
+Host: local macOS 27.0.1 (26A434), Apple Silicon arm64
+Compiler: Apple clang 21.0.0 (clang-2100.3.34.2)
+Runtime tools: mise 2026.9.12; Bun 1.4.2 via repository-local mise state
+Bend revision: 60ca80aedeec9d8f0629b5f10dd19457d8ad67af
+Command: ./scripts/test with the 40 explicit entry points listed below
+Excluded: tests/projection_store.bend (experimental engine; not integrated
+or included in this publishable regression set)
+Exit status: 0
+Completed: 40 Bend test executables
+Named PASS checks: 2960
+Completion banners excluded: 18 (including 2 banners beginning with PASS)
+Started UTC: 2026-10-20T21:29:24.963077+00:00
+Finished UTC: 2026-10-20T21:43:30.998269+00:00
+
+Counts come from completed native output. Named checks include explicit
+fixture/setup checks and successful-return checks, as in the historical
+baseline. Completion banners are counted separately and add no assertions.
+Each executable used scripts/test's fresh private synthetic data directory.
+Native GUI state tests are not a substitute for observed desktop interaction.
+The coordinating task ran native UI validation concurrently; this receipt
+makes no isolated timing or performance claim.
+
+Historical integrated baseline retained: 33 executables / 2166 named checks.
+Historical raw log SHA-256:
+f2bb5cf950aae924b55d72a3c572b39aa711cb545a1114fa338e18c57bc445b9
+The baseline column preserves its per-executable named counts. "new" means
+that executable was absent from that baseline, not that it has no earlier
+focused test history. This file does not replace the historical receipt.
+
+Executable                                    Baseline    Current   Banners
+tests/append_batches.bend                          new        226         1
+tests/append_integrity.bend                         49         49         0
+tests/catalog.bend                                 new         52         0
+tests/catalog_cli.bend                             new         24         0
+tests/cli.bend                                       9          9         1
+tests/client.bend                                    6          6         0
+tests/context.bend                                  22         22         0
+tests/coverage_integrity.bend                        4          4         0
+tests/display.bend                                   6          6         0
+tests/domain.bend                                   53         53         1
+tests/evidence.bend                                 42         42         1
+tests/evidence_time.bend                             9          9         0
+tests/file_evidence.bend                            35         35         1
+tests/file_limits.bend                               7          7         0
+tests/git_diff.bend                                 36         36         0
+tests/gui.bend                                      52         87         1
+tests/hash.bend                                    new        164         0
+tests/integration.bend                              21         21         1
+tests/list_pagination.bend                         new        162         1
+tests/maintenance.bend                              30         30         1
+tests/native_trace.bend                             10         10         0
+tests/projection_cursor.bend                        12         12         0
+tests/provenance.bend                               36         36         1
+tests/providers.bend                                61         61         0
+tests/publication_crash.bend                      1203       1203         1
+tests/query.bend                                    48         48         1
+tests/repository_browser.bend                      new         55         0
+tests/scoped_reader.bend                            18         18         1
+tests/selected_integrity.bend                       24         24         0
+tests/sources.bend                                  24         24         1
+tests/sql_batches.bend                             131        131         1
+tests/sqlite.bend                                   49         49         1
+tests/storage.bend                                   5          5         0
+tests/storage_edges.bend                            33         33         1
+tests/storage_inventory.bend                       new         66         0
+tests/storage_search.bend                           28         28         0
+tests/store_query.bend                              37         37         0
+tests/timestamp.bend                                18         18         0
+tests/ui.bend                                       19         29         1
+tests/usage.bend                                    29         29         0
+
+Source alignment: all 74 selected tests and recursively imported first-party
+Bend/native inputs plus scripts/test, scripts/build, scripts/bend and mise.toml
+had identical before/after SHA-256 hashes. The selected 40-test list was also
+unchanged. All 72 pinned Bend compiler/runtime and source-pin files had
+identical before/after hashes. These statements apply to this frozen run;
+subsequent source deltas require separate validation receipts.
+
+First-party input manifest SHA-256 (before = after):
+57cfbe4b7b17ef30e601246ade71d72367d6ca95dcc7c1b7a911d9419fbf976e
+Pinned Bend toolchain manifest SHA-256 (before = after):
+1de6dbc368b098359dce9773b65fa13fe6783bd0431c235bf614dbfe6c5a8d55
+Test executable manifest SHA-256:
+bcbf006eb05657580875501df33043a70f48b3f84834bc5d2382d87158a087c3
+Raw complete log SHA-256:
+86228ed3c3787c6bfb2fa5b374fef28e7ce7300e2c3faeaf58758854e72f8fca
+
+Ignored local evidence: build/parity-full-tests.log,
+build/parity-full-tests.exit.json, build/parity-selected-tests.txt,
+build/parity-inputs-before.sha256, build/parity-inputs-after.sha256,
+build/parity-toolchain-before.sha256, build/parity-toolchain-after.sha256,
+build/parity-test-counts.json and build/parity-test-binaries.sha256.
+No raw fixture data, host screenshots or transcript content are included here.
+
+Frozen first-party input SHA-256 manifest
+0e15fcff5e17ed3a65bce5f6c1bc980b53272f80742606280c208bd5b8b91c8c  benchmarks/native_trace.bend
+814ea7ec479614f977416115f33c33f4a9f5efc250a0f0093311e8f6d72dc908  mise.toml
+919cb2abd8bad19a3e8cdf12c676f586717121a9c7222a557345ade8f7ab753e  native/sqlite.c
+daed2fbc1e56005659ca2eb1a95437f5d3d644e3210376ca592fc767e874e6d6  scripts/bend
+d078faa6a8923cf6eee5098a85f4b416a6687afdaab4736d20a9baa048e6fc54  scripts/build
+f11b7cd9a668dc0ee39a4292a5168479166f50297b860cff4f4bb9599cd8ec50  scripts/test
+44e9c7ab678bcc1b745c933cb8f2407d87741979e9c4d62ecacd89905eea1fa7  src/actors.bend
+fafe78a3389444d03659d8f41cedefb85a18494ade37020495d4b87cc7009626  src/catalog.bend
+b405be8b23a0be0395bc7e0c993ff0a42220c40e0458e2de261342f891a0184e  src/cli.bend
+feaa2f1597153224ae80d5b42202434485180c129f84a0110744d2ba44d4d06d  src/client.bend
+84f81d744743c8fbb5f106599cec0c3c1e4e2325bc6afa6d0a7b9224fe2138b2  src/demo.bend
+f2f68a4a9781ea102f3e275781380a885e3057e178d75c8d45b310c3c5002191  src/domain.bend
+69d3caf7b9867bd3ef2f4c8d913207ba7f3a10d2fee24318f2b6720e955dad1f  src/evidence.bend
+3bcd8f324959d369643be7be4e42bad054a549626bf36f7c49b727bf04d30775  src/file_evidence.bend
+f6da8b2a1f37afe8250c2bfcdd0cdb34d216d5a453e2a0486e75ee0122f4ebc1  src/font.bend
+586152e3cecc8f1b8439e0bf3f4bc87802bd40da66fb9b8bd9172eafe1773083  src/git_diff.bend
+1776cba5872e1961f5ed7337a2e442d60cae813f2d4958ddb70d3dd2b06f7ead  src/gui.bend
+02941eb344a355c5d4b41e544a987ca762cf662f7c978b983fd65c3e7de565e6  src/json.bend
+6a2121c6269596b929b7b6669f3f2de95cc3428cd059192db067a6deb913bf0d  src/main.bend
+e3bf2ed16fd237a9422a30fc06716159fa093308219ad0426949d293929b817d  src/maintenance.bend
+0f12835f723c4dfd8e0db055c6392bdc1f9b09518f5c4d22f7be93520c55e223  src/paths.bend
+2a913606e0e2deb85c7fa44fd381662579acee1fd5caff924b3143b24496a62f  src/provenance.bend
+706758310c2885c8e6ccf29ad836ddcd49a0ee81236902e0df5bd8473d649d98  src/providers.bend
+df4792f6d0ca3d867b7b139a83f6b91014f75029299702e3258735eba72befe6  src/query.bend
+7a5e66266caa9b95b4a25ff7bd7dd38bda49de43ef21bf88b526f4e18e653242  src/repo_scope.bend
+d973ae6f1e71a2fe5d59d8a7a13adaca8a37fbb5521dc02227235fe1a60e55b0  src/repository_browser.bend
+b638237b91649404169d0df12012d7c46844a246c41b47f429a9192e6cd1174a  src/scoped_reader.bend
+c01358789018b44c6bb8f2d49ccf7a62c3779b3c511fc449b7e90ec0d232ba13  src/sources.bend
+e0d70821050b21ca0cc239c2983d5c22f63a1786de72dff5c431510f6e794b62  src/sql.bend
+c9372c959f6a1450fdf58c04be4fb29b6a440b8505defd11a9f63aa1cffef3a4  src/storage_inventory.bend
+2cfbba20290138d1e86d5c60005f96986ea462fbf333669cbe2174e9c3057d24  src/store.bend
+ce5e6992c072e752b61702326d1ac9a6c3751e3ab5719496c7c0511529f083ee  src/timestamp.bend
+278f570f43b1a328907e9f6377a2bb3ced97e158e6594bca9d4ce4186a587073  src/ui.bend
+192e7ccd100c0da1c19488c5d299ca6c31a2b2260ec4b0f1f0647a9fd0cd7d34  src/usage.bend
+66e1e27c42f512fd09c0fb1e9cd0285e59044f8e990b3b4dbc4f5490a1e4464a  tests/append_batches.bend
+41a133946aace732b8549de390d2ce38fd230625760e8d0c5785140eb19c26f0  tests/append_integrity.bend
+d7ccdfe801e05ac508029c359ad117c4e725a8ec2fb9002a0bb69bb9422c7785  tests/catalog.bend
+bfefaab776d2b1649806c04fe642f2231405392376bcb7109638effd7a3e7e8c  tests/catalog_cli.bend
+2055482ff81111c23257d02aa5b14b95bef10db816e05d115cabeef8e1cd48d2  tests/cli.bend
+b88971740a746c97be6fd96a4db806ea32d7c54315332a6db51e21d3825e58de  tests/client.bend
+2bdeff8cb7d467730eda959935581984d8cda17a3075aa64c4f8bf159430c97e  tests/context.bend
+c8086ca284e2980eec589582ed069f60335c9e3f8e7daa1ffb78aacee9c5f23e  tests/coverage_integrity.bend
+f19b9e2ff5b4b095dc1c0fcffda5c6a33d543de0b3ad72c7ccff48f6b12c33b2  tests/display.bend
+5095d65ac626502a7a76e8a679510fb510ffa42d858282e9c5e5c56fe6e2080a  tests/domain.bend
+c59b2fb8989f975dac828e0ad272df4f5a6e5d0b8fa506ce92c6cef7f009e819  tests/evidence.bend
+42f7c60143e5bdf3d422699a97b5e2dfbdc9da716ce5dd39352fb9fdf4592046  tests/evidence_time.bend
+f05b978c02dc65e5b18b7c13510ed660265a0794117d53a1d72f293ebb00c8bd  tests/file_evidence.bend
+4acea8573638bc9b5cdde1e5d171fa3c327a18098e277b653aecec5fdb3eb4b3  tests/file_limits.bend
+a03f0a94bf74919f4b73ee7dcf0a0376603e1b61bb4b914703842a61e5d1b8bf  tests/git_diff.bend
+89eda950680452cbf2c82f1ccfb6b0e3729bc32e172878190cb7a3318e5ddeea  tests/gui.bend
+06e8e3f3edb2b2f3f972dc31c7dc72be5dbeece9f52d9cb5054bc9b738475ed5  tests/hash.bend
+f13271b02f90231be34fec006ebe3bc9e0a2d18d2eebb9a831ac5e498610d4e3  tests/integration.bend
+04783c4e9950670968b5b84f2769f00a2e7a085a8a7b9bac6103d214c91f2dbe  tests/list_pagination.bend
+a7bb7428776b02cb71215d4d3f6fec5fe37644b6cff9410ebfc08a8e41a47aa1  tests/maintenance.bend
+eedd0993c5745a225ccb4baa48f1b7b6bd70823b6cd79ed6ff51cb9f35f1dc37  tests/native_trace.bend
+c9a318ed02c64a5d89347c94574453611fec825bd2bc0ecd50d1ee4e58585067  tests/projection_cursor.bend
+912196a4e2c39ac6209af470cb165c87cf6ac3df331614a4f69df4405b10629c  tests/provenance.bend
+8abddb25126c53de3cc927fc2ec6c6e77f6cb49947737057f46f4d4afb80156e  tests/providers.bend
+58638fc09beb949ca40a93c1738fc7798ca3b83b6039b202c6dd2ad3e7f412c8  tests/publication_crash.bend
+e0f99f8b50734888df70baad6132c391c6688cd3e6dd372d1dd00f6e5e07ec4f  tests/query.bend
+0607504aedf03f316883459cf04f80fd84e55bbeb7b74f6bc63b4b098d62353b  tests/repository_browser.bend
+a1850553f5031a0c5dca85b15028bd7421c132217dd20f6e588aece9b2504de7  tests/scoped_reader.bend
+bc72e10a789c3b2e28bb43e6ceee62d967a445ba82afc1d6c8360d81a2e486fe  tests/selected_integrity.bend
+c60a3fd28ce16eb598cfd8eac3767bfd0b3af86db07aece588a806eadf8a073f  tests/sources.bend
+d1493d2a0404c89a4aa283259c4f2a6f943f6c8a35a27a7e01387eba2b63e3b3  tests/sql_batches.bend
+245ad84bb874bdb557f3ab66cd24c88bc657c15385f40a662c2da6c34bc52b40  tests/sqlite.bend
+1b12888e280741fadbd3648f6c5f43bc2f8579a3f33aeb6f351731093aa5a317  tests/storage.bend
+25ed3caf0b7c77595aaf1b3350cf2b3008925097099d79286405dac78aea2e0a  tests/storage_edges.bend
+1271a4dab0248a61cc4c3d800927c19e1c43abd39545dec4701daa0e4b112c6a  tests/storage_inventory.bend
+41e92bd0b335ec861d9824253dcac67a606fd74f15309ccf5dce132ffad7425f  tests/storage_search.bend
+a8a6665aa9bd3baf386ba6cdd66568dae652f52fb1a9e71b3bd105c89cbd516c  tests/store_query.bend
+992cbda402bafe4920dbd0d3543503074aae9e13e108ce3ccd59217510ed0b12  tests/timestamp.bend
+33312d3b2b92505408d6f85cc0f294607b50b5becff439b69671340d3af70523  tests/ui.bend
+fa5c28f628a36884101e189e29e9fa663e8a4ef5bab369197d6f5e7a7c6e2097  tests/usage.bend
+
+Native test executable SHA-256 manifest (captured after completed run)
+4a776f336186fc7bfb881d5667b7e310608d62da0ad9b7949345d9fbf0edb33b  build/tests/append_batches
+3c7efbe0e09712445042447841be041a07762796cfbbb7086e09fd3e92dcede9  build/tests/append_integrity
+d22a44b2b82b15a8fd4227a8916a2c8eca6ce6580978cbca8e6c76fc536e5039  build/tests/catalog
+328cba79a3f9bd961bfd713dd7aa95237b647ebc308b81c6dfe02f511bbf62a9  build/tests/catalog_cli
+f36b575806882858c674659789c3a2583433338e5340be4204830ff322ce8680  build/tests/cli
+eeb0f69b393171f96ba2ca2ac1596a8969db96576ce1c4154eabeb5fc4f5cb7d  build/tests/client
+05ef56a459972b3d34816a614d948cd254a0ca2b55479fc5ca9fdd2c66d39e9a  build/tests/context
+1926e5d517db9bb7715b1ffd507e096d13533d52de8d75e371386d1c59902678  build/tests/coverage_integrity
+84683a477db2bfa388e4fb619fad7a80a9295a4d106dd81b4b4009bdee22ce4f  build/tests/display
+8d7dbb6f346498c86c65a565d6733c6af95de656c6b1f12bdd85204cd9e22ef9  build/tests/domain
+2b7de6892dafdcc55da946d88c3786c5340bfeeb2eaadfa460ffd674e42505ba  build/tests/evidence
+66c86c05c8a52564e2bbd56a723425250cb09fe1e214920ec7f8652119869cff  build/tests/evidence_time
+ce5dd744e46cfbd426b2f8df25a9ba91e708d23698ca3e183ff2f667617665a1  build/tests/file_evidence
+b454bf01e9cfc88dc44b7a4f10f428c0cbc5bf39999e9d02eb10ebdcb5b206a4  build/tests/file_limits
+a8d0bf638e5be655586455bfbeffbf33ef96f5036bff3fc503f60c2774c4e2f8  build/tests/git_diff
+631c0d5fac5b6839d0972fdc3254fbe106f8022b1d3ec9270135b473d9aa18d0  build/tests/gui
+26f6d88966b3d6a101d0710e530791aa4f4930350ee414b013aa7e4e5c2ef6e5  build/tests/hash
+7a4165a992f3dd972f41193812ea330d86f8d7da600712b21ba570b46d19a27a  build/tests/integration
+e20faba0e267350400972ac9e3a953775d3fc7d4ffa061a196942ec79ed7abd1  build/tests/list_pagination
+0eedf404d95d9e43327e8af209d1346c8f850b8ef4a0fbb7c92c46055bc106ff  build/tests/maintenance
+30537a891807290a879d64d0829621336a48b39660536d35fa1edc3c1e45557b  build/tests/native_trace
+1be57fbac0824c3e60fdd095865daaaae88e8c4389659e03074937a1ecc9f930  build/tests/projection_cursor
+2f171cd9d2f84e6fc39229403ccfd8102466f589fb3c6ceee48cf1cb446ebae2  build/tests/provenance
+8edac867928df50643885adfed9b243702e00a0db46c32b1a2e4465f05e6f1d5  build/tests/providers
+d9839a94393344fcca929d71e524ffb123e1ac785b4761f7ccf77f99c3d721e6  build/tests/publication_crash
+91e8c09b4d13635d9f1f6b6d07ab99e00c2464080198dc3f8475f2ae7c5dceef  build/tests/query
+872591eb9008c6e73588e934fd2fc3720e6012577db752c574ae9e10b0a238f4  build/tests/repository_browser
+02f36b0ed5fcd7105db4f613ad5f4b8893d15eccba01b4d65dca154279d37448  build/tests/scoped_reader
+e2f8f4bde1c02eb4c466b741f697a2ad0f831501e77952dd5149005e43b0ad7e  build/tests/selected_integrity
+3ff93737671bf84a3628ad2a452d95516feff4902dc79b53ea62fc002830f23f  build/tests/sources
+dd94edea48597b327626d6199c8477e889c0e27d1393ca9a75e2351314191955  build/tests/sql_batches
+3c6932845858070de4bbe97defb5d6d055827fe25de82b39dcfa2bc45c316ef7  build/tests/sqlite
+160d954c38973bf7047e3d066f3bd61700ab5a2d9aedc1b335a5fc96091c73d8  build/tests/storage
+d92965acdb4faa4695416f969309efe3574b046fbd4ced7dc2cf622bbd58a671  build/tests/storage_edges
+5a25f7e73b2f2e72b8cbfba4469e8dc9d971ff0a54b58f8547d6e649346beb34  build/tests/storage_inventory
+adc28a40dc753116ec51c65bb257a164ce5cf56777d6773dc60f7d5e9c3980c6  build/tests/storage_search
+4e251e960c744a2074caa5e2b0be3d43e369e0984a30258153027a636f170494  build/tests/store_query
+d7c0d7abe86f3b3ad2ec84a0ece4bd9e9a09a3523a1a7c706c06e3845b9cd975  build/tests/timestamp
+621de04de456e4bc8d4ee6cc169d2815b0ad68c39a0f00b2b84569981f795893  build/tests/ui
+758b31519c1b242a9577b8bf33f7f3cb9f4b6f6c7bf9cda65ae875c9d9c8407d  build/tests/usage

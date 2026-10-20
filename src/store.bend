@@ -674,14 +674,18 @@ def context_digest(snapshot: String,generation: String,extent: U32,ordinal: U32,
       Sql.Cell.Text{digest},Sql.Cell.Text{repository},Sql.Cell.Text{session},
       Sql.Cell.Text{model},Sql.Cell.Text{parent}])))
 
-def put_context(db: U32,+snapshot: String,generation: String,extent: U32,
-  +ordinal: U32,offset: U32,length: U32,digest: String,+context: Context) -> IO(Unit):
+def context_cells(+snapshot: String,generation: String,extent: U32,
+  +ordinal: U32,offset: U32,length: U32,digest: String,+context: Context) -> List<&2,Sql.Cell>:
   Context{repository,session,model,parent} = context
-  exec(db,"INSERT OR REPLACE INTO snapshot_context(snapshot,ordinal,repository,session,model,parent,version,digest) VALUES(?,?,?,?,?,?,?,?)",
-    [Sql.Cell.Integer{snapshot},Sql.Cell.Integer{U32.show(ordinal)},
+  [Sql.Cell.Integer{snapshot},Sql.Cell.Integer{U32.show(ordinal)},
      Sql.Cell.Text{repository},Sql.Cell.Text{session},Sql.Cell.Text{model},
      Sql.Cell.Text{parent},Sql.Cell.Text{context_version()},
-     Sql.Cell.Text{context_digest(snapshot,generation,extent,ordinal,offset,length,digest,context)}])
+     Sql.Cell.Text{context_digest(snapshot,generation,extent,ordinal,offset,length,digest,context)}]
+
+def put_context(db: U32,snapshot: String,generation: String,extent: U32,
+  ordinal: U32,offset: U32,length: U32,digest: String,context: Context) -> IO(Unit):
+  exec(db,"INSERT OR REPLACE INTO snapshot_context(snapshot,ordinal,repository,session,model,parent,version,digest) VALUES(?,?,?,?,?,?,?,?)",
+    context_cells(snapshot,generation,extent,ordinal,offset,length,digest,context))
 
 # Caller supplies the standard, already verified raw row used for replay.
 def put_record_context(db: U32,snapshot: String,extent: U32,+row: List<&2,Sql.Cell>,
@@ -775,25 +779,49 @@ def verify_result(got: File & Bool,next: File -> IO(File & Bool)) -> IO(File & B
 type Verify is Data:
   Verify{snapshot: String,generation: String,extent: U32,count: U32,ordinal: U32,offset: U32,continued: Bool}
 
-def verify_row(file: File, rows: List<&2,List<&2,Sql.Cell>>,
-  state: Verify,next: Verify -> File -> IO(File & Bool)) -> IO(File & Bool):
+# Select the bounded map window before joining raw. LEFT JOIN retains a missing
+# raw target as an invalid row, and the carried ordinal catches missing maps.
+# The byte budget uses actual bytes, never the unverified stored length.
+def verify_batch(db: U32,snapshot: String,ordinal: U32,count: U32) ->
+  IO(List<&2,List<&2,Sql.Cell>>):
+  q(db,
+    "SELECT generation,raw_ordinal,offset,n,digest,bytes,oversized,complete,map_ordinal FROM (SELECT r.generation,r.ordinal AS raw_ordinal,r.offset,r.n,r.digest,r.bytes,r.oversized,r.complete,i.ordinal AS map_ordinal,row_number() OVER (ORDER BY i.ordinal) AS rn,sum(coalesce(length(CAST(r.bytes AS BLOB)),0)+coalesce(length(CAST(r.digest AS BLOB)),0)+256) OVER (ORDER BY i.ordinal) AS total_bytes FROM (SELECT ordinal,raw FROM records WHERE snapshot=? AND ordinal>=? AND ordinal<? ORDER BY ordinal LIMIT 128) i LEFT JOIN raw r ON r.id=i.raw) WHERE total_bytes<=1048576 OR rn=1 ORDER BY map_ordinal",
+    [Sql.Cell.Integer{snapshot},Sql.Cell.Integer{U32.show(ordinal)},
+     Sql.Cell.Integer{U32.show(count)}],128)
+
+def verify_batch_prepend(bytes: List<&2,U32>,following: Verify & List<&2,U32>) ->
+  Verify & List<&2,U32>:
+  (after,tail) = following
+  (after,List.append(&2,U32,bytes,tail))
+
+def verify_batch_records(rows: List<&2,List<&2,Sql.Cell>>,state: Verify) ->
+  IO(Verify & List<&2,U32>):
   match rows:
     case []:
-      IO.die(File & Bool,1,"Missing retained record; capture refused")
-    case row <> rest:
+      IO.pure(Verify & List<&2,U32>,(state,[]))
+    case +row <> rest:
       Verify{snap,+gen,+extent,+count,+ordinal,+offset,continued} = state
-      +r = row
-      +len = number(field(r,3n))
-      do IO<File & Bool>:
-        checked(record_valid(r,gen,extent,count,ordinal,offset,continued),
+      do IO<Verify & List<&2,U32>>:
+        checked(record_valid(row,gen,extent,count,ordinal,offset,continued),
           "Retained raw integrity, snapshot binding or coverage mismatch; capture refused")
-        result : File & Bool <- compare_record(r,file)
-        verify_result(result,f => next(Verify{snap,gen,extent,count,(ordinal + 1 : U32),
-          (offset + len : U32),Bool.not(row_newline(r))},f))
+        following : Verify & List<&2,U32> <- verify_batch_records(rest,
+          Verify{snap,gen,extent,count,U32.add(ordinal,1),
+            U32.add(offset,number(field(row,3n))),Bool.not(row_newline(row))})
+        return verify_batch_prepend(blob(cell(row,5n)),following)
+
+def verify_batch_source(file: File,+offset: U32,got: Verify & List<&2,U32>,
+  next: Verify -> File -> IO(File & Bool)) -> IO(File & Bool):
+  (+state,expected) = got
+  Verify{snap,gen,extent,count,ordinal,+end,continued} = state
+  do IO<File & Bool>:
+    checked(U32.is_gt(end,offset),"Missing retained record; capture refused")
+    result : File & Bool <- read(File & Bool,file,offset,U32.sub(end,offset),
+      f => bytes => IO.pure(File & Bool,(f,Domain.bytes_equal(expected,bytes))))
+    verify_result(result,f => next(state,f))
 
 def verify_step(+db: U32,file: File,state: Verify,done: Bool,
   next: Verify -> File -> IO(File & Bool)) -> IO(File & Bool):
-  Verify{+snap,gen,+extent,count,+ordinal,+offset,continued} = state
+  Verify{+snap,gen,+extent,+count,+ordinal,+offset,continued} = state
   match done:
     case True{}:
       do IO<File & Bool>:
@@ -801,10 +829,10 @@ def verify_step(+db: U32,file: File,state: Verify,done: Bool,
         return (file,True{})
     case False{}:
       do IO<File & Bool>:
-        rows : List<&2,List<&2,Sql.Cell>> <- q(db,
-          "SELECT r.generation,r.ordinal,r.offset,r.n,r.digest,r.bytes,r.oversized,r.complete,i.ordinal FROM records i JOIN raw r ON r.id=i.raw WHERE i.snapshot=? AND i.ordinal=?",
-          [Sql.Cell.Integer{snap},Sql.Cell.Integer{U32.show(ordinal)}],1)
-        verify_row(file,rows,Verify{snap,gen,extent,count,ordinal,offset,continued},next)
+        rows : List<&2,List<&2,Sql.Cell>> <- verify_batch(db,snap,ordinal,count)
+        batch : Verify & List<&2,U32> <- verify_batch_records(rows,
+          Verify{snap,gen,extent,count,ordinal,offset,continued})
+        verify_batch_source(file,offset,batch,next)
 
 def verify_walk(fuel: Nat,+db: U32,state: Verify,file: File) -> IO(File & Bool):
   match fuel:
@@ -1073,16 +1101,32 @@ def context_prefix_valid(db: U32,+previous: List<&2,Sql.Cell>,projection_ok: Boo
       number(field(previous,2n)),number(field(previous,4n)),0,
       U32.is_eq(number(field(previous,4n)),0)))
 
-def copy_context_rows(rows: List<&2,List<&2,Sql.Cell>>,+db: U32,+snapshot: String,
-  +extent: U32) -> IO(Unit):
+def copy_context_cells(rows: List<&2,List<&2,Sql.Cell>>,+snapshot: String,+extent: U32) ->
+  List<&2,Sql.Cell>:
+  match rows:
+    case []:
+      []
+    case +row <> rest:
+      List.append(&2,Sql.Cell,
+        context_cells(snapshot,field(row,0n),extent,number(field(row,1n)),
+          number(field(row,2n)),number(field(row,3n)),field(row,4n),prefix_context(row)),
+        copy_context_cells(rest,snapshot,extent))
+
+# The existing context reader supplies at most32 rows/1MiB. Re-seal every row
+# with the same snapshot/extent-bound digest, then use one typed INSERT for the
+# batch instead of one SQLite round trip per checkpoint. No checksum is reused.
+def copy_context_rows(rows: List<&2,List<&2,Sql.Cell>>,db: U32,snapshot: String,
+  extent: U32) -> IO(Unit):
   match rows:
     case []:
       IO.pure(Unit,Unit{})
-    case +row <> rest:
+    case row <> +rest:
       do IO<Unit>:
-        put_context(db,snapshot,field(row,0n),extent,number(field(row,1n)),
-          number(field(row,2n)),number(field(row,3n)),field(row,4n),prefix_context(row))
-        copy_context_rows(rest,db,snapshot,extent)
+        checked(Nat.is_lt(List.length(&2,List<&2,Sql.Cell>,rest),32n),
+          "Context checkpoint insertion batch exceeds its bound")
+        exec(db,"INSERT OR REPLACE INTO snapshot_context(snapshot,ordinal,repository,session,model,parent,version,digest) VALUES(?,?,?,?,?,?,?,?)" ++
+          String.repeat(",(?,?,?,?,?,?,?,?)",List.length(&2,List<&2,Sql.Cell>,rest)),
+          copy_context_cells(row <> rest,snapshot,extent))
 
 def copy_context_walk(fuel: Nat,+db: U32,+old: String,+snapshot: String,+extent: U32,
   +count: U32,+ordinal: U32,done: Bool) -> IO(Unit):

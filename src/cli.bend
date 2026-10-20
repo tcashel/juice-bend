@@ -10,6 +10,12 @@ import ./domain.bend as Domain
 import ./scoped_reader.bend as Scoped
 import ./file_evidence.bend as FileEvidence
 import ./usage.bend as Usage
+import ./query.bend as Query
+import ./catalog.bend as Catalog
+import ./storage_inventory.bend as Inventory
+
+type Page is Data:
+  Page{offset: U32, rows: List<&2,List<&2,Sql.Cell>>, has_more: Bool}
 
 # IDs and SQLite integers stay decimal strings in JSON, including values above
 # JavaScript's exact integer range. The columns array defines each row.
@@ -83,18 +89,110 @@ def status(db: U32) -> IO(Unit):
     rows : List<&2,List<&2,Sql.Cell>> <- Store.status(db)
     output_rows("[\"sources\",\"generations\",\"accepted_snapshots\",\"raw_bytes\",\"projected_events\"]",rows)
 
+def storage(db: U32) -> IO(Unit):
+  do IO<Unit>:
+    +report : Inventory.Report <- Inventory.read(db)
+    IO.print("{\"kind\":\"storage_inventory\",\"inventory\":" ++ Inventory.to_json(report) ++
+      ",\"text\":" ++ Json.quote(Inventory.summary(report)) ++ "}")
+
+def list_rows(db: U32,history: Bool,filters: Query.Filters,limit: U32,offset: U32) ->
+  IO(List<&2,List<&2,Sql.Cell>>):
+  match history:
+    case True{}:
+      Query.Filters{query,provider,repo,role,after} = filters
+      Store.history(db,provider,repo,limit,offset)
+    case False{}:
+      Query.Filters{query,provider,repo,role,after} = filters
+      Store.search(db,query,provider,repo,role,after,limit,offset)
+
+def list_more(db: U32,history: Bool,filters: Query.Filters,offset: U32,full: Bool) -> IO(Bool):
+  match full:
+    case False{}:
+      IO.pure(Bool,False{})
+    case True{}:
+      do IO<Bool>:
+        rows : List<&2,List<&2,Sql.Cell>> <- list_rows(db,history,filters,1,U32.add(offset,100))
+        return Bool.not(List.is_empty(&2,List<&2,Sql.Cell>,rows))
+
+# Both reads see the same SQLite snapshot. Separate page commands intentionally
+# browse the current listing; captures can change its ordering between commands.
+def list_page(+db: U32,+history: Bool,+filters: Query.Filters,+offset: U32) -> IO(Page):
+  do IO<Page>:
+    checked(U32.is_le(offset,4294967195),"offset must be from 0 to 4294967195")
+    Store.exec(db,"BEGIN",[])
+    +rows : List<&2,List<&2,Sql.Cell>> <- list_rows(db,history,filters,100,offset)
+    more : Bool <- list_more(db,history,filters,offset,
+      Nat.is_eq(List.length(&2,List<&2,Sql.Cell>,rows),100n))
+    Store.exec(db,"COMMIT",[])
+    return Page{offset,rows,more}
+
+def output_page(columns: String,page: Page) -> IO(Unit):
+  Page{offset,rows,more} = page
+  IO.print("{\"columns\":" ++ columns ++ ",\"rows\":[" ++ rows_json(rows) ++
+    "],\"offset\":" ++ U32.show(offset) ++ ",\"limit\":100,\"has_more\":" ++
+    Bool.pick(String,more,"true","false") ++ "}")
+
+def history_rows(+db: U32,provider: String,repo: String,offset: U32) -> IO(Unit):
+  do IO<Unit>:
+    page : Page <- list_page(db,True{},Query.Filters{"",provider,repo,"",""},offset)
+    output_page("[\"source\",\"provider\",\"locator\",\"snapshot\",\"generation\",\"extent\",\"records\",\"excerpt\",\"repository\",\"first_event_ordinal\"]",page)
+
 def history(+db: U32, args: List<String>) -> IO(Unit):
   match args:
     case Nil{}:
-      do IO<Unit>:
-        rows : List<&2,List<&2,Sql.Cell>> <- Store.history(db,"","",100,0)
-        output_rows("[\"source\",\"provider\",\"locator\",\"snapshot\",\"generation\",\"extent\",\"records\",\"excerpt\",\"repository\",\"first_event_ordinal\"]",rows)
+      history_rows(db,"","",0)
     case Con{provider,Con{repository,Nil{}}}:
+      history_rows(db,provider,repository,0)
+    case provider <> repository <> offset <> []:
       do IO<Unit>:
-        rows : List<&2,List<&2,Sql.Cell>> <- Store.history(db,provider,repository,100,0)
-        output_rows("[\"source\",\"provider\",\"locator\",\"snapshot\",\"generation\",\"extent\",\"records\",\"excerpt\",\"repository\",\"first_event_ordinal\"]",rows)
+        from : U32 <- quantity(Provenance.parse_u32(offset),"offset")
+        history_rows(db,provider,repository,from)
     case _:
-      failure(Unit,"usage: history [PROVIDER REPOSITORY]; maximum 100 sessions")
+      failure(Unit,"usage: history [PROVIDER REPOSITORY [OFFSET]]; at most 100 sessions per page")
+
+def versions_more(db: U32,snapshot: String,offset: U32,full: Bool) -> IO(Bool):
+  match full:
+    case False{}:
+      IO.pure(Bool,False{})
+    case True{}:
+      do IO<Bool>:
+        rows : List<&2,List<&2,Sql.Cell>> <- Catalog.versions(db,snapshot,1,U32.add(offset,100))
+        return Bool.not(List.is_empty(&2,List<&2,Sql.Cell>,rows))
+
+def versions_page(+db: U32,+snapshot: String,+offset: U32) -> IO(Page):
+  do IO<Page>:
+    checked(snapshot_valid(snapshot),"snapshot must be a positive canonical SQLite integer")
+    checked(U32.is_le(offset,4294967195),"offset must be from 0 to 4294967195")
+    Store.exec(db,"BEGIN",[])
+    +rows : List<&2,List<&2,Sql.Cell>> <- Catalog.versions(db,snapshot,100,offset)
+    more : Bool <- versions_more(db,snapshot,offset,
+      Nat.is_eq(List.length(&2,List<&2,Sql.Cell>,rows),100n))
+    Store.exec(db,"COMMIT",[])
+    return Page{offset,rows,more}
+
+def versions_output(db: U32,snapshot: String,offset: String) -> IO(Unit):
+  do IO<Unit>:
+    from : U32 <- quantity(Provenance.parse_u32(offset),"offset")
+    page : Page <- versions_page(db,snapshot,from)
+    output_page("[\"snapshot\",\"generation\",\"extent\",\"records\",\"is_latest\"]",page)
+
+def versions(db: U32,args: List<String>) -> IO(Unit):
+  match args:
+    case snapshot <> []:
+      versions_output(db,snapshot,"0")
+    case snapshot <> offset <> []:
+      versions_output(db,snapshot,offset)
+    case _:
+      failure(Unit,"usage: versions SNAPSHOT [OFFSET]")
+
+def latest(+db: U32,+snapshot: String) -> IO(Unit):
+  do IO<Unit>:
+    checked(snapshot_valid(snapshot),"snapshot must be a positive canonical SQLite integer")
+    Store.exec(db,"BEGIN",[])
+    target : String <- Catalog.latest(db,snapshot)
+    Store.exec(db,"COMMIT",[])
+    IO.print("{\"snapshot\":" ++ Json.quote(target) ++
+      ",\"anchor_snapshot\":" ++ Json.quote(snapshot) ++ "}")
 
 def import_source(db: U32, +provider: String, path: String) -> IO(Unit):
   do IO<Unit>:
@@ -104,20 +202,23 @@ def import_source(db: U32, +provider: String, path: String) -> IO(Unit):
     IO.print("{\"accepted_snapshot\":" ++ Json.quote(snapshot) ++ "}")
 
 def search_rows(db: U32, query: String, provider: String, repository: String,
-  role: String, after: String) -> IO(Unit):
+  role: String, after: String, offset: U32) -> IO(Unit):
   do IO<Unit>:
-    rows : List<&2,List<&2,Sql.Cell>> <-
-      Store.search(db,query,provider,repository,role,after,100,0)
-    output_rows("[\"snapshot\",\"record\",\"event\",\"provider\",\"role\",\"snippet\",\"repository\",\"session\",\"timestamp\",\"generation\"]",rows)
+    page : Page <- list_page(db,False{},Query.Filters{query,provider,repository,role,after},offset)
+    output_page("[\"snapshot\",\"record\",\"event\",\"provider\",\"role\",\"snippet\",\"repository\",\"session\",\"timestamp\",\"generation\"]",page)
 
 def search(db: U32, args: List<String>) -> IO(Unit):
   match args:
     case Con{query,Nil{}}:
-      search_rows(db,query,"","","","")
+      search_rows(db,query,"","","","",0)
     case Con{query,Con{provider,Con{repository,Con{role,Con{after,Nil{}}}}}}:
-      search_rows(db,query,provider,repository,role,after)
+      search_rows(db,query,provider,repository,role,after,0)
+    case query <> provider <> repository <> role <> after <> offset <> []:
+      do IO<Unit>:
+        from : U32 <- quantity(Provenance.parse_u32(offset),"offset")
+        search_rows(db,query,provider,repository,role,after,from)
     case _:
-      failure(Unit,"usage: search QUERY [PROVIDER REPOSITORY ROLE AFTER]; use empty strings for unfiltered fields")
+      failure(Unit,"usage: search QUERY [PROVIDER REPOSITORY ROLE AFTER [OFFSET]]; use empty strings for unfiltered fields")
 
 def page_content(db: U32,snapshot: String,start: U32,count: U32,why: Bool) -> IO(String):
   match why:
@@ -408,10 +509,11 @@ def refresh_all(db: U32,data_dir: String) -> IO(Unit):
     refresh_program(db,data_dir,args)
 
 def help() -> IO(Unit):
-  IO.print("{\"commands\":[\"status\",\"history [PROVIDER REPOSITORY]\"," ++
+  IO.print("{\"commands\":[\"status\",\"storage\",\"history [PROVIDER REPOSITORY [OFFSET]]\"," ++
+    "\"versions SNAPSHOT [OFFSET]\",\"latest SNAPSHOT\"," ++
     "\"import PROVIDER PATH\",\"refresh PROVIDER PATH\",\"source-add PROVIDER ROOT\"," ++
     "\"source-disable PROVIDER ROOT\",\"sources\",\"refresh-all\"," ++
-    "\"search QUERY [PROVIDER REPOSITORY ROLE AFTER]\",\"session SNAPSHOT START COUNT\"," ++
+    "\"search QUERY [PROVIDER REPOSITORY ROLE AFTER [OFFSET]]\",\"session SNAPSHOT START COUNT\"," ++
     "\"why SNAPSHOT [START COUNT]\",\"session-scope SNAP START COUNT PROVIDER REPO ROLE AFTER\"," ++
     "\"why-scope SNAP START COUNT PROVIDER REPO ROLE AFTER\",\"blame REPOSITORY FILE START END\"," ++
     "\"why-file REPOSITORY FILE START END\",\"why-commit REPOSITORY SHA\"," ++
@@ -427,6 +529,12 @@ def help() -> IO(Unit):
 
 def command(db: U32,data_dir: String,cmd: String,args: List<String>) -> IO(Unit):
   match cmd:
+    case "storage":
+      match args:
+        case []:
+          storage(db)
+        case _:
+          failure(Unit,"usage: storage")
     case "status":
       match args:
         case Nil{}:
@@ -435,6 +543,14 @@ def command(db: U32,data_dir: String,cmd: String,args: List<String>) -> IO(Unit)
           failure(Unit,"usage: status")
     case "history":
       history(db,args)
+    case "versions":
+      versions(db,args)
+    case "latest":
+      match args:
+        case snapshot <> []:
+          latest(db,snapshot)
+        case _:
+          failure(Unit,"usage: latest SNAPSHOT")
     case "import":
       match args:
         case Con{provider,Con{path,Nil{}}}:

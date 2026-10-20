@@ -1,0 +1,29 @@
+Native append phase diagnostic with raw-I/O/context-insert batching only
+Host: Darwin arm64, owner Mac, synthetic isolated data only.
+Build: ./scripts/build benchmarks/append_phases.bend build/juice-bend-append-phases-batched
+The executable was built before the independent Domain SHA optimization.
+
+Recorded source SHA256 at build:
+src/store.bend 2cfbba20290138d1e86d5c60005f96986ea462fbf333669cbe2174e9c3057d24
+src/domain.bend 8199e1c32f6b0497f06c80b8b6afd57ed6311d247c100ead2232fce4be1112a0
+src/maintenance.bend e3bf2ed16fd237a9422a30fc06716159fa093308219ad0426949d293929b817d
+src/providers.bend 706758310c2885c8e6ccf29ad836ddcd49a0ee81236902e0df5bd8473d649d98
+src/sql.bend e0d70821050b21ca0cc239c2983d5c22f63a1786de72dff5c431510f6e794b62
+native/sqlite.c 919cb2abd8bad19a3e8cdf12c676f586717121a9c7222a557345ade8f7ab753e
+benchmarks/main.bend 00f951077f700f4305fcf8f3b3882c58f935cd1568e210e0a0e7c9a85b0ee9e9
+benchmarks/append_phases.bend 5ba77c540a1020dee4c8c989672d7161fe18317624b5341245959b0d60043ca7
+build/juice-bend-append-phases-batched c56c597fc863782a04783565a611ef1e2e8c6894828bd9c1aad1fd6576b2376c
+Executable bytes: 1964688
+
+Run from a fresh isolated directory: /Users/tcashel/repositories/juice-bend/build/juice-bend-append-phases-batched 100000
+Exit status: 0. All production-helper and final count assertions passed.
+Raw measurements: 100000-append-phases-batched.jsonl
+The VM was stopped and other heavy builds/tests were paused during this run.
+
+The diagnostic is identical to the before run: fixture generation and initial
+capture precede all append timers. Component probes execute production helpers
+in a transaction that is rolled back; the following actual import_observed
+append consequently has warmed caches and includes observer output overhead.
+The observed append interval was 35,657 ms, compared with 42,784 ms before batching.
+These single-run diagnostic receipts are not the canonical benchmark or GUI
+responsiveness measurements. No seal, parser version, schema or bridge changed.

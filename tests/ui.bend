@@ -86,6 +86,61 @@ def long_drag() -> IO(Unit):
       String.eq(UI.selection(moved),"0123456789"),"long query drag freezes its original viewport")
     require(String.eq(UI.selection(apply(Move{384,64},arrival)),"0123456789"),"reader arrival preserves an active query drag")
 
+def navigation_kind(result: UI.State & UI.Action) -> U32:
+  (state,action) = result
+  match action:
+    case UI.ListPrevious{}:
+      1
+    case UI.ListNext{}:
+      2
+    case UI.Previous{}:
+      3
+    case UI.Next{}:
+      4
+    case UI.Open{index}:
+      5
+    case UI.Versions{}:
+      6
+    case UI.OpenLatest{}:
+      7
+    case UI.Storage{}:
+      8
+    case _:
+      0
+
+def result_navigation() -> IO(Unit):
+  +first = UI.set_results(UI.set_rows(UI.init(),["one result"]),UI.Results{0,100,True{},True{}})
+  +last = UI.set_results(first,UI.Results{100,1,False{},True{}})
+  +pending = UI.set_results(first,UI.Results{100,0,False{},False{}})
+  do IO<Unit>:
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{400,832,0,True{}},first)),2),
+      "result Next control emits a distinct list action")
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{208,832,0,True{}},last)),1),
+      "result Previous control emits a distinct list action")
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{208,832,0,True{}},first)),0) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{400,832,0,True{}},last)),0),
+      "result controls are inert at first and final boundaries")
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{208,832,0,True{}},pending)),0) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{400,832,0,True{}},pending)),0),
+      "pending result navigation is disabled")
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{1000,96,0,True{}},first)),3) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{1200,96,0,True{}},first)),4),
+      "transcript toolbar paging remains separate")
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{208,144,0,True{}},first)),0) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{208,208,0,True{}},first)),0),
+      "list header and blank rows cannot select nonexistent results")
+    require(String.eq(UI.result_label(UI.Results{0,0,False{},True{}}),"No results") &&
+      String.eq(UI.result_label(UI.Results{200,0,False{},True{}}),"No results after 200"),
+      "result labels distinguish empty first and later pages")
+    require(String.eq(UI.result_label(UI.Results{100,100,True{},True{}}),"101-200 + more") &&
+      String.eq(UI.result_label(UI.Results{200,1,False{},True{}}),"201-201 / end"),
+      "result range labels use global ordinal ranges")
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,768,0,True{}},first)),6) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{32,816,0,True{}},first)),7),
+      "saved versions and explicit latest have distinct pointer actions")
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,400,0,True{}},first)),8),
+      "Storage inventory has a dedicated Settings action")
+
 def after_clipboard(result: Result<&1, &1, U32 & String, U32 & (String & String)>, state: UI.State) -> IO(Maybe<UI.State>):
   match result:
     case Fail{(code, message)}:
@@ -144,6 +199,7 @@ def dispatch(args: List<String>) -> IO(Unit):
         tests()
         buttons()
         long_drag()
+        result_navigation()
 
 def main() -> IO(Unit):
   do IO<Unit>:

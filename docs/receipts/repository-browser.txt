@@ -1,0 +1,35 @@
+Juice Bend repository browser focused delta receipt
+Date: 2026-10-20
+Host: local native macOS / Apple Silicon arm64
+Bend revision: 60ca80aedeec9d8f0629b5f10dd19457d8ad67af
+Command: ./scripts/test tests/repository_browser.bend > build/repository-browser-range-final.log 2>&1
+Exit status: 0
+Completed: 1 native Bend test executable / 58 named PASS checks
+
+The earlier integrated run in test-parity-summary.txt passed 40 executables
+and 2960 named checks, including 55 repository-browser checks. That frozen
+run predates this delta; it is not a full-suite result for the final module.
+The final focused run passed all 55 prior checks plus three new checks:
+- Nine source lines resolve to nine independently created commit identities.
+- A nine-commit selection returns structured evidence_range_too_wide.
+- The same worker successfully returns evidence for exactly eight commits.
+
+This browser delta changed only src/repository_browser.bend and
+tests/repository_browser.bend after the integrated run. The three shared
+Git helpers were unchanged.
+The wrapper built and ran the real production backend with fresh isolated
+synthetic Git repositories and an owned SQLite database. No tests were rerun
+to produce this receipt; hashes below identify the retained final artifacts.
+
+Scope: pinned committed-tree directory/source paging and explicit-commit
+Blame/evidence; literal paths, binary/encoding/size limits, symlink/gitlink
+refusal, replacement objects, HEAD movement, and index preservation.
+This backend module is not yet wired into the CLI or native GUI. These
+results do not establish a user-visible browser workflow or UI interaction.
+No performance claim is made. Raw local logs and binaries remain ignored.
+
+Final SHA-256
+b0eda204cbb4310af8dd3d1342e9a2b9d1f47c1574e3363abc1df264750cdc5a  src/repository_browser.bend
+96141fe561393025bde2eb9427da03591572e4f62a03c1e2ade04ba1141136d6  tests/repository_browser.bend
+a8d9941195d78318c29f5fd1f44f7f4769ef2085be451ea2de3b2cafffea6ccd  build/tests/repository_browser
+0ad8adb2976f7b5682648d100193b7f5608cdb8f03109efc4bb2409d7cff4aa5  build/repository-browser-range-final.log

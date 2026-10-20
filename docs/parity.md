@@ -14,8 +14,11 @@ settings). The original checkout remains at `a9767a7296886301bf813fd3d3f99fa03fe
 with its existing edits untouched. Reference inspection uses read-only Git
 objects; no source snapshots or real histories are copied here.
 
-Priority order: fix long-history append; close native/proof validation gaps;
-complete bounded result paging and saved-version navigation; repository/file
+Bounded result paging, saved-version navigation and read-only Storage inventory
+are implemented and observed in the native app. The committed-repository
+browser backend passes 58 focused checks but is not yet connected to the UI.
+Priority order: finish long-history append improvements; close remaining
+native validation gaps; connect repository/file
 provenance browsing; Settings and recorded activity; richer tool/subagent/archive
 support; full Usage and deterministic context preparation; owned-storage
 management and explicit opt-in connection/subscription surfaces. UI polish

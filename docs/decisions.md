@@ -1,5 +1,21 @@
 # Decisions
 
+- **2026-10-20 — Bound verification without changing captured identity.** Raw
+  checks select at most 128 mappings and approximately 1 MiB before reading one
+  contiguous source span; contexts insert at most 32 rows per statement. Every
+  digest, typed field, ordinal, extent, full source pass and transaction boundary
+  remains checked. The aligned Bend SHA path preserves the existing digest and
+  streaming-buffer contract; native vectors and fresh kernel verdict pass.
+- **2026-10-20 — Separate list navigation from retained reads.** History/search
+  and saved-version pages have their own offset. Paging preserves the current
+  reader; only explicit capture selection or Open latest changes its snapshot.
+  Storage reports owned logical sizes/counts and preserves selected identity;
+  it does not claim physical reclaimable space or perform maintenance.
+- **2026-10-20 — Pin repository browsing.** The standalone browser resolves a
+  commit once, then reads bounded literal paths/objects at that revision. Git
+  replacement objects, lazy fetching and pathspec expansion are disabled. This
+  backend remains separate from the current GUI until its navigation is wired.
+
 - **2026-10-20 — Local macOS execution.** The owner's execution update supersedes
   the cloud host instructions. No cloud execution is needed for this app.
 - **2026-10-20 — mise and exact source pin.** `mise.toml` pins Bun 1.4.2;

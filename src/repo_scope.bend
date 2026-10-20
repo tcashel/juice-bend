@@ -66,7 +66,7 @@ def result(result: Result<&1,&1,U32 & String,U32 & (String & String)>) ->
 def git(repo: String,args: List<String>) -> IO(Result<&2,&2,String,String>):
   do IO<Result<&2,&2,String,String>>:
     output : Result<&1,&1,U32 & String,U32 & (String & String)> <-
-      Process.run("/usr/bin/git","--no-pager" <> "--no-optional-locks" <> "-c" <>
+      Process.run("/usr/bin/git","--no-pager" <> "--no-optional-locks" <> "--no-replace-objects" <> "--no-lazy-fetch" <> "-c" <>
         "core.hooksPath=/dev/null" <> "-c" <> "core.fsmonitor=false" <> "-c" <>
         "core.attributesFile=/dev/null" <> "-c" <> "diff.external=" <> "-C" <> repo <> args,
         "",65536,3000)

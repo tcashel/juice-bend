@@ -1,0 +1,50 @@
+{"measurement":"sha256-alternating-v1","trials_per_variant":3,"order":["before","aligned","aligned","before","before","aligned"],"benchmark_sha256":"f8f1bd8a600b614c6be3dbeb12d13dc988387a3f2ed6f713d99c59888be1d9e7","tests_sha256":"06e8e3f3edb2b2f3f972dc31c7dc72be5dbeece9f52d9cb5054bc9b738475ed5","domain_sources":{"before":"8199e1c32f6b0497f06c80b8b6afd57ed6311d247c100ead2232fce4be1112a0","aligned":"f2f68a4a9781ea102f3e275781380a885e3057e178d75c8d45b310c3c5002191"},"binaries":{"before":{"path":"build/juice-bend-hash-before","sha256":"3f8b090e0f38da0e08739eb586812e7d56845e1b8376fe64f533d1c65d2f7b98","bytes":125160,"generated_c_bytes":293462},"aligned":{"path":"build/juice-bend-hash-aligned","sha256":"ee7e74bff11a47e67a99fa006a507d10075a58034a0b4e27789c9b9ce7fdfda6","bytes":587544,"generated_c_bytes":1368418}},"host_os":"27.0.1","architecture":"arm64","timers":"Native IO.now intervals include one checksum print, exclude corpus generation and checks","concurrency":"Root reserved quiet window; no other task build/test/benchmark running"}
+{"trial":1,"variant":"before","benchmark":"sha256-chains-v1","seed":"64 ASCII zeroes","generation_and_corpus_checks":"outside_timers","checksum_output":"inside_timers"}
+{"trial":1,"variant":"before","operation":"byte_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":1,"variant":"before","operation":"byte_chain_512","iterations":10000,"message_bytes":512,"duration_ms":159}
+{"trial":1,"variant":"before","operation":"utf8_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":1,"variant":"before","operation":"utf8_chain_512","iterations":10000,"message_bytes":512,"duration_ms":186}
+{"trial":1,"variant":"before","operation":"byte_chain_262144","final_sha256":"18926dfa939ab08b83a305a816f30ba07205704af6cc2672d209a318bf0ce999"}
+{"trial":1,"variant":"before","operation":"byte_chain_262144","iterations":16,"message_bytes":262144,"duration_ms":104}
+{"trial":1,"variant":"before","benchmark_complete":true}
+{"trial":1,"variant":"aligned","benchmark":"sha256-chains-v1","seed":"64 ASCII zeroes","generation_and_corpus_checks":"outside_timers","checksum_output":"inside_timers"}
+{"trial":1,"variant":"aligned","operation":"byte_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":1,"variant":"aligned","operation":"byte_chain_512","iterations":10000,"message_bytes":512,"duration_ms":92}
+{"trial":1,"variant":"aligned","operation":"utf8_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":1,"variant":"aligned","operation":"utf8_chain_512","iterations":10000,"message_bytes":512,"duration_ms":124}
+{"trial":1,"variant":"aligned","operation":"byte_chain_262144","final_sha256":"18926dfa939ab08b83a305a816f30ba07205704af6cc2672d209a318bf0ce999"}
+{"trial":1,"variant":"aligned","operation":"byte_chain_262144","iterations":16,"message_bytes":262144,"duration_ms":49}
+{"trial":1,"variant":"aligned","benchmark_complete":true}
+{"trial":2,"variant":"aligned","benchmark":"sha256-chains-v1","seed":"64 ASCII zeroes","generation_and_corpus_checks":"outside_timers","checksum_output":"inside_timers"}
+{"trial":2,"variant":"aligned","operation":"byte_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":2,"variant":"aligned","operation":"byte_chain_512","iterations":10000,"message_bytes":512,"duration_ms":85}
+{"trial":2,"variant":"aligned","operation":"utf8_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":2,"variant":"aligned","operation":"utf8_chain_512","iterations":10000,"message_bytes":512,"duration_ms":124}
+{"trial":2,"variant":"aligned","operation":"byte_chain_262144","final_sha256":"18926dfa939ab08b83a305a816f30ba07205704af6cc2672d209a318bf0ce999"}
+{"trial":2,"variant":"aligned","operation":"byte_chain_262144","iterations":16,"message_bytes":262144,"duration_ms":49}
+{"trial":2,"variant":"aligned","benchmark_complete":true}
+{"trial":2,"variant":"before","benchmark":"sha256-chains-v1","seed":"64 ASCII zeroes","generation_and_corpus_checks":"outside_timers","checksum_output":"inside_timers"}
+{"trial":2,"variant":"before","operation":"byte_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":2,"variant":"before","operation":"byte_chain_512","iterations":10000,"message_bytes":512,"duration_ms":155}
+{"trial":2,"variant":"before","operation":"utf8_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":2,"variant":"before","operation":"utf8_chain_512","iterations":10000,"message_bytes":512,"duration_ms":185}
+{"trial":2,"variant":"before","operation":"byte_chain_262144","final_sha256":"18926dfa939ab08b83a305a816f30ba07205704af6cc2672d209a318bf0ce999"}
+{"trial":2,"variant":"before","operation":"byte_chain_262144","iterations":16,"message_bytes":262144,"duration_ms":103}
+{"trial":2,"variant":"before","benchmark_complete":true}
+{"trial":3,"variant":"before","benchmark":"sha256-chains-v1","seed":"64 ASCII zeroes","generation_and_corpus_checks":"outside_timers","checksum_output":"inside_timers"}
+{"trial":3,"variant":"before","operation":"byte_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":3,"variant":"before","operation":"byte_chain_512","iterations":10000,"message_bytes":512,"duration_ms":156}
+{"trial":3,"variant":"before","operation":"utf8_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":3,"variant":"before","operation":"utf8_chain_512","iterations":10000,"message_bytes":512,"duration_ms":185}
+{"trial":3,"variant":"before","operation":"byte_chain_262144","final_sha256":"18926dfa939ab08b83a305a816f30ba07205704af6cc2672d209a318bf0ce999"}
+{"trial":3,"variant":"before","operation":"byte_chain_262144","iterations":16,"message_bytes":262144,"duration_ms":102}
+{"trial":3,"variant":"before","benchmark_complete":true}
+{"trial":3,"variant":"aligned","benchmark":"sha256-chains-v1","seed":"64 ASCII zeroes","generation_and_corpus_checks":"outside_timers","checksum_output":"inside_timers"}
+{"trial":3,"variant":"aligned","operation":"byte_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":3,"variant":"aligned","operation":"byte_chain_512","iterations":10000,"message_bytes":512,"duration_ms":84}
+{"trial":3,"variant":"aligned","operation":"utf8_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":3,"variant":"aligned","operation":"utf8_chain_512","iterations":10000,"message_bytes":512,"duration_ms":123}
+{"trial":3,"variant":"aligned","operation":"byte_chain_262144","final_sha256":"18926dfa939ab08b83a305a816f30ba07205704af6cc2672d209a318bf0ce999"}
+{"trial":3,"variant":"aligned","operation":"byte_chain_262144","iterations":16,"message_bytes":262144,"duration_ms":51}
+{"trial":3,"variant":"aligned","benchmark_complete":true}
+{"experiment":"compact_fallback_alias","source_sha256":"c1c95c399f415bd54dce1c45bdb63ca5ae049c4de910145fd4110b4cf4ed8c0d","change":"Retain reusable original bytes and pass them to wildcard fallback instead of binding the unmatched input","native_hash_assertions":164,"native_domain_assertions":53,"native_test_exit":0,"generated_c_identical_to_aligned":true,"generated_c_sha256":"e5ceb5a437b42f2b59fe31e266adb0013a748c0ace6bab01519c911ec2219d08","generated_c_bytes":1368418,"executable_bytes":587544,"executable_sha256":"3df77c46c8618c30b7f7410f8467bce415aa4147d71e9d226c334baba5da283f","timings":"Not run: emitted C is byte-identical to measured aligned variant","decision":"Restored clearer aligned source; accept measured throughput versus generated-code size tradeoff","selected_source_sha256":"f2f68a4a9781ea102f3e275781380a885e3057e178d75c8d45b310c3c5002191"}

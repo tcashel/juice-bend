@@ -15,7 +15,7 @@ def require(ok: Bool,name: String) -> IO(Unit):
 def state() -> Gui.State:
   Gui.State{0,"/tmp/juice-bend-gui-contract","/usr/bin/false",
     UI.set_reader(UI.set_query(UI.init(),"needle"),"Pinned","stable evidence"),
-    Gui.Selection{[],"7",0,3,[],Gui.empty_filters()},Gui.Form{0,"needle","",""},
+    Gui.Selection{[],"7",0,3,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"needle","",""},
     Gui.Jobs{2,None{},None{},None{},False{}},0n,0}
 
 def ui(s: Gui.State) -> UI.State:
@@ -23,7 +23,7 @@ def ui(s: Gui.State) -> UI.State:
   ui
 
 def snapshot(s: Gui.State) -> String:
-  Gui.State{db,dir,program,ui,Gui.Selection{items,snap,start,displayed,args,filters},form,jobs,refresh_at,serial} = s
+  Gui.State{db,dir,program,ui,Gui.Selection{items,snap,start,displayed,args,filters,+listing},form,jobs,refresh_at,serial} = s
   snap
 
 def mode(s: Gui.State) -> U32:
@@ -51,17 +51,22 @@ def blame_result(value: Result<&2,&2,String,List<&2,String>>) -> String:
     case Done{args}:
       String.join(args,"|")
 
-def forms() -> IO(Unit):
+def source_input() -> Gui.State:
   +settings = Gui.settings(state())
-  +input = Gui.form_text(Gui.replace_ui(settings,UI.set_query(ui(settings),"/tmp/explicit source.jsonl")))
+  Gui.form_text(Gui.replace_ui(settings,UI.set_query(ui(settings),"/tmp/explicit source.jsonl")))
+
+def forms() -> IO(Unit):
+  +input = source_input()
   +scoped = Gui.scope_changed(Gui.replace_ui(input,UI.set_scope(ui(input),"codex")))
-  +completed = Gui.write_done(input,Gui.Request{7,["import","claude","/tmp/a"],"",0,"import"},
-    Gui.Reply{Done{Json.JObject{[Json.JField{"accepted_snapshot",Json.JString{"8"}}]}}})
   do IO<Unit>:
-    Unit <- require(U32.is_eq(mode(settings),1),"settings is an explicit input mode")
-    Unit <- require(String.eq(UI.query(ui(scoped)),"/tmp/explicit source.jsonl"),"provider choice preserves source path")
-    Unit <- require(U32.is_eq(mode(scoped),1) && String.eq(wanted(scoped),"sources"),"source mode never executes lexical search")
-    require(String.eq(UI.query(ui(completed)),"/tmp/explicit source.jsonl") && U32.is_eq(mode(completed),1),"import completion retains current form")
+    require(U32.is_eq(mode(Gui.settings(state())),1),"settings is an explicit input mode")
+    require(String.eq(UI.query(ui(scoped)),"/tmp/explicit source.jsonl"),"provider choice preserves source path")
+    require(U32.is_eq(mode(scoped),1) && String.eq(wanted(scoped),"sources"),"source mode never executes lexical search")
+
+def form_completion() -> IO(Unit):
+  +completed = Gui.write_done(source_input(),Gui.Request{7,["import","claude","/tmp/a"],"",0,"import"},
+    Gui.Reply{Done{Json.JObject{[Json.JField{"accepted_snapshot",Json.JString{"8"}}]}}})
+  require(String.eq(UI.query(ui(completed)),"/tmp/explicit source.jsonl") && U32.is_eq(mode(completed),1),"import completion retains current form")
 
 def readers() -> IO(Unit):
   +stale = Gui.read_current(state(),Gui.Request{3,["session","8","0","40"],"8",0,"new"},result_text("new evidence"),False{})
@@ -74,13 +79,13 @@ def readers() -> IO(Unit):
 
 def initial() -> IO(Unit):
   +empty = {Gui.State{0,"/tmp/juice-bend-gui-contract","/usr/bin/false",UI.init(),
-    Gui.Selection{[],"",0,0,[],Gui.empty_filters()},Gui.Form{0,"","",""},Gui.Jobs{0,None{},None{},None{},False{}},0n,0} : Gui.State}
+    Gui.Selection{[],"",0,0,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"","",""},Gui.Jobs{0,None{},None{},None{},False{}},0n,0} : Gui.State}
   +next = Gui.with_rows(empty,[Gui.Item{"9",0,"initial source","claude","/tmp/repo","2",Gui.empty_filters()}])
   require(String.eq(wanted(next),"session-scope|9|0|40||||"),"initial unpinned browse opens first accepted snapshot")
 
 def initial_late_hit() -> IO(Unit):
   +empty = {Gui.State{0,"/tmp/juice-bend-gui-contract","/usr/bin/false",UI.init(),
-    Gui.Selection{[],"",0,0,[],Gui.empty_filters()},Gui.Form{0,"","",""},Gui.Jobs{0,None{},None{},None{},False{}},0n,0} : Gui.State}
+    Gui.Selection{[],"",0,0,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"","",""},Gui.Jobs{0,None{},None{},None{},False{}},0n,0} : Gui.State}
   +next = Gui.with_rows(empty,[Gui.Item{"9",500,"late matching record","codex","/tmp/repo","2",
     Query.Filters{"","codex","/tmp/repo","assistant","2026-10-01"}}])
   require(String.eq(wanted(next),"session-scope|9|500|40|codex|/tmp/repo|assistant|2026-10-01"),
@@ -100,12 +105,12 @@ def history_ordinal() -> IO(Unit):
 def filters() -> IO(Unit):
   +filtered = Gui.form_text(Gui.replace_ui(state(),UI.set_query(ui(state()),"cache role:assistant after:2026-10-01 provider:codex")))
   do IO<Unit>:
-    Unit <- require(String.eq(wanted(filtered),"search|cache|codex||assistant|2026-10-01"),"GUI filters reach literal CLI argv")
+    Unit <- require(String.eq(wanted(filtered),"search|cache|codex||assistant|2026-10-01|0"),"GUI filters reach literal CLI argv")
     Unit <- require(String.eq(blame_result(Gui.blame_fields(String.split("/tmp/a repo|src/file.txt|3|4",'|'))),"blame|/tmp/a repo|src/file.txt|3|6"),"Blame count converts to exact end line")
     require(String.eq(blame_result(Gui.blame_fields(String.split("/tmp/repo|../escape|x|4",'|'))),"error"),"invalid Blame quantities are rejected")
 
 def result_items(s: Gui.State) -> List<&2,Gui.Item>:
-  Gui.State{db,dir,program,ui,Gui.Selection{items,snap,start,displayed,args,filters},form,jobs,refresh_at,serial} = s
+  Gui.State{db,dir,program,ui,Gui.Selection{items,snap,start,displayed,args,filters,+listing},form,jobs,refresh_at,serial} = s
   items
 
 def revision(s: Gui.State) -> U32:
@@ -113,7 +118,7 @@ def revision(s: Gui.State) -> U32:
   revision
 
 def ui_status(s: UI.State) -> String:
-  UI.State{UI.Content{query,rows,reader,lines,title,status,scope},input,image,dirty} = s
+  UI.State{UI.Content{query,rows,reader,lines,title,status,scope,+results},input,image,dirty} = s
   status
 
 def state_status(s: Gui.State) -> String:
@@ -129,7 +134,7 @@ def result_invalidation() -> IO(Unit):
 def click_invalidation() -> IO(Unit):
   +scoped = scoped_state()
   +clicked = Gui.open_item(scoped,Gui.select_item(result_items(scoped),0n))
-  require(String.eq(wanted(clicked),"search|needle|codex|||") && String.eq(snapshot(clicked),"7"),"old click cannot cancel scoped search or pinned reader")
+  require(String.eq(wanted(clicked),"search|needle|codex||||0") && String.eq(snapshot(clicked),"7"),"old click cannot cancel scoped search or pinned reader")
 
 def caret_preserved() -> IO(Unit):
   require(String.eq(UI.query(UI.insert(ui(Gui.text_done(state(),Gui.Request{3,[],"7",0,"page"},Done{"page"})),"X")),"needleX"),"transcript arrival preserves search insertion point")
@@ -166,7 +171,7 @@ def export_selection() -> IO(Unit):
     "export-displayed|/tmp/export.md|immutable displayed evidence"),"Blame export carries exact displayed evidence without rerunning Git")
 
 def selected_filters(s: Gui.State) -> Query.Filters:
-  Gui.State{db,dir,program,ui,Gui.Selection{items,snap,start,displayed,args,filters},form,jobs,refresh_at,serial} = s
+  Gui.State{db,dir,program,ui,Gui.Selection{items,snap,start,displayed,args,filters,+listing},form,jobs,refresh_at,serial} = s
   filters
 
 def scope_values() -> Query.Filters:
@@ -259,34 +264,34 @@ def clean(s: Gui.State) -> Gui.State:
 def refresh_clock() -> IO(Unit):
   do IO<Unit>:
     +armed : Gui.State <- Gui.auto_refresh(clean(state()),1000n)
-    +same_time : Gui.State <- Gui.auto_refresh(armed,1000n)
-    +early : Gui.State <- Gui.auto_refresh(same_time,30999n)
-    +large : Gui.State <- Gui.auto_refresh(clean(state()),Nat.add(4294967295n,1n))
-    Unit <- require(Nat.is_eq(deadline(armed),31000n) && Bool.not(has_writer(armed)),
+    require(Nat.is_eq(deadline(armed),31000n) && Bool.not(has_writer(armed)),
       "automatic refresh arms a thirty second monotonic deadline")
-    Unit <- require(Nat.is_eq(deadline(same_time),31000n) && Nat.is_eq(deadline(early),31000n) && Bool.not(has_writer(early)),
-      "render frequency does not advance or postpone the refresh deadline")
-    Unit <- require(Nat.is_eq(deadline(large),Nat.add(4294967295n,30001n)),
-      "refresh timestamps retain milliseconds beyond the U32 boundary")
-    Unit <- require(Bool.not(Gui.refresh_due(31000n,30999n)) && Gui.refresh_due(31000n,31000n),
-      "refresh is due exactly at its deadline")
     require(U32.is_eq(Gui.sleep_ms(armed,False{}),80),
       "arming a refresh deadline does not dirty the settled view")
+    +same_time : Gui.State <- Gui.auto_refresh(armed,1000n)
+    +early : Gui.State <- Gui.auto_refresh(same_time,30999n)
+    require(Nat.is_eq(deadline(same_time),31000n) && Nat.is_eq(deadline(early),31000n) && Bool.not(has_writer(early)),
+      "render frequency does not advance or postpone the refresh deadline")
+    +large : Gui.State <- Gui.auto_refresh(clean(state()),Nat.add(4294967295n,1n))
+    require(Nat.is_eq(deadline(large),Nat.add(4294967295n,30001n)),
+      "refresh timestamps retain milliseconds beyond the U32 boundary")
+    require(Bool.not(Gui.refresh_due(31000n,30999n)) && Gui.refresh_due(31000n,31000n),
+      "refresh is due exactly at its deadline")
 
 def refresh_resume() -> IO(Unit):
   +armed = Gui.refresh_deadline(clean(state()),31000n)
   do IO<Unit>:
     +paused : Gui.State <- Gui.auto_refresh(Gui.toggle_pause(armed),90000n)
+    require(Nat.is_eq(deadline(paused),0n) && Bool.not(has_writer(paused)),
+      "pause disarms automatic refresh even after the deadline")
     +resumed : Gui.State <- Gui.auto_refresh(Gui.toggle_pause(paused),100000n)
+    require(Nat.is_eq(deadline(resumed),130000n) && Bool.not(has_writer(resumed)),
+      "resume starts a full interval rather than catching up missed refreshes")
     +source : Gui.State <- Gui.auto_refresh(Gui.settings(armed),90000n)
     +blame : Gui.State <- Gui.auto_refresh(Gui.selected_file_form(armed,"/tmp/repo|file|1|1"),90000n)
-    +backwards : Gui.State <- Gui.auto_refresh(Gui.refresh_deadline(armed,50000n),1000n)
-    Unit <- require(Nat.is_eq(deadline(paused),0n) && Bool.not(has_writer(paused)),
-      "pause disarms automatic refresh even after the deadline")
-    Unit <- require(Nat.is_eq(deadline(resumed),130000n) && Bool.not(has_writer(resumed)),
-      "resume starts a full interval rather than catching up missed refreshes")
-    Unit <- require(Nat.is_eq(deadline(source),0n) && Nat.is_eq(deadline(blame),0n) && Bool.not(has_writer(blame)),
+    require(Nat.is_eq(deadline(source),0n) && Nat.is_eq(deadline(blame),0n) && Bool.not(has_writer(blame)),
       "source and Blame forms disarm automatic refresh")
+    +backwards : Gui.State <- Gui.auto_refresh(Gui.refresh_deadline(armed,50000n),1000n)
     require(Nat.is_eq(deadline(backwards),31000n) && Bool.not(has_writer(backwards)),
       "a reversed clock rearms conservatively")
 
@@ -323,9 +328,221 @@ def idle_pacing() -> IO(Unit):
     require(U32.is_eq(Gui.sleep_ms(queued,False{}),1),
       "queued reader work bypasses the idle delay")
 
+def listing(s: Gui.State) -> Gui.Listing:
+  Gui.State{db,dir,program,ui,Gui.Selection{items,snap,start,displayed,args,filters,listing},form,jobs,deadline,serial} = s
+  listing
+
+def listing_offset(value: Gui.Listing) -> U32:
+  Gui.Listing{kind,filters,offset,more,loaded,anchor} = value
+  offset
+
+def list_offset(s: Gui.State) -> U32:
+  listing_offset(listing(s))
+
+def listing_more(value: Gui.Listing) -> Bool:
+  Gui.Listing{kind,filters,offset,more,loaded,anchor} = value
+  more
+
+def list_more(s: Gui.State) -> Bool:
+  listing_more(listing(s))
+
+def page_filters() -> Query.Filters:
+  Query.Filters{"needle","codex","/synthetic/repo","assistant","2026-10-01"}
+
+def page_request(+offset: U32) -> Gui.Request:
+  Gui.Request{2,Gui.list_args(2,page_filters(),offset),"",offset,"Search"}
+
+def worker_started(s: Gui.State) -> Gui.State:
+  Gui.State{db,dir,program,ui,selection,form,Gui.Jobs{revision,wanted,reader,writer,paused},deadline,serial} = s
+  Gui.State{db,dir,program,ui,selection,form,Gui.Jobs{revision,None{},reader,writer,paused},deadline,serial}
+
+def listing_json(offset: U32,more: Bool,empty: Bool) -> Json.Json:
+  Json.JObject{[Json.JField{"offset",Json.JNumber{U32.show(offset)}},
+    Json.JField{"limit",Json.JNumber{"100"}},Json.JField{"has_more",Json.JBool{more}},
+    Json.JField{"rows",Json.JArray{Bool.pick(List<&2,Json.Json>,empty,[],[
+      Json.JArray{[Json.JString{"9"},Json.JString{"500"},Json.JString{"0"},
+        Json.JString{"codex"},Json.JString{"assistant"},Json.JString{"late matching record"},
+        Json.JString{"/synthetic/repo"},Json.JString{"session"},Json.JString{"2026-10-02"},Json.JString{"2"}]}])}}]}
+
+def loaded_page(base: Gui.State,+offset: U32,more: Bool,empty: Bool) -> Gui.State:
+  Gui.read_current(worker_started(Gui.list_request(base,2,page_filters(),offset)),page_request(offset),
+    Gui.Reply{Done{listing_json(offset,more,empty)}},True{})
+
+def result_next() -> IO(Unit):
+  +pending = Gui.list_paging(loaded_page(state(),0,True{},False{}),True{})
+  do IO<Unit>:
+    require(String.eq(wanted(pending),"search|needle|codex|/synthetic/repo|assistant|2026-10-01|100"),
+      "next result page retains every listing filter and lexical query")
+    require(List.is_empty(&2,Gui.Item,result_items(pending)) && Bool.not(Gui.listing_loaded(listing(pending))),
+      "pending result page clears actionable old rows")
+    require(String.eq(UI.reader(ui(pending)),"stable evidence") && String.eq(snapshot(pending),"7"),
+      "result navigation preserves the immutable displayed reader")
+
+def result_arrival() -> IO(Unit):
+  +second = loaded_page(state(),100,True{},False{})
+  do IO<Unit>:
+    require(U32.is_eq(list_offset(second),100) && list_more(second) &&
+      String.contains(state_status(second),"101-101 + more"),"result reply publishes range and navigation together")
+    require(String.eq(wanted(Gui.list_paging(second,False{})),
+      "search|needle|codex|/synthetic/repo|assistant|2026-10-01|0"),"previous result page retains its listing identity")
+    require(String.eq(wanted(Gui.open_item(second,Gui.select_item(result_items(second),0n))),
+      "session-scope|9|500|40|codex|/synthetic/repo|assistant|2026-10-01"),
+      "a later-page result opens its own ordinal and frozen reader scope")
+    require(String.eq(snapshot(second),"7") && String.eq(UI.reader(ui(second)),"stable evidence"),
+      "page arrival does not follow a newer capture")
+
+def result_boundaries() -> IO(Unit):
+  +empty = loaded_page(state(),200,False{},True{})
+  do IO<Unit>:
+    require(String.eq(wanted(Gui.list_paging(loaded_page(state(),0,True{},False{}),False{})),"none"),
+      "previous at first result page queues no worker")
+    require(String.eq(wanted(Gui.list_paging(loaded_page(state(),200,False{},False{}),True{})),"none"),
+      "next at final result page queues no worker")
+    require(String.contains(state_status(empty),"No results after 200") &&
+      String.eq(wanted(Gui.list_paging(empty,False{})),"search|needle|codex|/synthetic/repo|assistant|2026-10-01|100"),
+      "an empty later page remains navigable back")
+    require(String.eq(wanted(Gui.list_paging(loaded_page(state(),4294967195,True{},False{}),True{})),"none"),
+      "result paging cannot wrap the U32 offset")
+
+def changed_listing() -> Gui.State:
+  +second = loaded_page(state(),100,True{},False{})
+  Gui.form_text(Gui.replace_ui(second,UI.set_query(ui(second),"different")))
+
+def result_query_change() -> IO(Unit):
+  +changed = changed_listing()
+  require(U32.is_eq(list_offset(changed),0) && String.eq(wanted(changed),"search|different|||||0"),
+    "query edits restart result paging at zero")
+
+def result_scope_change() -> IO(Unit):
+  +second = loaded_page(state(),100,True{},False{})
+  +scoped = Gui.scope_changed(Gui.replace_ui(second,UI.set_scope(ui(second),"claude")))
+  require(U32.is_eq(list_offset(scoped),0) && String.eq(wanted(scoped),"search|needle|claude||||0"),
+    "provider changes restart result paging at zero")
+
+def result_refresh() -> IO(Unit):
+  require(U32.is_eq(list_offset(Gui.refresh_listing(loaded_page(state(),100,True{},False{}),0)),0),
+    "manual Refresh restarts the listing immediately")
+
+def result_stale() -> IO(Unit):
+  +stale = Gui.read_current(changed_listing(),page_request(100),Gui.Reply{Done{listing_json(100,True{},False{})}},False{})
+  require(U32.is_eq(list_offset(stale),0) && Bool.not(list_more(stale)) &&
+    List.is_empty(&2,Gui.Item,result_items(stale)),"stale page replies cannot restore old rows or pagination metadata")
+
+def result_invalid() -> IO(Unit):
+  +pending = Gui.list_paging(loaded_page(state(),0,True{},False{}),True{})
+  +invalid = Gui.read_current(worker_started(pending),page_request(100),Gui.Reply{Done{listing_json(0,True{},False{})}},True{})
+  require(String.contains(state_status(invalid),"metadata was invalid") &&
+    List.is_empty(&2,Gui.Item,result_items(invalid)),"mismatched page metadata is rejected")
+
+def version_request() -> Gui.Request:
+  Gui.Request{17,["versions","8","0"],"8",0,"Versions"}
+
+def version_json() -> Json.Json:
+  Json.JObject{[Json.JField{"offset",Json.JNumber{"0"}},Json.JField{"limit",Json.JNumber{"100"}},
+    Json.JField{"has_more",Json.JBool{True{}}},Json.JField{"rows",Json.JArray{[
+      Json.JArray{[Json.JString{"9"},Json.JString{"3"},Json.JString{"1200"},Json.JString{"30"},Json.JString{"1"}]},
+      Json.JArray{[Json.JString{"8"},Json.JString{"2"},Json.JString{"1000"},Json.JString{"25"},Json.JString{"0"}]},
+      Json.JArray{[Json.JString{"6"},Json.JString{"1"},Json.JString{"800"},Json.JString{"20"},Json.JString{"0"}]}]}}]}
+
+def saved_versions() -> Gui.State:
+  Gui.read_current(worker_started(Gui.versions(scoped_shown())),version_request(),
+    Gui.Reply{Done{version_json()}},True{})
+
+def version_listing() -> IO(Unit):
+  +shown = saved_versions()
+  do IO<Unit>:
+    require(String.eq(wanted(Gui.versions(scoped_shown())),"versions|8|0"),
+      "Versions resolves captures from the explicitly selected snapshot source")
+    require(String.eq(snapshot(shown),"8") && String.eq(UI.reader(ui(shown)),"only eligible evidence"),
+      "listing newer and older captures leaves the displayed snapshot pinned")
+    require(String.contains(state_status(shown),"Saved captures") &&
+      Nat.is_eq(List.length(&2,Gui.Item,result_items(shown)),3n),
+      "saved versions have an explicit capture listing status")
+    require(String.eq(wanted(Gui.list_paging(shown,True{})),"versions|8|100"),
+      "version list paging retains its original source anchor")
+    require(String.eq(wanted(Gui.refresh_listing(Gui.list_paging(shown,True{}),0)),"versions|8|0"),
+      "refresh restarts saved versions without switching to a different source")
+
+def version_selection() -> IO(Unit):
+  +shown = saved_versions()
+  +requested = Gui.open_item(shown,Gui.select_item(result_items(shown),2n))
+  do IO<Unit>:
+    require(String.eq(wanted(requested),"session-scope|6|0|40|codex|/tmp/repo|assistant|2026-10-01"),
+      "choosing an older version preserves reader filters and uses its immutable identity")
+    require(String.eq(snapshot(requested),"8"),
+      "version selection waits for verified reader completion before replacing the snapshot")
+
+def latest_request() -> Gui.Request:
+  Gui.Request{18,["latest-view","8","codex","/tmp/repo","assistant","2026-10-01"],"8",0,"Open latest"}
+
+def latest_reply(anchor: String,target: String) -> Gui.Reply:
+  Gui.Reply{Done{Json.JObject{[Json.JField{"anchor_snapshot",Json.JString{anchor}},
+    Json.JField{"snapshot",Json.JString{target}}]}}}
+
+def explicit_latest() -> IO(Unit):
+  +requested = Gui.open_latest(scoped_shown())
+  +resolved = Gui.read_current(worker_started(requested),latest_request(),latest_reply("8","9"),True{})
+  do IO<Unit>:
+    require(String.eq(wanted(requested),"latest-view|8|codex|/tmp/repo|assistant|2026-10-01"),
+      "Open latest is an explicit request with frozen selected reader filters")
+    require(String.eq(wanted(resolved),"session-scope|9|0|40|codex|/tmp/repo|assistant|2026-10-01"),
+      "resolved latest capture goes through the ordinary scoped raw reader")
+    require(String.eq(snapshot(resolved),"8") && String.eq(UI.reader(ui(resolved)),"only eligible evidence"),
+      "latest metadata alone cannot replace displayed retained evidence")
+
+def latest_stale() -> IO(Unit):
+  +changed = Gui.form_text(Gui.replace_ui(scoped_shown(),UI.set_query(ui(scoped_shown()),"new query")))
+  +stale = Gui.read_current(changed,latest_request(),latest_reply("8","9"),False{})
+  require(String.eq(wanted(stale),"search|new query|||||0") && String.eq(snapshot(stale),"8"),
+    "stale latest resolutions cannot override a newer listing request")
+
+def latest_invalid() -> IO(Unit):
+  +wrong = Gui.read_current(worker_started(Gui.open_latest(scoped_shown())),latest_request(),latest_reply("other","9"),True{})
+  require(String.eq(wanted(wrong),"none") && String.eq(snapshot(wrong),"8") &&
+    String.contains(state_status(wrong),"did not match"),"latest source mismatch retains pinned evidence")
+
+def latest_invalid_identity() -> IO(Unit):
+  +wrong = Gui.read_current(worker_started(Gui.open_latest(scoped_shown())),latest_request(),latest_reply("8","9223372036854775808"),True{})
+  require(String.eq(wanted(wrong),"none") && String.eq(snapshot(wrong),"8"),
+    "latest response cannot introduce an out-of-range SQLite identity")
+
+def displayed_kind(s: Gui.State) -> U32:
+  Gui.State{db,dir,program,ui,Gui.Selection{items,snap,start,displayed,args,filters,listing},form,jobs,deadline,serial} = s
+  displayed
+
+def storage_request() -> Gui.Request:
+  Gui.Request{19,["storage"],"",0,"Storage inventory"}
+
+def storage_view() -> IO(Unit):
+  +requested = Gui.storage(source_input())
+  +shown = Gui.read_current(worker_started(requested),storage_request(),result_text("Synthetic read-only inventory"),True{})
+  do IO<Unit>:
+    require(String.eq(wanted(requested),"storage") && U32.is_eq(mode(requested),1),
+      "Storage uses an explicit read-only worker in Settings mode")
+    require(String.eq(UI.query(ui(requested)),"/tmp/explicit source.jsonl"),
+      "Storage preserves the configured source form input")
+    require(String.eq(snapshot(shown),"7") && U32.is_eq(displayed_kind(shown),0),
+      "Storage display preserves selected snapshot and cannot become an evidence export")
+    require(String.eq(UI.reader(ui(shown)),"Synthetic read-only inventory") &&
+      String.contains(state_status(shown),"Read-only storage inventory"),
+      "Storage displays the returned readable inventory")
+
+def storage_stale() -> IO(Unit):
+  +back = Gui.browse(Gui.storage(state()))
+  +stale = Gui.read_current(back,storage_request(),result_text("stale storage"),False{})
+  require(String.eq(wanted(stale),"search|needle|||||0") &&
+    Bool.not(String.eq(UI.reader(ui(stale)),"stale storage")),
+    "late Storage responses cannot replace a newer search view")
+
+def storage_failure() -> IO(Unit):
+  +failed = Gui.read_current(worker_started(Gui.storage(state())),storage_request(),Gui.Reply{Fail{"synthetic inventory failure"}},True{})
+  require(String.eq(snapshot(failed),"7") && String.contains(state_status(failed),"synthetic inventory failure"),
+    "Storage failure is visible without discarding selected evidence")
+
 def main() -> IO(Unit):
   do IO<Unit>:
     forms()
+    form_completion()
     readers()
     initial()
     initial_late_hit()
@@ -355,4 +572,21 @@ def main() -> IO(Unit):
     refresh_resume()
     refresh_writer()
     idle_pacing()
+    result_next()
+    result_arrival()
+    result_boundaries()
+    result_query_change()
+    result_scope_change()
+    result_refresh()
+    result_stale()
+    result_invalid()
+    version_listing()
+    version_selection()
+    explicit_latest()
+    latest_stale()
+    latest_invalid()
+    latest_invalid_identity()
+    storage_view()
+    storage_stale()
+    storage_failure()
     IO.print("PASS GUI coordinator contracts; native interaction is separate")

@@ -1,0 +1,8 @@
+{"benchmark":"sha256-chains-v1","seed":"64 ASCII zeroes","generation_and_corpus_checks":"outside_timers","checksum_output":"inside_timers"}
+{"operation":"byte_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"operation":"byte_chain_512","iterations":10000,"message_bytes":512,"duration_ms":157}
+{"operation":"utf8_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"operation":"utf8_chain_512","iterations":10000,"message_bytes":512,"duration_ms":184}
+{"operation":"byte_chain_262144","final_sha256":"18926dfa939ab08b83a305a816f30ba07205704af6cc2672d209a318bf0ce999"}
+{"operation":"byte_chain_262144","iterations":16,"message_bytes":262144,"duration_ms":103}
+{"benchmark_complete":true}

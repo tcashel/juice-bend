@@ -87,6 +87,8 @@ The optional `mise run setup-lean` installs the exact Lean 4.34.0 archive into
 `.tools` after SHA-256 verification; it needs `zstd` on PATH. An already
 downloaded official archive can be supplied as its only argument. No global
 tool installation is performed. See the [toolchain receipt](docs/receipts/lean-toolchain.txt).
+Lean is a development-time dependency of Bend's upstream proof checker. It is
+not linked into the application or required to build, launch or use the app.
 Tests, fixture generators, benchmarks and proof logic are Bend.
 
 `mise run build-trace` builds the optional bounded GUI callback diagnostic;

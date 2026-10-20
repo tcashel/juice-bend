@@ -292,12 +292,49 @@ def hash_feed(context: HashContext, byte: U32) -> HashContext:
     case HashContext{state, pending, used, size}:
       HashContext{state, Con{byte, pending}, (used + 1 : U32), (size + 1 : U32)}
 
-def hash_bytes(bytes: List<&2, U32>, context: HashContext) -> HashContext:
+def hash_bytes_partial(bytes: List<&2, U32>, context: HashContext) -> HashContext:
   match bytes:
     case Nil{}:
       context
     case Con{byte, rest}:
-      hash_bytes(rest, hash_feed(context, byte))
+      hash_bytes_partial(rest, hash_feed(context, byte))
+
+def hash_word(a: U32, b: U32, c: U32, d: U32) -> U32:
+  (a * 16777216 + b * 65536 + c * 256 + d : U32)
+
+# A complete aligned block can be packed directly from the input list. Avoid
+# constructing a second 64-byte pending list, reversing it, and constructing
+# and reversing a 16-word list. Partial blocks keep the original context path.
+def hash_bytes_aligned(bytes: List<&2, U32>, +state: HashState,
+  size: U32) -> HashContext:
+  match bytes:
+    case a0 <> a1 <> a2 <> a3 <> b0 <> b1 <> b2 <> b3 <>
+      c0 <> c1 <> c2 <> c3 <> d0 <> d1 <> d2 <> d3 <>
+      e0 <> e1 <> e2 <> e3 <> f0 <> f1 <> f2 <> f3 <>
+      g0 <> g1 <> g2 <> g3 <> h0 <> h1 <> h2 <> h3 <>
+      i0 <> i1 <> i2 <> i3 <> j0 <> j1 <> j2 <> j3 <>
+      k0 <> k1 <> k2 <> k3 <> l0 <> l1 <> l2 <> l3 <>
+      m0 <> m1 <> m2 <> m3 <> n0 <> n1 <> n2 <> n3 <>
+      o0 <> o1 <> o2 <> o3 <> p0 <> p1 <> p2 <> p3 <> rest:
+      hash_bytes_aligned(rest, hash_add(state, hash_rounds(hash_constants(),
+        HashSchedule{hash_word(a0,a1,a2,a3),hash_word(b0,b1,b2,b3),
+          hash_word(c0,c1,c2,c3),hash_word(d0,d1,d2,d3),
+          hash_word(e0,e1,e2,e3),hash_word(f0,f1,f2,f3),
+          hash_word(g0,g1,g2,g3),hash_word(h0,h1,h2,h3),
+          hash_word(i0,i1,i2,i3),hash_word(j0,j1,j2,j3),
+          hash_word(k0,k1,k2,k3),hash_word(l0,l1,l2,l3),
+          hash_word(m0,m1,m2,m3),hash_word(n0,n1,n2,n3),
+          hash_word(o0,o1,o2,o3),hash_word(p0,p1,p2,p3)},state)),
+        (size + 64 : U32))
+    case remaining:
+      hash_bytes_partial(remaining, HashContext{state,[],0,size})
+
+def hash_bytes(bytes: List<&2, U32>, context: HashContext) -> HashContext:
+  match context:
+    case HashContext{state,[],0,size}:
+      hash_bytes_aligned(bytes, state, size)
+    case other:
+      hash_bytes_partial(bytes, other)
 
 def word_bytes(+word: U32) -> List<&2, U32>:
   [U32.and(U32.shrn(word, 24n), 255), U32.and(U32.shrn(word, 16n), 255),

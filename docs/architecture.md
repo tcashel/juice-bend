@@ -33,10 +33,18 @@ raw verification. These checks detect corruption relative to trusted metadata;
 they do not authenticate a database whose data and checksums were both replaced.
 
 The UI and CLI consume the same storage, provider and provenance modules.
+`catalog.bend` resolves accepted saved versions for one exact source and an
+explicit latest target. Result and version pages use a bounded lookahead in the
+same SQLite read transaction; navigating the listing never silently changes a
+pinned reader. `storage_inventory.bend` reads owned row/page counts and samples
+only the main database and its WAL/SHM sibling lengths. Its logical/reusable
+numbers are not estimates of physical disk space that could be reclaimed.
 Tests exercise these production modules through Bend-native entry points.
 `LAWS.bend`/`PROOF.bend` depend only on the pure production functions they verify;
 runtime effects, SQLite, compiler translation and native interaction remain
 outside the proof boundary.
+The upstream proof kernel uses Lean only during development. The app, UI and
+its same-executable workers contain no Lean runtime dependency.
 
 `mise.toml` organizes repository tasks. `scripts/bend` hosts the pinned compiler;
 `scripts/build` produces native executables; the other wrappers launch the

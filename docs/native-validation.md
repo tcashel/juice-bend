@@ -1,5 +1,44 @@
 # Native interaction observations
 
+## Parity candidate — catalog and storage
+
+The native candidate SHA-256
+`98283d91b51229f90eaacb90888466b91ea5ec3570ea96860ac5976ba431decd`
+(5,917,312 bytes) ran in the dedicated macOS 27.0 arm64 Tart guest with host-only
+networking. All 32 application/build input hashes matched before and after
+build. The separate Bend fixture generated 206 sources, 306 accepted captures,
+306 current search events and 101 saved versions through production capture.
+
+Observed window interactions: History pages 1–100, 101–200 and 201–206; Search
+through 301–306; saved captures through 101–101; selecting capture 206;
+explicitly returning to latest capture 306; transcript page beginning at record
+80. List paging retained the existing reader snapshot. Codex scope showed no
+results and retained the reader; Claude reset the result page. Storage displayed
+the owned counts, refused transcript export while showing inventory, and
+returned to the selected source. After moving this run's original synthetic
+source away, Open latest and bounded evidence export still succeeded.
+The export was inspected as a 5,774-byte mode-0600 Markdown file containing
+the retained Unicode and snapshot descriptor. A subsequent Bend-generated
+append accepted capture 307 while the window stayed pinned to 306; clicking
+Open latest then explicitly loaded 307. Native Command+Q closed the test
+window. Final SQLite quick_check was `ok`, with 307 accepted captures and 307
+current search events; no foreign-key violations were returned. The owned Tart
+runner stopped its child and verified the VM stopped before releasing its lease.
+
+Native keyboard checks used the guest's existing input tools: ASCII `caf`,
+Option+E followed by E produced exact UTF-8 `café`; Command+A/C/V preserved
+`café 中文 🙂`; replacement yielded `keyboard-ok`; Shift+Left twice selected
+exact `ok`. Transcript copy also preserved Unicode. This observes one native
+dead-key composition path, not full IME, physical keyboard or font-shaping
+coverage. Unsupported glyphs still render as boxes. No input-to-display latency
+or scroll-frequency measurement is claimed for this run; host tests overlapped.
+
+Raw synthetic screenshots, clipboard bytes and orchestration records are under
+ignored `build/tart/catalog.U5y5pY/artifacts`. The earlier observations below
+remain tied to their own executable identities.
+
+## Earlier core workflow observations
+
 2026-10-20. Native windows used the pinned Bend runtime on the host desktop
 (macOS 27.0.1 arm64) and a coordinated Tart guest (macOS 27.0 arm64,
 Tart 2.40.1). All libraries and sources were synthetic. These are observed

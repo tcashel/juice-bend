@@ -232,7 +232,7 @@ def git_result(result: Result<&1,&1,U32 & String,U32 & (String & String)>) ->
 def git(repo: String,args: List<String>) -> IO(Result<&2,&2,String,String>):
   do IO<Result<&2,&2,String,String>>:
     result : Result<&1,&1,U32 & String,U32 & (String & String)> <- Process.run("/usr/bin/git",
-      "--no-pager" <> "--no-optional-locks" <> "-c" <> "core.hooksPath=/dev/null" <>
+      "--no-pager" <> "--no-optional-locks" <> "--no-replace-objects" <> "--no-lazy-fetch" <> "--literal-pathspecs" <> "-c" <> "core.hooksPath=/dev/null" <>
       "-c" <> "core.fsmonitor=false" <> "-c" <> "diff.external=" <> "-c" <>
       "core.attributesFile=/dev/null" <> "-c" <> "color.ui=false" <> "-C" <> repo <> args,
       "",1048576,3000)

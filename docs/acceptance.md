@@ -3,11 +3,14 @@
 Local macOS arm64 implementation, 2026-10-20. M0–M5 are **in progress**.
 “Passed” below applies only to the named test scope. Module tests, a native
 window, and backend benchmarks do not establish the complete GUI workflow.
-The final integrated native suite passed 33 executables and 2,166 named checks,
+The published application baseline passed 33 executables and 2,166 named checks,
 including 52 GUI-state checks, 10 trace-contract checks, 131 SQL-batch checks
 and the 27-cut publication-crash matrix.
 Native interaction observations remain separate. Tests use synthetic fixtures
 in isolated directories. See the [sanitized test receipt](receipts/test-summary.txt).
+The new catalog/storage/append candidate passed 40 native executables and 2,960
+named checks with unchanged recorded inputs; see `receipts/test-parity-summary.txt`.
+Its separate native observations are in `native-validation.md`.
 
 | ID | Current result | Evidence and remaining work |
 |---|---|---|
@@ -29,7 +32,7 @@ in isolated directories. See the [sanitized test receipt](receipts/test-summary.
 | A16 | Passed tested cases | Provenance: 36 checks cover scope, collisions, ambiguity, exact rational scores, decimal timestamps above 2^53, ties, repeated/low-entropy lines and safe paths. File-evidence checks additionally require an eligible unique parent for child evidence; orphaned, ambiguous, excluded and cyclic identities remain unresolved. Parent navigation retains the child's captured citation/model rather than fabricating parent authorship. |
 | A17 | Passed tested/observed scope | Citation consumer verifies full provider/source/generation/snapshot/extent/record/event identity against retained bytes. 38 evidence assertions plus four synthetic Git fixture commands pass, including old references after append/rewrite. Earlier file Why quoted captured intent. Final guest Why/export worked after source removal; its inspected Markdown was 11,796 bytes, mode 0600, with the exact hash recorded in `native-validation.md`. Atomic no-overwrite exports pass race/symlink regressions. |
 | A18 | Audited implementation boundary | Maintained application modules, tests, benchmarks and proofs are Bend; the native first-party exception is the 418-line SQLite bridge. The recorded `otool -L` audit shows only system SQLite/libSystem and upstream macOS UI frameworks. Source/process audit found no semantic, model, vector or network application subsystem. This is a dependency/source audit, not packet tracing. |
-| A19 | Passed named native paths; physical input/IME unverified | Final guest explicit Command+A/C/V preserved exact `café 中文 🙂`; ASCII replacement produced `keyboard-ok`, and Shift+Arrow copied `ok`. Reader drag copied exact eight-byte `[assista`, and scrolling worked. Direct Unicode keystroke automation instead delivered corrupted Text, so physical Unicode typing and IME remain unverified. Earlier ambiguous host-tool modifiers are not treated as equivalent evidence. See `native-validation.md`. |
+| A19 | Passed named native paths; full IME unverified | Candidate `98283d91…` produced exact `café` through native Option+E then E, preserved `café 中文 🙂` with Command+A/C/V, replaced it with `keyboard-ok`, and copied Shift+Arrow selection `ok`. Earlier reader drag/scroll observations retain their own binary identity. This establishes one dead-key composition path; physical keyboard and full IME remain unverified. Earlier failed Unicode injection is not treated as equivalent evidence. See `native-validation.md`. |
 | A20 | Partial native responsiveness and resource evidence | Final guest GUI visibly accepted `live-capture-ok` and Pause during the 100,016-record capture. Final GUI physical footprint was 41.1M (peak 41.5M) before rebuild and 46.2M (peak 46.2M) afterward. The 80 ms scheduler measured 1.55% of one core on intermediate `0a6243d5…`, which shares the final GUI source hash; this is not final-binary CPU evidence. The earlier callback trace retains its identified instrumented-build timing results. No input-to-photon percentile or sustained 60 Hz scroll result is claimed. |
 | A21 | Passed scoped audit | Wrappers use private temporary roots and `umask 077`; source/process audit confirms explicit roots, bounded read-only Git and no implicit provider-home scan. Publication inventory contains synthetic tests/receipts, no private logs, databases or reference-source snapshots. Original Juice was used read-only and its pre-existing edits remain present. |
 | A22 | Passed named law scope | Twelve production laws pass ordinary Bend checking and the pinned BendTT kernel through Lean 4.34.0. `scripts/prove` exits 0. Exact source/tool hashes and archive provenance are recorded in `receipts/prove-inputs.sha256` and `receipts/lean-toolchain.txt`. The pure laws do not establish foreign effects, UI or hashing correctness. |
@@ -121,8 +124,10 @@ downloads the exact official arm64 archive or accepts an existing local copy,
 verifies its pinned SHA-256, and installs only under `.tools/lean-4.34.0`.
 The observed installation used the authorized Tart guest for the official
 download after host DNS failed. No global tool installation or substitute
-kernel version was used. Twelve laws passed with the original domain source
-hash recorded in the receipt; later domain changes require a new verdict.
+kernel version was used. Twelve laws also passed a fresh verdict against the
+selected SHA optimization (`src/domain.bend` SHA-256 `f2f68a4a…`); the complete
+input hashes are recorded in `docs/receipts/prove-inputs.sha256`. Further domain
+changes require another verdict.
 
 ## Size and coverage boundaries
 

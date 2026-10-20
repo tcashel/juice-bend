@@ -1,0 +1,61 @@
+{
+  "receipt_version": 1,
+  "date": "2026-10-20",
+  "host": "macOS 27.0.1 arm64",
+  "guest": "macOS 27.0 (26A428) arm64",
+  "tart": "2.40.1",
+  "network": "host-only",
+  "application_sha256": "98283d91b51229f90eaacb90888466b91ea5ec3570ea96860ac5976ba431decd",
+  "application_bytes": 5917312,
+  "build_input_hashes_verified": 32,
+  "initial_fixture_sha256": "690c41e61bd33982195bde783a9c8bf211ff48ca603fd79da42cc87ee9350fd5",
+  "append_fixture_sha256": "1d74388adc477e9b38d475c79decf581a55a475a7f1514064cf40ab23863f9d6",
+  "fixture": {
+    "generator": "native-catalog-v1",
+    "initial_sources": 206,
+    "initial_accepted_snapshots": 306,
+    "initial_current_search_events": 306,
+    "versioned_source_snapshots": 101,
+    "final_accepted_snapshots": 307,
+    "final_current_search_events": 307
+  },
+  "observed": [
+    "History pages 1-100, 101-200, 201-206 retained reader snapshot306",
+    "Search pages reached301-306 without changing the pinned reader",
+    "Saved versions second page101-101 selected snapshot206 with one record",
+    "Open latest explicitly returned from snapshot206 to306",
+    "Transcript Next text twice reached record80",
+    "Codex scope showed no results while preserving reader; Claude reset page",
+    "Storage displayed owned counts and refused transcript export",
+    "Returning from Storage and Open latest retained the selected source",
+    "Moving only the synthetic source away did not prevent retained viewing/export",
+    "Appended capture307 left native reader at306 until explicit Open latest",
+    "Native Command+Q closed the test window"
+  ],
+  "keyboard": {
+    "ascii_plus_native_option_e_then_e": "café",
+    "command_a_c_v_roundtrip": "café 中文 🙂",
+    "replacement": "keyboard-ok",
+    "shift_arrow_selection": "ok",
+    "transcript_copy_preserved_unicode": true,
+    "full_ime": "not_observed",
+    "physical_keyboard": "not_observed",
+    "complete_glyph_rendering": "unsupported glyphs display boxes"
+  },
+  "retained_export": {
+    "format": "bounded scoped Markdown",
+    "bytes": 5774,
+    "mode": "0600",
+    "snapshot": "306",
+    "source_absent_at_export": true
+  },
+  "database": {"quick_check": "ok", "foreign_key_violations": 0},
+  "input_to_display_latency": "not_measured",
+  "scroll_frequency": "not_measured",
+  "host_tests_overlapped": true,
+  "final_window_list": [],
+  "vm_final_state": "stopped",
+  "runner_exit": 130,
+  "runner_lease_removed": true,
+  "raw_observations": "ignored build/tart/catalog.U5y5pY/artifacts"
+}

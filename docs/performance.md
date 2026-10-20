@@ -16,7 +16,51 @@ repositories, timestamps, tool arguments/results and usage. Each four physical
 JSONL records yield five normalized events. Events include tools and are not
 presented as five independent human/assistant messages.
 
-## Current backend benchmark — bounded SQL batches
+## Current backend candidate — bounded verification and aligned SHA
+
+The immutable optimized candidate appended 16 records in **33,392 ms**, compared
+with the published baseline's 40,103 ms. This is an observed 16.7% reduction,
+not an isolated statistical comparison; append remains slow. Full integrity
+checks and the unchanged benchmark assertions were retained.
+
+| Observation | 100k candidate |
+|---|---:|
+| Source physical records / normalized events | 100,000 / 125,000 |
+| Source bytes | 35,601,602 |
+| First import | 32,780 ms |
+| Unchanged refresh | 4,547 ms |
+| Append 16 raw records / 20 events | 33,392 ms |
+| Warm scoped search median / p95 | 39 / 41 ms |
+| Warm late page median / p95 | 7 / 8 ms |
+| Warm repository-scoped late page median / p95 | 17 / 18 ms |
+| SQLite logical page bytes after append | 216,109,056 |
+| Existing database reopen and status | 16 ms |
+
+The benchmark child exited 0. Independent read-only SQLite checks found
+`quick_check=ok`, no foreign-key violations and the exact two-snapshot raw,
+projection, context and latest-search counts. No task builds, tests or VM ran
+over these operation timers; unrelated host activity was not controlled.
+Five-trial p95 is the observed maximum. Native UI latency is not measured here.
+
+The executable remained SHA-256
+`ef5f01f9605b52bc7e00060134bf65e0a9c9039955803d9dd2416f157a8c7af6`
+(2,816,072 bytes). Its 18 build inputs and 88 upstream files matched at build.
+An approved Git pathspec correction changed `src/provenance.bend` during the
+run; the other 17 inputs and upstream files remained unchanged. The benchmark
+does not invoke Git. These measurements identify the frozen executable, not a
+claim that every working-tree source remained unchanged; the orchestration's
+post-run hash check correctly reported that edit.
+
+See [raw results](../benchmarks/results/100000-aligned.jsonl),
+[build and input receipt](../benchmarks/results/100000-aligned-build.txt), and
+[independent database checks](../benchmarks/results/100000-aligned-db-check.json).
+The batching-only diagnostic separately reduced append from 42,784 to 35,657 ms;
+it times internal phases and is not substituted for this standard benchmark.
+Aligned SHA microbenchmarks improved, but their gains are not extrapolated to
+the application's end-to-end timing. A shared-projection prototype is separate
+work, not integrated or included in these results.
+
+## Published backend baseline — bounded SQL batches
 
 The final working-source benchmark completed successfully in a fresh isolated
 library. Warm search and late-page reads passed the provisional backend

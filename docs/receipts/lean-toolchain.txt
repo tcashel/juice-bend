@@ -32,14 +32,18 @@ Lean (version 4.34.0, arm64-apple-darwin24.6.0, commit 293d5d0c0c3f3dded4688b3cc
 ./scripts/prove compiled the pinned, unmodified upstream BendTT source under
 .tools/bendtt, then ran the real --verdict kernel check. The ordinary checker
 and kernel both printed ALL PROOFS CHECK and exited 0. First-run elapsed time
-including kernel compilation was 19.68 seconds; the cached repeat was 0.58
-seconds. These are individual /usr/bin/time -p observations on the shared host.
+including kernel compilation was 19.68 seconds; the initial cached repeat was
+0.58 seconds. The final repeat after the selected aligned SHA256 implementation
+was 0.90 seconds, again exit 0 for both ordinary and kernel checking. These are
+individual /usr/bin/time -p observations on the shared host.
 
 Receipts: prove-first-run.{stdout,stderr,exit}.txt and
 prove.{stdout,stderr,exit}.txt. The earlier unavailable-kernel result is retained
 as prove-before-lean.{stdout,stderr,exit}.txt. prove-inputs.sha256 binds the exact
 laws, proof implementations, production Domain module, upstream kernel source,
-compiled kernel, and Lean/leanc binaries used by the successful cached run.
+compiled kernel, and Lean/leanc binaries used by the successful final run.
+That run binds Domain SHA256
+f2f68a4a9781ea102f3e275781380a885e3057e178d75c8d45b310c3c5002191.
 
 All twelve existing laws passed unchanged: pinned_snapshot_survives_append,
 generation_isolation, page_within_request, page_within_snapshot,

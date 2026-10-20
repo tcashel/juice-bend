@@ -1,0 +1,44 @@
+Aligned SHA plus batched Store benchmark build, 2026-10-20
+Host: macOS 27.0.1 (26A434), arm64
+Base Git HEAD: b647310636e59543668ecadb27571b9a7c5ae9e4
+Bend 2.0.37, pinned revision 60ca80aedeec9d8f0629b5f10dd19457d8ad67af.
+Bun 1.4.2 via repository-local mise configuration.
+Apple clang 21.0.0 (clang-2100.3.34.2); -std=c11 -O3 -lpthread -lm -lsqlite3.
+
+Command: ./scripts/build benchmarks/main.bend build/juice-bend-bench-aligned
+Build exit: 0
+Build wall time: 22.112 seconds
+This is an observed build with other task builds permitted concurrently;
+it is not an isolated build-time performance comparison.
+
+All 18 transitive first-party source/build-input hashes were captured before
+build and verified unchanged afterward. All 88 pinned upstream files were
+also verified against toolchain/bend.sha256 before and after build.
+Manifest: benchmarks/results/100000-aligned-sources.sha256
+Manifest SHA-256: c9e1033e3211a896adc902696a1f4ffa70ddab45d7c75fed03eeee8cdc0d59cd
+
+Executable: build/juice-bend-bench-aligned
+Executable bytes: 2816072
+Executable SHA-256: ef5f01f9605b52bc7e00060134bf65e0a9c9039955803d9dd2416f157a8c7af6
+Generated C SHA-256: 6d21485c65167712f099a99a3f0dd4ba2b48cc6fd1768aad3eff7bc52b0aef48
+
+Store SHA-256: 2cfbba20290138d1e86d5c60005f96986ea462fbf333669cbe2174e9c3057d24
+Domain SHA-256: f2f68a4a9781ea102f3e275781380a885e3057e178d75c8d45b310c3c5002191
+Benchmark SHA-256: 00f951077f700f4305fcf8f3b3882c58f935cd1568e210e0a0e7c9a85b0ee9e9
+The existing benchmark source, corpus generator, counts and assertions are unchanged.
+Benchmark execution: not run at build receipt creation; await the exclusive window.
+
+Execution receipt added after the reserved quiet run:
+Command: build/juice-bend-bench-aligned 100000, in a fresh private temporary directory (umask077).
+Benchmark child exit:0; benchmark_complete=true; all existing Bend correctness assertions passed.
+Raw result: benchmarks/results/100000-aligned.jsonl
+Result SHA-256:436ef9fd32d849b688eb01d3ac4c0085a1d6bf8419bd784faad039320625ae1a
+No other task builds/tests/benchmarks or Tart ran during operation timers; the host itself was not isolated.
+Executable identity was verified unchanged before and after; all18 input hashes matched immediately before execution.
+Post-run orchestration verification exited1 because src/provenance.bend was edited during execution.
+Provenance before:abc6bf8251636da77bb5a6caf4a9d6275d9ad530bcf8c328ea59b5d0c0e90933
+Provenance after:2a913606e0e2deb85c7fa44fd381662579acee1fd5caff924b3143b24496a62f
+Other17 first-party/build inputs and all88 upstream files were unchanged. Store and Domain hashes still match the build manifest.
+This is a result for the immutable built executable and pre-run manifest, not for the subsequently edited working tree.
+Independent read-only SQLite post-run inspection passed: quick_check ok, zero foreign-key violations, exact raw/map/event/context/FTS counts.
+Inspection receipt: benchmarks/results/100000-aligned-db-check.json (outside operation timers).

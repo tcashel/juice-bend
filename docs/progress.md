@@ -4,18 +4,50 @@
 
 The owner's follow-up requests fixing slow append, closing validation gaps,
 matching the SwiftUI Juice feature set without embeddings, and then UI polish.
-This goal is active. The published baseline is PR #1 commit
-`cf066af054346c2ee900ea8324f3a23f8e81482c`; its measured results follow below.
+This goal is active. PR #1 remains draft and unmerged. This checkpoint builds
+on toolchain commit `edfeadd6bf3149739b3af00a6c92671354208584` and application
+baseline `cf066af054346c2ee900ea8324f3a23f8e81482c`, whose historical results
+remain below.
 Current iteration: bounded raw verification/context insertion and bit-identical
 SHA throughput work; bounded result paging and saved-version navigation; owned
 storage inventory. The exact Lean 4.34.0 archive was obtained through the
 authorized Tart guest, independently hash-checked and installed locally.
 The pinned BendTT kernel now passes all twelve production laws. Its exact input
-hashes are in `docs/receipts/prove-inputs.sha256`; SHA optimization will require
-a fresh verdict. New uncommitted application changes
-are not covered by the baseline test counts until rerun. Root owns integration
+hashes are in `docs/receipts/prove-inputs.sha256`. A fresh verdict also passes
+against the selected SHA optimization (`src/domain.bend` SHA-256 `f2f68a4a…`).
+Lean is only Bend's development-time proof checker dependency. Application/UI,
+tests, fixture generators, benchmarks and law definitions remain Bend 2; the
+application neither links to nor runs Lean. Current application validation is
+recorded separately from the historical baseline below. Root owns integration
 and Tart lifecycle. The owner no longer requires cross-chat VM coordination;
 the runner still checks stopped state and acquires its exclusive lease.
+
+Current candidate `build/juice-bend-parity2` built successfully with all 32 input
+hashes unchanged: 5,917,312 bytes, SHA-256
+`98283d91b51229f90eaacb90888466b91ea5ec3570ea96860ac5976ba431decd`.
+It contains bounded result paging, saved-version navigation, Open latest,
+read-only Storage inventory, literal Git paths and the append/hash changes.
+Native Tart interaction checks passed, including exact dead-key composition,
+retained export and explicit navigation from capture 306 to 307; see
+`native-validation.md`. The expanded regression suite passed 40 executables
+and 2,960 named checks, with all 74 first-party and 72 pinned-toolchain input
+hashes unchanged. The historical validated binary remains intact.
+The later repository-browser-only range correction separately passed 58 checks;
+it is not a full-suite rerun. That backend is not yet wired into CLI/GUI.
+The Bend native catalog fixture passed host checks for 206 sources, 306 accepted
+snapshots, 306 current search events and 101 saved versions. The frozen standard
+100k benchmark passed: append 33.392 s, unchanged refresh 4.547 s, search p95
+41 ms, late page 8 ms and scoped late page 18 ms. Append remains slow. The immutable binary and the known concurrent
+Git-only source edit are recorded in `performance.md`. The host-only Tart
+session stopped cleanly and released its lease; raw synthetic observations are
+under `build/tart/catalog.U5y5pY/artifacts`.
+The standalone shared-projection prototype is unintegrated and excluded from
+this publication. Its first gate passed 904 checks, but its first engine-only
+profile exposed expensive per-record SQL validation; batching is in progress.
+Preserve the
+working v2 store until migration, one-corpus FTS ranking, typed recovery,
+snapshot reads and all crash boundaries are covered. Engine-only profiles are
+diagnostic measurements, never app append performance.
 
 ## Published baseline
 
@@ -27,12 +59,13 @@ below; do not report the entire matrix as passed.
 
 ## Runnable result
 
-The final native candidate is `build/juice-bend-validated`, 4,708,120 bytes,
-SHA-256 `05cdff4f599edcd16646fc3363e27c3856bda4b073f52a92f23264887ef5ba35`.
-The standard executable `build/juice-bend` and local bundle
-`build/Juice Bend Validated.app` use this same candidate. Earlier bundles remain
-preserved and are not the current candidate. Outputs and synthetic data are
-ignored; use an explicit isolated data directory for validation.
+The current candidate is `build/juice-bend-parity2`, 5,917,312 bytes,
+SHA-256 `98283d91b51229f90eaacb90888466b91ea5ec3570ea96860ac5976ba431decd`.
+The standard executable `build/juice-bend` and new local bundle
+`build/Juice Bend Parity.app` use this same candidate. The bundle launcher passed
+an isolated library status check. The historical `build/juice-bend-validated`
+and `build/Juice Bend Validated.app` remain preserved with SHA-256 `05cdff4f…`.
+Outputs and synthetic data are ignored; use an explicit isolated data directory.
 
 Mise pins Bun 1.4.2 and Bend 2.0.37 revision
 `60ca80aedeec9d8f0629b5f10dd19457d8ad67af`; all 88 source hashes verify.
@@ -50,7 +83,7 @@ pause and verified derived-index rebuild. All maintained application/UI logic
 is Bend; the unchanged 418-line SQLite bridge is the native exception.
 Same-executable Bend workers do not depend on the existing Juice process.
 
-## Completed validation
+## Published baseline validation
 
 - Full native suite: **33 executables, 2,166 named checks**, exit 0. Includes
   52 GUI-state, 131 SQL-batch and 10 diagnostic checks; exact counts are in
