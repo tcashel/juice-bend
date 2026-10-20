@@ -1,5 +1,39 @@
 # Native interaction observations
 
+## Tools candidate — retained recorded activity
+
+Candidate `68d221e24b7aed7635d2986783f4567c31004a14ff5424ed79a8b510780104db`
+(8,823,088 bytes) ran in the host-only macOS 27.0 (26A428) arm64 Tart guest.
+All 38 build inputs were unchanged and all 88 upstream hashes passed. The Bend
+fixture created 43 physical records, including Unicode arguments, a matched
+call/result, a counterpart across the 40-record page boundary and an explicit
+tool-error result. It then appended two records and hid only its own source.
+
+Actual window interaction opened Tools, paged 40+3 records and held at EOF.
+Command+A/C copied both pages exactly against the frozen executable's CLI text
+(3,401 and 3,387 UTF-8 bytes). After append and source removal, the old pages
+remained byte-identical. Why then Command+T and Files then History restored
+the old Tools page. Explicit Open latest changed to snapshot 2; its last five
+records copied exactly (5,044 bytes). Native wheel events visibly moved the
+reader to tool content; copying afterward retained all 5,044 bytes. Earlier
+arrow-key injection did not visibly scroll and is not counted as a pass.
+
+Both mode-0600 Markdown exports contained the exact displayed body: the old
+page was 3,558 bytes total and the latest page 5,215. Independent SQLite checks
+returned `ok`, no foreign-key violations, two accepted snapshots, 45 raw
+records, 88 retained event rows and 45 current search events. Command+Q closed
+each owned window. The runner exited 130 after Ctrl-C, verified its VM stopped
+and released both leases. No owner desktop unlock was required.
+
+The first viewport is metadata-heavy and unsupported glyphs display boxes;
+copied/exported Unicode is intact. This run measured neither input latency nor
+scroll cadence. The 435 focused native checks are not a full-suite rerun.
+Receipts: `receipts/recorded-activity.txt`, `receipts/activity-build-inputs.sha256`
+and `benchmarks/results/tart-activity-summary.json`. Raw synthetic observations
+remain under ignored `build/tart/activity-7kaut8qw`. The standard executable
+and new `build/Juice Bend Activity.app` contain this exact verified candidate;
+the Files and earlier binaries/bundles remain preserved.
+
 ## Files candidate — pinned repository browsing
 
 Candidate `0e1d10180fa875ca225a1bae25f60b968689e6d0440ad1a21e82f4b7bbeb1434`

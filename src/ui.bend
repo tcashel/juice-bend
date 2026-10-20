@@ -33,6 +33,7 @@ type Action is Data:
   Export{}
   Why{}
   Usage{}
+  Tools{}
   Rebuild{}
   Versions{}
   OpenLatest{}
@@ -359,6 +360,8 @@ def key_down(+s: State, +code: U32, +command: Bool) -> State & Action:
       (s, Blame{})
     case 108 True{}:
       (s, Filter{})
+    case 116 True{}:
+      (s, Tools{})
     case 13 _:
       (s, Submit{})
     case 127 False{}:
@@ -427,6 +430,8 @@ def sidebar_action(+s: State, +row: U32) -> State & Action:
       (s, Settings{})
     case 25:
       (s, Storage{})
+    case 28:
+      (s, Tools{})
     case 30:
       copy_action(s,String.is_empty(selection(s)))
     case 33:
@@ -704,7 +709,8 @@ def draw(+s: State) -> Image:
   p = write(10n, filters, "Settings", 1, 23, 3960107, 15396591)
   storage = write(10n,p,"Storage",1,25,3960107,15396591)
   q2 = write(10n, storage, String.append("Scope: ", scope), 1, 27, 6516081, 15396591)
-  copy = write(10n, q2, "Copy text", 1, 30, 3960107, 15396591)
+  tools = write(10n, q2, "Tools", 1, 28, 3960107, 15396591)
+  copy = write(10n, tools, "Copy text", 1, 30, 3960107, 15396591)
   paste = write(10n, copy, "Paste", 1, 33, 3960107, 15396591)
   clear = write(10n, paste, "Clear", 1, 36, 3960107, 15396591)
   select = write(10n, clear, "Select all", 1, 39, 3960107, 15396591)
@@ -720,7 +726,7 @@ def draw(+s: State) -> Image:
   u = draw_rows(14n, t, List.drop(&2, String, rows, U32.to_nat(minus(selected, 13))), 0, minus(selected, minus(selected, 13)))
   v = draw_reader(42n, u, List.drop(&2, Line, lines, U32.to_nat(scroll)), 10, Bool.pick(U32, U32.is_eq(focus, 2), U32.min(caret, anchor), 0), Bool.pick(U32, U32.is_eq(focus, 2), U32.max(caret, anchor), 0))
   w = write(86n, v, status, 1, 54, 3960107, 15396591)
-  z = write(86n, w, "Cmd+F search | arrows navigate | drag select | Cmd+C copy | Cmd+E export", 1, 55, 6516081, 15396591)
+  z = write(86n, w, "Cmd+F search | Cmd+T tools | arrows navigate | drag select | Cmd+C copy | Cmd+E export", 1, 55, 6516081, 15396591)
   canvas.image(z)
 
 def view_dirty(+s: State, +dirty: Bool) -> State & Image:

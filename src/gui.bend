@@ -27,7 +27,7 @@ type Pending is Data:
 
 type Selection is Data:
   Selection{items: List<&2,Item>, snapshot: String, start: U32,
-    displayed: U32, blame_args: List<&2,String>, filters: Query.Filters, listing: Listing}
+    displayed: U32, view_args: List<&2,String>, filters: Query.Filters, listing: Listing}
 
 # List navigation is independent of the immutable reader selection. The full
 # parsed listing filters include the lexical query; reader filters omit it.
@@ -281,7 +281,7 @@ def files_active(state: State) -> Bool:
   U32.is_eq(mode,3)
 
 def files_saved_valid(+kind: U32) -> Bool:
-  U32.is_eq(kind,3) || U32.is_eq(kind,4) || U32.is_eq(kind,14)
+  U32.is_eq(kind,3) || U32.is_eq(kind,4) || U32.is_eq(kind,14) || U32.is_eq(kind,24)
 
 def files_saved_view(+ui: UI.State,valid: Bool) -> Files.Saved:
   match valid:
@@ -558,6 +558,8 @@ def why_capture(+state: State) -> State:
       why_nonempty(state,snap,start,filters,String.is_empty(snap))
     case 14:
       why_nonempty(state,snap,start,filters,String.is_empty(snap))
+    case 24:
+      why_nonempty(state,snap,start,filters,String.is_empty(snap))
     case 5:
       why_file(state,blame)
     case 12:
@@ -598,6 +600,8 @@ def usage_capture(+state: State) -> State:
       usage_nonempty(state,snap,start,filters,usage_scope(filters) && Bool.not(String.is_empty(snap)))
     case 14:
       usage_nonempty(state,snap,start,filters,usage_scope(filters) && Bool.not(String.is_empty(snap)))
+    case 24:
+      usage_nonempty(state,snap,start,filters,usage_scope(filters) && Bool.not(String.is_empty(snap)))
     case _:
       status(state,"Choose a captured transcript to inspect recorded usage.")
 
@@ -610,6 +614,38 @@ def usage_mode(+state: State,active: Bool) -> State:
 
 def usage(+state: State) -> State:
   usage_mode(state,files_active(state))
+
+# Tools uses the same immutable raw-record range as the captured reader. Its
+# response carries separate EOF metadata; visible tool count is not a cursor.
+def tools_request(+state: State,+snap: String,+start: U32,filters: Query.Filters) -> State:
+  queue(state,Request{24,scoped_args("activity-scope",snap,start,"40",filters),snap,start,
+    "Tools | snapshot " ++ snap ++ " | record " ++ U32.show(start)})
+
+def tools_ready(state: State,snap: String,start: U32,filters: Query.Filters,valid: Bool) -> State:
+  match valid:
+    case True{}:
+      tools_request(state,snap,start,filters)
+    case False{}:
+      status(state,"Tools needs a captured History reader. Return to History and choose a transcript first.")
+
+def tools(+state: State) -> State:
+  State{db,dir,program,ui,Selection{items,+snap,start,displayed,args,filters,listing},Form{mode,search,source,blame,files},jobs,deadline,serial} = state
+  tools_ready(state,snap,start,filters,U32.is_eq(mode,0) && files_saved_valid(displayed) && Bool.not(String.is_empty(snap)))
+
+def tools_page_ready(state: State,snap: String,start: U32,filters: Query.Filters,valid: Bool) -> State:
+  match valid:
+    case True{}:
+      tools_request(state,snap,start,filters)
+    case False{}:
+      status(state,"No further Tools page. The displayed captured range is unchanged.")
+
+def tools_paging(state: State,+snap: String,+start: U32,filters: Query.Filters,+forward: Bool,args: List<&2,String>) -> State:
+  match args:
+    case "activity" <> pinned <> source <> generation <> extent <> provider <> total <> +next <> selected <> []:
+      tools_page_ready(state,snap,Bool.pick(U32,forward,Files.number(next),UI.minus(start,40)),filters,
+        String.eq(snap,pinned) && Bool.pick(Bool,forward,U32.is_gt(Files.number(next),0),U32.is_gt(start,0)))
+    case _:
+      status(state,"Reload Tools to obtain its captured range metadata before paging.")
 
 
 def paging_next(+state: State,kind: U32,+snap: String,+next: U32,+filters: Query.Filters) -> State:
@@ -630,7 +666,11 @@ def paging_kind(+state: State,+kind: U32,+snap: String,+start: U32,+filters: Que
 
 def paging_capture(+state: State,+forward: Bool) -> State:
   State{db,dir,program,ui,Selection{items,snap,start,displayed,args,filters,+listing},form,jobs,refresh_at,serial} = state
-  paging_kind(state,displayed,snap,start,filters,forward)
+  match displayed:
+    case 24:
+      tools_paging(state,snap,start,filters,forward,args)
+    case _:
+      paging_kind(state,displayed,snap,start,filters,forward)
 
 def paging_mode(+state: State,forward: Bool,active: Bool) -> State:
   match active:
@@ -856,6 +896,8 @@ def read_job(+program: String,+dir: String,args: List<&2,String>) -> IO(Reply):
       read_scoped(program,dir,"session-scope" <> rest)
     case "why-scope" <> rest:
       read_scoped(program,dir,"why-scope" <> rest)
+    case "activity-scope" <> rest:
+      read_scoped(program,dir,"activity-scope" <> rest)
     case other:
       do IO<Reply>:
         result : Result<&2,&2,String,Json.Json> <- Client.call(program,dir,linear_args(other))
@@ -995,6 +1037,8 @@ def export_args(+kind: U32,+snap: String,+start: U32,+filters: Query.Filters,+te
       ["export-displayed",path,text]
     case 14:
       ["export-displayed",path,text]
+    case 24:
+      ["export-displayed",path,text]
     case 4:
       List.append(&2,String,scoped_args("export-why-scope",snap,start,"20",filters),[path])
     case _:
@@ -1019,7 +1063,7 @@ def export_begin(+state: State,+valid: Bool) -> IO(State):
 
 def export_capture(+state: State) -> IO(State):
   State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters,+listing},Form{+mode,+search,+source,+form,+files},+jobs,+refresh_at,+serial} = state
-  export_begin(state,Bool.not(U32.is_eq(mode,1)) && ((displayed >= 3 && displayed <= 4 : U32) || file_kind(displayed) || U32.is_eq(displayed,14)))
+  export_begin(state,Bool.not(U32.is_eq(mode,1)) && ((displayed >= 3 && displayed <= 4 : U32) || file_kind(displayed) || U32.is_eq(displayed,14) || U32.is_eq(displayed,24)))
 
 def files_export_args(ui: UI.State,path: String) -> List<&2,String>:
   ["export-displayed",path,UI.reader(ui)]
@@ -1142,6 +1186,129 @@ def text_done(+state: State,+request: Request,result: Result<&2,&2,String,String
           Bool.pick(List<&2,String>,file_kind(kind),args,blame),
           Bool.pick(Query.Filters,file_kind(kind) || U32.is_eq(kind,14),filters,request_filters(args)),listing},Form{Bool.pick(U32,file_kind(kind),2,0),search,source,form,files},jobs,refresh_at,serial}
 
+# The activity worker returns immutable identity and physical-record cursors,
+# not search-hit counts. Keep this metadata in Selection's tagged view_args;
+# neither Files nor transcript exports interpret it as a file/range request.
+def tools_text_matches(+value: Json.Json,+key: String,expected: String) -> Bool:
+  Files.text_valid(Json.field(value,key)) && String.eq(Json.get(value,key),expected)
+
+def tools_id(+value: Json.Json,+key: String) -> Bool:
+  Files.text_valid(Json.field(value,key)) && P.decimal_valid(Json.get(value,key)) &&
+    Bool.not(String.eq(Json.get(value,key),"0")) &&
+    Bool.not(Cmp.is_gt(P.decimal_compare(Json.get(value,key),"9223372036854775807")))
+
+def tools_locator(+value: Json.Json) -> Bool:
+  Files.text_valid(Json.field(value,"source")) && String.starts_with(Json.get(value,"source"),"/") &&
+    Bool.not(String.contains(Json.get(value,"source"),"\0")) && Nat.is_le(String.length(Json.get(value,"source")),8192n)
+
+def tools_scope(+value: Json.Json,filters: Query.Filters) -> Bool:
+  Query.Filters{query,provider,repo,role,after} = filters
+  tools_text_matches(value,"provider",provider) && tools_text_matches(value,"repository",repo) &&
+    tools_text_matches(value,"role",role) && tools_text_matches(value,"after",after)
+
+def tools_numbers(+value: Json.Json,keys: List<&2,String>) -> Bool:
+  match keys:
+    case []:
+      True{}
+    case key <> rest:
+      Files.number_valid(Json.field(value,key)) && tools_numbers(value,rest)
+
+def tools_next(value: Json.Json,+end: Nat,total: U32) -> Bool:
+  match value:
+    case Json.JNull{}:
+      Nat.is_ge(end,U32.to_nat(total))
+    case Json.JNumber{text}:
+      String.eq(text,Nat.show(end)) && Nat.is_lt(end,U32.to_nat(total))
+    case _:
+      False{}
+
+def tools_present(value: Maybe<&2,Json.Json>) -> Bool:
+  match value:
+    case Some{value}:
+      True{}
+    case None{}:
+      False{}
+
+def tools_has_next(value: Json.Json) -> Bool:
+  match value:
+    case Json.JObject{fields}:
+      tools_present(Json.field_scan(fields,"next",None{}))
+    case _:
+      False{}
+
+def tools_bounds(+value: Json.Json,+start: U32,+total: U32,+selected: U32,+provider: String) -> Bool:
+  U32.is_eq(selected,U32.min(40,UI.minus(total,start))) &&
+    tools_has_next(value) && tools_next(Json.field(value,"next"),Nat.add(U32.to_nat(start),U32.to_nat(selected)),total) &&
+    String.eq(Json.get(value,"verified_count"),U32.show(Bool.pick(U32,
+      String.is_empty(provider) || String.eq(provider,Json.get(value,"provider")),selected,0)))
+
+def tools_range(+value: Json.Json,+start: U32,filters: Query.Filters) -> Bool:
+  Query.Filters{query,provider,repo,role,after} = filters
+  tools_numbers(value,["start","requested_count","selected_count","verified_count","total_records"]) &&
+    String.eq(Json.get(value,"start"),U32.show(start)) && String.eq(Json.get(value,"requested_count"),"40") &&
+    tools_bounds(value,start,Files.number(Json.get(value,"total_records")),Files.number(Json.get(value,"selected_count")),provider)
+
+def tools_same_identity(+value: Json.Json,+snapshot: String,args: List<&2,String>) -> Bool:
+  match args:
+    case "activity" <> +pinned <> source <> generation <> extent <> provider <> total <> next <> selected <> []:
+      Bool.not(String.eq(snapshot,pinned)) ||
+        (String.eq(Json.get(value,"source"),source) && String.eq(Json.get(value,"generation"),generation) &&
+        String.eq(Json.get(value,"extent"),extent) && String.eq(Json.get(value,"provider"),provider) &&
+        String.eq(Json.get(value,"total_records"),total))
+    case _:
+      True{}
+
+def tools_request_args(args: List<&2,String>,snapshot: String,start: U32) -> Bool:
+  match args:
+    case "activity-scope" <> snap <> first <> "40" <> provider <> repo <> role <> after <> []:
+      String.eq(snap,snapshot) && String.eq(first,U32.show(start))
+    case _:
+      False{}
+
+def tools_request_valid(request: Request) -> Bool:
+  Request{kind,args,snapshot,start,title} = request
+  U32.is_eq(kind,24) && tools_request_args(args,snapshot,start)
+
+def tools_valid(state: State,+request: Request,+value: Json.Json) -> Bool:
+  State{db,dir,program,ui,Selection{items,snap,start,displayed,view_args,filters,listing},Form{mode,search,source,blame,files},jobs,deadline,serial} = state
+  Request{kind,+args,+snapshot,first,title} = request
+  U32.is_eq(mode,0) && tools_request_valid(request) && tools_text_matches(value,"kind","recorded_activity") &&
+    tools_text_matches(value,"snapshot",snapshot) && tools_id(value,"snapshot") && tools_locator(value) && tools_id(value,"generation") &&
+    Files.text_valid(Json.field(value,"provider")) &&
+    (String.eq(Json.get(value,"provider"),"claude") || String.eq(Json.get(value,"provider"),"codex")) &&
+    Files.text_valid(Json.field(value,"extent")) && Files.number_valid(Json.JNumber{Json.get(value,"extent")}) &&
+    Files.text_valid(Json.field(value,"text")) && tools_scope(Json.field(value,"scope"),request_filters(args)) &&
+    tools_range(value,first,request_filters(args)) && tools_same_identity(value,snapshot,view_args)
+
+def tools_metadata(+value: Json.Json) -> List<&2,String>:
+  ["activity",Json.get(value,"snapshot"),Json.get(value,"source"),Json.get(value,"generation"),Json.get(value,"extent"),
+    Json.get(value,"provider"),Json.get(value,"total_records"),U32.show(Files.next(Json.field(value,"next"))),Json.get(value,"selected_count")]
+
+def tools_title(+value: Json.Json) -> String:
+  "Tools | snap " ++ Json.get(value,"snapshot") ++ " | " ++ Json.get(value,"start") ++
+    "+" ++ Json.get(value,"selected_count") ++ "/" ++ Json.get(value,"total_records") ++ " records"
+
+def tools_apply(state: State,+value: Json.Json) -> State:
+  State{db,dir,program,ui,Selection{items,snapshot,start,displayed,args,filters,listing},form,jobs,deadline,serial} = state
+  State{db,dir,program,UI.set_status(ui,
+    "Recorded Tools loaded. Prev/Next text pages captured records; Copy/Export preserve displayed evidence."),
+    Selection{items,snapshot,start,displayed,tools_metadata(value),filters,listing},form,jobs,deadline,serial}
+
+def tools_value(+state: State,+request: Request,+value: Json.Json,valid: Bool) -> State:
+  Request{kind,args,snapshot,start,title} = request
+  match valid:
+    case False{}:
+      status(state,"Tools response did not match its captured identity, range or filters; the reader is unchanged.")
+    case True{}:
+      tools_apply(text_done(state,Request{kind,args,snapshot,start,tools_title(value)},Done{Json.get(value,"text")}),value)
+
+def tools_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
+  match result:
+    case Fail{message}:
+      status(state,message)
+    case Done{+value}:
+      tools_value(state,request,value,tools_valid(state,request,value))
+
 def read_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
   Request{+kind,+args,+snap,+start,+title} = request
   match kind:
@@ -1165,6 +1332,8 @@ def read_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.J
       files_done(state,request,result)
     case 23:
       files_done(state,request,result)
+    case 24:
+      tools_done(state,request,result)
     case _:
       text_done(state,request,Client.text_result(result))
 
@@ -1474,6 +1643,8 @@ def handle(+state: State,action: UI.Action) -> IO(Maybe<State>):
       IO.pure(Maybe<State>,Some{why(state)})
     case UI.Usage{}:
       IO.pure(Maybe<State>,Some{usage(state)})
+    case UI.Tools{}:
+      IO.pure(Maybe<State>,Some{tools(state)})
     case UI.Rebuild{}:
       do IO<Maybe<State>>:
         next : State <- rebuild(state)

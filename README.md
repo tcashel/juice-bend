@@ -81,6 +81,13 @@ does not follow symlinks or show uncommitted changes; Open repo explicitly pins
 the current HEAD again. The `repo-open`, `repo-tree`, `repo-source`, `repo-blame`
 and `repo-why` CLI commands expose the same bounded operations.
 
+Tools (or Command+T) opens recorded tool activity for the selected capture and
+filters. Prev/Next text pages 40 physical records; calls and results retain
+their own citations. A missing counterpart may be outside this page, and a
+recorded result does not prove successful execution. Copy and Export retain
+the displayed text. `activity-scope SNAPSHOT START COUNT PROVIDER REPOSITORY
+ROLE AFTER` exposes the same reader through the CLI, with at most 100 records.
+
 ## Validation and current limits
 
 ```sh

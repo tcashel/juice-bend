@@ -16,6 +16,12 @@ trace checks. Native candidate `0e1d1018…` also passed pinned repository/sourc
 paging, Blame/Why, exact copy/export, unsupported-entry refusal, and History
 restoration in Tart. These focused results do not replace the earlier full
 suite or establish complete feature/UI parity.
+The subsequent Tools integration passed 435 focused named checks across eight
+native executables. Candidate `68d221e2…` passed actual Tart paging, exact copy,
+wheel scrolling, retained reads after append/source removal, explicit latest
+navigation and two exact-body exports. See `receipts/recorded-activity.txt` and
+`native-validation.md`. This is a bounded recorded-activity view; complete
+session activity, child navigation and polished typography remain outstanding.
 
 | ID | Current result | Evidence and remaining work |
 |---|---|---|

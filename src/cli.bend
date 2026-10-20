@@ -14,6 +14,7 @@ import ./query.bend as Query
 import ./catalog.bend as Catalog
 import ./storage_inventory.bend as Inventory
 import ./repository_cli.bend as Repository
+import ./activity_cli.bend as Activity
 
 type Page is Data:
   Page{offset: U32, rows: List<&2,List<&2,Sql.Cell>>, has_more: Bool}
@@ -517,6 +518,7 @@ def help() -> IO(Unit):
     "\"search QUERY [PROVIDER REPOSITORY ROLE AFTER [OFFSET]]\",\"session SNAPSHOT START COUNT\"," ++
     "\"why SNAPSHOT [START COUNT]\",\"session-scope SNAP START COUNT PROVIDER REPO ROLE AFTER\"," ++
     "\"why-scope SNAP START COUNT PROVIDER REPO ROLE AFTER\",\"blame REPOSITORY FILE START END\"," ++
+    "\"activity-scope SNAPSHOT START COUNT PROVIDER REPOSITORY ROLE AFTER\"," ++
     "\"why-file REPOSITORY FILE START END\",\"why-commit REPOSITORY SHA\"," ++
     "\"repo-open REPO\",\"repo-tree REPO COMMIT PATH OFFSET\"," ++
     "\"repo-source REPO COMMIT PATH FIRST COUNT\",\"repo-blame REPO COMMIT PATH FIRST COUNT\"," ++
@@ -609,6 +611,8 @@ def command(db: U32,data_dir: String,cmd: String,args: List<String>) -> IO(Unit)
       read_scoped(db,args,False{})
     case "why-scope":
       read_scoped(db,args,True{})
+    case "activity-scope":
+      Activity.command(db,args)
     case "export-range-scope":
       export_scoped(db,args,False{})
     case "export-why-scope":

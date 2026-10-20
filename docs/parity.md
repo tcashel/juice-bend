@@ -20,8 +20,12 @@ browser is connected to CLI and native Files UI, with explicit pinned commits,
 directory/source paging, displayed-range Blame/Why and exact text exports.
 Focused CLI/GUI gates passed 351 checks; native Tart interaction passed commit
 pinning across changed HEAD/dirty worktree and retained History restoration.
+Recorded Tools now has a retained, scoped reader, CLI and native control.
+Its 435 focused checks and actual Tart observations cover page boundaries,
+old snapshots after append/source removal, explicit latest and exact exports.
+Pairing is page-local and conservative; child/subagent navigation remains open.
 Priority order: finish long-history append improvements; close remaining
-native validation gaps; recorded tool activity/subagent navigation; Settings;
+native validation gaps; child/subagent navigation; Settings;
 richer provider/archive
 support; full Usage and deterministic context preparation; owned-storage
 management and explicit opt-in connection/subscription surfaces. UI polish

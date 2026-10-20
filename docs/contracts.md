@@ -45,5 +45,23 @@ UI consumes storage/search functions and retains exact selected evidence keys.
 Text state uses committed Text events. Copy exports underlying Unicode, never
 glyph approximations. Renderers may show explicit missing-glyph boxes.
 
+Recorded activity uses the same retained raw/context validation and frozen
+scope. `activity-scope` accepts 1–100 physical records; the GUI requests 40.
+Its envelope carries provider, canonical source locator, generation, snapshot
+and extent as strings; bounded record counts and ordinals are JSON numbers.
+The reader owns one deferred read transaction and refuses an existing caller
+transaction. Missing or stale context checkpoints require verified rebuild;
+there is no unbounded prefix replay in this interactive path. Selected events
+are capped at 256 and 512 KiB of UTF-8; rendered text and the final escaped CLI
+response are each bounded to 1 MiB. Exceeding a bound fails the whole page.
+
+Calls/results remain separate cited occurrences. A unique ordered counterpart
+requires the same provider, source, generation, snapshot, extent, session,
+absolute repository and call ID. Duplicate, missing, order-conflicting or
+type-uncertain IDs remain unresolved. The current normalizer cannot distinguish
+some scalar/container-looking strings from coerced IDs, so pairing conservatively
+withholds those cases. Recorded errors are explicit; recorded results are not
+proof of successful execution. One canonical string serves display/copy/export.
+
 No real home history scan by default. Synthetic demo and tests use explicit,
 isolated data directories. Original Juice and source repositories are read-only.

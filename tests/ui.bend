@@ -111,6 +111,8 @@ def navigation_kind(result: UI.State & UI.Action) -> U32:
       10
     case UI.RepoParent{}:
       11
+    case UI.Tools{}:
+      12
     case _:
       0
 
@@ -161,6 +163,17 @@ def files_navigation() -> IO(Unit):
     require(U32.is_eq(navigation_kind(UI.event(Mouse{32,400,0,True{}},files)),8) &&
       U32.is_eq(navigation_kind(UI.event(Mouse{32,768,0,True{}},files)),6),
       "Files controls preserve Storage and Versions hit targets")
+
+def tools_navigation() -> IO(Unit):
+  +state = UI.set_query(UI.init(),"literal query")
+  do IO<Unit>:
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,448,0,True{}},state)),12),
+      "Tools has a distinct sidebar row below Scope")
+    require(U32.is_eq(navigation_kind(UI.event(Key{116,True{}},UI.set_modifiers(state,True{},False{}))),12),
+      "Command-T opens recorded Tools")
+    require(String.eq(UI.query(changed(UI.event(Key{116,True{}},UI.set_modifiers(state,True{},False{})))),"literal query") &&
+      U32.is_eq(navigation_kind(UI.event(Key{116,True{}},state)),0),
+      "Tools shortcut preserves query and plain T is not a command")
 
 def after_clipboard(result: Result<&1, &1, U32 & String, U32 & (String & String)>, state: UI.State) -> IO(Maybe<UI.State>):
   match result:
@@ -222,6 +235,7 @@ def dispatch(args: List<String>) -> IO(Unit):
         long_drag()
         result_navigation()
         files_navigation()
+        tools_navigation()
 
 def main() -> IO(Unit):
   do IO<Unit>:
