@@ -85,6 +85,14 @@ Up to four candidate records per snapshot share an 8 MiB raw/predecessor read
 budget per page. Missing context never triggers prefix replay just for a title.
 See `receipts/history-native.txt`; this does not expand request eligibility.
 
+Continuation brief is now reachable from the pinned transcript. It narrows the
+exact opened range/filters to an explicitly chosen repository, shows bounded
+recorded facts and uncertainty, and rechecks the full preview before copying or
+exporting. Root edits retire it; Back restores the exact reader. App `78c396eb…`
+passed actual native keyboard/copy/export/retention checks. See
+`receipts/brief-native.txt`; this is not a generated summary or complete-session
+claim. Its technical preamble, empty fields and wrapping still need polish.
+
 Current priority: transcript/evidence readability, remaining validation gaps,
 richer provider/archive support, deterministic context
 preparation and explicit opt-in connection/subscription surfaces. Rebuild is

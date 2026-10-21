@@ -1,4 +1,5 @@
 import Base
+import ./brief_cli.bend as Brief
 import ./store.bend as Store
 import ./history_titles.bend as HistoryTitles
 import ./sql.bend as Sql
@@ -275,18 +276,25 @@ def scoped_content(db: U32,+snapshot: String,start: String,count: String,
     checked(U32.is_gt(size,0) && U32.is_le(size,100),"count must be from 1 to 100")
     Scoped.page(db,snapshot,from,size,scope,why)
 
-def read_scoped(db: U32,args: List<String>,+why: Bool) -> IO(Unit):
+def scoped_response(header: Maintenance.Header,+snapshot: String,+start: String,+count: String,+why: Bool,text: String) -> String:
+  Maintenance.Header{_,_,records,_} = header
+  +selected = Domain.bounded_count(Store.number(start),U32.min(Store.number(count),Bool.pick(U32,why,20,100)),records)
+  "{\"snapshot\":" ++ Json.quote(snapshot) ++ ",\"start\":" ++ U32.show(Store.number(start)) ++
+    ",\"requested_records\":" ++ U32.show(Store.number(count)) ++ ",\"selected_records\":" ++ U32.show(selected) ++ ",\"kind\":" ++
+    Json.quote(Bool.pick(String,why,"scoped_recorded_evidence","scoped_transcript_page")) ++
+    ",\"complete_export\":false,\"text\":" ++ Json.quote(text) ++ "}"
+
+def read_scoped(+db: U32,args: List<String>,+why: Bool) -> IO(Unit):
   match args:
     case +snapshot <> +start <> +count <> provider <> repo <> role <> after <> []:
       do IO<Unit>:
         +text : String <- scoped_content(db,snapshot,start,count,Scoped.Scope{provider,repo,role,after},why)
         checked(Bool.not(String.starts_with(text,"Why unavailable:")),text)
-        IO.print("{\"snapshot\":" ++ Json.quote(snapshot) ++ ",\"start\":" ++ U32.show(Store.number(start)) ++
-          ",\"requested_records\":" ++ U32.show(Store.number(count)) ++ ",\"kind\":" ++
-          Json.quote(Bool.pick(String,why,"scoped_recorded_evidence","scoped_transcript_page")) ++
-          ",\"complete_export\":false,\"text\":" ++ Json.quote(text) ++ "}")
+        header : Maintenance.Header <- Maintenance.header(db,snapshot)
+        IO.print(scoped_response(header,snapshot,start,count,why,text))
     case _:
       failure(Unit,"usage: session-scope or why-scope SNAP START COUNT PROVIDER REPO ROLE AFTER")
+
 
 def export_scoped(+db: U32,args: List<String>,+why: Bool) -> IO(Unit):
   match args:
@@ -479,6 +487,18 @@ def export_displayed(+db: U32,+path: String) -> IO(Unit):
       ",\"kind\":\"displayed_evidence\",\"verification\":\"not_reverified\"," ++
       "\"exact_displayed_text\":true,\"complete_export\":false}")
 
+# Exact text sink for GUI-authorized brief exports. Revalidation belongs to the
+# caller immediately before this write; this command makes no evidence claim.
+# It reuses the existing strict UTF8 reader and private no-clobber output path.
+def export_brief_text(+db: U32,+path: String) -> IO(Unit):
+  do IO<Unit>:
+    input : File <- IO.try(File,File.open("/dev/stdin","r"))
+    +text : String <- displayed_read(1048577n,0,[],input)
+    checked(Bool.not(String.is_empty(text)) && Bool.not(String.contains(text,"\0")) &&
+      Nat.is_le(List.length(&2,U32,Domain.encode(text)),8192n),"Brief text must contain 1 to 8192 valid UTF8 bytes without NUL")
+    Maintenance.write_text(db,path,text)
+    IO.print("{\"path\":" ++ Json.quote(path) ++ ",\"kind\":\"continuation_brief_text\",\"exact_supplied_text\":true}")
+
 def citation_result(result: Result<&2,&2,String,String>) -> IO(Unit):
   match result:
     case Fail{error}:
@@ -540,17 +560,26 @@ def help() -> IO(Unit):
     "\"repo-source REPO COMMIT PATH FIRST COUNT\",\"repo-blame REPO COMMIT PATH FIRST COUNT\"," ++
     "\"repo-why REPO COMMIT PATH FIRST COUNT\"," ++
     "\"usage SNAPSHOT [START [COUNT]]\",\"session-usage SNAPSHOT\"," ++
+    "\"brief-prepare (versioned stdin)\",\"brief-check (versioned stdin)\"," ++
     "\"citation JSON\",\"export SNAPSHOT PATH\",\"export-range SNAPSHOT START COUNT PATH\"," ++
     "\"export-why SNAPSHOT START COUNT PATH\",\"export-blame REPOSITORY FILE START END PATH\"," ++
     "\"export-range-scope SNAP START COUNT PROVIDER REPO ROLE AFTER PATH\"," ++
     "\"export-why-scope SNAP START COUNT PROVIDER REPO ROLE AFTER PATH\"," ++
-    "\"export-displayed PATH\",\"export-all SNAPSHOT PATH\",\"verify SNAPSHOT\",\"rebuild SNAPSHOT\"]," ++
+    "\"export-brief-text PATH\",\"export-displayed PATH\",\"export-all SNAPSHOT PATH\",\"verify SNAPSHOT\",\"rebuild SNAPSHOT\"]," ++
     "\"limits\":{\"rows\":100,\"page_records\":100,\"why_records\":20,\"refresh_batch\":8,\"displayed_stdin_bytes\":1048576}," ++
     "\"refresh_all\":\"inspect failed and discovery.status in the report; a successful report can contain per-source failures\"," ++
     "\"export_all\":\"stream all retained raw bytes in the accepted snapshot\"}")
 
 def command(db: U32,data_dir: String,cmd: String,args: List<String>) -> IO(Unit):
   match cmd:
+    case "brief-prepare":
+      match args:
+        case []: Brief.run(db,"brief-prepare")
+        case _: IO.die(Unit,2,"brief-prepare accepts only its versioned stdin request")
+    case "brief-check":
+      match args:
+        case []: Brief.run(db,"brief-check")
+        case _: IO.die(Unit,2,"brief-check accepts only its versioned stdin request")
     case "refresh-preferences":
       RefreshPreferences.command(db,"refresh-preferences",args)
     case "refresh-preferences-set":
@@ -701,6 +730,10 @@ def command(db: U32,data_dir: String,cmd: String,args: List<String>) -> IO(Unit)
           export_all(db,snapshot,path)
         case _:
           failure(Unit,"usage: export-all SNAPSHOT PATH (destination must not exist)")
+    case "export-brief-text":
+      match args:
+        case path <> []: export_brief_text(db,path)
+        case _: failure(Unit,"usage: export-brief-text PATH; exact checked preview on UTF8 stdin")
     case "export-displayed":
       match args:
         case Con{path,Nil{}}:

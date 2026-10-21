@@ -1,0 +1,59 @@
+{
+  "app_sha256": "78c396eb02c15fed7d4c3266185244ffe851d7333872042090d9bb14cbb66935",
+  "preview_bytes": 2524,
+  "preview_sha256": "2d623aa2be8347f31c6fbb35426eba8394d87ff97c8cd0659ffb401078eb0059",
+  "query_clipboards": {
+    "query-prefix": true,
+    "query-append": true,
+    "query-prepend": true,
+    "query-reversed-left": true,
+    "query-reversed-right": true,
+    "query-next-step": true,
+    "query-start-bound": true,
+    "query-end-bound": true
+  },
+  "brief_copies": {
+    "brief-whole": true,
+    "brief-reader-all": true,
+    "brief-before-root-edit": true,
+    "brief-reprepared": true,
+    "brief-retained": true
+  },
+  "brief_selected": "Continuation",
+  "exports": [
+    {
+      "bytes": 2524,
+      "sha256": "2d623aa2be8347f31c6fbb35426eba8394d87ff97c8cd0659ffb401078eb0059",
+      "exact": true
+    },
+    {
+      "bytes": 2524,
+      "sha256": "2d623aa2be8347f31c6fbb35426eba8394d87ff97c8cd0659ffb401078eb0059",
+      "exact": true
+    }
+  ],
+  "back_bytes": 3965,
+  "back_text_and_pixels_equal": true,
+  "empty_root_copy_export_refused": true,
+  "edited_root_copy_export_refused": true,
+  "held_native_delete_passed": true,
+  "resume_exit": 0,
+  "final_windows": [],
+  "dock_restored": true,
+  "prior_attempts": "Earlier query-clear shortcut and Dock-shortcut setup failures were preserved. Held native Delete and explicit query clearing passed without application changes.",
+  "retention_scope": "Snapshot2 after all original source paths became unavailable; source1 append/rewrite old-capture assertions are separate fixture evidence",
+  "limitations": [
+    "No timed native stale-callback race",
+    "Unsupported glyphs and full shaping/IME/accessibility/resize remain",
+    "No new performance or full-suite/proof claim"
+  ],
+  "vm_stopped": true,
+  "lease_released": true,
+  "runner_exit": 130,
+  "date": "2026-10-21",
+  "platform": "macOS 27.0 arm64 Tart 2.40.1",
+  "network": "host-only",
+  "app_inputs": 62,
+  "upstream_hashes": 88,
+  "application": "Bend 2 with unchanged SQLite bridge"
+}

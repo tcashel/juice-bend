@@ -31,18 +31,19 @@ def pointer_action(result: UI.State & UI.Action) -> String:
   (view,action) = result
   match action:
     case UI.Settings{}: "settings"
+    case UI.Brief{}: "brief"
     case UI.Rebuild{}: "rebuild"
     case _: "other"
 
 def actions() -> IO(Unit):
   do IO<Unit>:
-    require(String.eq(UI.side_label(False{},12,False{}),"Index settings"),
-      "normal rail labels the route Index settings")
+    require(String.eq(UI.side_label(False{},12,False{}),"Prepare brief"),
+      "normal rail labels the route Prepare brief")
     require(String.eq(UI.side_label(True{},17,False{}),"Rebuild capture") &&
       String.eq(UI.side_label(True{},0,False{}),"Back to history"),
       "Settings exposes Rebuild capture and keeps its first Back control")
-    require(String.eq(pointer_action(UI.event(Mouse{24,U32.add(G.sidebar_y(12),8),0,True{}},Fixture.ui(Fixture.ready()))),"settings"),
-      "actual normal pointer hit emits Settings without Rebuild")
+    require(String.eq(pointer_action(UI.event(Mouse{24,U32.add(G.sidebar_y(12),8),0,True{}},Fixture.ui(Fixture.ready()))),"brief"),
+      "actual normal pointer hit emits Brief without Rebuild")
     require(String.eq(pointer_action(UI.event(Mouse{24,U32.add(G.sidebar_y(17),8),0,True{}},Fixture.ui(Fixture.panel()))),"rebuild"),
       "actual Settings pointer hit emits Rebuild")
 
@@ -101,7 +102,7 @@ def no_target_shown(states: List<&2,Gui.State>) -> Bool:
 
 def route() -> IO(Unit):
   do IO<Unit>:
-    +opened : List<&2,Gui.State> <- click([Fixture.ready()],12)
+    +opened : List<&2,Gui.State> <- click([Fixture.ready()],10)
     require(target_shown(opened),"Index settings pointer route shows exact target and starts no writer")
     require(existing_fields(opened),"Rebuild target notice preserves every existing Settings field group")
     +started : List<&2,Gui.State> <- click(opened,17)
@@ -115,7 +116,7 @@ def route() -> IO(Unit):
 
 def missing() -> IO(Unit):
   do IO<Unit>:
-    +opened : List<&2,Gui.State> <- click([no_target(Fixture.ready())],12)
+    +opened : List<&2,Gui.State> <- click([no_target(Fixture.ready())],10)
     require(no_target_shown(opened),"Settings without a captured snapshot explains how to select its target")
     +refused : List<&2,Gui.State> <- click(opened,17)
     require(String.eq(writer(refused),"none") && String.contains(status(refused),"Select a captured transcript"),
@@ -147,7 +148,7 @@ def completed(states: List<&2,Gui.State>) -> List<&2,Gui.State>:
 
 def completion() -> IO(Unit):
   do IO<Unit>:
-    opened : List<&2,Gui.State> <- click([Fixture.ready()],12)
+    opened : List<&2,Gui.State> <- click([Fixture.ready()],10)
     started : List<&2,Gui.State> <- click(opened,17)
     +done : List<&2,Gui.State> <- IO.pure(List<&2,Gui.State>,completed(started))
     require(String.eq(writer(done),"none") && String.contains(status(done),"Verified search rows rebuilt for Snapshot 7"),

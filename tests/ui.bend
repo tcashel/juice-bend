@@ -206,6 +206,7 @@ def settings_action(result: UI.State & UI.Action) -> String:
     case UI.Refresh{}: "refresh"
     case UI.Pause{}: "automatic"
     case UI.Settings{}: "back"
+    case UI.Rebuild{}: "rebuild"
     case _: "other"
 
 def settings_navigation() -> IO(Unit):
@@ -226,7 +227,7 @@ def settings_navigation() -> IO(Unit):
       String.eq(settings_action(UI.event(Mouse{32,696,0,True{}},state)),"28800") &&
       String.eq(settings_action(UI.event(Mouse{32,728,0,True{}},state)),"86400"),"Settings exposes exact four-hour eight-hour and daily choices")
     require(String.eq(settings_action(UI.event(Mouse{32,144,0,True{}},state)),"back") &&
-      String.eq(settings_action(UI.event(Mouse{32,832,0,True{}},state)),"back"),"Settings Back has visible nonrecursive exit controls")
+      String.eq(settings_action(UI.event(Mouse{32,832,0,True{}},state)),"rebuild"),"Settings keeps its first Back control and reachable final Rebuild action")
     require(UI.result_available(UI.SettingsResults{0,32,"Pause",True{}},True{}) &&
       Bool.not(UI.result_available(UI.SettingsResults{28,32,"Pause",True{}},True{})) &&
       String.eq(UI.result_label(UI.SettingsResults{28,32,"Pause",True{}}),"29-32/32"),"Settings folder paging reaches all thirty-two bounded rows and stops at the end")
@@ -255,6 +256,10 @@ def probe_action(result: UI.State & UI.Action) -> IO(Maybe<UI.State>):
     case UI.Quit{}:
       IO.pure(Maybe<UI.State>, None{})
     case UI.Copy{text}:
+      do IO<Maybe<UI.State>>:
+        result : Result<&1, &1, U32 & String, U32 & (String & String)> <- UI.clipboard_copy(text)
+        after_clipboard(result, state)
+    case UI.CopyStatus{text}:
       do IO<Maybe<UI.State>>:
         result : Result<&1, &1, U32 & String, U32 & (String & String)> <- UI.clipboard_copy(text)
         after_clipboard(result, state)

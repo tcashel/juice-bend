@@ -1,0 +1,56 @@
+Continuation brief and keyboard selection — native evidence, 2026-10-21
+
+All first-party application/UI behavior is Bend 2. SQLite bridge unchanged.
+Final native app SHA256: 78c396eb02c15fed7d4c3266185244ffe851d7333872042090d9bb14cbb66935
+Generated C SHA256: 00164e528f95b20763cb5fa2f6576396ba8e771d50d8e150748a023fd634cc9d
+App bytes: 14732920. All 62 app inputs and 88 upstream hashes unchanged.
+Native UI host: macOS 27.0 / 26A428 / arm64, Tart 2.40.1, host-only network.
+Physical compiler host: macOS 27.0.1 / 26A434 / arm64.
+
+Production gate history (distinct build observations)
+- First candidate 1c661eb78bd15e104fee0c562e33d5317585767b8f33855b2daf5e1ab2721759:
+  backend84, safe-text85, adapter123, GUI46, actual-app-driver53 PASS lines;
+  every gate exited0, stderr0, recorded inputs unchanged. These counts include
+  documented fixture/command checks and suite banners, not just assertions.
+- Keyboard correction: 46 assertions on binary
+  ba6edb98ada872710bbee3f91931096908a1dcfa06effe8502263433e2c23693;
+  exit0, stderr0, all11 recorded inputs unchanged. The initial test helper's
+  recursion-order rejection was preserved, then corrected without app changes.
+- Final app above: existing verified driver
+  38b4fe8f7bdad8d08cc79b52fa64c6c4c2a83002d8735163227f50d202469b1a
+  passed53 lines, exit0/stderr0; driver was reused, not newly compiled.
+
+Actual native UI on final app
+- Eight exact query clipboard cases: Unicode prefix, append/prepend, reversed
+  collapse Left/Right, next scalar step, start/end boundaries.
+- Native held Delete (key51 down150ms/up) cleared selected query; empty-copy
+  sentinel remained unchanged and keyboard-ok replacement copied exactly.
+- Brief: opened exact snapshot2 physical range0+3 from a requested40-record page;
+  empty repository refused Copy/Export; explicit synthetic repository prepared.
+- Whole button, Select All, before-root-edit, re-prepared and retained copies all
+  equal2524 bytes. Actual Cmd+A/Left/Shift+Right12/Cmd+C copied Continuation.
+- Two exact exports, mode0600, SHA256:
+  2d623aa2be8347f31c6fbb35426eba8394d87ff97c8cd0659ffb401078eb0059
+- Root edit retired preview; Copy preserved sentinel and Export created no file.
+- Back and retained reads restored identical3965-byte text and identical pixels.
+  Fixture mutated another source into snapshots7/8, then moved the captures
+  directory: original paths became unavailable. Selected snapshot2 remained
+  exact; the other source's old-capture preservation has separate fixture checks.
+- All resumed steps exit0/stderr0, all windows closed, original Boolean Dock
+  preference restored, owned VM stopped and lease released.
+
+Earlier evidence is not overwritten
+First native candidate exposed a real plain-arrow selection bug, corrected in
+final app. Its pointer/Shift copy/export checks remain a distinct observation.
+On final app the initial query-clear shortcut did not clear the query; a later
+Dock shortcut also failed. Both setup failures remain preserved. A held native
+Delete event and explicit Clear search action passed; no app changes were made
+between these final-app attempts. The final run did not change Dock visibility.
+
+Limits
+No hardware keyboard, timed native stale-worker race, full-suite/proof rerun or
+new performance claim. Preview policy is bounded and withholds recognized
+sensitive patterns; user review remains necessary. Citations hash source locators
+and require the originating library/preview mapping for local resolution.
+Request-first presentation, wrapping, empty-field suppression, unavailable-action
+styling, missing glyphs, shaping/IME/accessibility/resize remain open.

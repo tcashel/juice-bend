@@ -1,5 +1,23 @@
 # Acceptance evidence
 
+## Continuation brief and keyboard selection — 2026-10-21
+
+App `78c396eb…` prepares a bounded brief from the exact opened capture range,
+filters and explicitly entered repository. Copy/export recheck the full preview;
+root edits retire it. Plain arrows now collapse selections to the correct edge.
+Actual Tart checks passed eight Unicode/query keyboard cases, held native Delete,
+exact selected and whole Brief copy, two private exports, empty/edited-root
+refusal, and identical Back text/pixels after original source paths became
+unavailable. The final 2,524-byte exports match the checked preview exactly.
+
+The preceding candidate passed five production gates; the corrected selection
+path passed 46 assertions and the final app passed the existing 53-line runtime
+driver. These are distinct observations, not a full-suite/proof/performance run.
+The final app has 62 unchanged inputs and all 88 upstream hashes verified.
+Earlier automation setup failures and the original arrow bug are retained in the
+[receipt](receipts/brief-native.txt); [summary](../benchmarks/results/tart-brief-summary.json)
+records the final native scope. Readability and missing-glyph work remain.
+
 ## Verified request titles in History — 2026-10-21
 
 App `b1cc6430…` shows a bounded, verified recorded request as the History title,

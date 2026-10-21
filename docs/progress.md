@@ -4,90 +4,91 @@
 
 Functional and pleasant native UX parity with SwiftUI Juice, excluding embeddings
 and model features, remains **in progress**. No user answer or approval is pending.
-All maintained app behavior/UI is Bend 2; the unchanged 418-line SQLite bridge is
-the native exception. Lean is optional development proof checking, not runtime.
-Mise pins Bun 1.4.2 and Bend 2.0.37 at 60ca80aedeec9d8f0629b5f10dd19457d8ad67af.
-Original Juice and provider data remain read-only; all validation is synthetic.
-Only update tcashel/juice-bend draft PR #1; no merge, force push or distribution.
-Preserve the protected checkout index and all existing changes. Publication uses
-an explicit allowlist and separate index in ignored build/publication.git.
+The goal is active. All maintained app behavior/UI is Bend 2; the unchanged
+418-line SQLite bridge is the native exception. Lean is optional proof checking,
+not runtime. Mise pins Bun 1.4.2 and Bend 2.0.37 at
+60ca80aedeec9d8f0629b5f10dd19457d8ad67af. Original Juice and provider data remain
+read-only; validation is synthetic. Only update tcashel/juice-bend draft PR #1;
+no merge, force push or distribution. Preserve all local changes and protected
+checkout index. Publication uses an explicit allowlist and separate index in
+ignored build/publication.git.
 
-## Working executable and evidence
+## Working executable and observed slice
 
-Standard `build/juice-bend`, named `build/juice-bend-history`, and
-`build/Juice Bend History.app` contain observed native binary
-`b1cc6430206dd6f24059cffb69f005acc9abda5a7cb8e0ad9535d7b068efadf9`
-(13,285,648 bytes; 58 unchanged application inputs and 88 upstream hashes).
-Isolated launcher status passed. Prior Reading/Request/Polished/Usage/Context apps remain.
-`mise run run -- --demo` builds current source into a synthetic isolated demo.
+Standard `build/juice-bend`, named `build/juice-bend-brief-keyboard`, and
+`build/Juice Bend Brief Keyboard.app` contain observed native binary
+`78c396eb02c15fed7d4c3266185244ffe851d7333872042090d9bb14cbb66935`
+(14,732,920 bytes, 62 unchanged app inputs and all 88 upstream hashes verified).
+Isolated empty-library launcher status passed. Prior Brief/History/Reading and
+other named apps remain. `mise run run -- --demo` builds current source into an
+isolated synthetic demo.
 
-- History titles: 199 focused production checks / 142 unchanged inputs. Actual
-  Tart passed six titles, provider/repository filters, exact scoped copy/export,
-  Usage Back and retained text/pixels after append/rewrite/source absence. Only
-  title cells change; Search and opening identity remain unchanged. See
-  `receipts/history-native.txt` and `benchmarks/results/tart-history-summary.json`.
-- Previous reading slice: request-first Why, scoped content before citation, tab
-  marker without canonical text changes, and reachable selected-snapshot Rebuild.
-  Six production executables passed 107 checks with 155 unchanged inputs. Actual
-  Tart passed six Why cases, exact Unicode copy, four mode 0600 exports, raw-exact
-  Rebuild, empty-target refusal, Back restoration and retained/restarted reads
-  after append/rewrite/source absence. See `receipts/reading-native.txt` and
-  `benchmarks/results/tart-reading-summary.json`.
-- Previous recorded-request policy passed 423 focused checks; native polish
-  passed 604. Usage, Settings/source controls, Files, Tools and Related have
-  separate actual-native receipts in `native-validation.md`. These are distinct
-  build observations, not a rerun of everything on the newest binary.
-- Context batching passed 3,315 checks including 27 process-crash cuts. Physical-Mac
-  100k observations: initial 36.194 s, unchanged 3.910 s, append 16 records 23.816 s;
-  search/late/scoped-late p95 42/7/17 ms. Marginal append tuning is deferred per
-  owner priorities. No Swift comparison; any future comparison uses the same
-  host or VM and equivalent work. See `performance.md`.
-- Earlier full suite: 40 executables / 2,960 checks. Twelve unchanged production
-  laws passed BendTT and Lean 4.34. Linux passed 300 portable checks. No new
-  full-suite, proof, performance or unsupported-glyph acceptance is claimed.
+The new continuation brief freezes the exact opened range/filters and requires an
+explicit repository. Copy/export recheck the entire preview. Root edits and Back
+retire pending effects. Native selection now collapses to the correct edge on
+plain Left/Right; Shift extends from the active caret.
+
+Actual Tart passed eight query clipboard cases, held native Delete, Brief selected
+and whole copy, two exact private exports, empty/edited-root refusal, retained
+reads and identical Back text/pixels. Both exports equal the checked 2,524-byte
+preview. Snapshot 2 remained selected while the fixture mutated another source
+into 7/8 and moved all original source paths away. Separate fixture assertions
+cover that other source's old capture; this is not a timed native stale-worker
+race. First-run query-clear and Dock shortcut failures remain separately saved.
+Held native key51 Delete and explicit Clear search passed without app changes.
+
+First candidate `1c661eb…` passed five production gates (84/85/123/46/53 PASS
+lines including documented fixture/command checks and banners). The corrected
+selection path passed 46 assertions; the final app passed the existing verified
+53-line runtime driver. These are distinct builds, not a new full-suite, proof or
+performance run. See `receipts/brief-native.txt`, `receipts/brief-build-inputs.sha256`
+and `benchmarks/results/tart-brief-summary.json`.
+
+Earlier History: 199 focused checks, six native titles/scopes/copy/export/Back.
+Reading: 107 focused checks, six native Why cases, four exports, selected-snapshot
+Rebuild and retained restart. Earlier full suite: 40 executables / 2,960 checks;
+twelve production laws passed BendTT and Lean 4.34. Linux passed 300 portable
+checks. Context batching passed 3,315 checks including 27 crash cuts. Physical-Mac
+100k timings: initial 36.194 s, unchanged 3.910 s, append 16 records 23.816 s;
+search/late/scoped-late p95 42/7/17 ms. Marginal tuning is deferred per owner
+priorities. No Swift comparison; any comparison must use the same host and work.
+Exact historical build scopes remain in native-validation.md and performance.md.
 
 ## Exact continuation
 
-1. Reading is published at `514fa027f3620e931aa306a78ec60dac9c315764`, tree
-   `9217635cdf0231dfa1e7b936acd340ddb084e239`, as a non-forced fast-forward of
-   `e31c78bfa42875fbacca4c02dc6c57e46d53fb18`. PR #1 has 21 commits and was
-   freshly verified open/draft/unmerged, with auto-merge unset. Exact receipts:
-   `build/reading-publication.json`, `build/reading-remote.json` and bare ref
-   `published-reading-validation`. All 57 app inputs match the published tree.
-   Verify live PR head before another expected-SHA update. Keep PR #1 draft and
-   unmerged; do not modify the protected checkout index.
-2. Native run `build/tart/reading-uxajzehi` is complete. Owned windows closed;
-   Dock restored; runner 14470 exited 130; VM stopped and owned lease released.
-   Standard app promotion is in `build/reading-promotion.json`. Raw traces and
-   screenshots remain ignored. No reading compiler or VM remains active.
-3. History request titles are adopted and native-validated. Gates are bound by
-   `build/history-production-summary.json`; app by `build/history-build.json`.
-   Native run `build/tart/history-et9xg9hl` completed; owned windows closed,
-   Dock restored, runner 11397 exited 130, VM stopped, lease absent. The first
-   Search oracle wrongly expected start 0; corrected start 1 matched the actual
-   hit and reader exactly. No app fix was needed. Promotion is recorded in
-   `build/history-promotion.json`. Publish the explicit History source/test/docs
-   allowlist against the verified Reading head above, then record its exact
-   remote commit/tree without changing the protected checkout index.
-4. Bounded deterministic continuation brief is isolated under
-   `build/continuation-brief`, using its approved CONTRACT.md. Domain agent owns
-   isolated implementation. Backend passed 84 native checks (6 fixture commands)
-   and redaction helper 85; the later dedicated-fields wording change is separately
-   hashed, not retroactively counted. Protocol adapter passed 123 checks (121 behavioral + 2 fixture commands),
-   with 101 unchanged inputs; `receipts/adapter-summary.json` binds the later
-   wording and adapter. `build/brief-ui` is resolving isolated Bend frontend
-   constraints before its native gates; production remains untouched.
-   Preview must bind exact capture/range/scope, disclose uncertainty/omissions,
-   redact recognized credentials/paths, and revalidate exact text before copy.
-   It must never execute captured repository paths or invent new instructions.
-5. `build/archive-coverage` has a reviewed additive unsupported-archive count and
-   native refresh-notice patch, not yet compiled/adopted. `build/archive-decoder`
-   is implementing a separate pure-Bend Zstandard decoder; no subset is claimed
-   as complete compressed-archive support. Serialize compiler slots: brief UI, archive entropy, then archive-coverage gates.
-   No root compiler or VM remains active. Audit `build/parity-next-audit.md`
-   records remaining archive/attachment coverage
-   and explicit opt-in connections/subscription surfaces. No implicit account
-   access, provider changes, billing invention or model-storage cleanup.
-   Request eligibility remains bounded to 16 actor records / 64 generations.
-   CJK/emoji/combining glyphs, full IME/shaping/accessibility, resize and latency
-   remain open/upstream-limited. Functional and visual parity is not complete.
+1. This checkpoint accompanies the Brief source, tests and native receipts.
+   Earlier published base is History `cc5a0397a4804530af4ae97a85143caba92533db`,
+   tree `811e00905a360b0c7ef3d60889e3b605ba3a80d9`. Brief publication uses
+   `build/brief-publication.json` and `build/brief-remote.json`. Verify the live
+   PR head before the next expected-SHA fast-forward. Keep PR open/draft/unmerged.
+2. Brief native run `build/tart/brief-keyboard-plan` is complete. Resumed guest
+   steps exited 0, all owned windows closed, original Boolean Dock 0 restored,
+   runner 40123 exited 130, VM stopped and lease absent. Original failed attempts
+   remain under first-run-artifacts and resume-1-artifacts. Native summary and
+   promotion: `build/tart/brief-keyboard-plan/artifacts/native-summary.json` and
+   `build/brief-keyboard-promotion.json`. No root compiler or VM remains running.
+3. Archive integration remains isolated under `build/archive-integration`.
+   Agent archive_decoder owns the compiler for its remaining focused gates.
+   Production is unchanged. It has reported native metadata 90, maintenance 60,
+   compressed capture 40 and atomic safety 3,412 assertions, including 43 rejection
+   cases, 30 owned-process kill boundaries and an actual old-writer schema fence.
+   Read current receipts/HANDOFF before adoption; broad-regression orchestration
+   and genuine old-schema fixture corrections have separate failed attempts.
+   Resource-cap and real CLI-route gates remain to verify. Decoder's earlier 485
+   assertions are separate. Keep helper modules out of top-level standalone test
+   glob. Archive profile initially bounds input 1 MiB / logical 4 MiB; that is not full
+   archive parity or a peak-memory claim. Review schema3 migration, exact owned
+   container plus logical stream, byte-space labels, final publication gates,
+   source-independent dual exports/rebuild, and all failure paths together.
+4. Request-first Brief readability is isolated in `build/brief-readability`.
+   Its patch passes `git apply --check`, but has no runtime verdict: new layout,
+   omitted empty fields, full policy/citations after facts, format v2 and 34
+   declared assertions. Root still needs code review, compilation, tests and
+   actual visual validation. Merge archive's logical_source_bytes commitment and
+   wording explicitly; never overwrite either source wholesale. Do not weaken
+   preview identity, byte bounds, request eligibility or full revalidation.
+5. Remaining parity includes archive/attachment coverage, explicit opt-in
+   connection/subscription surfaces and pleasant interaction/visual quality.
+   CJK/emoji/combining glyphs, shaping/IME/accessibility, resize and measured
+   input-to-photon latency remain open/upstream-limited. No implicit account
+   access, provider changes, billing invention, models or model-storage cleanup.

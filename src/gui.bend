@@ -11,6 +11,7 @@ import ./gui_files.bend as Files
 import ./gui_relations.bend as Related
 import ./gui_settings.bend as Settings
 import ./gui_usage.bend as Usage
+import ./gui_brief.bend as Brief
 import ./refresh_preferences.bend as Refresh
 
 # The window owns no effectful database path. Every operation is a bounded call
@@ -44,6 +45,8 @@ type Navigation is Data:
   RelatedNavigation{origin: Selection,origin_view: UI.Bookmark,origin_search: String,
     page: Maybe<&2,Related.Page>,page_view: Maybe<&2,UI.Bookmark>,
     previous: List<&2,String>,phase: U32,target: Maybe<&2,Related.Reference>}
+  BriefNavigation{origin: Selection,origin_view: UI.Bookmark,origin_search: String,
+    prior: List<&2,Navigation>,model: List<&2,Brief.Model>}
   UsageNavigation{origin: Selection,origin_view: UI.Bookmark,origin_search: String,
     prior: List<&2,Navigation>,ready: Bool}
 
@@ -249,6 +252,7 @@ def navigation_phase(value: Navigation) -> U32:
     case NoNavigation{}: 3
     case RelatedNavigation{origin,view,search,page,page_view,previous,phase,target}: phase
     case UsageNavigation{_,_,_,_,_}: 4
+    case BriefNavigation{_,_,_,_,_}: 5
 
 def related_filters(value: Navigation) -> Query.Filters:
   match value:
@@ -1279,7 +1283,7 @@ def usage_request_valid(request: Request,value: Navigation,+capture: Json.Json) 
     case UsageNavigation{Selection{items,+snap,first,displayed,view_args,filters,listing},_,_,prior,False{}}:
       U32.is_eq(kind,14) && String.eq(snapshot,snap) && U32.is_eq(start,first) &&
         String.eq(String.join(args,"\0"),String.join(["session-usage",snap],"\0")) &&
-        usage_item_identity(items,capture,snapshot) && usage_view_identity(view_args,capture) &&
+        usage_item_identity(items,capture,snapshot) && usage_view_identity(Brief.metadata_base(view_args),capture) &&
         usage_related_identity(navigation_value(prior),capture)
     case _: False{}
 
@@ -1535,8 +1539,18 @@ def read_scoped(program: String,dir: String,args: List<&2,String>) -> IO(Reply):
       Process.run(program,"--data-dir" <> dir <> linear_args(args),"",1048576,60000)
     return Reply{Client.completed(result)}
 
+def brief_read_job(+program: String,+dir: String,+command: String,+body: String) -> IO(Reply):
+  do IO<Reply>:
+    result : Result<&1,&1,U32 & String,U32 & (String & String)> <-
+      Process.run(program,["--data-dir",dir,command],body,131072,60000)
+    return Reply{Client.completed(result)}
+
 def read_job(+program: String,+dir: String,args: List<&2,String>) -> IO(Reply):
   match args:
+    case "brief-prepare" <> body <> []:
+      brief_read_job(program,dir,"brief-prepare",body)
+    case "brief-check" <> body <> []:
+      brief_read_job(program,dir,"brief-check",body)
     case "latest-view" <> snapshot <> provider <> repo <> role <> after <> []:
       do IO<Reply>:
         result : Result<&2,&2,String,Json.Json> <- Client.call(program,dir,["latest",snapshot])
@@ -1581,16 +1595,18 @@ def source_change(+program: String,+dir: String,+args: List<&2,String>) -> IO(Re
     reply : Reply <- run_write(program,dir,args)
     source_change_result(program,dir,args,reply)
 
-def run_write_text(+program: String,+dir: String,+path: String,text: String) -> IO(Reply):
+def run_write_text(+program: String,+dir: String,+command: String,+path: String,text: String) -> IO(Reply):
   do IO<Reply>:
     result : Result<&1,&1,U32 & String,U32 & (String & String)> <-
-      Process.run(program,["--data-dir",dir,"export-displayed",path],text,1048576,10000)
+      Process.run(program,["--data-dir",dir,command,path],text,1048576,10000)
     return Reply{Client.completed(result)}
 
 def write_job(+program: String,+dir: String,args: List<&2,String>) -> IO(Reply):
   match args:
     case "export-displayed" <> path <> text <> []:
-      run_write_text(program,dir,path,text)
+      run_write_text(program,dir,"export-displayed",path,text)
+    case "export-brief-text" <> path <> text <> []:
+      run_write_text(program,dir,"export-brief-text",path,text)
     case "source-add" <> provider <> path <> []:
       source_change(program,dir,["source-add",provider,path])
     case "source-disable" <> provider <> path <> []:
@@ -1867,7 +1883,7 @@ def latest_done(+state: State,+request: Request,result: Result<&2,&2,String,Json
 # after a different snapshot's reader succeeds. File evidence owns its args.
 def text_view_args(kind: U32,args: List<&2,String>,previous: List<&2,String>,old: String,snapshot: String) -> List<&2,String>:
   Bool.pick(List<&2,String>,file_kind(kind),args,
-    Bool.pick(List<&2,String>,String.eq(old,snapshot),previous,[]))
+    Bool.pick(List<&2,String>,String.eq(old,snapshot),Brief.metadata_base(previous),[]))
 
 def text_done(+state: State,+request: Request,result: Result<&2,&2,String,String>) -> State:
   State{+db,+dir,+program,+ui,Selection{+items,+old,+oldstart,+displayed,+blame,+filters,+listing},Form{+mode,+search,+source,+form,+files,+navigation,+settings},+jobs,+refresh_at,+serial} = state
@@ -1995,7 +2011,7 @@ def tools_valid(state: State,+request: Request,+value: Json.Json) -> Bool:
     (String.eq(Json.get(value,"provider"),"claude") || String.eq(Json.get(value,"provider"),"codex")) &&
     Files.text_valid(Json.field(value,"extent")) && Files.number_valid(Json.JNumber{Json.get(value,"extent")}) &&
     Files.text_valid(Json.field(value,"text")) && tools_scope(Json.field(value,"scope"),request_filters(args)) &&
-    tools_range(value,first,request_filters(args)) && tools_same_identity(value,snapshot,view_args) && related_tool_identity(navigation_value(navigation),value)
+    tools_range(value,first,request_filters(args)) && tools_same_identity(value,snapshot,Brief.metadata_base(view_args)) && related_tool_identity(navigation_value(navigation),value)
 
 def tools_metadata(+value: Json.Json) -> List<&2,String>:
   ["activity",Json.get(value,"snapshot"),Json.get(value,"source"),Json.get(value,"generation"),Json.get(value,"extent"),
@@ -2025,78 +2041,6 @@ def tools_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.
       status(state,message)
     case Done{+value}:
       tools_value(state,request,value,tools_valid(state,request,value))
-
-def read_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
-  Request{+kind,+args,+snap,+start,+title} = request
-  match kind:
-    case 1:
-      listing_done(state,request,result)
-    case 2:
-      listing_done(state,request,result)
-    case 3:
-      related_target_done(state,request,Client.text_result(result))
-    case 17:
-      listing_done(state,request,result)
-    case 18:
-      latest_done(state,request,result)
-    case 19:
-      storage_done(state,Client.text_result(result))
-    case 6:
-      source_read_done(state,request,result)
-    case 20:
-      files_done(state,request,result)
-    case 21:
-      files_done(state,request,result)
-    case 22:
-      files_done(state,request,result)
-    case 23:
-      files_done(state,request,result)
-    case 24:
-      tools_done(state,request,result)
-    case 14:
-      usage_done(state,request,result)
-    case 25:
-      related_done(state,request,result)
-    case 26:
-      related_done(state,request,result)
-    case _:
-      text_done(state,request,Client.text_result(result))
-
-def read_current(+state: State,+request: Request,+reply: Reply,+current: Bool) -> State:
-  Reply{+value} = reply
-  match current:
-    case False{}:
-      clear_reader(state)
-    case True{}:
-      read_done(clear_reader(state),request,value)
-
-def poll_read_ready(+state: State,+ticket: U32,+request: Request,chan: Chan(Reply),result: Maybe<&1,Reply>) -> IO(State):
-  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
-  match result:
-    case None{}:
-      do IO<State>:
-        Chan.close(Reply,chan)
-        return status(clear_reader(state),"Local reader ended without a result.")
-    case Some{reply}:
-      do IO<State>:
-        Chan.close(Reply,chan)
-        return read_current(state,request,reply,U32.is_eq(ticket,revision))
-
-def poll_read_result(+state: State,+ticket: U32,+request: Request,chan: Chan(Reply),result: Poll<&1,&1,Maybe<&1,Reply>,Unit>) -> IO(State):
-  match result:
-    case Wait{unit}:
-      IO.pure(State,state)
-    case Ready{value}:
-      poll_read_ready(state,ticket,request,chan,value)
-
-def poll_read(+state: State,pending: Maybe<&2,Pending>) -> IO(State):
-  match pending:
-    case None{}:
-      IO.pure(State,state)
-    case Some{Pending{ticket,request,+chan}}:
-      do IO<State>:
-        result : Poll<&1,&1,Maybe<&1,Reply>,Unit> <- Chan.try_recv(Reply,chan,0)
-        poll_read_result(state,ticket,request,chan,result)
 
 def refresh_idle(+state: State,wanted: Maybe<&2,Request>,reader: Maybe<&2,Pending>) -> State:
   match wanted reader:
@@ -2395,12 +2339,6 @@ def service_write(+state: State) -> IO(State):
     next : State <- service_preferences(polled)
     service_start(next)
 
-def service(+state: State) -> IO(State):
-  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
-  do IO<State>:
-    next : State <- poll_read(state,reader)
-    service_write(next)
-
 def settings_effective(+model: Settings.Model) -> Refresh.Preferences:
   Settings.Model{+phase,+prefs,+desired,+sources,+loaded,+selected,+offset,+last} = model
   match desired:
@@ -2503,6 +2441,348 @@ def enter(+state: State,+index: U32) -> IO(State):
     case _:
       IO.pure(State,open_item(state,select_item(items,U32.to_nat(index))))
 
+# Brief navigation freezes the actual displayed range and keeps the origin intact.
+def brief_model_box(values: List<&2,Brief.Model>) -> Maybe<&2,Brief.Model>:
+  match values:
+    case value <> []: Some{value}
+    case _: None{}
+
+def brief_model(+value: Navigation) -> Maybe<&2,Brief.Model>:
+  match value:
+    case BriefNavigation{_,_,_,_,model}: brief_model_box(model)
+    case _: None{}
+
+def brief_update_value(+state: State,+model: Brief.Model,+value: Navigation) -> State:
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,nav,settings},jobs,deadline,serial} = state
+  match value:
+    case BriefNavigation{origin,view,saved,prior,old}:
+      State{db,dir,program,UI.set_results(ui,UI.BriefResults{Brief.phase(model)}),selection,
+        Form{mode,search,source,blame,files,[BriefNavigation{origin,view,saved,prior,[model]}],settings},jobs,deadline,serial}
+    case _: state
+
+def brief_update(+state: State,+model: Brief.Model) -> State:
+  brief_update_value(state,model,navigation(state))
+
+def brief_restore_value(+state: State,+value: Navigation) -> State:
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,nav,settings},jobs,deadline,serial} = state
+  match value:
+    case BriefNavigation{origin,view,saved,prior,model}:
+      invalidate(State{db,dir,program,UI.restore(ui,view),origin,Form{0,saved,source,blame,files,prior,settings},jobs,0n,serial})
+    case _: state
+
+def brief_back(+state: State) -> State:
+  brief_restore_value(state,navigation(state))
+
+def brief_prefill_identity(identity: Files.Identity) -> String:
+  Files.Identity{repo,checkout,commit} = identity
+  # Files identity is populated only by an explicitly opened repository.
+  checkout
+
+def brief_prefill(+files: Files.State) -> String:
+  brief_prefill_identity(Files.identity(files))
+
+def brief_enter_ready(+state: State,+count: U32,+valid: Bool) -> State:
+  State{db,dir,program,+ui,Selection{+items,+snap,+start,+displayed,+args,+filters,+listing},Form{mode,+search,source,blame,+files,+prior,settings},jobs,deadline,+serial} = state
+  match valid:
+    case False{}: status(state,"Open a captured transcript with a nonempty verified physical range before preparing a brief. Reopen the reader if its range metadata is older.")
+    case True{}:
+      +selection = {Selection{items,snap,start,displayed,args,filters,listing} : Selection}
+      +anchor = {Brief.Anchor{snap,start,count,filters} : Brief.Anchor}
+      +root = brief_prefill(files)
+      +model = {Brief.Model{anchor,root,serial,0,None{},Brief.Whole{}} : Brief.Model}
+      shown = UI.set_reader(UI.set_query(UI.set_rows(UI.set_results(ui,UI.BriefResults{0}),
+        ["Snapshot " ++ snap,"Records " ++ U32.show(start) ++ " + " ++ U32.show(count),"Frozen reader filters","Explicit repository only","Review before sharing"]),root),
+        "Continuation brief | choose repository",Brief.guidance(anchor))
+      invalidate(State{db,dir,program,shown,selection,
+        Form{0,search,source,blame,files,[BriefNavigation{selection,UI.bookmark(ui),search,prior,[model]}],settings},jobs,0n,U32.inc(serial)})
+
+def brief_enter(+state: State) -> State:
+  State{_,_,_,_,Selection{_,+snap,+start,+kind,+args,_,_},Form{+mode,_,_,_,_,_,_},_,_,_} = state
+  +count = Brief.selected_count(args,snap,start)
+  brief_enter_ready(state,count,U32.is_eq(mode,0) && U32.is_eq(kind,3) && U32.is_gt(count,0) &&
+    (U32.is_eq(navigation_phase(navigation(state)),3) || U32.is_eq(navigation_phase(navigation(state)),2)))
+
+def brief_edit_value(+state: State,+value: Maybe<&2,Brief.Model>) -> State:
+  State{_,_,_,+ui,_,_,_,_,_} = state
+  match value:
+    case None{}: state
+    case Some{+model}:
+      status(invalidate(brief_update(replace_ui(state,UI.set_reader(ui,"Continuation brief | choose repository",Brief.guidance(Brief.anchor(model)))),
+        Brief.edit(model,UI.query(ui)))),"Repository input changed. Prepare a new preview; the old preview cannot be copied or exported.")
+
+def brief_edit(+state: State) -> State:
+  brief_edit_value(state,brief_model(navigation(state)))
+
+def brief_queue(+state: State,+model: Brief.Model,+kind: U32) -> State:
+  queue(brief_update(state,model),Request{kind,Brief.args(model),Brief.nonce(model),0,"Continuation brief"})
+
+def brief_prepare_checked(+state: State,+model: Brief.Model,+valid: Bool) -> State:
+  State{_,_,_,+ui,_,_,_,_,_} = state
+  match valid:
+    case False{}: status(state,"Enter an explicit absolute repository folder above. Captured working directories are never executed.")
+    case True{}:
+      brief_queue(replace_ui(state,UI.set_reader(ui,"Continuation brief | preparing",Brief.guidance(Brief.anchor(model)))),Brief.preparing(model),32)
+
+def brief_prepare_value(+state: State,+value: Maybe<&2,Brief.Model>) -> State:
+  match value:
+    case Some{+model}: brief_prepare_checked(state,model,Brief.valid_root(Brief.root(model)))
+    case _: status(state,"Choose Prepare brief from a captured transcript first.")
+
+def brief_prepare(+state: State) -> State:
+  brief_prepare_value(state,brief_model(navigation(state)))
+
+def brief_check_ready(+state: State,+model: Brief.Model,+export: Bool,+choice: Brief.Choice,+valid: Bool) -> State:
+  match valid:
+    case True{}: brief_queue(state,Brief.checking(model,export,choice),Bool.pick(U32,export,34,33))
+    case False{}: status(state,"Prepare and review a complete preview before Copy brief or Export brief. A recheck may already be pending.")
+
+def brief_check_value(+state: State,+export: Bool,+choice: Brief.Choice,+value: Maybe<&2,Brief.Model>) -> State:
+  match value:
+    case Some{+model}: brief_check_ready(state,model,export,choice,U32.is_eq(Brief.phase(model),2))
+    case _: status(state,"No continuation brief is ready.")
+
+def brief_check(+state: State,+export: Bool) -> State:
+  brief_check_value(state,export,Brief.Whole{},brief_model(navigation(state)))
+
+def brief_request_matches(+request: Request,+model: Brief.Model) -> Bool:
+  Request{kind,args,nonce,start,title} = request
+  String.eq(nonce,Brief.nonce(model)) && U32.is_eq(start,0) &&
+    String.eq(String.join(args,"\0"),String.join(Brief.args(model),"\0")) &&
+    U32.is_eq(kind,Bool.pick(U32,U32.is_eq(Brief.phase(model),1),32,Bool.pick(U32,U32.is_eq(Brief.phase(model),3),33,34)))
+
+def brief_reply_match(+model: Brief.Model,+value: Json.Json,+valid: Bool) -> Result<&2,&2,String,Brief.Preview>:
+  match valid:
+    case True{}: Brief.decode(value,model)
+    case False{}: Fail{"Brief reply was stale. Nothing was copied or exported."}
+
+def brief_reply_value(+request: Request,+value: Maybe<&2,Brief.Model>,+result: Result<&2,&2,String,Json.Json>) -> Result<&2,&2,String,Brief.Preview>:
+  match value result:
+    case Some{+model} Done{value}:
+      brief_reply_match(model,value,brief_request_matches(request,model))
+    case _ Fail{message}: Fail{message}
+    case _ _: Fail{"The brief view was retired. Nothing was copied or exported."}
+
+def brief_fail_value(+state: State,+message: String,+value: Maybe<&2,Brief.Model>) -> State:
+  match value:
+    case Some{model}: status(brief_update(state,Brief.failed(model)),message)
+    case _: state
+
+def brief_fail(+state: State,+message: String) -> State:
+  brief_fail_value(state,message,brief_model(navigation(state)))
+
+def brief_preview_value(+state: State,+preview: Brief.Preview,+value: Maybe<&2,Brief.Model>) -> State:
+  State{_,_,_,ui,_,_,_,_,_} = state
+  match value:
+    case Some{model}:
+      status(brief_update(replace_ui(state,UI.set_reader(ui,"Continuation brief | review before sharing",Brief.preview_text(preview))),Brief.ready(model,preview)),
+        "Review the whole brief before sharing. Recognized sensitive fields were withheld; unknown sensitive text may remain. Copy brief and Export brief recheck this exact preview.")
+    case _: state
+
+def brief_prepared(+state: State,+result: Result<&2,&2,String,Brief.Preview>) -> State:
+  match result:
+    case Fail{message}: brief_fail(state,message)
+    case Done{preview}: brief_preview_value(state,preview,brief_model(navigation(state)))
+
+def brief_done(+state: State,+request: Request,+result: Result<&2,&2,String,Json.Json>) -> State:
+  brief_prepared(state,brief_reply_value(request,brief_model(navigation(state)),result))
+
+# Only accepted current check replies reach these effects. Worker check itself
+# never writes a file or clipboard, so Back can safely retire pending replies.
+def brief_export_at(+state: State,+text: String,+now: Nat) -> IO(State):
+  State{db,+dir,program,ui,selection,form,jobs,deadline,+serial} = state
+  +path = dir ++ "/continuation-brief-" ++ Nat.show(now) ++ "-" ++ U32.show(serial) ++ ".txt"
+  start_write(State{db,dir,program,ui,selection,form,jobs,deadline,U32.inc(serial)},
+    Request{9,["export-brief-text",path,text],"",0,path},writer_of(state))
+
+def brief_complete(+state: State,+preview: Brief.Preview,+value: Maybe<&2,Brief.Model>) -> State:
+  match value:
+    case Some{model}: brief_update(state,Brief.ready(model,preview))
+    case _: state
+
+def brief_copy_text(+preview: Brief.Preview,+value: Maybe<&2,Brief.Model>) -> String:
+  match value:
+    case Some{model}: Brief.selected_text(preview,Brief.choice(model))
+    case _: ""
+
+def brief_choice_current(+ui: UI.State,+choice: Brief.Choice) -> Bool:
+  UI.State{_,UI.Input{_,_,UI.Edit{focus,caret,anchor,_,_},_,_},_,_} = ui
+  match choice:
+    case Brief.Whole{}: True{}
+    case Brief.Selected{first,last}: U32.is_eq(focus,2) && U32.is_eq(U32.min(caret,anchor),first) &&
+      U32.is_eq(U32.max(caret,anchor),last) && U32.is_lt(first,last)
+
+def brief_effect_guard(+state: State,+request: Request,+result: Result<&2,&2,String,Json.Json>,+valid: Bool) -> Result<&2,&2,String,Brief.Preview>:
+  match valid:
+    case True{}: brief_reply_value(request,brief_model(navigation(state)),result)
+    case False{}: Fail{"Text selection changed while the brief was being checked. Nothing was copied or exported; select text and try again."}
+
+def brief_effect_model(+state: State,+request: Request,+result: Result<&2,&2,String,Json.Json>,+value: Maybe<&2,Brief.Model>) -> Result<&2,&2,String,Brief.Preview>:
+  State{_,_,_,ui,_,_,_,_,_} = state
+  match value:
+    case Some{+model}: brief_effect_guard(state,request,result,brief_choice_current(ui,Brief.choice(model)))
+    case _: Fail{"The brief view was retired. Nothing was copied or exported."}
+
+def brief_effect_reply(+state: State,+request: Request,+result: Result<&2,&2,String,Json.Json>) -> Result<&2,&2,String,Brief.Preview>:
+  brief_effect_model(state,request,result,brief_model(navigation(state)))
+
+def brief_selected_checked(+state: State,+choice: Brief.Choice,+valid: Bool) -> State:
+  match valid:
+    case True{}: brief_check_value(state,False{},choice,brief_model(navigation(state)))
+    case False{}: status(state,"Select preview text to copy it, or choose Copy brief for the whole checked preview.")
+
+def brief_effect_ready(+state: State,+ready: State,+preview: Brief.Preview,+export: Bool) -> IO(State):
+  match export:
+    case False{}:
+      do IO<State>:
+        result : Result<&1,&1,U32 & String,U32 & (String & String)> <- UI.clipboard_copy(brief_copy_text(preview,brief_model(navigation(state))))
+        return copy_done(ready,result)
+    case True{}:
+      do IO<State>:
+        now : Nat <- IO.now()
+        brief_export_at(ready,Brief.preview_text(preview),now)
+
+def brief_effect(+state: State,+preview: Brief.Preview,+export: Bool) -> IO(State):
+  brief_effect_ready(state,brief_complete(state,preview,brief_model(navigation(state))),preview,export)
+
+def brief_effect_result(+state: State,+result: Result<&2,&2,String,Brief.Preview>,+export: Bool) -> IO(State):
+  match result:
+    case Fail{message}: IO.pure(State,brief_fail(state,message))
+    case Done{preview}: brief_effect(state,preview,export)
+
+def brief_paste(+state: State,result: Result<&1,&1,U32 & String,U32 & (String & String)>) -> State:
+  State{_,_,_,ui,_,_,_,_,_} = state
+  match result:
+    case Done{(0,(text,error))}: brief_edit(replace_ui(state,UI.insert(ui,text)))
+    case _: status(state,"Clipboard unavailable or paste failed.")
+
+def brief_selection_invalidated(+state: State,+model: Brief.Model,+changed: Bool) -> State:
+  match changed:
+    case False{}: state
+    case True{}: status(invalidate(brief_update(state,Brief.failed(model))),"Text selection changed. Pending copy was retired; copy the new selection to recheck it.")
+
+def brief_selection_value(+state: State,+value: Maybe<&2,Brief.Model>) -> State:
+  State{_,_,_,+ui,_,_,_,_,_} = state
+  match value:
+    case Some{+model}: brief_selection_invalidated(state,model,U32.is_eq(Brief.phase(model),3) && Bool.not(brief_choice_current(ui,Brief.choice(model))))
+    case _: state
+
+def transcript_apply_metadata(+state: State,+request: Request,+value: Json.Json,+valid: Bool) -> State:
+  State{db,dir,program,ui,Selection{items,snap,start,displayed,args,filters,listing},form,jobs,deadline,serial} = state
+  Request{_,_,snapshot,first,_} = request
+  match valid:
+    case True{}: State{db,dir,program,ui,Selection{items,snap,start,displayed,Brief.range_args(value,snapshot,first,args),filters,listing},form,jobs,deadline,serial}
+    case False{}: state
+
+def transcript_done(+state: State,+request: Request,+result: Result<&2,&2,String,Json.Json>) -> State:
+  Request{_,_,+snapshot,+start,_} = request
+  match result:
+    case Fail{message}: related_target_done(state,request,Fail{message})
+    case Done{+value}:
+      transcript_apply_metadata(related_target_done(state,request,Client.text_result(Done{value})),request,value,
+        related_target_valid(request,navigation(state)) && Brief.range_metadata(value,snapshot,start))
+
+def read_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
+  Request{+kind,+args,+snap,+start,+title} = request
+  match kind:
+    case 1:
+      listing_done(state,request,result)
+    case 2:
+      listing_done(state,request,result)
+    case 3:
+      transcript_done(state,request,result)
+    case 17:
+      listing_done(state,request,result)
+    case 18:
+      latest_done(state,request,result)
+    case 19:
+      storage_done(state,Client.text_result(result))
+    case 6:
+      source_read_done(state,request,result)
+    case 20:
+      files_done(state,request,result)
+    case 21:
+      files_done(state,request,result)
+    case 22:
+      files_done(state,request,result)
+    case 23:
+      files_done(state,request,result)
+    case 24:
+      tools_done(state,request,result)
+    case 14:
+      usage_done(state,request,result)
+    case 25:
+      related_done(state,request,result)
+    case 26:
+      related_done(state,request,result)
+    case 32:
+      brief_done(state,request,result)
+    case 33:
+      status(state,"Brief check requires current-request effect handling; no text was copied.")
+    case 34:
+      status(state,"Brief check requires current-request effect handling; no text was exported.")
+    case _:
+      text_done(state,request,Client.text_result(result))
+
+def read_current(+state: State,+request: Request,+reply: Reply,+current: Bool) -> State:
+  Reply{+value} = reply
+  match current:
+    case False{}:
+      clear_reader(state)
+    case True{}:
+      read_done(clear_reader(state),request,value)
+
+def read_current_kind(+state: State,+request: Request,+reply: Reply,+result: Result<&2,&2,String,Json.Json>,+kind: U32) -> IO(State):
+  match kind:
+    case 33: brief_effect_result(clear_reader(state),brief_effect_reply(state,request,result),False{})
+    case 34: brief_effect_result(clear_reader(state),brief_effect_reply(state,request,result),True{})
+    case _: IO.pure(State,read_current(state,request,reply,True{}))
+
+def read_current_io(+state: State,+request: Request,+reply: Reply,+current: Bool) -> IO(State):
+  Request{+kind,_,_,_,_} = request
+  Reply{result} = reply
+  match current:
+    case False{}: IO.pure(State,clear_reader(state))
+    case True{}: read_current_kind(state,request,reply,result,kind)
+
+def poll_read_ready(+state: State,+ticket: U32,+request: Request,chan: Chan(Reply),result: Maybe<&1,Reply>) -> IO(State):
+  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
+  match result:
+    case None{}:
+      do IO<State>:
+        Chan.close(Reply,chan)
+        return status(clear_reader(state),"Local reader ended without a result.")
+    case Some{reply}:
+      do IO<State>:
+        Chan.close(Reply,chan)
+        read_current_io(state,request,reply,U32.is_eq(ticket,revision))
+
+def poll_read_result(+state: State,+ticket: U32,+request: Request,chan: Chan(Reply),result: Poll<&1,&1,Maybe<&1,Reply>,Unit>) -> IO(State):
+  match result:
+    case Wait{unit}:
+      IO.pure(State,state)
+    case Ready{value}:
+      poll_read_ready(state,ticket,request,chan,value)
+
+def poll_read(+state: State,pending: Maybe<&2,Pending>) -> IO(State):
+  match pending:
+    case None{}:
+      IO.pure(State,state)
+    case Some{Pending{ticket,request,+chan}}:
+      do IO<State>:
+        result : Poll<&1,&1,Maybe<&1,Reply>,Unit> <- Chan.try_recv(Reply,chan,0)
+        poll_read_result(state,ticket,request,chan,result)
+
+def service(+state: State) -> IO(State):
+  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
+  do IO<State>:
+    next : State <- poll_read(state,reader)
+    service_write(next)
+
+def copy_action(+state: State,text: String) -> IO(Maybe<State>):
+  do IO<Maybe<State>>:
+    result : Result<&1,&1,U32 & String,U32 & (String & String)> <- UI.clipboard_copy(text)
+    return Some{copy_done(state,result)}
+
 def handle_normal(+state: State,action: UI.Action) -> IO(Maybe<State>):
   State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+args,+filters,+listing},+form,+jobs,+refresh_at,+serial} = state
   match action:
@@ -2518,10 +2798,8 @@ def handle_normal(+state: State,action: UI.Action) -> IO(Maybe<State>):
       do IO<Maybe<State>>:
         next : State <- enter(state,UI.selected(ui))
         return Some{next}
-    case UI.Copy{text}:
-      do IO<Maybe<State>>:
-        result : Result<&1,&1,U32 & String,U32 & (String & String)> <- UI.clipboard_copy(text)
-        return Some{copy_done(state,result)}
+    case UI.CopyStatus{text}: copy_action(state,text)
+    case UI.Copy{text}: copy_action(state,text)
     case UI.Paste{}:
       do IO<Maybe<State>>:
         result : Result<&1,&1,U32 & String,U32 & (String & String)> <- UI.clipboard_paste()
@@ -2562,6 +2840,8 @@ def handle_normal(+state: State,action: UI.Action) -> IO(Maybe<State>):
       IO.pure(Maybe<State>,Some{tools(state)})
     case UI.Related{}:
       IO.pure(Maybe<State>,Some{related_enter(state)})
+    case UI.Brief{}:
+      IO.pure(Maybe<State>,Some{brief_enter(state)})
     case UI.Back{}:
       IO.pure(Maybe<State>,Some{related_back(state)})
     case UI.Rebuild{}:
@@ -2578,6 +2858,38 @@ def handle_normal(+state: State,action: UI.Action) -> IO(Maybe<State>):
         return Some{next}
     case _:
       IO.pure(Maybe<State>,Some{state})
+
+def brief_selected_copy(+state: State,+text: String) -> IO(Maybe<State>):
+  State{_,_,_,+ui,_,_,_,_,_} = state
+  UI.State{_,UI.Input{_,_,UI.Edit{focus,+caret,+anchor,_,_},_,_},_,_} = ui
+  match focus:
+    case 0: handle_normal(state,UI.Copy{text})
+    case _:
+      IO.pure(Maybe<State>,Some{brief_selected_checked(state,Brief.Selected{U32.min(caret,anchor),U32.max(caret,anchor)},
+        U32.is_eq(focus,2) && Bool.not(String.is_empty(text)) && String.eq(text,UI.selection(ui)))})
+
+def handle_brief_action(+state: State,+action: UI.Action) -> IO(Maybe<State>):
+  match action:
+    case UI.Quit{}: IO.pure(Maybe<State>,None{})
+    case UI.Back{}: IO.pure(Maybe<State>,Some{brief_back(state)})
+    case UI.Search{}: IO.pure(Maybe<State>,Some{brief_edit(state)})
+    case UI.Submit{}: IO.pure(Maybe<State>,Some{brief_prepare(state)})
+    case UI.BriefPrepare{}: IO.pure(Maybe<State>,Some{brief_prepare(state)})
+    case UI.BriefCopy{}: IO.pure(Maybe<State>,Some{brief_check(state,False{})})
+    case UI.Copy{text}: brief_selected_copy(state,text)
+    case UI.CopyStatus{text}: handle_normal(state,UI.Copy{text})
+    case UI.BriefExport{}: IO.pure(Maybe<State>,Some{brief_check(state,True{})})
+    case UI.Export{}: IO.pure(Maybe<State>,Some{brief_check(state,True{})})
+    case UI.Paste{}:
+      do IO<Maybe<State>>:
+        result : Result<&1,&1,U32 & String,U32 & (String & String)> <- UI.clipboard_paste()
+        return Some{brief_paste(state,result)}
+    case UI.NoAction{}: IO.pure(Maybe<State>,Some{state})
+    case _: IO.pure(Maybe<State>,Some{status(state,"This brief keeps its frozen reader range. Back restores History before changing scope or opening another view.")})
+
+# Missing legacy range metadata allows reading, but never enables a brief.
+def handle_brief(+state: State,+action: UI.Action) -> IO(Maybe<State>):
+  handle_brief_action(brief_selection_value(state,brief_model(navigation(state))),action)
 
 def related_reader_action(state: State,action: UI.Action,ready: Bool) -> IO(Maybe<State>):
   match ready:
@@ -2692,6 +3004,7 @@ def handle_navigation(+state: State,action: UI.Action,phase: U32) -> IO(Maybe<St
   match phase:
     case 3: handle_normal(state,action)
     case 4: handle_usage(state,action)
+    case 5: handle_brief(state,action)
     case phase: handle_related(state,action,phase)
 
 def settings_scope(+state: State,+provider: String) -> State:
@@ -2741,12 +3054,20 @@ def handle_settings(+state: State,+action: UI.Action) -> IO(Maybe<State>):
     case UI.Next{}: IO.pure(Maybe<State>,Some{state})
     case other: handle_normal(state,other)
 
-def handle_mode(+state: State,+action: UI.Action,+active: Bool) -> IO(Maybe<State>):
+def handle_mode_inner(+state: State,+action: UI.Action,+active: Bool) -> IO(Maybe<State>):
   match action active:
     case action True{}: handle_settings(state,action)
     case UI.Settings{} False{}: IO.pure(Maybe<State>,Some{settings(state)})
     case UI.Storage{} False{}: IO.pure(Maybe<State>,Some{storage(state)})
     case other False{}: handle_navigation(state,other,navigation_phase(navigation(state)))
+
+def handle_mode_phase(+state: State,+action: UI.Action,active: Bool,phase: U32) -> IO(Maybe<State>):
+  match phase:
+    case 5: handle_brief(state,action)
+    case _: handle_mode_inner(state,action,active)
+
+def handle_mode(+state: State,+action: UI.Action,active: Bool) -> IO(Maybe<State>):
+  handle_mode_phase(state,action,active,navigation_phase(navigation(state)))
 
 def handle(+state: State,action: UI.Action) -> IO(Maybe<State>):
   handle_mode(state,action,settings_active(state))

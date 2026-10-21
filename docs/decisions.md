@@ -1,5 +1,12 @@
 # Decisions
 
+- **2026-10-21 — Freeze and recheck continuation briefs.** The explicit repository,
+  capture, range and filters bind an 8,192-byte preview of retained recorded facts.
+  Eligibility, omissions and pattern-based withholding are disclosed. Copy and
+  export revalidate the full preview commitment; root/selection changes and Back
+  retire pending effects. Ordinary Copy keeps scalar selection semantics; the
+  whole-brief action copies all checked text. No inferred task or model runs.
+
 - **2026-10-20 — Bound verification without changing captured identity.** Raw
   checks select at most 128 mappings and approximately 1 MiB before reading one
   contiguous source span; contexts insert at most 32 rows per statement. Every

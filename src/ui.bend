@@ -15,6 +15,7 @@ type Results is Data:
   Results{offset: U32, count: U32, has_more: Bool, ready: Bool}
   RelatedResults{page: U32, count: U32, has_more: Bool, has_previous: Bool}
   SettingsResults{offset: U32,total: U32,automatic: String,ready: Bool}
+  BriefResults{phase: U32}
 
 type Edit is Data:
   Edit{focus: U32, caret: U32, anchor: U32, dragging: Bool, viewport: U32}
@@ -37,6 +38,7 @@ type Action is Data:
   Submit{}
   Scope{provider: String}
   Copy{text: String}
+  CopyStatus{text: String}
   Paste{}
   Export{}
   Why{}
@@ -45,6 +47,10 @@ type Action is Data:
   Related{}
   Back{}
   Rebuild{}
+  Brief{}
+  BriefPrepare{}
+  BriefCopy{}
+  BriefExport{}
   Versions{}
   OpenLatest{}
   Blame{}
@@ -130,6 +136,12 @@ def is_settings(s: State) -> Bool:
     case SettingsResults{+offset,+total,automatic,ready}: True{}
     case _: False{}
 
+def is_brief(+s: State) -> Bool:
+  State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
+  match results:
+    case BriefResults{_}: True{}
+    case _: False{}
+
 def title(s: State) -> String:
   State{Content{q,rows,reader,lines,title,status,scope,results,+files},input,image,dirty} = s
   title
@@ -184,6 +196,7 @@ def ordinary_result_label(+offset: U32,+count: U32,more: Bool,ready: Bool) -> St
 
 def result_label(results: Results) -> String:
   match results:
+    case BriefResults{+phase}: Bool.pick(String,U32.is_eq(phase,0),"Choose explicit repository",Bool.pick(String,U32.is_eq(phase,2),"Review before sharing","Checking captured evidence"))
     case Results{offset,count,more,ready}: ordinary_result_label(offset,count,more,ready)
     case RelatedResults{page,count,more,previous}:
       "Page " ++ U32.show(page) ++ " | " ++ U32.show(count) ++ " links"
@@ -192,6 +205,7 @@ def result_label(results: Results) -> String:
 
 def result_available(results: Results,forward: Bool) -> Bool:
   match results:
+    case BriefResults{_}: False{}
     case Results{+offset,count,more,ready}:
       ready && Bool.pick(Bool,forward,more && U32.is_le(offset,4294967095),U32.is_gt(offset,0))
     case RelatedResults{page,count,more,previous}:
@@ -272,9 +286,12 @@ def selection(+s: State) -> String:
 
 def move_caret(+s: State, +right: Bool) -> State:
   State{Content{q, rows, reader, lines, title, status, scope,results,files},
-    Input{selected, scroll, Edit{+focus, +caret, anchor, drag, viewport}, command, +shift}, image, dirty} = s
+    Input{selected, scroll, Edit{+focus, +caret, +anchor, drag, viewport}, command, +shift}, image, dirty} = s
   +n = Bool.pick(U32, U32.is_eq(focus, 0), length(q), length(reader))
-  +pos = Bool.pick(U32, right, U32.min(n, U32.add(caret, 1)), minus(caret, 1))
+  +step = Bool.pick(U32, right, U32.min(n, U32.add(caret, 1)), minus(caret, 1))
+  +edge = Bool.pick(U32, right, U32.max(caret, anchor), U32.min(caret, anchor))
+  # An unshifted arrow collapses a selection without taking an additional step.
+  +pos = Bool.pick(U32, shift || U32.is_eq(caret, anchor), step, edge)
   set_edit(s, Edit{focus, pos, Bool.pick(U32, shift, anchor, pos), False{}, 0})
 
 def scroll_by(+s: State, +down: Bool, +amount: U32) -> State:
@@ -473,7 +490,7 @@ def sidebar_normal(+s: State,index: U32) -> State & Action:
     case 9: (s,OpenLatest{})
     case 10: (s,Settings{})
     case 11: (s,Storage{})
-    case 12: (s,Settings{})
+    case 12: (s,Brief{})
     case 13: copy_action(s,String.is_empty(selection(s)))
     case 14: paste_query(s)
     case 15: (set_query(s,""),Search{})
@@ -508,8 +525,24 @@ def sidebar_mode(s: State,row: U32,settings: Bool) -> State & Action:
     case True{}: sidebar_settings(s,row)
     case False{}: sidebar_normal(s,row)
 
+def sidebar_brief(+s: State,+row: U32) -> State & Action:
+  match row:
+    case 0: (s,Back{})
+    case 1: (s,BriefPrepare{})
+    case 2: (s,BriefCopy{})
+    case 3: (s,BriefExport{})
+    case 4: paste_query(s)
+    case 5: (set_query(s,""),Search{})
+    case 6: (select_all(s),NoAction{})
+    case _: (s,NoAction{})
+
+def sidebar_context(+s: State,+row: U32,+brief: Bool) -> State & Action:
+  match brief:
+    case True{}: sidebar_brief(s,row)
+    case False{}: sidebar_mode(s,row,is_settings(s))
+
 def sidebar_action(+s: State,row: U32) -> State & Action:
-  sidebar_mode(s,row,is_settings(s))
+  sidebar_context(s,row,is_brief(s))
 
 def list_row_click(+s: State,+index: U32,valid: Bool) -> State & Action:
   match valid:
@@ -599,8 +632,21 @@ def top_mode(s: State,group: U32,settings: Bool) -> State & Action:
     case True{}: top_settings(s,group)
     case False{}: top_normal(s,group)
 
+def top_brief(+s: State,+group: U32) -> State & Action:
+  match group:
+    case 0: (s,BriefPrepare{})
+    case 1: (s,BriefCopy{})
+    case 2: (s,BriefExport{})
+    case 3: (s,Back{})
+    case _: (s,NoAction{})
+
+def top_context(+s: State,+group: U32,+brief: Bool) -> State & Action:
+  match brief:
+    case True{}: top_brief(s,group)
+    case False{}: top_mode(s,group,is_settings(s))
+
 def top_action(+s: State,group: U32) -> State & Action:
-  top_mode(s,group,is_settings(s))
+  top_context(s,group,is_brief(s))
 
 def query_click(+s: State, col: U32) -> State & Action:
   +pos = query_at(s, col)
@@ -637,7 +683,7 @@ def status_close(+s: State) -> State:
   set_edit(s,Edit{U32.sub(focus,3),caret,anchor,False{},0})
 
 def status_copy(+s: State) -> State & Action:
-  (status_close(s),Copy{status_text(s)})
+  (status_close(s),CopyStatus{status_text(s)})
 
 def status_scroll(+s: State,+down: Bool,+amount: U32) -> State:
   State{content,Input{selected,scroll,Edit{focus,caret,anchor,drag,+viewport},command,shift},image,dirty} = s
@@ -921,6 +967,7 @@ def list_heading(results: Results,files: Bool) -> String:
   match results:
     case RelatedResults{page,count,more,previous}: "Related captures"
     case SettingsResults{offset,total,automatic,ready}: "Registered folders"
+    case BriefResults{_}: "Frozen capture"
     case _: Bool.pick(String,files,"Up to parent folder","Sessions")
 
 def automatic_label(results: Results,fallback: String) -> String:
@@ -965,7 +1012,7 @@ def side_label(settings: Bool,index: U32,files: Bool) -> String:
         case 9: "Open latest"
         case 10: "Settings"
         case 11: "Storage"
-        case 12: "Index settings"
+        case 12: "Prepare brief"
         case 13: "Copy selection"
         case 14: "Paste"
         case 15: "Clear search"
@@ -979,15 +1026,26 @@ def side_active(index: U32,scope: String) -> Bool:
     case 3: String.eq(scope,"codex")
     case _: False{}
 
-def draw_side(fuel: Nat,c: Canvas,+index: U32,+files: Bool,+settings: Bool,+scope: String) -> Canvas:
+def brief_side_label(+index: U32) -> String:
+  match index:
+    case 0: "Back to reader"
+    case 1: "Prepare preview"
+    case 2: "Copy brief"
+    case 3: "Export brief"
+    case 4: "Paste root"
+    case 5: "Clear root"
+    case 6: "Select all"
+    case _: ""
+
+def draw_side(fuel: Nat,c: Canvas,+index: U32,+files: Bool,+settings: Bool,+scope: String,+brief: Bool) -> Canvas:
   match fuel:
     case 0n: c
     case 1n+n:
       +y = G.sidebar_y(index)
-      +bg = Bool.pick(U32,side_active(index,scope) && (Bool.not(settings) || U32.is_ne(index,1)),selected_bg(),rail())
+      +bg = Bool.pick(U32,Bool.not(brief) && side_active(index,scope) && (Bool.not(settings) || U32.is_ne(index,1)),selected_bg(),rail())
       base = box(c,8,y,160,32,bg)
-      label = text(base,side_label(settings,index,files),16,U32.add(y,8),18,ink(),bg)
-      draw_side(n,label,U32.add(index,1),files,settings,scope)
+      label = text(base,Bool.pick(String,brief,brief_side_label(index),side_label(settings,index,files)),16,U32.add(y,8),18,ink(),bg)
+      draw_side(n,label,U32.add(index,1),files,settings,scope,brief)
 
 def whole_usage(s: State) -> Bool:
   String.starts_with(title(s),"Usage | whole captured session")
@@ -1002,15 +1060,23 @@ def top_label(index: U32,files: Bool,settings: Bool,whole: Bool,automatic: Strin
     case 5: Bool.pick(String,settings,"Disable selected",Bool.pick(String,whole,"Whole session","Previous page"))
     case _: Bool.pick(String,settings,"Reload settings",Bool.pick(String,whole,"All retained records","Next page"))
 
-def draw_top(fuel: Nat,c: Canvas,+index: U32,+files: Bool,+settings: Bool,+whole: Bool,+automatic: String) -> Canvas:
+def brief_top_label(+index: U32) -> String:
+  match index:
+    case 0: "Prepare preview"
+    case 1: "Copy brief"
+    case 2: "Export brief"
+    case 3: "Back to reader"
+    case _: ""
+
+def draw_top(fuel: Nat,c: Canvas,+index: U32,+files: Bool,+settings: Bool,+whole: Bool,+automatic: String,+brief: Bool) -> Canvas:
   match fuel:
     case 0n: c
     case 1n+n:
       +x = G.top_x(index)
       +w = G.top_width(index)
       base = box(c,x,80,w,32,panel())
-      label = text(base,top_label(index,files,settings,whole,automatic),U32.add(x,8),88,U32.sub(U32.div(w,8),2),accent(),panel())
-      draw_top(n,label,U32.add(index,1),files,settings,whole,automatic)
+      label = text(base,Bool.pick(String,brief,brief_top_label(index),top_label(index,files,settings,whole,automatic)),U32.add(x,8),88,U32.sub(U32.div(w,8),2),accent(),panel())
+      draw_top(n,label,U32.add(index,1),files,settings,whole,automatic,brief)
 
 def draw_status(modal: Bool,+s: State,c: Canvas) -> Canvas:
   match modal:
@@ -1038,15 +1104,15 @@ def draw_automatic_capture(+s: State,automatic: String,suspended: Bool) -> Image
   foot = box(list,0,G.footer_y(),1408,40,rail())
   brand = text(foot,"JUICE BEND",16,24,18,accent(),rail())
   tagline = text(brand,"Your captured work",16,48,18,muted(),rail())
-  input_label = text(tagline,Bool.pick(String,is_settings(s),"Source file or folder path",Bool.pick(String,files,"Repository folder path","Search captured history")),192,8,60,muted(),rail())
+  input_label = text(tagline,Bool.pick(String,is_brief(s),"Repository folder for this brief",Bool.pick(String,is_settings(s),"Source file or folder path",Bool.pick(String,files,"Repository folder path","Search captured history"))),192,8,60,muted(),rail())
   query_bg = box(input_label,192,24,1192,40,paper())
   query = draw_line(U32.to_nat(G.query_columns()),query_bg,String.append(String.drop(q,U32.to_nat(query_offset(s)))," "),U32.div(G.query_x(),G.cell()),U32.div(G.query_y(),G.cell()),query_offset(s),Bool.pick(U32,U32.is_eq(focus,0),U32.min(caret,anchor),0),Bool.pick(U32,U32.is_eq(focus,0),Bool.pick(U32,U32.is_eq(caret,anchor),U32.add(caret,1),U32.max(caret,anchor)),0))
-  top = draw_top(7n,query,0,files,is_settings(s),whole_usage(s),automatic_label(results,automatic))
+  top = draw_top(7n,query,0,files,is_settings(s),whole_usage(s),automatic_label(results,automatic),is_brief(s))
   capture = draw_capture_hint(top,suspended)
-  group1 = text(capture,Bool.pick(String,is_settings(s),"SOURCES","PROVIDERS"),16,160,18,muted(),rail())
-  group2 = text(group1,Bool.pick(String,is_settings(s),"FOLDER ACTIONS","CAPTURED EVIDENCE"),16,320,18,muted(),rail())
-  group3 = text(group2,Bool.pick(String,is_settings(s),"REFRESH INTERVAL","LIBRARY"),16,536,18,muted(),rail())
-  navigation = draw_side(18n,group3,0,files,is_settings(s),scope)
+  group1 = text(capture,Bool.pick(String,is_brief(s),"BRIEF",Bool.pick(String,is_settings(s),"SOURCES","PROVIDERS")),16,160,18,muted(),rail())
+  group2 = text(group1,Bool.pick(String,is_brief(s),"REVIEW",Bool.pick(String,is_settings(s),"FOLDER ACTIONS","CAPTURED EVIDENCE")),16,320,18,muted(),rail())
+  group3 = text(group2,Bool.pick(String,is_brief(s),"",Bool.pick(String,is_settings(s),"REFRESH INTERVAL","LIBRARY")),16,536,18,muted(),rail())
+  navigation = draw_side(18n,group3,0,files,is_settings(s),scope,is_brief(s))
   heading = text(navigation,list_heading(results,files),192,128,38,ink(),panel())
   range = text(heading,result_label(results),192,152,38,muted(),panel())
   prev = text(range,"Previous",192,G.list_pager_y(),16,Bool.pick(U32,result_available(results,False{}),accent(),muted()),panel())

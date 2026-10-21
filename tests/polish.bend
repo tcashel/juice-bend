@@ -46,6 +46,11 @@ def kind(action: UI.Action) -> U32:
     case UI.ListPrevious{}: 31
     case UI.ListNext{}: 32
     case UI.Quit{}: 33
+    case UI.Brief{}: 34
+    case UI.BriefPrepare{}: 35
+    case UI.BriefCopy{}: 36
+    case UI.BriefExport{}: 37
+    case UI.CopyStatus{text}: 38
 
 def clicked(result: UI.State & UI.Action,expected: U32,label: String) -> IO(Unit):
   (state,action) = result
@@ -83,7 +88,7 @@ def ordinary() -> IO(Unit):
     click(s,16,480,14,"Latest target")
     click(s,16,568,19,"Settings target")
     click(s,16,600,25,"Storage target")
-    click(s,16,632,12,"Rebuild target")
+    click(s,16,632,34,"Prepare brief target")
     click(s,16,696,4,"Copy target preserves selected query")
     click(s,16,728,5,"Paste target")
     click(s,16,760,1,"Clear target")
@@ -130,7 +135,7 @@ def settings() -> IO(Unit):
     click(s,1112,136,5,"Settings Paste remains reachable")
     click(s,16,760,1,"Settings Clear")
     click(s,16,792,0,"Settings Select all")
-    click(s,16,832,19,"Settings secondary Back")
+    click(s,16,832,12,"Settings Rebuild target")
     click(s,360,88,20,"Settings Add toolbar")
     click(s,520,88,21,"Settings Import toolbar")
     click(s,680,88,22,"Settings Enable toolbar")
@@ -182,7 +187,7 @@ def paging() -> IO(Unit):
 def copied(result: UI.State & UI.Action) -> String:
   (s,action) = result
   match action:
-    case UI.Copy{text}: text
+    case UI.CopyStatus{text}: text
     case _: ""
 
 def kind.action(result: UI.State & UI.Action) -> U32:
