@@ -45,6 +45,17 @@ Font data is pinned to JetBrains Mono 2.304 under its included SIL OFL license.
 uses the existing pinned Bun; it adds no application runtime. See
 [`assets/fonts/jetbrains-mono/README.md`](assets/fonts/jetbrains-mono/README.md).
 
+## Local quota observations
+
+Settings → Connections offers explicit local Claude usage collection. Enable,
+review Manual setup, then copy its fragment if you choose to install it yourself.
+Juice Bend does not install provider configuration or access an account. Until a
+usable feed arrives, usage remains unknown; a recorded zero stays distinct.
+Disconnect rejects callbacks from that connection and preserves sampled history.
+These observations are separate from captured-session usage and billed spend.
+See [native validation](docs/receipts/connections-native.txt) for tested behavior
+and remaining presentation/provider-integration limits.
+
 ## Capture your selected sources
 
 Without `--demo`, the default library is

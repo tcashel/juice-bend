@@ -29,7 +29,8 @@ typedef struct {
 } JbSqlCell;
 
 typedef struct {
-  int operation, code, slot;
+  int operation, code, slot, open_flags;
+  bool require_write;
   u32 token, max_rows, columns, rows, bindings;
   char* text;
   u64 text_len, input_bytes, output_bytes, deadline;
@@ -232,8 +233,11 @@ static void jb_sql_call(IoWork* w) {
   JbSqlCall* p = (JbSqlCall*)w->data;
   if (p->operation == 0) {
     if (sqlite3_threadsafe() == 0) { p->code = SQLITE_MISUSE; return; }
-    p->code = sqlite3_open_v2(p->text, &p->db,
-      SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX, NULL);
+    p->code = sqlite3_open_v2(p->text, &p->db, p->open_flags, NULL);
+    if (p->code == SQLITE_OK && p->require_write &&
+        sqlite3_db_readonly(p->db, "main") != 0) {
+      p->code = SQLITE_READONLY;
+    }
     if (p->code == SQLITE_OK) {
       /* Reject huge SQLite values before their allocation/production, not just
        * when copying columns back. These are transport ceilings, not schema. */
@@ -334,11 +338,15 @@ static void jb_sql_borrow(JbSqlCall* p, u32 token) {
   }
 }
 
-#ifdef CID(open)
-static Term jb_sql_open_run(Env e, Term* f, IoWork* w) {
+static Term jb_sql_open_start(Env e, Term path, IoWork* w, int flags,
+                             bool require_write, int validation_code) {
   JbSqlCall* p = jb_sql_new(w, 0);
-  p->text = jb_sql_bytes(e, f[0], true, &p->text_len, &p->code);
+  p->open_flags = flags;
+  p->require_write = require_write;
+  /* Copy/consume the affine path even if mode/capability validation failed. */
+  p->text = jb_sql_bytes(e, path, true, &p->text_len, &p->code);
   if (p->text_len == 0 || io_nul(p->text, p->text_len)) p->code = SQLITE_MISUSE;
+  if (validation_code != SQLITE_OK) p->code = validation_code;
   if (jb_sql_next_token > UINT32_MAX) p->code = SQLITE_FULL;
   if (p->code == SQLITE_OK) {
     for (u32 i = 0; i < JB_SQL_HANDLES; ++i) {
@@ -353,8 +361,36 @@ static Term jb_sql_open_run(Env e, Term* f, IoWork* w) {
   }
   return p->code ? jb_sql_pack(e, w) : io_work(w, jb_sql_call, jb_sql_pack);
 }
+
+#ifdef CID(open)
+static Term jb_sql_open_run(Env e, Term* f, IoWork* w) {
+  return jb_sql_open_start(e, f[0], w,
+    SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX,
+    false, SQLITE_OK);
+}
 static void __attribute__((constructor)) jb_sql_open_use(void) {
   io_eff(CID(open), jb_sql_open_run);
+}
+#endif
+
+#ifdef CID(open_existing)
+static Term jb_sql_open_existing_run(Env e, Term* f, IoWork* w) {
+  u32 mode = (u32)f[1];
+  int flags = SQLITE_OPEN_FULLMUTEX;
+  int code = mode > 1 ? SQLITE_MISUSE : SQLITE_CANTOPEN;
+#ifdef SQLITE_OPEN_NOFOLLOW
+  /* Older linked engines may ignore an unknown flag. Require both the header
+   * constant and the release that introduced NOFOLLOW; never downgrade it. */
+  if (mode <= 1 && sqlite3_libversion_number() >= 3031000) {
+    flags |= SQLITE_OPEN_NOFOLLOW |
+      (mode == 0 ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE);
+    code = SQLITE_OK;
+  }
+#endif
+  return jb_sql_open_start(e, f[0], w, flags, mode == 1, code);
+}
+static void __attribute__((constructor)) jb_sql_open_existing_use(void) {
+  io_eff(CID(open_existing), jb_sql_open_existing_run);
 }
 #endif
 

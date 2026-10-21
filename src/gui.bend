@@ -13,6 +13,8 @@ import ./gui_relations.bend as Related
 import ./gui_settings.bend as Settings
 import ./gui_usage.bend as Usage
 import ./gui_brief.bend as Brief
+import ./gui_quota.bend as Quota
+import ./quota_cli.bend as QuotaCli
 import ./refresh_preferences.bend as Refresh
 
 # The window owns no effectful database path. Every operation is a bounded call
@@ -41,6 +43,9 @@ type Listing is Data:
   Listing{kind: U32, filters: Query.Filters, offset: U32, has_more: Bool, loaded: Bool,
     anchor: String}
 
+type QuotaOrigin is Data:
+  QuotaOrigin{selection: Selection,view: UI.Bookmark,mode: U32,search: String,pending: Maybe<&2,Request>,settings_signature: String}
+
 type Navigation is Data:
   NoNavigation{}
   RelatedNavigation{origin: Selection,origin_view: UI.Bookmark,origin_search: String,
@@ -48,6 +53,7 @@ type Navigation is Data:
     previous: List<&2,String>,phase: U32,target: Maybe<&2,Related.Reference>}
   BriefNavigation{origin: Selection,origin_view: UI.Bookmark,origin_search: String,
     prior: List<&2,Navigation>,model: List<&2,Brief.Model>}
+  QuotaNavigation{origin: List<&2,QuotaOrigin>,prior: List<&2,Navigation>,model: List<&2,Quota.Model>}
   UsageNavigation{origin: Selection,origin_view: UI.Bookmark,origin_search: String,
     prior: List<&2,Navigation>,ready: Bool}
 
@@ -254,6 +260,7 @@ def navigation_phase(value: Navigation) -> U32:
     case RelatedNavigation{origin,view,search,page,page_view,previous,phase,target}: phase
     case UsageNavigation{_,_,_,_,_}: 4
     case BriefNavigation{_,_,_,_,_}: 5
+    case QuotaNavigation{_,_,_}: 6
 
 def related_filters(value: Navigation) -> Query.Filters:
   match value:
@@ -965,6 +972,158 @@ def settings_pending_origin(+jobs: Jobs) -> Maybe<&2,Request>:
   Jobs{+revision,+wanted,+reader,+writer,+paused} = jobs
   settings_origin_wanted(revision,reader,wanted)
 
+def quota_settings_signature_value(+state: State,value: SettingsState) -> String:
+  State{_,dir,_,_,selection,_,_,_,_} = state
+  SettingsState{+model,_,_,provider} = value
+  settings_body(dir,selection_snapshot(selection),provider,model) ++ "\n" ++
+    String.join(settings_source_titles(Settings.sources(model)),"\n") ++ "\nOffset:" ++ U32.show(Settings.offset(model))
+
+def quota_settings_signature(+state: State) -> String:
+  quota_settings_signature_value(state,settings_state(state))
+
+def quota_restore_render(state: State,changed: Bool) -> State:
+  match changed:
+    case False{}: state
+    case True{}: status(settings_render(state),"Settings changed while Connections was open. Showing the latest acknowledged source and refresh state.")
+
+# Connections owns a separate explicit data-root field and a closed quota model.
+# It never changes the capture root or source provider. The saved Settings view
+# retains its exact text, selection and outer History/Files bookmark.
+def quota_model(value: Navigation) -> Maybe<&2,Quota.Model>:
+  match value:
+    case QuotaNavigation{_,_,[model]}: Some{model}
+    case _: None{}
+
+def quota_set_value(state: State,model: Quota.Model,value: Navigation) -> State:
+  match value:
+    case QuotaNavigation{origin,prior,_}:
+      set_navigation(state,QuotaNavigation{origin,prior,[model]})
+    case _: state
+
+def quota_set(+state: State,model: Quota.Model) -> State:
+  quota_set_value(state,model,navigation(state))
+
+def quota_render_model(+state: State,+model: Quota.Model) -> State:
+  State{db,dir,+program,+ui,selection,form,jobs,deadline,serial} = state
+  +rows = Quota.rows(model)
+  +view = UI.set_results(UI.set_rows(UI.set_files(ui,False{}),rows),
+    UI.QuotaResults{Quota.phase(model),Quota.acknowledged(model),Quota.enabled(model),Quota.view(model),
+      Quota.offset(model),U32.from_nat(List.length(&2,String,rows)),Quota.more(model)})
+  State{db,dir,program,UI.set_status(UI.set_position(UI.set_reader(view,"Connections | Claude",Quota.body(model,program)),
+    Quota.selected_index(model),0),Quota.notice(model)),selection,form,jobs,deadline,serial}
+
+def quota_render_value(state: State,value: Maybe<&2,Quota.Model>) -> State:
+  match value:
+    case Some{model}: quota_render_model(state,model)
+    case None{}: state
+
+def quota_render(+state: State) -> State:
+  quota_render_value(state,quota_model(navigation(state)))
+
+def quota_update(state: State,model: Quota.Model) -> State:
+  quota_render(quota_set(state,model))
+
+def quota_edit_changed(state: State,model: Quota.Model,changed: Bool) -> State:
+  match changed:
+    case False{}: state
+    case True{}: quota_update(invalidate(state),model)
+
+def quota_edit_value(+state: State,value: Maybe<&2,Quota.Model>) -> State:
+  State{_,_,_,+ui,_,_,_,_,_} = state
+  match value:
+    case None{}: state
+    case Some{+model}: quota_edit_changed(state,Quota.edit(model,UI.query(ui)),Bool.not(String.eq(Quota.root(model),UI.query(ui))))
+
+def quota_edit(+state: State) -> State:
+  quota_edit_value(state,quota_model(navigation(state)))
+
+# A resumed Settings inventory is a new read of its original command. Quota
+# request tokens advance serial, so bind this fresh read to the current source
+# nonce; an in-flight source mutation will advance it again and retire the read.
+def quota_resume(+state: State,pending: Maybe<&2,Request>) -> State:
+  State{_,_,_,_,_,_,_,_,serial} = state
+  match pending:
+    case Some{Request{6,args,_,start,title}}: queue(state,Request{6,args,U32.show(serial),start,title})
+    case other: settings_resume(state,other)
+
+def quota_restore(+state: State,prior: List<&2,Navigation>,origin: List<&2,QuotaOrigin>) -> State:
+  State{db,dir,program,ui,_,Form{_,_,source,blame,files,_,settings},jobs,_,serial} = state
+  match origin:
+    case [QuotaOrigin{selection,view,mode,search,pending,signature}]:
+      quota_resume(quota_restore_render(invalidate(State{db,dir,program,UI.restore(ui,view),selection,
+        Form{mode,search,source,blame,files,prior,settings},jobs,0n,serial}),
+        Bool.not(String.eq(signature,quota_settings_signature(state)))),pending)
+    case _: state
+
+def quota_back_value(state: State,value: Navigation) -> State:
+  match value:
+    case QuotaNavigation{origin,prior,_}: quota_restore(state,prior,origin)
+    case _: state
+
+def quota_back(+state: State) -> State:
+  quota_back_value(state,navigation(state))
+
+def quota_request(+model: Quota.Model,operation: Quota.Operation,serial: U32) -> Quota.Request:
+  Quota.Request{U32.show(serial),Quota.root(model),operation,Quota.epoch(model)}
+
+def quota_app_request(+request: Quota.Request,kind: U32) -> Request:
+  Quota.Request{token,_,_,_} = request
+  Request{kind,Quota.args(request),token,0,"Connections"}
+
+def quota_advance(+state: State) -> State:
+  State{db,dir,program,ui,selection,form,jobs,deadline,serial} = state
+  State{db,dir,program,ui,selection,form,jobs,deadline,U32.add(serial,1)}
+
+def quota_read_valid(state: State,model: Quota.Model,+request: Quota.Request,valid: Bool) -> State:
+  match valid:
+    case False{}: status(state,"Refresh acknowledged local state before this operation; a pending operation must finish first.")
+    case True{}: quota_render(queue(quota_set(quota_advance(state),Quota.begin(model,request)),quota_app_request(request,37)))
+
+def quota_read_value(+state: State,+operation: Quota.Operation,value: Maybe<&2,Quota.Model>) -> State:
+  State{_,_,_,_,_,_,_,_,+serial} = state
+  match value:
+    case None{}: state
+    case Some{+model}:
+      +request = quota_request(model,operation,U32.add(serial,1))
+      quota_read_valid(state,model,request,U32.is_lt(serial,4294967295) && Bool.not(Quota.is_write(operation)) && Quota.request_valid(model,request))
+
+def quota_read(+state: State,operation: Quota.Operation) -> State:
+  quota_read_value(state,operation,quota_model(navigation(state)))
+
+def quota_enter(+state: State) -> State:
+  State{db,+dir,program,+ui,+selection,Form{+mode,+search,source,blame,files,+prior,settings},+jobs,deadline,serial} = state
+  quota_read(quota_render(invalidate(State{db,dir,program,UI.set_scope(UI.set_query(ui,dir),"claude"),no_display(selection),
+    Form{4,search,source,blame,files,[QuotaNavigation{[QuotaOrigin{selection,UI.bookmark(ui),mode,search,settings_pending_origin(jobs),quota_settings_signature(state)}],prior,[Quota.initial(dir)]}],settings},jobs,0n,serial})),Quota.Status{})
+
+def quota_args_equal(a: List<&2,String>,b: List<&2,String>) -> Bool:
+  match a b:
+    case Nil{} Nil{}: True{}
+    case x <> xs y <> ys: String.eq(x,y) && quota_args_equal(xs,ys)
+    case _ _: False{}
+
+def quota_done_valid(state: State,model: Quota.Model,request: Quota.Request,result: Result<&2,&2,String,Json.Json>,valid: Bool) -> State:
+  match valid:
+    case False{}: state
+    case True{}: quota_update(state,Quota.apply(model,request,result))
+
+def quota_done_pending(+state: State,+app: Request,result: Result<&2,&2,String,Json.Json>,model: Quota.Model,pending: Maybe<&2,Quota.Request>) -> State:
+  State{_,_,_,+ui,_,_,_,_,_} = state
+  Request{kind,args,token,_,_} = app
+  match pending:
+    case None{}: state
+    case Some{+request}:
+      Quota.Request{expected,root,_,_} = request
+      quota_done_valid(state,model,request,result,(U32.is_eq(kind,37) || U32.is_eq(kind,38)) &&
+        String.eq(token,expected) && String.eq(UI.query(ui),root) && quota_args_equal(args,Quota.args(request)))
+
+def quota_done_value(+state: State,request: Request,result: Result<&2,&2,String,Json.Json>,value: Maybe<&2,Quota.Model>) -> State:
+  match value:
+    case None{}: state
+    case Some{+model}: quota_done_pending(state,request,result,model,Quota.pending(model))
+
+def quota_done(+state: State,request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
+  quota_done_value(state,request,result,quota_model(navigation(state)))
+
 def settings_restore_value(+state: State,+saved: List<&2,SettingsOrigin>,+settingsValue: SettingsState) -> State:
   State{+db,+dir,+program,+ui,+selection,+form,+jobs,+deadline,+serial} = state
   match saved:
@@ -1546,8 +1705,15 @@ def brief_read_job(+program: String,+dir: String,+command: String,+body: String)
       Process.run(program,["--data-dir",dir,command],body,131072,60000)
     return Reply{Client.completed(result)}
 
+def quota_worker(program: String,root: String,args: List<&2,String>) -> IO(Reply):
+  do IO<Reply>:
+    value : Result<&1,&1,U32 & String,U32 & (String & String)> <-
+      Process.run(program,"--data-dir" <> root <> "quota" <> linear_args(args),"",131072,30000)
+    return Reply{Quota.completed(value)}
+
 def read_job(+program: String,+dir: String,args: List<&2,String>) -> IO(Reply):
   match args:
+    case "quota-view" <> root <> token <> minimum <> rest: quota_worker(program,root,rest)
     case "brief-prepare" <> body <> []:
       brief_read_job(program,dir,"brief-prepare",body)
     case "brief-check" <> body <> []:
@@ -1604,6 +1770,7 @@ def run_write_text(+program: String,+dir: String,+command: String,+path: String,
 
 def write_job(+program: String,+dir: String,args: List<&2,String>) -> IO(Reply):
   match args:
+    case "quota-view" <> root <> token <> minimum <> rest: quota_worker(program,root,rest)
     case "export-displayed" <> path <> text <> []:
       run_write_text(program,dir,"export-displayed",path,text)
     case "export-brief-text" <> path <> text <> []:
@@ -1622,6 +1789,7 @@ def write_job(+program: String,+dir: String,args: List<&2,String>) -> IO(Reply):
 def write_start_text(kind: U32) -> String:
   match kind:
     case 35: "Exporting the complete pinned capture as logical JSONL, including all records outside current filters. Browsing stays available."
+    case 38: "Changing only the explicit local quota connection. Refresh will confirm any uncertain result."
     case 36: "Exporting the complete pinned archive container, including all records outside current filters. Plain captures have no archive container."
     case _: "Updating captures or exporting evidence. Browsing stays available."
 
@@ -1637,6 +1805,24 @@ def start_write(+state: State,+request: Request,busy: Maybe<&2,Pending>) -> IO(S
         channel : Chan(Reply) <- IO.fork(Reply,write_job(program,dir,args))
         return State{db,dir,program,UI.set_status(ui,write_start_text(kind)),selection,form,
           Jobs{revision,wanted,reader,Some{Pending{revision,Request{kind,args,snap,start,title},channel}},paused},0n,serial}
+
+def quota_write_allowed(+state: State,model: Quota.Model,+request: Quota.Request,valid: Bool) -> IO(State):
+  State{_,_,_,_,_,_,Jobs{_,_,_,+writer,_},_,_} = state
+  match valid:
+    case False{}: IO.pure(State,status(state,"Refresh acknowledged local state before changing collection. A pending writer must finish first."))
+    case True{}: start_write(quota_update(quota_advance(state),Quota.begin(model,request)),quota_app_request(request,38),writer)
+
+def quota_write_value(+state: State,+operation: Quota.Operation,value: Maybe<&2,Quota.Model>) -> IO(State):
+  State{_,_,_,_,_,_,Jobs{_,_,_,writer,_},_,+serial} = state
+  match value:
+    case None{}: IO.pure(State,state)
+    case Some{+model}:
+      +request = quota_request(model,operation,U32.add(serial,1))
+      quota_write_allowed(state,model,request,U32.is_lt(serial,4294967295) &&
+        Bool.not(Maybe.is_some(&2,Pending,writer)) && Quota.is_write(operation) && Quota.request_valid(model,request))
+
+def quota_write(+state: State,operation: Quota.Operation) -> IO(State):
+  quota_write_value(state,operation,quota_model(navigation(state)))
 
 def import_path(state: State,provider: String,path: String,writer: Maybe<&2,Pending>,file: Bool) -> IO(State):
   match file:
@@ -2275,11 +2461,16 @@ def write_dispatch(state: State,kind: U32,args: List<&2,String>,title: String,mo
     case 36: full_export_done(state,kind,args,result)
     case _: write_value(state,kind,title,mode,result)
 
+def write_done_kind(state: State,request: Request,kind: U32,args: List<&2,String>,title: String,mode: U32,result: Result<&2,&2,String,Json.Json>) -> State:
+  match kind:
+    case 38: quota_done(state,request,result)
+    case _: write_dispatch(state,kind,args,title,mode,result)
+
 def write_done(+state: State,+request: Request,+reply: Reply) -> State:
   State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation,+settings},+jobs,+refresh_at,+serial} = state
   Request{+kind,+args,+snap,+start,+title} = request
   Reply{+value} = reply
-  write_dispatch(State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,navigation,settings},jobs,refresh_at,serial},kind,args,title,mode,value)
+  write_done_kind(State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,navigation,settings},jobs,refresh_at,serial},request,kind,args,title,mode,value)
 
 def poll_write_ready(+state: State,+request: Request,chan: Chan(Reply),result: Maybe<&1,Reply>) -> IO(State):
   match result:
@@ -2782,6 +2973,8 @@ def read_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.J
       related_done(state,request,result)
     case 26:
       related_done(state,request,result)
+    case 37:
+      quota_done(state,request,result)
     case 32:
       brief_done(state,request,result)
     case 33:
@@ -2818,7 +3011,7 @@ def poll_read_ready(+state: State,+ticket: U32,+request: Request,chan: Chan(Repl
     case None{}:
       do IO<State>:
         Chan.close(Reply,chan)
-        return status(clear_reader(state),"Local reader ended without a result.")
+        read_current_io(state,request,Reply{Fail{"Local reader ended without a result."}},U32.is_eq(ticket,revision))
     case Some{reply}:
       do IO<State>:
         Chan.close(Reply,chan)
@@ -2850,6 +3043,89 @@ def copy_action(+state: State,text: String) -> IO(Maybe<State>):
   do IO<Maybe<State>>:
     result : Result<&1,&1,U32 & String,U32 & (String & String)> <- UI.clipboard_copy(text)
     return Some{copy_done(state,result)}
+
+def quota_setup_allowed(state: State,model: Quota.Model,allowed: Bool) -> State:
+  match allowed:
+    case True{}: quota_update(state,Quota.setup_view(model))
+    case False{}: status(state,"Refresh an enabled local connection before reviewing manual setup.")
+
+def quota_setup_value(state: State,value: Maybe<&2,Quota.Model>) -> State:
+  match value:
+    case None{}: state
+    case Some{+model}: quota_setup_allowed(state,model,Quota.can_setup(model))
+
+def quota_pick_value(state: State,index: U32,value: Maybe<&2,Quota.Model>) -> State:
+  match value:
+    case None{}: state
+    case Some{model}: quota_update(state,Quota.selected(model,index))
+
+def quota_page_value(+state: State,+forward: Bool,value: Maybe<&2,Quota.Model>) -> State:
+  match value:
+    case None{}: state
+    case Some{+model}:
+      quota_read(state,Quota.History{Bool.pick(U32,forward,
+        Bool.pick(U32,Quota.more(model),U32.add(Quota.offset(model),40),Quota.offset(model)),UI.minus(Quota.offset(model),40))})
+
+def quota_paste(+state: State,result: Result<&1,&1,U32 & String,U32 & (String & String)>) -> State:
+  State{_,_,_,+ui,_,_,_,_,_} = state
+  match result:
+    case Done{(0,(text,error))}: quota_edit(replace_ui(state,UI.insert(ui,text)))
+    case _: status(state,"Clipboard unavailable or paste failed.")
+
+def quota_copy_done(state: State,result: Result<&1,&1,U32 & String,U32 & (String & String)>) -> State:
+  match result:
+    case Done{(0,_)}: status(state,"Manual setup copied. It is not installed; no account access or valid feed is implied.")
+    case _: status(state,"Manual setup was not confirmed copied.")
+
+def quota_copy_fragment(state: State,value: QuotaCli.result_type()) -> IO(Maybe<State>):
+  match value:
+    case Fail{_}: IO.pure(Maybe<State>,Some{status(state,"Manual setup is unavailable. Refresh this enabled local connection first.")})
+    case Done{text}:
+      do IO<Maybe<State>>:
+        result : Result<&1,&1,U32 & String,U32 & (String & String)> <- UI.clipboard_copy(text)
+        return Some{quota_copy_done(state,result)}
+
+def quota_copy_allowed(state: State,model: Quota.Model,program: String,allowed: Bool) -> IO(Maybe<State>):
+  match allowed:
+    case False{}: IO.pure(Maybe<State>,Some{status(state,"Review current Manual setup before copying. Root edits and pending changes retire that review.")})
+    case True{}: quota_copy_fragment(state,Quota.setup(model,program))
+
+def quota_copy_value(+state: State,value: Maybe<&2,Quota.Model>) -> IO(Maybe<State>):
+  State{_,_,program,+ui,_,_,_,_,_} = state
+  match value:
+    case None{}: IO.pure(Maybe<State>,Some{state})
+    case Some{+model}: quota_copy_allowed(state,model,program,Quota.can_copy(model) && String.eq(UI.query(ui),Quota.root(model)))
+
+def handle_quota(+state: State,action: UI.Action) -> IO(Maybe<State>):
+  match action:
+    case UI.Quit{}: IO.pure(Maybe<State>,None{})
+    case UI.Settings{}: IO.pure(Maybe<State>,Some{quota_back(state)})
+    case UI.Back{}: IO.pure(Maybe<State>,Some{quota_back(state)})
+    case UI.Search{}: IO.pure(Maybe<State>,Some{quota_edit(state)})
+    case UI.Submit{}: IO.pure(Maybe<State>,Some{quota_read(state,Quota.Status{})})
+    case UI.Refresh{}: IO.pure(Maybe<State>,Some{quota_read(state,Quota.Status{})})
+    case UI.QuotaEnable{}:
+      do IO<Maybe<State>>:
+        next : State <- quota_write(state,Quota.Enable{})
+        return Some{next}
+    case UI.QuotaDisconnect{}:
+      do IO<Maybe<State>>:
+        next : State <- quota_write(state,Quota.Disconnect{})
+        return Some{next}
+    case UI.QuotaHistory{}: IO.pure(Maybe<State>,Some{quota_read(state,Quota.History{0})})
+    case UI.QuotaSetup{}: IO.pure(Maybe<State>,Some{quota_setup_value(state,quota_model(navigation(state)))})
+    case UI.QuotaCopySetup{}: quota_copy_value(state,quota_model(navigation(state)))
+    case UI.ListPrevious{}: IO.pure(Maybe<State>,Some{quota_page_value(state,False{},quota_model(navigation(state)))})
+    case UI.ListNext{}: IO.pure(Maybe<State>,Some{quota_page_value(state,True{},quota_model(navigation(state)))})
+    case UI.Open{index}: IO.pure(Maybe<State>,Some{quota_pick_value(state,index,quota_model(navigation(state)))})
+    case UI.Copy{text}: copy_action(state,text)
+    case UI.CopyStatus{text}: copy_action(state,text)
+    case UI.Paste{}:
+      do IO<Maybe<State>>:
+        result : Result<&1,&1,U32 & String,U32 & (String & String)> <- UI.clipboard_paste()
+        return Some{quota_paste(state,result)}
+    case UI.NoAction{}: IO.pure(Maybe<State>,Some{state})
+    case _: IO.pure(Maybe<State>,Some{status(state,"Connections uses only its selected local quota store. Back restores Settings and its captured reader.")})
 
 def handle_normal(+state: State,action: UI.Action) -> IO(Maybe<State>):
   State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+args,+filters,+listing},+form,+jobs,+refresh_at,+serial} = state
@@ -3092,6 +3368,7 @@ def settings_scope(+state: State,+provider: String) -> State:
 def handle_settings(+state: State,+action: UI.Action) -> IO(Maybe<State>):
   State{+db,+dir,+program,+ui,+selection,+form,+jobs,+deadline,+serial} = state
   match action:
+    case UI.Connections{}: IO.pure(Maybe<State>,Some{quota_enter(settings_input(state))})
     case UI.Settings{}: IO.pure(Maybe<State>,Some{settings_leave(state)})
     case UI.Back{}: IO.pure(Maybe<State>,Some{settings_leave(state)})
     case UI.Search{}: IO.pure(Maybe<State>,Some{form_text(state)})
@@ -3140,6 +3417,7 @@ def handle_mode_inner(+state: State,+action: UI.Action,+active: Bool) -> IO(Mayb
 def handle_mode_phase(+state: State,+action: UI.Action,active: Bool,phase: U32) -> IO(Maybe<State>):
   match phase:
     case 5: handle_brief(state,action)
+    case 6: handle_quota(state,action)
     case _: handle_mode_inner(state,action,active)
 
 def handle_mode(+state: State,+action: UI.Action,active: Bool) -> IO(Maybe<State>):
@@ -3150,7 +3428,7 @@ def handle(+state: State,action: UI.Action) -> IO(Maybe<State>):
 
 def event(+state: State,result: UI.State & UI.Action) -> IO(Maybe<State>):
   (ui,action) = result
-  handle(replace_ui(state,ui),action)
+  handle(quota_edit(replace_ui(state,ui)),action)
 
 def events_next(result: Maybe<State>,next: State -> IO(Maybe<State>)) -> IO(Maybe<State>):
   match result:

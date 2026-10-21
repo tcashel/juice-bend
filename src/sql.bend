@@ -14,6 +14,13 @@ type Cell is Data:
 def open(path: String) -> IO(Result<&1, &1, U32 & String, U32>):
   import "../native/sqlite.c"
 
+# Existing-file primitive: mode 0 is read-only, mode 1 requires read-write.
+# Never sets CREATE; always requires SQLite NOFOLLOW support (3.31.0+).
+# Invalid modes fail. Bend callers retain ordinary-path, owner and mode policy;
+# SQLite special filenames are not a substitute for a validated absolute path.
+def open_existing(path: String, mode: U32) -> IO(Result<&1, &1, U32 & String, U32>):
+  import "../native/sqlite.c"
+
 # Exactly one prepared statement. Empty bindings for DDL/transaction statements.
 # Exceeding max_rows fails, never silently truncates. Bound SELECTs in SQL.
 # SQLite error codes are returned with content-free engine descriptions.

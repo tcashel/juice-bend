@@ -53,6 +53,12 @@ def kind(action: UI.Action) -> U32:
     case UI.CopyStatus{text}: 38
     case UI.WholeExport{}: 39
     case UI.ContainerExport{}: 40
+    case UI.Connections{}: 41
+    case UI.QuotaEnable{}: 42
+    case UI.QuotaDisconnect{}: 43
+    case UI.QuotaHistory{}: 44
+    case UI.QuotaSetup{}: 45
+    case UI.QuotaCopySetup{}: 46
 
 def clicked(result: UI.State & UI.Action,expected: U32,label: String) -> IO(Unit):
   (state,action) = result
@@ -126,7 +132,7 @@ def settings() -> IO(Unit):
     click(s,16,216,3,"Settings Codex")
     click(s,16,248,20,"Settings Add folder")
     click(s,16,280,21,"Settings Import file")
-    click(s,16,312,25,"Settings Storage")
+    click(s,16,312,41,"Settings Connections")
     click(s,16,344,24,"Settings Reload")
     click(s,16,376,22,"Settings Enable")
     click(s,16,408,23,"Settings Disable")

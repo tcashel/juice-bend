@@ -1,6 +1,21 @@
 # Capabilities
 
-The current compact app `e780c37b…` fits completely at observed 1280×800 with
+## Connections native validation — 2026-10-21
+
+Current app `0d4839d9…` adds explicit local Claude quota collection under
+Settings → Connections. Actual Tart interaction passed Enable, reviewed setup
+copy, known-zero/partial observations, invalid/unknown feed handling, retained
+history, Disconnect/retired callbacks, root-edit refusal and exact Back restoration.
+Eighteen clipboard comparisons, four inert-copy checks and 75 containment
+observations passed; capture counts and full 8,313-byte export stayed exact.
+This is passive local observation, not account authentication or real-provider
+integration. See [native receipt](receipts/connections-native.txt). Focused Linux 387
+and Mac 334 assertions have overlapping scopes, not a new full-suite total.
+The narrow SQLite bridge is 454 lines; new existing-file open flags do not change
+capture-open behavior. History-row newline, raw timestamp presentation and long
+policy text remain polish gaps. Earlier compact evidence below is preserved.
+
+The preserved compact app `e780c37b…` fits completely at observed 1280×800 with
 the Dock visible. Actual keyboard/wheel paging, status return, eighteen clipboard
 comparisons and six exports passed, including retained source-absent reads.
 See [compact receipt](receipts/compact-native.txt). This closes the observed

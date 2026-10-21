@@ -4,6 +4,8 @@ import ./sql.bend as Sql
 import ./gui.bend as Gui
 import ./cli.bend as Cli
 import ./demo.bend as Demo
+import ./quota_entry.bend as Quota
+import ./quota_route.bend as Route
 
 def mkdir_result(result: Result<&1,&1,U32 & String,U32 & (String & String)>) -> IO(Unit):
   match result:
@@ -39,16 +41,22 @@ def run(+dir: String,program: String,args: List<String>) -> IO(Unit):
     dispatch(db,dir,program,args)
     IO.try(Unit,Sql.close(db))
 
-def options(program: String,args: List<String>) -> IO(Unit):
-  match args:
-    case "--data-dir" <> dir <> rest:
-      run(dir,program,rest)
-    case "--data-dir" <> []:
-      IO.die(Unit,2,"--data-dir requires a directory")
-    case rest:
+def capture_root(program: String,args: List<&2,String>,root: Maybe<&2,String>) -> IO(Unit):
+  match root:
+    case Some{dir}: run(dir,program,Route.linear(args))
+    case None{}:
       do IO<Unit>:
         home : String <- IO.try(String,IO.get_env("HOME"))
-        run(home ++ "/Library/Application Support/JuiceBend",program,rest)
+        run(home ++ "/Library/Application Support/JuiceBend",program,Route.linear(args))
+
+def routed(program: String,route: Route.Route) -> IO(Unit):
+  match route:
+    case Route.Quota{root,args}: Quota.argv("--data-dir" <> root <> "quota" <> Route.linear(args))
+    case Route.Rejected{}: Quota.argv([])
+    case Route.Capture{root,args}: capture_root(program,args,root)
+
+def options(program: String,args: List<String>) -> IO(Unit):
+  routed(program,Route.classify(Quota.copied_args(args)))
 
 def argv(args: List<String>) -> IO(Unit):
   match args:

@@ -265,3 +265,19 @@ preview and each retained event field are limited to 2048 decoded characters;
 complete bytes remain in raw export. Parser/schema/projection versions, normalized
 text/roles and immutable capture/citation identity do not change. No rebuild is
 required. The existing first-16-record and 64-generation bounds remain explicit.
+
+## Explicit local quota collection
+
+`--data-dir ROOT quota ...` routes before capture initialization/default HOME
+lookup. Only Enable may provision the separate private observation store.
+Status/history/Disconnect/callback require an existing canonical private root;
+unsupported WAL headers are refused before SQLite opens them. Existing-file
+open requires SQLite 3.31+ NOFOLLOW and never adds CREATE. Same-UID parent
+replacement is not a claimed handle-bound containment guarantee.
+
+The receiver preserves known zero versus unknown, binds callbacks to an active
+local epoch, samples accepted observations in five-minute slots and retains
+bounded history after disconnect. Local receipt time does not establish provider
+freshness/account identity. GUI replies bind root/request/operation/epoch; Back
+and root edits retire presentation requests. Copied setup is not installed setup.
+No account, credential, provider process or network operation is performed.

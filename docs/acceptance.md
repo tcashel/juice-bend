@@ -1,8 +1,23 @@
 # Acceptance evidence
 
+## Connections native validation — 2026-10-21
+
+Current app `0d4839d9…` adds explicit local Claude quota collection under
+Settings → Connections. Actual Tart interaction passed Enable, reviewed setup
+copy, known-zero/partial observations, invalid/unknown feed handling, retained
+history, Disconnect/retired callbacks, root-edit refusal and exact Back restoration.
+Eighteen clipboard comparisons, four inert-copy checks and 75 containment
+observations passed; capture counts and full 8,313-byte export stayed exact.
+This is passive local observation, not account authentication or real-provider
+integration. See [native receipt](receipts/connections-native.txt). Focused Linux 387
+and Mac 334 assertions have overlapping scopes, not a new full-suite total.
+The narrow SQLite bridge is 454 lines; new existing-file open flags do not change
+capture-open behavior. History-row newline, raw timestamp presentation and long
+policy text remain polish gaps. Earlier compact evidence below is preserved.
+
 ## Compact native window — 2026-10-21
 
-Current app `e780c37b…` fits completely at actual 1280×800 with the Dock shown.
+Preserved compact app `e780c37b…` fits completely at actual 1280×800 with the Dock shown.
 Native Page Down/Up, wheel, status Close/Escape, exact Unicode copy, Brief and
 retained archive workflows passed. Eighteen clipboard comparisons and six
 private exact exports passed; source removal/restart and invalid-input refusals
@@ -254,7 +269,7 @@ and `performance.md`. These focused gates do not replace full-suite or UI parity
 | A15 | Passed backend fixture scope | File evidence: 35 checks; unified diff parser: 36. Real isolated Git fixtures exercise commit-hunk content mapping, unmatched neighboring regions, unique explicit-trailer exact identity, explicit-body probable identity, ambiguity and uncommitted lines. Linked worktrees share canonical repository scope. Exact identity does not establish sole authorship or tool success. Native workflow observations remain separate. |
 | A16 | Passed tested cases | Provenance: 36 checks cover scope, collisions, ambiguity, exact rational scores, decimal timestamps above 2^53, ties, repeated/low-entropy lines and safe paths. File-evidence checks additionally require an eligible unique parent for child evidence; orphaned, ambiguous, excluded and cyclic identities remain unresolved. Parent navigation retains the child's captured citation/model rather than fabricating parent authorship. |
 | A17 | Passed tested/observed scope | Citation consumer verifies full provider/source/generation/snapshot/extent/record/event identity against retained bytes. 38 evidence assertions plus four synthetic Git fixture commands pass, including old references after append/rewrite. Earlier file Why quoted captured intent. Final guest Why/export worked after source removal; its inspected Markdown was 11,796 bytes, mode 0600, with the exact hash recorded in `native-validation.md`. Atomic no-overwrite exports pass race/symlink regressions. |
-| A18 | Audited implementation boundary | Maintained application modules, tests, benchmarks and proofs are Bend; the native first-party exception is the 418-line SQLite bridge. The recorded `otool -L` audit shows only system SQLite/libSystem and upstream macOS UI frameworks. Source/process audit found no semantic, model, vector or network application subsystem. This is a dependency/source audit, not packet tracing. |
+| A18 | Audited implementation boundary | Maintained application modules, tests, benchmarks and proofs are Bend; the native first-party exception is the 454-line SQLite bridge (existing-file open flags added with separate native validation). The recorded `otool -L` audit shows only system SQLite/libSystem and upstream macOS UI frameworks. Source/process audit found no semantic, model, vector or network application subsystem. This is a dependency/source audit, not packet tracing. |
 | A19 | Passed named native paths; full IME unverified | Candidate `98283d91…` produced exact `café` through native Option+E then E, preserved `café 中文 🙂` with Command+A/C/V, replaced it with `keyboard-ok`, and copied Shift+Arrow selection `ok`. Earlier reader drag/scroll observations retain their own binary identity. This establishes one dead-key composition path; physical keyboard and full IME remain unverified. Earlier failed Unicode injection is not treated as equivalent evidence. See `native-validation.md`. |
 | A20 | Partial native responsiveness and resource evidence | Final guest GUI visibly accepted `live-capture-ok` and Pause during the 100,016-record capture. Final GUI physical footprint was 41.1M (peak 41.5M) before rebuild and 46.2M (peak 46.2M) afterward. The 80 ms scheduler measured 1.55% of one core on intermediate `0a6243d5…`, which shares the final GUI source hash; this is not final-binary CPU evidence. The earlier callback trace retains its identified instrumented-build timing results. No input-to-photon percentile or sustained 60 Hz scroll result is claimed. |
 | A21 | Passed scoped audit | Wrappers use private temporary roots and `umask 077`; source/process audit confirms explicit roots, bounded read-only Git and no implicit provider-home scan. Publication inventory contains synthetic tests/receipts, no private logs, databases or reference-source snapshots. Original Juice was used read-only and its pre-existing edits remain present. |

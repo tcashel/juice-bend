@@ -16,6 +16,7 @@ type Results is Data:
   RelatedResults{page: U32, count: U32, has_more: Bool, has_previous: Bool}
   SettingsResults{offset: U32,total: U32,automatic: String,ready: Bool}
   BriefResults{phase: U32}
+  QuotaResults{phase: U32,loaded: Bool,enabled: Bool,view: U32,offset: U32,count: U32,more: Bool}
 
 type Edit is Data:
   Edit{focus: U32, caret: U32, anchor: U32, dragging: Bool, viewport: U32}
@@ -66,6 +67,12 @@ type Action is Data:
   SettingsDisable{}
   SettingsInterval{seconds: U32}
   SettingsReload{}
+  Connections{}
+  QuotaEnable{}
+  QuotaDisconnect{}
+  QuotaHistory{}
+  QuotaSetup{}
+  QuotaCopySetup{}
   Storage{}
   Files{}
   RepoOpen{}
@@ -144,6 +151,33 @@ def is_brief(+s: State) -> Bool:
     case BriefResults{_}: True{}
     case _: False{}
 
+def is_quota(s: State) -> Bool:
+  State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
+  match results:
+    case QuotaResults{_,_,_,_,_,_,_}: True{}
+    case _: False{}
+
+def quota_ready(phase: U32,loaded: Bool) -> Bool:
+  U32.is_eq(phase,2) && loaded
+
+# The same presentation gate controls pointer actions and their muted paint.
+# Only an acknowledged local state can authorize enable/disconnect/setup.
+def quota_control(index: U32,+phase: U32,loaded: Bool,+enabled: Bool,view: U32) -> Bool:
+  match index:
+    case 0: True{}
+    case 1: U32.is_le(phase,3) && U32.is_ne(phase,1)
+    case 2: quota_ready(phase,loaded) && Bool.not(enabled)
+    case 3: quota_ready(phase,loaded) && enabled
+    case 4: quota_ready(phase,loaded)
+    case 5: quota_ready(phase,loaded) && enabled
+    case 6: quota_ready(phase,loaded) && enabled && U32.is_eq(view,2)
+    case _: False{}
+
+def quota_available(results: Results,index: U32) -> Bool:
+  match results:
+    case QuotaResults{phase,loaded,enabled,view,_,_,_}: quota_control(index,phase,loaded,enabled,view)
+    case _: False{}
+
 def title(s: State) -> String:
   State{Content{q,rows,reader,lines,title,status,scope,results,+files},input,image,dirty} = s
   title
@@ -198,6 +232,10 @@ def ordinary_result_label(+offset: U32,+count: U32,more: Bool,ready: Bool) -> St
 
 def result_label(results: Results) -> String:
   match results:
+    case QuotaResults{+phase,loaded,enabled,+view,offset,count,more}:
+      Bool.pick(String,U32.is_eq(phase,1),"Loading local observations",Bool.pick(String,quota_ready(phase,loaded),
+        Bool.pick(String,U32.is_eq(view,1),ordinary_result_label(offset,count,more,True{}),
+          Bool.pick(String,U32.is_eq(view,2),"Review manual setup",Bool.pick(String,enabled,"Collection enabled locally","Collection off"))),"Refresh to verify local state"))
     case BriefResults{+phase}: Bool.pick(String,U32.is_eq(phase,0),"Choose explicit repository",Bool.pick(String,U32.is_eq(phase,2),"Review before sharing","Checking captured evidence"))
     case Results{offset,count,more,ready}: ordinary_result_label(offset,count,more,ready)
     case RelatedResults{page,count,more,previous}:
@@ -207,6 +245,9 @@ def result_label(results: Results) -> String:
 
 def result_available(results: Results,forward: Bool) -> Bool:
   match results:
+    case QuotaResults{phase,loaded,enabled,view,+offset,count,more}:
+      quota_ready(phase,loaded) && U32.is_eq(view,1) &&
+        Bool.pick(Bool,forward,more && U32.is_le(offset,32728),U32.is_gt(offset,0))
     case BriefResults{_}: False{}
     case Results{+offset,count,more,ready}:
       ready && Bool.pick(Bool,forward,more && U32.is_le(offset,4294967095),U32.is_gt(offset,0))
@@ -508,7 +549,7 @@ def sidebar_settings(+s: State,index: U32) -> State & Action:
     case 3: (set_scope(s,"codex"),Scope{"codex"})
     case 4: (s,SettingsAddFolder{})
     case 5: (s,SettingsImportFile{})
-    case 6: (s,Storage{})
+    case 6: (s,Connections{})
     case 7: (s,SettingsReload{})
     case 8: (s,SettingsEnable{})
     case 9: (s,SettingsDisable{})
@@ -543,8 +584,31 @@ def sidebar_context(+s: State,+row: U32,+brief: Bool) -> State & Action:
     case True{}: sidebar_brief(s,row)
     case False{}: sidebar_mode(s,row,is_settings(s))
 
+def quota_action_ready(available: Bool,s: State,index: U32) -> State & Action:
+  match available:
+    case False{}: (s,NoAction{})
+    case True{}:
+      match index:
+        case 0: (s,Settings{})
+        case 1: (s,Refresh{})
+        case 2: (s,QuotaEnable{})
+        case 3: (s,QuotaDisconnect{})
+        case 4: (s,QuotaHistory{})
+        case 5: (s,QuotaSetup{})
+        case 6: (s,QuotaCopySetup{})
+        case _: (s,NoAction{})
+
+def quota_action(+s: State,+index: U32) -> State & Action:
+  State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
+  quota_action_ready(quota_available(results,index),s,index)
+
+def sidebar_quota(+s: State,row: U32,quota: Bool) -> State & Action:
+  match quota:
+    case True{}: quota_action(s,row)
+    case False{}: sidebar_context(s,row,is_brief(s))
+
 def sidebar_action(+s: State,row: U32) -> State & Action:
-  sidebar_context(s,row,is_brief(s))
+  sidebar_quota(s,row,is_quota(s))
 
 def list_row_click(+s: State,+index: U32,valid: Bool) -> State & Action:
   match valid:
@@ -647,8 +711,24 @@ def top_context(+s: State,+group: U32,+brief: Bool) -> State & Action:
     case True{}: top_brief(s,group)
     case False{}: top_mode(s,group,is_settings(s))
 
+def quota_top_action(s: State,group: U32) -> State & Action:
+  match group:
+    case 0: quota_action(s,1)
+    case 1: quota_action(s,2)
+    case 2: quota_action(s,3)
+    case 3: quota_action(s,4)
+    case 4: quota_action(s,5)
+    case 5: result_action(s,False{})
+    case 6: result_action(s,True{})
+    case _: (s,NoAction{})
+
+def top_quota(+s: State,group: U32,quota: Bool) -> State & Action:
+  match quota:
+    case True{}: quota_top_action(s,group)
+    case False{}: top_context(s,group,is_brief(s))
+
 def top_action(+s: State,group: U32) -> State & Action:
-  top_context(s,group,is_brief(s))
+  top_quota(s,group,is_quota(s))
 
 def query_click(+s: State, col: U32) -> State & Action:
   +pos = query_at(s, col)
@@ -967,6 +1047,7 @@ def draw_rows(+fuel: Nat,+c: Canvas,rows: List<&2,String>,+at: U32,+selected: U3
 
 def list_heading(results: Results,files: Bool) -> String:
   match results:
+    case QuotaResults{_,_,_,_,_,_,_}: "Local observations"
     case RelatedResults{page,count,more,previous}: "Related captures"
     case SettingsResults{offset,total,automatic,ready}: "Registered folders"
     case BriefResults{_}: "Frozen capture"
@@ -987,7 +1068,7 @@ def side_label(settings: Bool,index: U32,files: Bool) -> String:
         case 3: "Codex"
         case 4: "Add folder"
         case 5: "Import file"
-        case 6: "Storage"
+        case 6: "Connections"
         case 7: "Reload settings"
         case 8: "Enable selected"
         case 9: "Disable selected"
@@ -1081,6 +1162,78 @@ def draw_top(fuel: Nat,c: Canvas,+index: U32,+files: Bool,+settings: Bool,+whole
       label = text(base,Bool.pick(String,brief,brief_top_label(index),top_label(index,files,settings,whole,automatic)),U32.add(x,8),88,U32.sub(U32.div(w,8),2),accent(),panel())
       draw_top(n,label,U32.add(index,1),files,settings,whole,automatic,brief)
 
+def quota_side_label(index: U32) -> String:
+  match index:
+    case 0: "Back to Settings"
+    case 1: "Refresh local"
+    case 2: "Enable"
+    case 3: "Disconnect"
+    case 4: "Sampled history"
+    case 5: "Manual setup"
+    case 6: "Copy setup"
+    case _: ""
+
+def quota_side_color(results: Results,index: U32) -> U32:
+  Bool.pick(U32,quota_available(results,index),ink(),muted())
+
+def draw_quota_side(fuel: Nat,c: Canvas,+index: U32,+results: Results) -> Canvas:
+  match fuel:
+    case 0n: c
+    case 1n+n:
+      +y = G.sidebar_y(index)
+      base = box(c,8,y,160,32,rail())
+      label = text(base,quota_side_label(index),16,U32.add(y,8),18,quota_side_color(results,index),rail())
+      draw_quota_side(n,label,U32.add(index,1),results)
+
+def draw_side_context(quota: Bool,c: Canvas,results: Results,files: Bool,settings: Bool,scope: String,brief: Bool) -> Canvas:
+  match quota:
+    case True{}: draw_quota_side(7n,c,0,results)
+    case False{}: draw_side(U32.to_nat(G.sidebar_rows()),c,0,files,settings,scope,brief)
+
+def quota_top_label(index: U32) -> String:
+  match index:
+    case 0: "Refresh local"
+    case 1: "Enable"
+    case 2: "Disconnect"
+    case 3: "History"
+    case 4: "Manual setup"
+    case 5: "Previous samples"
+    case 6: "Next samples"
+    case _: ""
+
+def quota_top_available(results: Results,index: U32) -> Bool:
+  match index:
+    case 0: quota_available(results,1)
+    case 1: quota_available(results,2)
+    case 2: quota_available(results,3)
+    case 3: quota_available(results,4)
+    case 4: quota_available(results,5)
+    case 5: result_available(results,False{})
+    case 6: result_available(results,True{})
+    case _: False{}
+
+def quota_top_color(results: Results,index: U32) -> U32:
+  Bool.pick(U32,quota_top_available(results,index),accent(),muted())
+
+def draw_quota_top(fuel: Nat,c: Canvas,+index: U32,+results: Results) -> Canvas:
+  match fuel:
+    case 0n: c
+    case 1n+n:
+      +x = G.top_x(index)
+      +w = G.top_width(index)
+      base = box(c,x,80,w,32,panel())
+      label = text(base,quota_top_label(index),U32.add(x,8),88,U32.sub(U32.div(w,8),2),quota_top_color(results,index),panel())
+      draw_quota_top(n,label,U32.add(index,1),results)
+
+def draw_top_context(quota: Bool,c: Canvas,results: Results,files: Bool,settings: Bool,whole: Bool,automatic: String,brief: Bool) -> Canvas:
+  match quota:
+    case True{}: draw_quota_top(7n,c,0,results)
+    case False{}: draw_top(7n,c,0,files,settings,whole,automatic,brief)
+
+def query_label(+s: State) -> String:
+  Bool.pick(String,is_quota(s),"Selected Juice Bend data directory",Bool.pick(String,is_brief(s),"Repository folder for this brief",
+    Bool.pick(String,is_settings(s),"Source file or folder path",Bool.pick(String,is_files(s),"Repository folder path","Search captured history"))))
+
 def draw_status(modal: Bool,+s: State,c: Canvas) -> Canvas:
   match modal:
     case False{}: c
@@ -1099,6 +1252,13 @@ def draw_capture_hint(c: Canvas,+suspended: Bool) -> Canvas:
   first = text(c,capture_hint(suspended),G.capture_hint_x(),80,G.capture_hint_columns(),muted(),rail())
   text(first,Bool.pick(String,suspended,"Back to History",""),G.capture_hint_x(),96,G.capture_hint_columns(),muted(),rail())
 
+def draw_capture_context(quota: Bool,c: Canvas,+suspended: Bool) -> Canvas:
+  match quota:
+    case False{}: draw_capture_hint(c,suspended)
+    case True{}:
+      first = text(c,capture_hint(suspended),G.capture_hint_x(),80,G.capture_hint_columns(),muted(),rail())
+      text(first,"Local quota only",G.capture_hint_x(),96,G.capture_hint_columns(),muted(),rail())
+
 def draw_canvas_capture(+s: State,automatic: String,suspended: Bool) -> Canvas:
   State{Content{+q,rows,reader,lines,title,status,+scope,+results,+files},Input{+selected,scroll,Edit{+focus,+caret,+anchor,drag,viewport},command,shift},image,dirty} = s
   base = box(Flat{paper()},0,0,G.width(),G.header_height(),rail())
@@ -1107,12 +1267,12 @@ def draw_canvas_capture(+s: State,automatic: String,suspended: Bool) -> Canvas:
   foot = box(list,0,G.footer_y(),G.width(),40,rail())
   brand = text(foot,"JUICE BEND",16,24,18,accent(),rail())
   tagline = text(brand,"Your captured work",16,48,18,muted(),rail())
-  input_label = text(tagline,Bool.pick(String,is_brief(s),"Repository folder for this brief",Bool.pick(String,is_settings(s),"Source file or folder path",Bool.pick(String,files,"Repository folder path","Search captured history"))),192,8,60,muted(),rail())
+  input_label = text(tagline,query_label(s),192,8,60,muted(),rail())
   query_bg = box(input_label,G.query_left(),24,U32.sub(G.query_right(),G.query_left()),40,paper())
   query = draw_line(U32.to_nat(G.query_columns()),query_bg,String.append(String.drop(q,U32.to_nat(query_offset(s)))," "),U32.div(G.query_x(),G.cell()),U32.div(G.query_y(),G.cell()),query_offset(s),Bool.pick(U32,U32.is_eq(focus,0),U32.min(caret,anchor),0),Bool.pick(U32,U32.is_eq(focus,0),Bool.pick(U32,U32.is_eq(caret,anchor),U32.add(caret,1),U32.max(caret,anchor)),0))
-  top = draw_top(7n,query,0,files,is_settings(s),whole_usage(s),automatic_label(results,automatic),is_brief(s))
-  capture = draw_capture_hint(top,suspended)
-  navigation = draw_side(U32.to_nat(G.sidebar_rows()),capture,0,files,is_settings(s),scope,is_brief(s))
+  top = draw_top_context(is_quota(s),query,results,files,is_settings(s),whole_usage(s),automatic_label(results,automatic),is_brief(s))
+  capture = draw_capture_context(is_quota(s),top,suspended)
+  navigation = draw_side_context(is_quota(s),capture,results,files,is_settings(s),scope,is_brief(s))
   heading = text(navigation,list_heading(results,files),192,128,38,ink(),panel())
   range = text(heading,result_label(results),192,152,38,muted(),panel())
   prev = text(range,"Previous",192,G.list_pager_y(),16,Bool.pick(U32,result_available(results,False{}),accent(),muted()),panel())

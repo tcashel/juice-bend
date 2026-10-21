@@ -27,6 +27,10 @@ The source/compiler cache is ignored under `.tools`; generated C,
 native executables and the module cache are ignored under `build`. Bun does not
 run in the shipped native application process.
 
+Connections existing-store admission requires SQLite 3.31+ with NOFOLLOW.
+Its narrow bridge open primitive uses RO/RW and FULLMUTEX without CREATE;
+ordinary capture-open behavior is unchanged. See the Connections native receipt.
+
 The system SDK and SQLite are capability requirements rather than vendored
 packages. Run the SQLite boundary tests when either changes. Do not substitute
 the `sqlite3` found on PATH: this Mac also has a separate Conda SQLite 3.45.3.
