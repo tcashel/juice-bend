@@ -3,9 +3,13 @@ import ../src/cli.bend as Cli
 import ../src/store.bend as Store
 import ../src/sql.bend as Sql
 import ../src/query.bend as Query
+import ../src/domain.bend as Domain
+import ../src/json.bend as Json
 
-# Listing-only fixtures deliberately populate synthetic projections directly.
-# They exercise ordering, filtering and read transactions, not raw preservation.
+# Listing fixtures preserve explicit identities and artificial projected rows.
+# History titles now verify retained bytes: each source therefore owns one valid
+# complete JSONL record. Extra role/date projection rows below stay intentional;
+# these tests exercise listing behavior, not projection/transcript equivalence.
 # scripts/test supplies the isolated working directory and its .build folder.
 def assert(ok: Bool,name: String) -> IO(Unit):
   match ok:
@@ -39,12 +43,45 @@ def source_rows(+db: U32,+base: Nat,+at: U32,+count: U32) -> IO(Unit):
 def index_all(db: U32) -> IO(Unit):
   Store.exec(db,"INSERT INTO search(rowid,body,arguments,result,tool,snapshot,ordinal,event) SELECT rowid,body,arguments,result,tool,snapshot,ordinal,event FROM events",[])
 
+def retained_text(provider: String,repo: String) -> String:
+  match provider:
+    case "codex":
+      "{\"type\":\"response_item\",\"timestamp\":\"2026-10-02T00:00:00Z\",\"payload\":{\"type\":\"message\",\"role\":\"user\",\"cwd\":" ++
+        Json.quote(repo) ++ ",\"session_id\":\"listing-fixture\",\"content\":[{\"type\":\"input_text\",\"text\":\"pagingneedle\"}]}}\n"
+    case _:
+      "{\"type\":\"user\",\"cwd\":" ++ Json.quote(repo) ++
+        ",\"sessionId\":\"listing-fixture\",\"timestamp\":\"2026-10-02T00:00:00Z\",\"message\":{\"content\":\"pagingneedle\"}}\n"
+
+# Use production UTF8 encoding and generation-bound raw hashing while retaining
+# the source/generation/snapshot identities required by the paging assertions.
+# The newline terminates this single non-oversized physical record at its extent.
+def retained_snapshot(+db: U32,+id: String,provider: String,repo: String) -> IO(Unit):
+  +bytes = Domain.encode(retained_text(provider,repo))
+  +size = U32.from_nat(List.length(&2,U32,bytes))
+  digest = Store.raw_digest(id,0,0,size,bytes)
+  do IO<Unit>:
+    Store.exec(db,"INSERT INTO snapshots(id,generation,extent,checkpoint,checkpoint_ordinal,records,accepted) VALUES(?,?,?,?,1,1,1)",
+      [Sql.Cell.Integer{id},Sql.Cell.Integer{id},Sql.Cell.Integer{U32.show(size)},Sql.Cell.Integer{U32.show(size)}])
+    Store.exec(db,"INSERT INTO raw(id,generation,ordinal,offset,n,digest,bytes,complete,oversized) VALUES(?,?,0,0,?,?,?,1,0)",
+      [Sql.Cell.Integer{id},Sql.Cell.Integer{id},Sql.Cell.Integer{U32.show(size)},Sql.Cell.Text{digest},Sql.Cell.Blob{bytes}])
+    Store.exec(db,"INSERT INTO records(snapshot,ordinal,raw) VALUES(?,0,?)",
+      [Sql.Cell.Integer{id},Sql.Cell.Integer{id}])
+
+def retained_rows(rows: List<&2,List<&2,Sql.Cell>>,+db: U32) -> IO(Unit):
+  match rows:
+    case []: IO.pure(Unit,Unit{})
+    case +row <> rest:
+      do IO<Unit>:
+        retained_snapshot(db,Store.field(row,0n),Store.field(row,1n),"/synthetic/list-target")
+        retained_rows(rest,db)
+
 def fixture(+db: U32,base: Nat,count: U32) -> IO(Unit):
   do IO<Unit>:
     Store.exec(db,"BEGIN IMMEDIATE",[])
     source_rows(db,base,1,count)
     Store.exec(db,"INSERT INTO generations(id,source) SELECT id,id FROM sources",[])
-    Store.exec(db,"INSERT INTO snapshots(id,generation,extent,records,accepted) SELECT id,id,1,1,1 FROM sources",[])
+    retained : List<&2,List<&2,Sql.Cell>> <- Store.q(db,"SELECT id,provider FROM sources ORDER BY id",[],4096)
+    retained_rows(retained,db)
     Store.exec(db,"INSERT INTO events SELECT id,0,0,'user','pagingneedle','','','','','/synthetic/list-target','listing-fixture','2026-10-02T00:00:00.000000000Z','','','','complete' FROM sources",[])
     index_all(db)
     Store.exec(db,"COMMIT",[])
@@ -117,11 +154,11 @@ def event(+db: U32,+id: String,+ordinal: U32,role: String,repo: String,date: Str
     Store.exec(db,"INSERT INTO search(rowid,body,arguments,result,tool,snapshot,ordinal,event) SELECT rowid,body,arguments,result,tool,snapshot,ordinal,event FROM events WHERE snapshot=? AND ordinal=? AND event=0",
       [Sql.Cell.Integer{id},Sql.Cell.Integer{U32.show(ordinal)}])
 
-def extra_source(+db: U32,+id: String,provider: String,repo: String) -> IO(Unit):
+def extra_source(+db: U32,+id: String,+provider: String,+repo: String) -> IO(Unit):
   do IO<Unit>:
     source(db,id,provider)
     Store.exec(db,"INSERT INTO generations(id,source) VALUES(?,?)",[Sql.Cell.Integer{id},Sql.Cell.Integer{id}])
-    Store.exec(db,"INSERT INTO snapshots(id,generation,extent,records,accepted) VALUES(?,?,1,1,1)",[Sql.Cell.Integer{id},Sql.Cell.Integer{id}])
+    retained_snapshot(db,id,provider,repo)
     event(db,id,0,"user",repo,"2026-10-02T00:00:00.000000000Z")
 
 def scoped_rows(rows: List<&2,List<&2,Sql.Cell>>,+history: Bool) -> Bool:
@@ -232,7 +269,7 @@ def suite(+self: String) -> IO(Unit):
       "CLI rejects lookahead overflow before attempting a nested transaction")
     rejected(self,"4294967296","offset must be an integer from 0 to 4294967295",
       "CLI rejects greater-than-U32 offsets before listing transaction creation")
-    IO.print("Listing pagination suite passed; synthetic SQL projections only")
+    IO.print("Listing pagination suite passed; synthetic retained raw and listing projections")
 
 def dispatch(args: List<String>) -> IO(Unit):
   match args:

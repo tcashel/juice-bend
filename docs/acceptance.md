@@ -1,5 +1,18 @@
 # Acceptance evidence
 
+## Verified request titles in History — 2026-10-21
+
+App `b1cc6430…` shows a bounded, verified recorded request as the History title,
+with a neutral fallback for context, relay, metadata and uncertain frames.
+Only the title cell changes: opening identity, ordering, paging and Search
+rows remain unchanged. Native Tart passed six titles, provider/repository
+filters, exact scoped copy/export, Usage → Back and unchanged selected text
+and pixels after append/rewrite/source removal. Three focused production
+gates passed 199 checks with 142 unchanged inputs; all 58 app inputs stayed
+fixed. See [receipt](receipts/history-native.txt) and
+[summary](../benchmarks/results/tart-history-summary.json). This is not a new
+full-suite, performance or proof run. Unsupported glyphs remain a visual gap.
+
 ## Request-first reading and reachable rebuild — 2026-10-21
 
 App `9af66798…` passed actual Tart Files → Why for six cases, exact Unicode

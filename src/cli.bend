@@ -1,5 +1,6 @@
 import Base
 import ./store.bend as Store
+import ./history_titles.bend as HistoryTitles
 import ./sql.bend as Sql
 import ./json.bend as Json
 import ./provenance.bend as Provenance
@@ -104,11 +105,20 @@ def list_rows(db: U32,history: Bool,filters: Query.Filters,limit: U32,offset: U3
   IO(List<&2,List<&2,Sql.Cell>>):
   match history:
     case True{}:
-      Query.Filters{query,provider,repo,role,after} = filters
-      Store.history(db,provider,repo,limit,offset)
+      HistoryTitles.history(db,filters,limit,offset)
     case False{}:
       Query.Filters{query,provider,repo,role,after} = filters
       Store.search(db,query,provider,repo,role,after,limit,offset)
+
+# The extra pagination probe does not display a row or spend title-read budget.
+def list_more_rows(db: U32,history: Bool,filters: Query.Filters,offset: U32) ->
+  IO(List<&2,List<&2,Sql.Cell>>):
+  match history:
+    case True{}:
+      Query.Filters{query,provider,repo,role,after} = filters
+      Store.history(db,provider,repo,1,offset)
+    case False{}:
+      list_rows(db,False{},filters,1,offset)
 
 def list_more(db: U32,history: Bool,filters: Query.Filters,offset: U32,full: Bool) -> IO(Bool):
   match full:
@@ -116,7 +126,7 @@ def list_more(db: U32,history: Bool,filters: Query.Filters,offset: U32,full: Boo
       IO.pure(Bool,False{})
     case True{}:
       do IO<Bool>:
-        rows : List<&2,List<&2,Sql.Cell>> <- list_rows(db,history,filters,1,U32.add(offset,100))
+        rows : List<&2,List<&2,Sql.Cell>> <- list_more_rows(db,history,filters,U32.add(offset,100))
         return Bool.not(List.is_empty(&2,List<&2,Sql.Cell>,rows))
 
 # Both reads see the same SQLite snapshot. Separate page commands intentionally

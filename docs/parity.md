@@ -77,6 +77,14 @@ empty selection is visibly refused. Six native Why cases, four exports,
 retained/restarted reads and 107 focused production checks passed. See
 `receipts/reading-native.txt`. Eligibility and capture identity are unchanged.
 
+History now uses the same recorded-request policy for a verified display title.
+App `b1cc6430…` passed six native rows, provider/repository filters, exact copy
+and export, Usage Back and retained text/pixels after source removal. All
+non-title row cells and Search output were unchanged; 199 focused checks passed.
+Up to four candidate records per snapshot share an 8 MiB raw/predecessor read
+budget per page. Missing context never triggers prefix replay just for a title.
+See `receipts/history-native.txt`; this does not expand request eligibility.
+
 Current priority: transcript/evidence readability, remaining validation gaps,
 richer provider/archive support, deterministic context
 preparation and explicit opt-in connection/subscription surfaces. Rebuild is
