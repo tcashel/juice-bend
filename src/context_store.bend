@@ -104,14 +104,31 @@ def write(+db: U32,snapshot: String,+prefix: Binding.Prefix,+raw: Binding.Raw,+c
 # actual keys cannot hide below a synthetic initial ordinal. Subsequent pages
 # continue strictly after the preceding accepted key. Fractional keys between
 # consecutive integers remain visible. Missing joined maps/raw remain visible.
-# At most32 candidates are inspected and at most1MiB returned, except first-row
-# progress; the unchanged bridge cap still fails oversized output explicitly.
+# Candidate stages retain numeric keys or empty typed failure markers, plus
+# independently coalesced byte lengths. REAL keys retain their exact order for
+# byte-cut detection; TEXT/BLOB keys become small values of the same storage
+# class, so they remain after numeric keys and still fail the typed validator.
+# ORDER BY uses the actual stored key before the 128-key bound. Invalid marker
+# keys never perform payload lookups, even if an actual empty-key row exists.
+# Payload joins
+# occur after the 1MiB counted-byte window, with first-row
+# progress. Length inspection can still read an oversized value; neither this
+# window nor the unchanged bridge cap is a total SQLite memory/work bound.
+def context_bytes(+alias: String) -> String:
+  "coalesce(length(CAST(" ++ alias ++ ".repository AS BLOB)),0)+coalesce(length(CAST(" ++ alias ++
+    ".session AS BLOB)),0)+coalesce(length(CAST(" ++ alias ++ ".model AS BLOB)),0)+coalesce(length(CAST(" ++ alias ++
+    ".parent AS BLOB)),0)+coalesce(length(CAST(" ++ alias ++ ".version AS BLOB)),0)+coalesce(length(CAST(" ++ alias ++ ".digest AS BLOB)),0)"
+
+def raw_metadata_bytes() -> String:
+  "coalesce(length(CAST(i.ordinal AS BLOB)),0)+coalesce(length(CAST(i.raw AS BLOB)),0)+coalesce(length(CAST(r.generation AS BLOB)),0)+coalesce(length(CAST(r.ordinal AS BLOB)),0)+coalesce(length(CAST(r.offset AS BLOB)),0)+coalesce(length(CAST(r.n AS BLOB)),0)+coalesce(length(CAST(r.digest AS BLOB)),0)"
+
 def scan_query(db: U32,+snapshot: String,start: U32,+initial: Bool) -> IO(List<&2,List<&2,Sql.Cell>>):
-  +condition = Bool.pick(String,initial,""," AND ordinal>?")
+  +condition = Bool.pick(String,initial,""," AND c.ordinal>?")
   +args = Bool.pick(List<&2,Sql.Cell>,initial,[Sql.Cell.Integer{snapshot}],
     [Sql.Cell.Integer{snapshot},Sql.Cell.Integer{U32.show(U32.sub(start,1))}])
   Seal.q(db,
-    "WITH rows AS MATERIALIZED (SELECT * FROM snapshot_context WHERE snapshot=?" ++ condition ++ " ORDER BY ordinal LIMIT 32), joined AS (SELECT c.ordinal,i.ordinal AS map_ordinal,i.raw,r.generation,r.ordinal AS raw_ordinal,r.offset,r.n,r.digest AS raw_digest,c.repository,c.session,c.model,c.parent,c.version,c.digest,row_number() OVER (ORDER BY c.ordinal) AS rn,sum(coalesce(length(CAST(c.repository AS BLOB)),0)+coalesce(length(CAST(c.session AS BLOB)),0)+coalesce(length(CAST(c.model AS BLOB)),0)+coalesce(length(CAST(c.parent AS BLOB)),0)+coalesce(length(CAST(c.version AS BLOB)),0)+coalesce(length(CAST(c.digest AS BLOB)),0)+coalesce(length(CAST(r.digest AS BLOB)),0)+512) OVER (ORDER BY c.ordinal) AS total_bytes FROM rows c LEFT JOIN records i ON i.snapshot=c.snapshot AND i.ordinal=c.ordinal LEFT JOIN raw r ON r.id=i.raw) SELECT ordinal,map_ordinal,raw,generation,raw_ordinal,offset,n,raw_digest,repository,session,model,parent,version,digest FROM joined WHERE total_bytes<=1048576 OR rn=1 ORDER BY ordinal",args,32)
+    "WITH keys AS MATERIALIZED (SELECT CASE typeof(c.ordinal) WHEN 'integer' THEN c.ordinal WHEN 'real' THEN c.ordinal WHEN 'text' THEN '' WHEN 'blob' THEN x'' ELSE NULL END AS ordinal," ++ context_bytes("c") ++ "+" ++ raw_metadata_bytes() ++ "+512 AS n FROM snapshot_context c LEFT JOIN records i ON i.snapshot=c.snapshot AND i.ordinal=c.ordinal LEFT JOIN raw r ON r.id=i.raw WHERE c.snapshot=?" ++ condition ++ " ORDER BY c.ordinal LIMIT 128), windowed AS (SELECT ordinal,row_number() OVER (ORDER BY ordinal) AS rn,sum(n) OVER (ORDER BY ordinal) AS total_bytes FROM keys), limited AS MATERIALIZED (SELECT ordinal FROM windowed WHERE total_bytes<=1048576 OR rn=1) SELECT k.ordinal,i.ordinal,i.raw,r.generation,r.ordinal,r.offset,r.n,r.digest,c.repository,c.session,c.model,c.parent,c.version,c.digest FROM limited k LEFT JOIN snapshot_context c ON typeof(k.ordinal) IN('integer','real') AND c.snapshot=? AND c.ordinal=k.ordinal LEFT JOIN records i ON i.snapshot=c.snapshot AND i.ordinal=c.ordinal LEFT JOIN raw r ON r.id=i.raw ORDER BY k.ordinal",
+    List.append(&2,Sql.Cell,args,[Sql.Cell.Integer{snapshot}]),128)
 
 def row_decoded(prefix: Binding.Prefix,context: Binding.Context,tag: String,stored: String,
   result: Maybe<&2,Binding.Raw>) -> Bool:
@@ -200,13 +217,13 @@ def verify(+db: U32,parser: String,+header: Seal.Header) -> IO(Validation):
 
 def copy_keys(db: U32,+snapshot: String,+ordinal: U32,+count: U32) -> IO(List<&2,List<&2,Sql.Cell>>):
   +initial = U32.is_eq(ordinal,0)
-  +condition = Bool.pick(String,initial,""," AND ordinal>?")
+  +condition = Bool.pick(String,initial,""," AND c.ordinal>?")
   +args = Bool.pick(List<&2,Sql.Cell>,initial,
     [Sql.Cell.Integer{snapshot},Sql.Cell.Integer{U32.show(count)}],
     [Sql.Cell.Integer{snapshot},Sql.Cell.Integer{U32.show(count)},Sql.Cell.Integer{U32.show(U32.sub(ordinal,1))}])
   Seal.q(db,
-    "SELECT ordinal FROM (SELECT ordinal,row_number() OVER (ORDER BY ordinal) AS rn,sum(length(CAST(repository AS BLOB))+length(CAST(session AS BLOB))+length(CAST(model AS BLOB))+length(CAST(parent AS BLOB))+length(CAST(version AS BLOB))+length(CAST(digest AS BLOB))+256) OVER (ORDER BY ordinal) AS total_bytes FROM (SELECT * FROM snapshot_context WHERE snapshot=? AND ordinal<?" ++ condition ++ " ORDER BY ordinal LIMIT 32)) WHERE total_bytes<=1048576 OR rn=1 ORDER BY ordinal",
-    args,32)
+    "WITH keys AS MATERIALIZED (SELECT CASE typeof(c.ordinal) WHEN 'integer' THEN c.ordinal WHEN 'real' THEN c.ordinal WHEN 'text' THEN '' WHEN 'blob' THEN x'' ELSE NULL END AS ordinal," ++ context_bytes("c") ++ "+256 AS n FROM snapshot_context c WHERE c.snapshot=? AND c.ordinal<?" ++ condition ++ " ORDER BY c.ordinal LIMIT 128), windowed AS (SELECT ordinal,row_number() OVER (ORDER BY ordinal) AS rn,sum(n) OVER (ORDER BY ordinal) AS total_bytes FROM keys) SELECT ordinal FROM windowed WHERE total_bytes<=1048576 OR rn=1 ORDER BY ordinal",
+    args,128)
 
 def keys_next(rows: List<&2,List<&2,Sql.Cell>>,+expected: U32,+stop: U32) -> IO(U32):
   match rows:
@@ -250,21 +267,16 @@ def unequal(columns: List<&2,String>) -> String:
     case +name <> rest:
       "typeof(a." ++ name ++ ")<>typeof(b." ++ name ++ ") OR a." ++ name ++ " IS NOT b." ++ name ++ " OR " ++ unequal(rest)
 
-def bytes_of(+alias: String) -> String:
-  "length(CAST(" ++ alias ++ ".repository AS BLOB))+length(CAST(" ++ alias ++
-    ".session AS BLOB))+length(CAST(" ++ alias ++ ".model AS BLOB))+length(CAST(" ++
-    alias ++ ".parent AS BLOB))+length(CAST(" ++ alias ++ ".version AS BLOB))+length(CAST(" ++ alias ++ ".digest AS BLOB))"
-
 def equality_query(db: U32,+old: String,+target: String,+count: U32,+start: U32,+initial: Bool) -> IO(List<&2,List<&2,Sql.Cell>>):
-  +condition = Bool.pick(String,initial,""," AND ordinal>?")
+  +condition = Bool.pick(String,initial,""," AND c.ordinal>?")
   +left = Bool.pick(List<&2,Sql.Cell>,initial,[Sql.Cell.Integer{old},Sql.Cell.Integer{U32.show(count)}],
     [Sql.Cell.Integer{old},Sql.Cell.Integer{U32.show(count)},Sql.Cell.Integer{U32.show(U32.sub(start,1))}])
   +right = Bool.pick(List<&2,Sql.Cell>,initial,[Sql.Cell.Integer{target},Sql.Cell.Integer{U32.show(count)}],
     [Sql.Cell.Integer{target},Sql.Cell.Integer{U32.show(count)},Sql.Cell.Integer{U32.show(U32.sub(start,1))}])
   Seal.q(db,
-    "WITH keys AS MATERIALIZED (SELECT ordinal FROM (SELECT ordinal FROM snapshot_context WHERE snapshot=? AND ordinal<?" ++ condition ++ " ORDER BY ordinal LIMIT 32) UNION SELECT ordinal FROM (SELECT ordinal FROM snapshot_context WHERE snapshot=? AND ordinal<?" ++ condition ++ " ORDER BY ordinal LIMIT 32) ORDER BY ordinal LIMIT 32), pairs AS MATERIALIZED (SELECT k.ordinal,a.snapshot AS a_snapshot,b.snapshot AS b_snapshot,a.ordinal AS a_ordinal,b.ordinal AS b_ordinal,coalesce(" ++ bytes_of("a") ++ ",0)+coalesce(" ++ bytes_of("b") ++ ",0)+512 AS n FROM keys k LEFT JOIN snapshot_context a ON a.snapshot=? AND a.ordinal=k.ordinal LEFT JOIN snapshot_context b ON b.snapshot=? AND b.ordinal=k.ordinal), windowed AS (SELECT *,row_number() OVER (ORDER BY ordinal) AS rn,sum(n) OVER (ORDER BY ordinal) AS total_bytes FROM pairs), limited AS MATERIALIZED (SELECT * FROM windowed WHERE total_bytes<=1048576 OR rn=1) SELECT k.ordinal,CASE WHEN a.snapshot IS NULL OR b.snapshot IS NULL OR " ++ unequal(["ordinal","repository","session","model","parent","version","digest"]) ++ " THEN 0 ELSE 1 END FROM limited k LEFT JOIN snapshot_context a ON a.snapshot=k.a_snapshot AND a.ordinal=k.a_ordinal LEFT JOIN snapshot_context b ON b.snapshot=k.b_snapshot AND b.ordinal=k.b_ordinal ORDER BY k.ordinal",
+    "WITH keys AS MATERIALIZED (SELECT ordinal FROM (SELECT CASE typeof(c.ordinal) WHEN 'integer' THEN c.ordinal WHEN 'real' THEN c.ordinal WHEN 'text' THEN '' WHEN 'blob' THEN x'' ELSE NULL END AS ordinal FROM snapshot_context c WHERE c.snapshot=? AND c.ordinal<?" ++ condition ++ " ORDER BY c.ordinal LIMIT 128) UNION SELECT ordinal FROM (SELECT CASE typeof(c.ordinal) WHEN 'integer' THEN c.ordinal WHEN 'real' THEN c.ordinal WHEN 'text' THEN '' WHEN 'blob' THEN x'' ELSE NULL END AS ordinal FROM snapshot_context c WHERE c.snapshot=? AND c.ordinal<?" ++ condition ++ " ORDER BY c.ordinal LIMIT 128) ORDER BY ordinal LIMIT 128), pairs AS MATERIALIZED (SELECT k.ordinal," ++ context_bytes("a") ++ "+" ++ context_bytes("b") ++ "+512 AS n FROM keys k LEFT JOIN snapshot_context a ON typeof(k.ordinal) IN('integer','real') AND a.snapshot=? AND a.ordinal=k.ordinal LEFT JOIN snapshot_context b ON typeof(k.ordinal) IN('integer','real') AND b.snapshot=? AND b.ordinal=k.ordinal), windowed AS (SELECT ordinal,row_number() OVER (ORDER BY ordinal) AS rn,sum(n) OVER (ORDER BY ordinal) AS total_bytes FROM pairs), limited AS MATERIALIZED (SELECT ordinal FROM windowed WHERE total_bytes<=1048576 OR rn=1) SELECT k.ordinal,CASE WHEN a.snapshot IS NULL OR b.snapshot IS NULL OR " ++ unequal(["ordinal","repository","session","model","parent","version","digest"]) ++ " THEN 0 ELSE 1 END FROM limited k LEFT JOIN snapshot_context a ON typeof(k.ordinal) IN('integer','real') AND a.snapshot=? AND a.ordinal=k.ordinal LEFT JOIN snapshot_context b ON typeof(k.ordinal) IN('integer','real') AND b.snapshot=? AND b.ordinal=k.ordinal ORDER BY k.ordinal",
     List.append(&2,Sql.Cell,left,List.append(&2,Sql.Cell,right,
-      [Sql.Cell.Integer{old},Sql.Cell.Integer{target}])),32)
+      [Sql.Cell.Integer{old},Sql.Cell.Integer{target},Sql.Cell.Integer{old},Sql.Cell.Integer{target}])),128)
 
 def equality_rows(rows: List<&2,List<&2,Sql.Cell>>,+expected: U32,+stop: U32) -> IO(U32):
   match rows:

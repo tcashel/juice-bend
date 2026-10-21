@@ -1,5 +1,28 @@
 # Acceptance evidence
 
+## Whole-session Usage and context batching — 2026-10-21
+
+Native app `91a147f0…` passed the synthetic Tart Usage workflow: exact Claude/Codex
+summaries and Back origins, filter refusal, two mode 0600 exports, manual append,
+an observed 30-second automatic rewrite capture from History, and owned old/latest
+reads after the original paths were hidden. On a 100,001-record library, Back
+restored exact text and selection while a real Usage child was running; its late
+completion changed neither clipboard nor screenshot. Usage itself suspends
+capture; Back does not kill the worker. The initial provider-transition defect
+was fixed and rechecked. All 54 application inputs stayed unchanged. The standard
+executable and new Usage bundle contain this exact observed binary; isolated
+empty-library launcher status passed. Owned windows closed and Tart stopped.
+
+See [native receipt](receipts/usage-ui-native.txt),
+[GUI regression receipt](receipts/session-usage-gui.txt),
+[backend receipt](receipts/session-usage-native.txt) and
+[structured native summary](../benchmarks/results/tart-usage-summary.json).
+Context batching separately passed 3,315 checks including 27 crash cuts.
+The Linux laptop separately passed 300 portable checks; neither constitutes a new
+full-suite, proof or complete UX acceptance run. Typography, shaping, full IME,
+accessibility and input-to-photon latency remain unfinished or unverified.
+
+
 Local macOS arm64 implementation, 2026-10-20. M0–M5 are **in progress**.
 “Passed” below applies only to the named test scope. Module tests, a native
 window, and backend benchmarks do not establish the complete GUI workflow.

@@ -60,6 +60,7 @@ DATA=/tmp/juice-bend-explicit-library
 "$APP" --data-dir "$DATA" history
 "$APP" --data-dir "$DATA" search '"captured evidence"' claude '' assistant ''
 "$APP" --data-dir "$DATA" session 1 0 20
+"$APP" --data-dir "$DATA" session-usage 1
 "$APP" --data-dir "$DATA" why 1 0 20
 "$APP" --data-dir "$DATA" verify 1
 "$APP" --data-dir "$DATA" export-range 1 0 20 /tmp/selected-evidence.md
@@ -73,6 +74,13 @@ must not exist. `rebuild SNAPSHOT` verifies retained bytes before rebuilding
 derived events/search; it never repairs raw bytes by changing their hashes.
 Refresh reports can contain per-source failures: inspect `failed` and discovery
 coverage even when the reporting command exits successfully.
+
+Usage reads the whole pinned captured session from verified owned bytes, within
+explicit record/byte/key limits. It separates scan coverage from accounting
+coverage, deduplicates supported Claude mirrors and interprets recorded Codex
+counters conservatively. Unknown values remain unknown; these are recorded token
+facts, not billing or subscription totals. Back restores the original reader.
+Repository/role/date-scoped views refuse widening to a whole-session summary.
 
 Search supports literal words, quoted phrases, and GUI filters such as
 `provider:claude repo:"/selected/repository" role:assistant after:2026-10-01`.

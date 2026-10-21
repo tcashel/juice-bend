@@ -33,6 +33,15 @@ def require(ok: Bool,name: String) -> IO(Unit):
 
 def main() -> IO(Unit):
   do IO<Unit>:
+    require(U32.is_eq(Client.timeout_ms(["session-usage","9007199254740993"]),120000),
+      "whole-capture usage receives the bounded longer worker deadline")
+    require(U32.is_eq(Client.timeout_ms(["session-usage","1","extra"]),10000) &&
+      U32.is_eq(Client.timeout_ms(["session-usage"]),10000),
+      "malformed usage command shapes keep the ordinary worker deadline")
+    require(U32.is_eq(Client.timeout_ms(["session","1","0","40"]),10000) &&
+      U32.is_eq(Client.timeout_ms(["usage","1"]),10000) &&
+      U32.is_eq(Client.timeout_ms(["status"]),10000),
+      "paged reads and other workers retain their original deadline")
     missing : Result<&2,&2,String,Json.Json> <- Client.call("/juice-bend-test-missing-executable","/tmp/juice-bend-client-test",["status"])
     require(failure(missing),"missing worker executable returns data instead of terminating GUI")
     nonzero : Result<&2,&2,String,Json.Json> <- Client.call("/usr/bin/false","/tmp/juice-bend-client-test",["status"])

@@ -1,0 +1,54 @@
+Context batch native correctness receipt
+
+All 12 live builds and native executions exited 0: 3,315 checks, including the actual 27-cut publication crash matrix. This receipt makes no timing, throughput, memory-use, UI or distribution claim.
+
+Change and preserved boundaries:
+Store.put_piece computes its raw digest once and shares the immutable result with the raw INSERT and context writer. Independent raw verification still recomputes it. Context scan/copy/equality queries select at most 128 keys and independently coalesced byte lengths before joining the byte-window-selected payloads; the previous cap was 32.
+INTEGER/REAL keys retain their exact order. Malformed TEXT/BLOB keys become bounded markers with their storage class retained, so validators reject them. Numeric-only final joins prevent those markers from aliasing an actual empty key and multiplying its payload.
+Schema, checksum formats, parser versions, bridge, both original raw/source passes, complete old event/context verification, repeated final map comparison, trigger fallback and all nine observer positions remain unchanged. The context gate still follows publication SQL and BeforeCommit, immediately before COMMIT. No extra raw/source pass was added. The gate does not defend against privileged callbacks changing trusted anchors and checksums together.
+
+Live command and coverage:
+python3 build/context-batched-integration/run-gates.py
+Each target uses ./scripts/build tests/NAME.bend build/context-batched-integration/bin/NAME, then the executable in a fresh recorded private synthetic directory with PWD set. Assertions, fixtures and fault semantics are Bend. No standard app executable was overwritten.
+Counts: context 23; append_batches 226; append_integrity 49; event_seal_append 283; storage_edges 33; selected_integrity 24; coverage_integrity 4; maintenance 30; integration 21; context_batched 1,365; context_metadata 54; publication_crash 1,203. Total 3,315.
+Crash matrix: initial/append/rewrite x before_transaction/staged/reverified/sealed/accepted/search_removed/latest_repointed/before_commit/committed. All 27 exact nonce/phase markers and 27 owned-child timeout/SIGKILL/reap confirmations were checked individually. Rollback, durable commit, old evidence/search and retry assertions passed.
+All 106 recursive source/Base/native/pinned compiler/runtime/build inputs matched before and after, with per-target manifests. This does not fingerprint external clang/bun/mise/system SQLite or the OS. No live failure, retry or runtime source correction occurred. An independent read-only audit rechecked every source/binary/generated-code/log hash, count and exact crash marker.
+
+Separate isolated gate and older-writer compatibility:
+The ignored candidate passed 1,464 checks: unchanged portable suite 812 + new batch checks 553 + actual older-worker compatibility 45 + oversized metadata checks 54. These overlap the live checks and are not additional unique cases.
+Candidate commands: ./scripts/build build/context-batched-candidate/tests/context_batched.bend build/context-batched-candidate/bin/context_batched; the same for context_metadata. Private-root executions: context_batched; context_batched compat ABSOLUTE_FROZEN_OLD_WORKER; context_metadata. All build/native exits were 0. Candidate manifests contained 96 inputs, or 97 for metadata; the separately frozen old worker retained all 88 inputs.
+The real pre-v2 Bend worker writes v1, reads/rebuilds older captures, alternates reopened old/new writers, and fully replays an unknown v2 context tag on append. An already-open old connection waited through the parent transaction publishing v2, then observed the new tag and replayed safely. Unchanged refresh does not migrate tags; this is not a claim that old binaries reject the whole library.
+New cases cover 128/129/256/257 records, fractional keys 127.5/255.5, negative/REAL/TEXT/BLOB keys, missing joins, exact prefix raw IDs/checksums, byte-cut gaps, oversized first-row progress and late rollback. Three 1.1 MiB TEXT values in INTEGER-affinity map/raw columns remain visible with their exact type/length and are rejected. The unchanged portable cases retain empty/checkpoint-zero, partial-tail replacement, wide identities, v1 reads and late main/temp-trigger coverage.
+
+Bounds, review and retained failures:
+The 1 MiB counted payload window includes a per-row allowance and permits first-row progress. It is not a total-memory, RSS or internal SQLite-work bound. Initial length calculations still read payloads; 128 candidates allow four times the prior candidate work. The unchanged bridge separately enforces its 4 MiB output-payload ceiling and two-second statement deadline.
+Saved EXPLAIN/VDBE review confirms bounded key candidates precede final payload joins and continuation uses indexed range seeks. It is plan evidence, not measured runtime. Generated C confirms one raw-digest call in put_piece and the separate verification call.
+Initial source review found malformed markers could alias a real empty key and multiply its large payload. The numeric-only join fix landed before any native execution; regression tests retain 128 typed failure markers with NULL payloads and exact rollback. The earlier source is saved as build/context-batched-candidate/context_store-before-invalid-key-join-fix.bend. Two test-only affine compiler failures remain in compile-failure-01.log and compile-failure-02.log there. Neither is reported as a successful run; no isolated native failure occurred.
+
+SHA256 frozen production/test inputs:
+57a4b3c75a0c4d32b12886d4d39bab1921f7cfa0fbd8df5c32ffa963d996f9e6  src/store.bend
+35da2ca0dc2b625a580cc1ffcaa11ddb136c88b03b37db99a21acee024d3c567  src/context_store.bend
+6f69cc3e9afb19ea0f9a920e01cff92933e17910475d9a9c6ee462ee9c8ead57  src/context_binding.bend
+4248e4156df6023178a7004cba4cef88bf2d7b5e0b92dfb2c3fdf512b727ba79  src/maintenance.bend
+eba657f6476109b035a3c4daf0ffdb87e0017524425caecb572b3af39d688b30  src/projection_seal.bend
+f2f68a4a9781ea102f3e275781380a885e3057e178d75c8d45b310c3c5002191  src/domain.bend
+919cb2abd8bad19a3e8cdf12c676f586717121a9c7222a557345ade8f7ab753e  native/sqlite.c
+2a22d063730b1953889a2ba951fa1d18a372a3d946fe3c50c62174dcc77b7a35  tests/context_batched.bend
+e46f66565e92be39f77053416dd1f3b7247345e662f3cebc87f809f5ceb5cbf3  tests/context_metadata.bend
+f8eaaea049416a4de50769f73e058b308858fc994bd5213ba2cdaf397abd128e  tests/context_portable.bend
+503f1098ef910c153db717074311c692bd864030e1cf818f3484ad0b60a90694  build/juice-bend (unchanged)
+
+SHA256 manifests and evidence:
+6335948535eb2b9ed440fce023a99637fa6250098ff8bab0077115b43cf397ad  build/context-batched-integration/combined-validation.json
+edef6cce178ecfdeb4a44d52085a89f007a3498ac4fb340c722866d1569a7405  build/context-batched-integration/inputs-before.json and inputs-after.json
+e3e00f6893c152c0eee62d4030ef0ed5b0a15b935f9e7409e5ef48f62dc6c7d6  build/context-batched-candidate/batched-receipt.json
+268b7bf39b50e3f532f679953b99ed8e68bae5d111ecd1024345baa98e2a7aaf  build/context-batched-candidate/batched-compat-receipt.json
+8e6d65519f2934712939a8588535fd8a0a003da08c175b11a5bc3e7f36411c2f  build/context-batched-candidate/metadata-receipt.json
+d8372c3ed074e4c54657161e257037225ecff82b7f9fdfcd11e24f39f9d2a097  build/context-batched-candidate/query-plans.txt
+11a10b0fbedd1ab732b997d5d8d7c032030a3bff022d95193ca3f2588a4dc762  build/context-batched-candidate/raw-digest-codegen.txt
+f470818d992ac7a28823afa5169c4129d5d161f3b9bc70443f4a0a2617c7609e  build/context-v2-candidate/bin/old-worker
+9ee68a798f656f8febcba0d232e576b579713161da8cc85f6de6f34e8cf41173  build/context-batched-integration/bin/context_batched
+05823a434261b336b7b4f598077bb9fe622ac629e3d0dc3470518896b0eebe46  build/context-batched-integration/bin/context_metadata
+87f198d5fea680d7f7868a4a19b2cdf3f763eaebabfc338a50f7665e7cc04f37  build/context-batched-integration/bin/publication_crash
+b4e386ca51f1df939b1a0b53c740a296f5d1f457e12b8d2d75ce3aa6f213fc86  build/context-batched-integration/publication_crash.log
+The combined live receipt records all 12 exact test-source, executable, generated-C and log hashes, exit statuses, private roots and per-target counts.

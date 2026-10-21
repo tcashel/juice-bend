@@ -860,15 +860,16 @@ def put_portable_record_context(db: U32,snapshot: String,+prefix: ContextBinding
 def put_piece(state: ImportState, piece: Piece) -> IO(ImportState):
   ImportState{+db,file,+provider,+source,+gen,+snap,+extent,+off,+ord,+checkpoint,+checkpoint_ord,+ctx,observe,seal,ContextStore.Plan{+context_prefix,context_reuse}} = state
   Piece{+bytes,+len,+newline,+oversized} = piece
+  +digest = raw_digest(gen,ord,off,len,bytes)
   do IO<ImportState>:
     exec(db,"INSERT INTO raw(generation,ordinal,offset,n,digest,bytes,complete,oversized) VALUES(?,?,?,?,?,?,?,?)",
       [Sql.Cell.Integer{gen},Sql.Cell.Integer{U32.show(ord)},Sql.Cell.Integer{U32.show(off)},
-       Sql.Cell.Integer{U32.show(len)},Sql.Cell.Text{raw_digest(gen,ord,off,len,bytes)},
+       Sql.Cell.Integer{U32.show(len)},Sql.Cell.Text{digest},
        Sql.Cell.Blob{bytes},Sql.Cell.Integer{U32.show(Bool.to_u32(newline))},
        Sql.Cell.Integer{U32.show(Bool.to_u32(oversized))}])
     +rid : String <- last_id(db)
     exec(db,"INSERT INTO records VALUES(?,?,?)",[Sql.Cell.Integer{snap},Sql.Cell.Integer{U32.show(ord)},Sql.Cell.Integer{rid}])
-    ContextStore.write(db,snap,context_prefix,ContextBinding.Raw{rid,ord,off,len,raw_digest(gen,ord,off,len,bytes)},portable_context(ctx))
+    ContextStore.write(db,snap,context_prefix,ContextBinding.Raw{rid,ord,off,len,digest},portable_context(ctx))
     next : Context <- put_events(piece_events(oversized,provider,bytes),db,snap,ord,0,provider,ctx)
     return ImportState{db,file,provider,source,gen,snap,extent,(off + len : U32),(ord + 1 : U32),
       Bool.pick(U32,newline,(off + len : U32),checkpoint),

@@ -8,6 +8,12 @@ The host also ran implementation/testing work. These are observations, not an
 isolated machine comparison or a Swift Juice comparison. Earlier candidates
 retain their own results and identities below.
 
+Owner constraint: any Swift Juice versus Juice Bend timing comparison must use
+the same physical host or the same VM, equivalent synthetic fixtures and
+equivalent feature settings. Do not compare a host result against a guest
+result. Current backend revision timings use the physical Mac; Tart interaction
+receipts establish behavior and do not establish relative application speed.
+
 Run `mise run bench -- 10000` or `mise run bench -- 100000`. The wrapper creates a
 private temporary working directory. Fixture generation is Bend code and is
 excluded from operation timers. Generator v1, seed 1337, creates one long
@@ -16,7 +22,42 @@ repositories, timestamps, tool arguments/results and usage. Each four physical
 JSONL records yield five normalized events. Events include tools and are not
 presented as five independent human/assistant messages.
 
-## Current verified backend — portable context checkpoints
+## Latest measured backend — bounded context batches
+
+The context-batched candidate measured initial import **36,194 ms**, unchanged
+refresh **3,910 ms**, and an append of **16 records to the 100k-record session
+23,816 ms**. The append is not the full-import number. Warm search/late-page/
+scoped-late-page p95 were **42/7/17 ms** across five trials. Initial import and
+append are individual observations, not a statistical speedup claim.
+
+Binary `d341efb4…` and 22 inputs stayed unchanged; all 88 upstream hashes passed.
+Task builds/tests/Tart were held during timers. The storage change passed
+3,315 checks across 12 native targets, including 27 process-crash cuts.
+Independent typed prefix comparisons, raw IDs, FTS, counts and integrity passed.
+An external postflight initially expected a mistakenly renamed context-version
+label; corrected read-only postflight passed on the same database without
+rerunning the timed operations. See [native receipt](receipts/context-batched-native.txt),
+[raw timings](../benchmarks/results/100000-context-batched.jsonl) and
+[postflight](../benchmarks/results/100000-context-batched-db-check.json).
+
+The owner considers tens of seconds reasonable for initial import. Further
+marginal append optimization is deferred while native correctness and UX move
+forward. A requested Instruments profile is a separate diagnostic; its timings
+must not replace these observations or be compared against Swift on another host.
+
+## Native CPU profile — 2026-10-21
+
+One separate Time Profiler run produced42,190 resolved CPU samples plus 14 without
+stacks. Whole-lifecycle self time included term release 24.18%, reference-count
+wrapping 12.49%, String.append 9.55%, JSON escaping 5.42% and SQLite library 13.38%.
+This includes startup, preflight and postflight: these are not append-only
+percentages. Native tail calls also flatten logical ancestry. There is no
+allocation-byte or Swift comparison result. The instrumented 29.124 s append is a
+diagnostic observation with concurrent work and does not replace the benchmark.
+All retained-data and input checks passed. See the [receipt](receipts/append-profile-native.txt)
+and [sanitized flamegraph](receipts/append-profile-flamegraph.svg).
+
+## Preceding backend — portable context checkpoints
 
 The v2 checkpoint binds exact source/generation/raw identity, allowing unchanged
 context checksums to be copied within a verified write transaction. The complete

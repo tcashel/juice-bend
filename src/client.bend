@@ -33,8 +33,30 @@ def completed(result: Result<&1,&1,U32 & String,U32 & (String & String)>) ->
     case Done{(code,(out,err))}:
       exited(code,out,err)
 
-def call_checked(program: String,data_dir: String,args: List<String>,valid: Bool) ->
+# Whole-capture usage verifies bounded retained raw bytes and can outlast a
+# paged read. Keep the longer deadline confined to this exact command shape.
+# Process.run has no cancellation handle; GUI Back invalidates its reply while
+# retaining the single in-flight worker until completion or this deadline.
+def two_args(+command: String,snapshot: String) -> List<String> & U32:
+  ([command,snapshot],Bool.pick(U32,String.eq(command,"session-usage"),120000,10000))
+
+def timed_args(args: List<String>) -> List<String> & U32:
+  match args:
+    case Con{command,Con{snapshot,Nil{}}}:
+      two_args(command,snapshot)
+    case other:
+      (other,10000)
+
+def timeout_value(pair: List<String> & U32) -> U32:
+  (_,timeout) = pair
+  timeout
+
+def timeout_ms(args: List<String>) -> U32:
+  timeout_value(timed_args(args))
+
+def call_timed(program: String,data_dir: String,pair: List<String> & U32,valid: Bool) ->
   IO(Result<&2,&2,String,Json.Json>):
+  (args,timeout) = pair
   match valid:
     case False{}:
       IO.pure(Result<&2,&2,String,Json.Json>,
@@ -42,8 +64,12 @@ def call_checked(program: String,data_dir: String,args: List<String>,valid: Bool
     case True{}:
       do IO<Result<&2,&2,String,Json.Json>>:
         result : Result<&1,&1,U32 & String,U32 & (String & String)> <-
-          Process.run(program,"--data-dir" <> data_dir <> args,"",1048576,10000)
+          Process.run(program,"--data-dir" <> data_dir <> args,"",1048576,timeout)
         return completed(result)
+
+def call_checked(program: String,data_dir: String,args: List<String>,valid: Bool) ->
+  IO(Result<&2,&2,String,Json.Json>):
+  call_timed(program,data_dir,timed_args(args),valid)
 
 def call(+program: String,+data_dir: String,args: List<String>) ->
   IO(Result<&2,&2,String,Json.Json>):

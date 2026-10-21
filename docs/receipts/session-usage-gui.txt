@@ -1,0 +1,107 @@
+Latest correction after actual native interaction
+
+The first native app exposed stale Claude Tools identity retained when opening
+another Codex snapshot. The Usage guard correctly refused the mismatched state.
+text_done now clears prior view arguments only after a different captured
+snapshot succeeds; same-snapshot identity, file requests and failed reads remain
+unchanged. Identity guards were not weakened.
+
+Latest focused transition gate: 88 PASS, exit 0, 120 unchanged inputs.
+  build/gui-usage-transition-native.json
+Latest existing controller/UI gate: 265 PASS, exit 0, 125 unchanged inputs.
+  build/gui-usage-transition-regressions-native.json
+Current src/gui.bend SHA256:
+  7fcfb77e54cadc4a14c599425242a0deffd850d7b2f0e49c68712ff58c796e25
+Current tests/gui_usage.bend SHA256:
+  e0cdd6852a7653dac52f406d82a0047cf8dab8b1f6a2b6b7e926606d5c56fd26
+Native focused binary SHA256:
+  673881b81f16f55f4fac1503b1e68d100e0a1f538c64f181eb4309f62a8189fa
+Native regression binary SHA256:
+  52d2dd1180bae90411f7594559bed1ab1507f0b0a33976025d9b0e0c2d47586a
+Both original manifests and logs remain; actual window validation is separate.
+
+Earlier pre-window gate (superseded for the controller source)
+
+Whole-capture Usage GUI model/controller validation
+
+Scope: native Bend 2 test executables using synthetic data. These checks exercise
+the decoder, controller, navigation, selection/copy/export arguments and UI model.
+They do not establish actual window interaction, clipboard delivery, native UI
+latency, scan performance or memory use; those require separate application runs.
+No app was promoted and no original Juice data was accessed by these gates.
+
+Final focused gate
+  Command: ./scripts/test tests/gui_usage.bend
+  Exit: 0; named PASS checks: 76; recursive inputs: 120; changed inputs: none.
+  Local receipt: build/gui-usage-final-native-2.json
+  Before/after manifest SHA256:
+    be80f0f0149b02c3d1f4c93c6b2c7d986fede41318c5890e037432760d8878d5
+  Log SHA256:
+    df7435e524ef5a3eb973076de437b143dd6e22071f46ebb4a88aee5eaae1cd36
+  Native binary SHA256 (6,180,168 bytes):
+    11475fcfbabff7b085ad65c76c30696038063cd11b07ce8d3179bcb63ce31a38
+  Generated C SHA256:
+    42cb666926e9a3dec6026cff9c58e73d13eff75303062ff1ed05548449f31f6d
+
+Coverage includes strict closed envelope schemas and duplicate rejection, exact
+snapshot/provider/generation identity, typed limits and coverage, nullable counts,
+incomplete/unknown accounting, scope refusal, stale/duplicate response rejection,
+exact origin range/query/scroll/selection restoration, Why/Tools origin handling,
+Related and Settings return navigation, displayed Unicode copy/export identity,
+and immediate Back while retaining one outstanding reader and queuing later work.
+The pending-reader checks use a synthetic channel, not a live child process.
+
+Final existing-behavior regressions
+  Command: ./scripts/test build/gui-usage-regressions.bend
+  The ignored Bend runner invokes the original main functions in tests/gui.bend,
+  tests/gui_activity.bend, tests/gui_relations.bend, tests/gui_settings.bend and
+  tests/ui.bend. It avoids compiling their common dependency graph five times.
+  Maintained equivalent: ./scripts/test tests/gui.bend tests/gui_activity.bend
+    tests/gui_relations.bend tests/gui_settings.bend tests/ui.bend
+  Exit: 0; named PASS checks: 265; recursive inputs: 125; changed inputs: none.
+  Local receipt: build/gui-usage-regressions-native-2.json
+  Before/after manifest SHA256:
+    55060844227629b446bf0451cd2ec8a4c88319bf6e6768469ab54ebbc5e66e91
+  Log SHA256:
+    b3b45066c1a76974d7ec9a404fdca41a24e6210282ffac6ae98abb11975cad5c
+  Runner SHA256:
+    69f06359884de6e94d2c5cfbd9e24a79275add94a4837dd9f66266cc22f77748
+  Native binary SHA256 (9,528,328 bytes):
+    548c914f292e42c1d1af79912273b7c284618504a2a33193d7dab543424be484
+  Generated C SHA256:
+    ea6a1bee3ec754e2edfaccc765fb0fa77462bdbe6c1849f562cb56127f0c9811
+
+Frozen source SHA256 (rechecked after both gates)
+  src/gui.bend
+    7f6725473e37de0638cdca8b761bbc04ac4c1ba60c85f0d2494e9dcbbcdfaea8
+  src/gui_usage.bend
+    251f87aea53c7c8963e972092edb6848b77e11e469db8b4d3a792034da8f3927
+  src/ui.bend
+    a3d18ae8ee6eb8bffcb714d1f45f1340c8893e306a15afdc4490110c6ac91e7d
+  tests/gui_usage.bend
+    d90a673799f1948cfbc6adabb70203761e15a395ee9e1f66f36d6458b4a65c49
+  tests/gui.bend
+    47c396caf9aa2fb928300f9c0e3351fadf04d4160cc4794438e639f2f7fd73eb
+  tests/gui_activity.bend
+    6dfed15d9e83e3d1a823f4f2703369675eb17e6663add66c7eeacc603bcda651
+  .tools/bend/bend2/comp.ts (original pinned compiler, never modified)
+    5ae06d6c44581bd7e0e2f5952e402659c9be408f79a5a4e86ff23e5be9844ce6
+
+Earlier failed attempts (not counted as passing evidence)
+  Test entry code generation exceeded the pinned compiler's 247-argument limit.
+  An ignored compiler copy identified oversized IO continuations in actions,
+  nested_navigation and main (288-292 arguments); no pinned compiler was changed.
+  Boxing saved test states and splitting test continuations fixed this without
+  removing assertions. The production main code-generation probe passed with the
+  original compiler. Diagnostic logs remain under build/arity-diagnostic-* and
+  build/gui-usage-native-{thirteenth,fourteenth,sixteenth,seventeenth}.log.
+  The first focused native run compiled, then failed on an incorrectly escaped
+  hand-written JSON test fixture (literal newline). Only test escaping changed;
+  build/gui-usage-final-native.json/log retain that exit-1 receipt (120 unchanged
+  inputs). The final focused gate above supersedes it.
+  The first regression run passed 123 checks then failed an obsolete message
+  assertion requiring the word "unfiltered". The replacement checks the current
+  scope-refusal message, no queued request and unchanged displayed text; the
+  permitted case checks the whole-capture request and exact range on Back.
+  build/gui-usage-regressions-native.json/log retain that failed receipt
+  (125 unchanged inputs). The final 265-check gate above supersedes it.

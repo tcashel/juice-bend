@@ -147,3 +147,22 @@ inventory. A source-list operation nonce rejects older inventory replies.
 Settings saves the exact originating view independently of global preferences.
 Completed origins restore without another read; a request already pending at
 entry resumes with its original snapshot, range and scope.
+
+Whole-session Usage owns one deferred read transaction only after successful
+BEGIN. An existing caller transaction is refused and remains untouched. The
+reader pins provider/source/locator/generation/snapshot/extent/record count,
+checks typed raw mappings and consumes at most 128 records/about 1 MiB per window.
+Defaults stop at 1M records, 1 GiB verified bytes, 100k Claude call keys or 16 MiB of
+logical key descriptors; limits yield explicit partial coverage. Known decimal
+counts remain exact strings; missing buckets stay unknown. A complete byte scan
+does not imply complete attribution or accounting. Claude uses exact call keys
+and maxima for mirrors; Codex ordinary first totals and inherited fork baselines
+are distinct. This is captured evidence, not provider billing or subscription data.
+
+The GUI saves the exact reader origin before whole-capture Usage. Provider-only
+entry is allowed; repository/role/date scope cannot silently widen. Back restores
+text/selection/scroll without rereading and retires the pending view request;
+the sole OS worker completes or times out before another read starts. Successful
+cross-snapshot text loads clear stale view metadata, whereas failed/pending reads
+preserve the old identity. Copy/export uses exact displayed evidence. Automatic
+capture remains suspended during Usage; History's actual interval is observed.

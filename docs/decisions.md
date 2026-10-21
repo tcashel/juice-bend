@@ -85,3 +85,23 @@
   equality and a final post-publication gate; triggers force a full scan.
   Preserve both source passes. Native compatibility and adversarial tests are
   separate from performance evidence; no speedup follows from the design alone.
+
+- **2026-10-21 — Whole-capture Usage.** Retain exact snapshot identity in an owned
+  deferred read transaction; stream bounded verified raw windows, expose unknown
+  buckets and attribution separately, and preserve exact origin navigation.
+  Back discards late view replies without spawning overlapping read workers.
+  Repository/role/date filters refuse an unfiltered summary. Usage suspends
+  automatic capture until History is restored; the UI must state this clearly.
+- **2026-10-21 — Profile before further append changes.** The owner accepts
+  tens-of-seconds initial import and prioritizes product parity and UX over
+  marginal append tuning. The native CPU sample identifies string/reference
+  costs but does not isolate append-only attribution. Keep raw traces private.
+- **2026-10-21 — Upstream guidance.** Inspected the pinned guide/Base and public
+  [Bend README](https://github.com/bendlang/bend) and
+  [agent guidance](https://github.com/bendlang/bend/blob/main/AGENTS.md), plus
+  [Victor Taelin's repositories](https://github.com/VictorTaelin). The actual
+  pin uses linked character lists; append/drop/get can traverse them. The shader
+  guide records a 247-word continuation/definition limit, relevant to boxed GUI
+  state tests. No packaged official Bend skill was found in the searched repos.
+  This is a bounded search, not exhaustive absence. Native compilation and
+  actual interaction remain required; checker success alone is insufficient.

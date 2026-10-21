@@ -1,0 +1,47 @@
+Whole-session Usage native interaction — 2026-10-21
+
+Bend 2.0.37 native app, macOS 27.0 arm64 Tart 2.40.1, host-only network.
+Application SHA-256 91a147f069fd68c16d30a0ddb6e403bce522aa4c92aaec2088939fec6573fb1f
+13,038,408 bytes; generated C 1bd2fd8094b2384ed2295288c5a9baf88d7e990c933d9a704077b4331f7bbe7f
+54 application inputs stayed unchanged; all 88 pinned upstream hashes passed.
+Exact input manifest: usage-build-inputs.sha256. Native fixture SHA-256
+0c42be73f0db815afb9609ed70a5c6658e1c29a132163b642dcd5e2fe200013d.
+
+Actual interaction passed:
+- Scoped lexical hits opened physical record 40 for Claude and Codex. Whole
+  pinned Usage matched the exact CLI body: 4,395 and 3,590 bytes. Origin text
+  matched 15,261 and 13,743 bytes. Claude Back restored its complete text and
+  one selected reader pixel region; Why matched CLI. Tools navigation observed.
+- Repository/role/date-filtered Usage was refused without changing the reader.
+  Provider-only entry succeeded. The Claude Tools → Codex reader → Usage
+  transition passed after fixing stale view metadata without weakening guards.
+- Two corrected-app Command+E exports matched the exact displayed body plus
+  the explicit 171-byte display-only disclosure: 4,566 / 3,761 bytes, mode 0600.
+- Source-only append followed by native History Refresh retained snapshots 1/2
+  and accepted 3/4. The selected old Usage and Back origin stayed exact. New
+  Codex usage accounted input 190 / cached 60 / output 40 in snapshot 4.
+- A source-only rewrite was captured by the actual 30-second automatic timer
+  while History was open: snapshots remained 4 through 29 s, became 5 at 31 s.
+  Snapshot 5 used generation 3; old snapshot 4 summary stayed exact. After both
+  original synthetic paths were moved to retained filenames, old and latest
+  summaries still read owned data; latest totals were 60/10/9. All five captures
+  passed the Bend fixture verifier; SQLite quick_check/FK checks passed.
+- A separate copied synthetic library had 100,001 records. Its real session-usage
+  child was observed while pending. Back immediately restored the 11,480-byte
+  origin; after child exit, exact text and complete PNG still matched. This is
+  observed interaction, not a latency measurement. Back does not kill the worker.
+
+The initial candidate 0c8d4bd1 failed the provider transition guard and was not
+promoted. Initial checks expecting Refresh/automatic capture inside Usage failed
+because that view suspends capture; corrected History tests are separate.
+Those attempts remain local. No assertion or identity check was weakened.
+
+All owned windows closed; runner exited 130 after deliberate stop; VM stopped
+and its owned lease was absent. Standard build/juice-bend and the new
+build/Juice Bend Usage.app package the exact observed executable. Isolated
+empty-library launcher status passed. Earlier named working apps remain.
+
+Not established: full IME, shaping, accessibility, latency, stress-limit GUI
+completion or complete parity. Raw synthetic screenshots/process output remain
+ignored under build/tart/usage-batched-5n_wbswg. Sanitized structured results:
+benchmarks/results/tart-usage-summary.json.

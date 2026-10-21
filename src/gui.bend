@@ -10,6 +10,7 @@ import ./provenance.bend as P
 import ./gui_files.bend as Files
 import ./gui_relations.bend as Related
 import ./gui_settings.bend as Settings
+import ./gui_usage.bend as Usage
 import ./refresh_preferences.bend as Refresh
 
 # The window owns no effectful database path. Every operation is a bounded call
@@ -43,6 +44,8 @@ type Navigation is Data:
   RelatedNavigation{origin: Selection,origin_view: UI.Bookmark,origin_search: String,
     page: Maybe<&2,Related.Page>,page_view: Maybe<&2,UI.Bookmark>,
     previous: List<&2,String>,phase: U32,target: Maybe<&2,Related.Reference>}
+  UsageNavigation{origin: Selection,origin_view: UI.Bookmark,origin_search: String,
+    prior: List<&2,Navigation>,ready: Bool}
 
 # Global acknowledged preferences outlive the Settings panel. Its origin is
 # boxed separately and deliberately excludes SettingsState to prevent nesting.
@@ -192,9 +195,15 @@ def first_snapshot(items: List<&2,Item>) -> String:
     case Item{snapshot,ordinal,title,provider,repo,gen,filters} <> rest:
       snapshot
 
+def queued_reader_status(value: Maybe<&2,Pending>) -> String:
+  match value:
+    case Some{Pending{_,Request{14,_,_,_,_},_}}:
+      "Queued behind the previous whole-capture Usage worker. Its bounded read must finish before this read starts; its old response will be ignored."
+    case _: "Loading captured evidence..."
+
 def queue(+state: State, +request: Request) -> State:
   State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
-  State{db,dir,program,UI.set_status(ui,"Loading captured evidence..."),selection,form,
+  State{db,dir,program,UI.set_status(ui,queued_reader_status(reader)),selection,form,
     Jobs{U32.add(revision,1),Some{request},reader,writer,paused},refresh_at,serial}
 
 def invalidate(+state: State) -> State:
@@ -234,18 +243,19 @@ def navigation_phase(value: Navigation) -> U32:
   match value:
     case NoNavigation{}: 3
     case RelatedNavigation{origin,view,search,page,page_view,previous,phase,target}: phase
+    case UsageNavigation{_,_,_,_,_}: 4
 
 def related_filters(value: Navigation) -> Query.Filters:
   match value:
-    case NoNavigation{}: empty_filters()
     case RelatedNavigation{Selection{items,snap,start,kind,args,filters,listing},view,search,page,page_view,previous,phase,target}: filters
+    case _: empty_filters()
 
 def related_restore_value(+state: State,value: Navigation) -> State:
   State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,old,settings},jobs,deadline,serial} = state
   match value:
-    case NoNavigation{}: state
     case RelatedNavigation{origin,view,search,page,page_view,previous,phase,target}:
       invalidate(State{db,dir,program,UI.restore(ui,view),origin,Form{0,search,source,blame,files,[],settings},jobs,0n,serial})
+    case _: state
 
 def related_restore(+state: State) -> State:
   related_restore_value(state,navigation(state))
@@ -264,9 +274,9 @@ def related_back_view(+state: State,value: Navigation,bookmark: Maybe<&2,UI.Book
 
 def related_back_value(+state: State,+value: Navigation) -> State:
   match value:
-    case NoNavigation{}: status(state,"No Related navigation to return from.")
     case RelatedNavigation{origin,view,search,page,+page_view,previous,0,target}: related_restore(state)
     case RelatedNavigation{origin,view,search,page,+page_view,previous,phase,target}: related_back_view(state,value,page_view)
+    case _: status(state,"No Related navigation to return from.")
 
 def related_back(+state: State) -> State:
   related_back_value(state,navigation(state))
@@ -408,7 +418,6 @@ def related_apply(+state: State,+request: Request,+page: Related.Page,value: Nav
   Request{kind,args,snap,step,title} = request
   Related.Page{anchor,watermark,after,+next,+scanned,+rows,text,filters} = page
   match value:
-    case NoNavigation{}: state
     case RelatedNavigation{+origin,view,+search,+prior,saved,previous,phase,target}:
       +trail = related_trail(step,related_old_after(prior),previous)
       +number = U32.inc(U32.from_nat(List.length(&2,String,trail)))
@@ -418,6 +427,7 @@ def related_apply(+state: State,+request: Request,+page: Related.Page,value: Nav
         "Inspected " ++ U32.show(scanned) ++ " sources. Links/ambiguity are page-local; absent links do not prove no relatives. Back restores origin.")
       State{db,dir,program,shown,related_selection(origin),Form{0,search,source,blame,files,
         [RelatedNavigation{origin,view,search,Some{page},Some{UI.bookmark(shown)},trail,0,None{}}],settings},jobs,0n,serial}
+    case _: state
 
 def related_validated(+state: State,request: Request,page: Related.Page,valid: Bool) -> State:
   match valid:
@@ -1152,15 +1162,41 @@ def why(+state: State) -> State:
 
 
 def usage_scope(filters: Query.Filters) -> Bool:
-  Query.Filters{query,provider,repo,role,after} = filters
-  String.is_empty(repo) && String.is_empty(role) && String.is_empty(after)
+  Usage.scope(filters)
+
+def usage_active(value: Navigation) -> Bool:
+  match value:
+    case UsageNavigation{_,_,_,_,_}: True{}
+    case _: False{}
+
+def usage_restore_value(+state: State,value: Navigation) -> State:
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,old,settings},jobs,deadline,serial} = state
+  match value:
+    case UsageNavigation{origin,view,search,prior,ready}:
+      invalidate(State{db,dir,program,UI.restore(ui,view),origin,Form{0,search,source,blame,files,prior,settings},jobs,deadline,serial})
+    case _: state
+
+def usage_restore(+state: State) -> State:
+  usage_restore_value(state,navigation(state))
+
+def usage_enter(+state: State,+snap: String,+start: U32) -> State:
+  State{db,dir,program,+ui,+selection,Form{mode,+search,source,blame,files,prior,settings},jobs,deadline,serial} = state
+  status(queue(State{db,dir,program,ui,
+    selection,Form{mode,search,source,blame,files,[UsageNavigation{selection,UI.bookmark(ui),search,prior,False{}}],settings},jobs,deadline,serial},
+    Request{14,["session-usage",snap],snap,start,"Usage | whole captured session | snapshot " ++ snap}),
+    "Scanning the whole pinned capture. Back restores this range immediately; the active worker may finish before another read starts.")
+
+def usage_enter_ready(state: State,snap: String,start: U32,active: Bool) -> State:
+  match active:
+    case True{}: status(state,"Usage is already scanning or displaying this whole pinned capture. Back returns to its original range.")
+    case False{}: usage_enter(state,snap,start)
 
 def usage_nonempty(+state: State,+snap: String,+start: U32,+filters: Query.Filters,valid: Bool) -> State:
   match valid:
     case True{}:
-      queue(state,Request{14,["usage",snap,U32.show(start),"40"],snap,start,"Usage | recorded facts in captured range"})
+      usage_enter_ready(state,snap,start,usage_active(navigation(state)))
     case False{}:
-      status(state,"Usage needs an unfiltered transcript range. Clear repository, role and date filters, then reopen a result.")
+      status(state,"Whole-session Usage would widen this repository, role or date scope. Clear those filters and reopen a transcript first.")
 
 def usage_capture(+state: State) -> State:
   State{db,dir,program,ui,Selection{items,+snap,+start,displayed,args,+filters,+listing},form,jobs,refresh_at,serial} = state
@@ -1185,6 +1221,76 @@ def usage_mode(+state: State,active: Bool) -> State:
 
 def usage(+state: State) -> State:
   usage_mode(state,files_active(state))
+
+def usage_item_identity(items: List<&2,Item>,+capture: Json.Json,+snapshot: String) -> Bool:
+  match items:
+    case []: True{}
+    case Item{+snap,_,_,+provider,_,generation,_} <> rest:
+      (Bool.not(String.eq(snapshot,snap)) ||
+        ((String.eq(provider,"capture") || String.eq(provider,Json.get(capture,"provider"))) && String.eq(generation,Json.get(capture,"generation")))) &&
+        usage_item_identity(rest,capture,snapshot)
+
+def usage_view_identity(args: List<&2,String>,+capture: Json.Json) -> Bool:
+  match args:
+    case "activity" <> snap <> source <> generation <> extent <> provider <> total <> next <> count <> []:
+      String.eq(snap,Json.get(capture,"snapshot")) && String.eq(source,Json.get(capture,"source")) &&
+        String.eq(generation,Json.get(capture,"generation")) && String.eq(extent,Json.get(capture,"extent")) &&
+        String.eq(provider,Json.get(capture,"provider")) && String.eq(total,Json.get(capture,"records"))
+    case _: True{}
+
+def usage_related_identity(value: Navigation,+capture: Json.Json) -> Bool:
+  match value:
+    case NoNavigation{}: True{}
+    case RelatedNavigation{_,_,_,_,_,_,2,Some{target}}:
+      Related.same(target,Related.reference(capture))
+    case _: False{}
+
+def usage_request_valid(request: Request,value: Navigation,+capture: Json.Json) -> Bool:
+  Request{kind,args,+snapshot,start,title} = request
+  match value:
+    case UsageNavigation{Selection{items,+snap,first,displayed,view_args,filters,listing},_,_,prior,False{}}:
+      U32.is_eq(kind,14) && String.eq(snapshot,snap) && U32.is_eq(start,first) &&
+        String.eq(String.join(args,"\0"),String.join(["session-usage",snap],"\0")) &&
+        usage_item_identity(items,capture,snapshot) && usage_view_identity(view_args,capture) &&
+        usage_related_identity(navigation_value(prior),capture)
+    case _: False{}
+
+def usage_filters(value: Navigation) -> Query.Filters:
+  match value:
+    case UsageNavigation{Selection{_,_,_,_,_,filters,_},_,_,_,_}: filters
+    case _: empty_filters()
+
+def usage_selection(origin: Selection) -> Selection:
+  Selection{items,snap,first,displayed,view_args,filters,listing} = origin
+  Selection{items,snap,first,14,view_args,filters,listing}
+
+def usage_apply_ready(+state: State,+request: Request,+report: Usage.Report,value: Navigation) -> State:
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,old,settings},jobs,deadline,serial} = state
+  Request{kind,args,snapshot,start,title} = request
+  match value:
+    case UsageNavigation{+origin,view,+saved_search,prior,False{}}:
+      State{db,dir,program,UI.set_status(UI.set_reader(ui,title,Usage.displayed(report)),Usage.description(report)),
+        usage_selection(origin),
+        Form{mode,search,source,blame,files,[UsageNavigation{origin,view,saved_search,prior,True{}}],settings},jobs,deadline,serial}
+    case _: status(state,"Usage reply was already accepted. Displayed evidence is unchanged.")
+
+def usage_apply(state: State,request: Request,report: Usage.Report,value: Navigation,valid: Bool) -> State:
+  match valid:
+    case True{}: usage_apply_ready(state,request,report,value)
+    case False{}: status(state,"Usage reply did not match the current pinned request, or was already accepted. Displayed evidence is unchanged.")
+
+def usage_decoded(+state: State,+request: Request,result: Result<&2,&2,String,Usage.Report>) -> State:
+  match result:
+    case Fail{message}: status(state,message)
+    case Done{+report}:
+      Usage.Report{capture,_,_,_,_} = report
+      usage_apply(state,request,report,navigation(state),usage_request_valid(request,navigation(state),capture))
+
+def usage_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
+  Request{kind,args,snapshot,start,title} = request
+  match result:
+    case Fail{message}: status(state,message)
+    case Done{value}: usage_decoded(state,request,Usage.decode(value,snapshot,usage_filters(navigation(state))))
 
 # Tools uses the same immutable raw-record range as the captured reader. Its
 # response carries separate EOF metadata; visible tool count is not a cursor.
@@ -1226,7 +1332,7 @@ def paging_next(+state: State,kind: U32,+snap: String,+next: U32,+filters: Query
     case 4:
       why_nonempty(state,snap,next,filters,String.is_empty(snap))
     case 14:
-      usage_nonempty(state,snap,next,filters,usage_scope(filters) && Bool.not(String.is_empty(snap)))
+      status(state,"Whole-session Usage has no transcript pages. Back restores the original range; scroll the summary to read it.")
     case _:
       status(state,"Open a transcript to page. Adjust the Blame form for another file range.")
 
@@ -1722,6 +1828,13 @@ def latest_done(+state: State,+request: Request,result: Result<&2,&2,String,Json
         P.decimal_valid(Json.get(value,"snapshot")) && Bool.not(String.eq(Json.get(value,"snapshot"),"0")) &&
         Bool.not(Cmp.is_gt(P.decimal_compare(Json.get(value,"snapshot"),"9223372036854775807"))))
 
+# Captured view metadata belongs to the accepted snapshot, not the live listing.
+# Keep same-snapshot Tools identity across transcript/Why, but retire it only
+# after a different snapshot's reader succeeds. File evidence owns its args.
+def text_view_args(kind: U32,args: List<&2,String>,previous: List<&2,String>,old: String,snapshot: String) -> List<&2,String>:
+  Bool.pick(List<&2,String>,file_kind(kind),args,
+    Bool.pick(List<&2,String>,String.eq(old,snapshot),previous,[]))
+
 def text_done(+state: State,+request: Request,result: Result<&2,&2,String,String>) -> State:
   State{+db,+dir,+program,+ui,Selection{+items,+old,+oldstart,+displayed,+blame,+filters,+listing},Form{+mode,+search,+source,+form,+files,+navigation,+settings},+jobs,+refresh_at,+serial} = state
   Request{+kind,+args,+snap,+start,+title} = request
@@ -1731,7 +1844,7 @@ def text_done(+state: State,+request: Request,result: Result<&2,&2,String,String
     case Done{text}:
       State{db,dir,program,UI.set_status(UI.set_reader(Bool.pick(UI.State,file_kind(kind) || U32.is_eq(mode,0),ui,UI.set_query(ui,search)),title,text),"Captured evidence loaded. Scroll or drag to select; Cmd+C copies."),
         Selection{items,Bool.pick(String,file_kind(kind),old,snap),start,kind,
-          Bool.pick(List<&2,String>,file_kind(kind),args,blame),
+          text_view_args(kind,args,blame,old,snap),
           Bool.pick(Query.Filters,file_kind(kind) || U32.is_eq(kind,14),filters,request_filters(args)),listing},Form{Bool.pick(U32,file_kind(kind),2,0),search,source,form,files,navigation,settings},jobs,refresh_at,serial}
 
 def related_target_result(+state: State,+request: Request,value: Navigation,valid: Bool,+result: Result<&2,&2,String,String>) -> State:
@@ -1741,6 +1854,7 @@ def related_target_result(+state: State,+request: Request,value: Navigation,vali
       text_done(set_navigation(state,RelatedNavigation{origin,view,search,page,saved,previous,2,target}),request,Done{text})
     case _ True{} Fail{message}: status(state,message)
     case _ False{} _: status(state,"Captured target reply did not match the Related selection; displayed evidence is unchanged.")
+    case _ _ _: status(state,"Captured target reply cannot replace whole-session Usage; Back restores the original range.")
 
 def related_target_valid(+request: Request,+value: Navigation) -> Bool:
   Request{kind,+args,+snap,start,title} = request
@@ -1905,6 +2019,8 @@ def read_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.J
       files_done(state,request,result)
     case 24:
       tools_done(state,request,result)
+    case 14:
+      usage_done(state,request,result)
     case 25:
       related_done(state,request,result)
     case 26:
@@ -1961,7 +2077,7 @@ def refresh_finished_normal(+state: State) -> State:
 
 def refresh_finished_mode(state: State,related: Bool) -> State:
   match related:
-    case True{}: status(state,"Capture finished. Related keeps its exact anchor, watermark, page and target.")
+    case True{}: status(state,"Capture finished. Your evidence navigation and original range remain pinned.")
     case False{}: refresh_finished_normal(state)
 
 def refresh_finished(+state: State) -> State:
@@ -2479,9 +2595,69 @@ def handle_related(+state: State,action: UI.Action,+phase: U32) -> IO(Maybe<Stat
     case UI.Rebuild{}: IO.pure(Maybe<State>,Some{status(state,"Back to the origin and open Settings before rebuilding a captured snapshot.")})
     case other: handle_normal(state,other)
 
+def usage_ready(value: Navigation) -> Bool:
+  match value:
+    case UsageNavigation{_,_,_,_,ready}: ready
+    case _: False{}
+
+def usage_reader_pending(reader: Maybe<&2,Pending>) -> Bool:
+  match reader:
+    case Some{_}: True{}
+    case None{}: False{}
+
+def usage_back(+state: State) -> State:
+  State{_,_,_,_,_,_,Jobs{_,_,reader,_,_},_,_} = state
+  +restored = usage_restore(state)
+  Bool.pick(State,usage_reader_pending(reader),status(restored,
+    "Original range restored. The previous Usage worker may still finish; its result is ignored. A new read waits for that single worker."),restored)
+
+def usage_export(+state: State,ready: Bool) -> IO(Maybe<State>):
+  match ready:
+    case False{}: IO.pure(Maybe<State>,Some{status(state,"Wait for the captured Usage summary before exporting it, or Back to export the original range.")})
+    case True{}:
+      do IO<Maybe<State>>:
+        next : State <- export(state)
+        return Some{next}
+
+def handle_usage_origin_phase(state: State,action: UI.Action,phase: U32) -> IO(Maybe<State>):
+  match phase:
+    case 3: handle_normal(state,action)
+    case 4: IO.pure(Maybe<State>,Some{status(state,"Invalid nested Usage origin; current evidence retained.")})
+    case phase: handle_related(state,action,phase)
+
+def handle_usage_origin(+state: State,action: UI.Action) -> IO(Maybe<State>):
+  handle_usage_origin_phase(state,action,navigation_phase(navigation(state)))
+
+def handle_usage(+state: State,action: UI.Action) -> IO(Maybe<State>):
+  State{_,_,_,+ui,_,_,_,_,_} = state
+  match action:
+    case UI.Back{}: IO.pure(Maybe<State>,Some{usage_back(state)})
+    case UI.Usage{}: IO.pure(Maybe<State>,Some{status(state,"This is Usage for the whole pinned capture. Back restores the original range.")})
+    case UI.Previous{}: IO.pure(Maybe<State>,Some{status(state,"Whole-session Usage has no transcript pages. Back restores the original range; scroll this summary to read it.")})
+    case UI.Next{}: IO.pure(Maybe<State>,Some{status(state,"Whole-session Usage has no transcript pages. Back restores the original range; scroll this summary to read it.")})
+    case UI.ListPrevious{}: IO.pure(Maybe<State>,Some{status(state,"Back restores the result list and its paging position.")})
+    case UI.ListNext{}: IO.pure(Maybe<State>,Some{status(state,"Back restores the result list and its paging position.")})
+    case UI.Open{index}: IO.pure(Maybe<State>,Some{status(state,"Back restores the result list before opening another captured transcript.")})
+    case UI.Submit{}: IO.pure(Maybe<State>,Some{status(state,"Back restores the result list before opening another captured transcript.")})
+    case UI.Export{}: usage_export(state,usage_ready(navigation(state)))
+    case UI.Refresh{}: IO.pure(Maybe<State>,Some{status(state,"Usage stays pinned to this accepted capture. Back to History before refreshing source files or choosing Open latest.")})
+    case UI.Why{}: handle_usage_origin(usage_restore(state),UI.Why{})
+    case UI.Tools{}: handle_usage_origin(usage_restore(state),UI.Tools{})
+    case UI.Related{}: handle_usage_origin(usage_restore(state),UI.Related{})
+    case UI.Search{}: handle_usage_origin(related_query_restore(usage_restore(state),UI.query(ui)),UI.Search{})
+    case UI.Scope{+provider}: handle_usage_origin(related_scope_restore(usage_restore(state),provider),UI.Scope{provider})
+    case UI.Paste{}: handle_usage_origin(usage_restore(state),UI.Paste{})
+    case UI.Files{}: handle_usage_origin(usage_restore(state),UI.Files{})
+    case UI.Filter{}: handle_usage_origin(usage_restore(state),UI.Filter{})
+    case UI.Blame{}: handle_usage_origin(usage_restore(state),UI.Blame{})
+    case UI.Versions{}: handle_usage_origin(usage_restore(state),UI.Versions{})
+    case UI.OpenLatest{}: handle_usage_origin(usage_restore(state),UI.OpenLatest{})
+    case other: handle_normal(state,other)
+
 def handle_navigation(+state: State,action: UI.Action,phase: U32) -> IO(Maybe<State>):
   match phase:
     case 3: handle_normal(state,action)
+    case 4: handle_usage(state,action)
     case phase: handle_related(state,action,phase)
 
 def settings_scope(+state: State,+provider: String) -> State:

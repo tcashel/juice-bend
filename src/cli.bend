@@ -17,6 +17,7 @@ import ./repository_cli.bend as Repository
 import ./activity_cli.bend as Activity
 import ./relations_cli.bend as Relations
 import ./refresh_preferences_cli.bend as RefreshPreferences
+import ./session_usage_cli.bend as SessionUsage
 
 type Page is Data:
   Page{offset: U32, rows: List<&2,List<&2,Sql.Cell>>, has_more: Bool}
@@ -528,7 +529,7 @@ def help() -> IO(Unit):
     "\"repo-open REPO\",\"repo-tree REPO COMMIT PATH OFFSET\"," ++
     "\"repo-source REPO COMMIT PATH FIRST COUNT\",\"repo-blame REPO COMMIT PATH FIRST COUNT\"," ++
     "\"repo-why REPO COMMIT PATH FIRST COUNT\"," ++
-    "\"usage SNAPSHOT [START [COUNT]]\"," ++
+    "\"usage SNAPSHOT [START [COUNT]]\",\"session-usage SNAPSHOT\"," ++
     "\"citation JSON\",\"export SNAPSHOT PATH\",\"export-range SNAPSHOT START COUNT PATH\"," ++
     "\"export-why SNAPSHOT START COUNT PATH\",\"export-blame REPOSITORY FILE START END PATH\"," ++
     "\"export-range-scope SNAP START COUNT PROVIDER REPO ROLE AFTER PATH\"," ++
@@ -634,6 +635,8 @@ def command(db: U32,data_dir: String,cmd: String,args: List<String>) -> IO(Unit)
       why(db,args)
     case "usage":
       usage(db,args)
+    case "session-usage":
+      SessionUsage.command(db,args)
     case "citation":
       match args:
         case Con{descriptor,Nil{}}:

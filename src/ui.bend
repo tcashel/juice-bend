@@ -819,6 +819,9 @@ def settings_chrome(c: Canvas,active: Bool) -> Canvas:
       r = write(10n,q,"Every 8h",1,48,3960107,15396591)
       write(10n,r,"Every 24h",1,50,3960107,15396591)
 
+def whole_usage(s: State) -> Bool:
+  String.starts_with(title(s),"Usage | whole captured session")
+
 def draw_automatic(+s: State,automatic: String) -> Image:
   State{Content{+q, rows, reader, lines, title, status, +scope,+results,+files},
     Input{+selected, scroll, Edit{+focus, +caret, +anchor, drag, viewport}, command, shift}, image, dirty} = s
@@ -837,8 +840,8 @@ def draw_automatic(+s: State,automatic: String) -> Image:
   blame = write(10n, g, Bool.pick(String,is_settings(s),"Add folder","Blame"), 25, 6, 3960107, 15988716)
   h = write(11n, blame, Bool.pick(String,is_settings(s),"Import file","Why"), 37, 6, 3960107, 15988716)
   i = write(10n, h, Bool.pick(String,is_settings(s),"Enable","Export"), 49, 6, 3960107, 15988716)
-  j = write(10n, i, Bool.pick(String,is_settings(s),"Disable","Prev text"), 61, 6, 3960107, 15988716)
-  k = write(10n, j, Bool.pick(String,is_settings(s),"Reload","Next text"), 73, 6, 3960107, 15988716)
+  j = write(10n, i, Bool.pick(String,is_settings(s),"Disable",Bool.pick(String,whole_usage(s),"Whole view","Prev text")), 61, 6, 3960107, 15988716)
+  k = write(10n, j, Bool.pick(String,is_settings(s),"Reload",Bool.pick(String,whole_usage(s),"No pages","Next text")), 73, 6, 3960107, 15988716)
   l = write(10n, k, Bool.pick(String,files,"History","Files"), 1, 9, 6516081, 15396591)
   m = write(10n, l, "All", 1, 11, 3960107, 15396591)
   n = write(10n, m, "Claude", 1, 14, 3960107, 15396591)
