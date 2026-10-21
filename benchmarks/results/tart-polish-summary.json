@@ -69,10 +69,11 @@
   },
   "cleanup": {
     "owned_windows_closed": true,
-    "dock_autohide_restored": false,
     "vm_state": "stopped",
     "runner_exit": 130,
-    "owned_lease_released": true
+    "owned_lease_released": true,
+    "dock_autohide_after": false,
+    "dock_preference_restored": true
   },
   "earlier_candidate": {
     "sha256": "149700c84f70f22adacd8e601aed9529db5e7fea1d8ff69c3e9083797e7a2a4b",

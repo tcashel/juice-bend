@@ -113,3 +113,9 @@
   modifiers/drag without retaining an old image. Returning to an accepted History
   reader preserves text selection and exact capture identity without a reread;
   an explicit provider click still overrides the saved listing scope.
+
+- File/commit request eligibility is a read-time policy over verified raw/event
+  correspondence. It never rewrites normalized role/text or citation ordinals.
+  Known context/relay/meta records remain readable; uncertainty before the first
+  request stays ineligible. Why distinguishes exact request suffix previews
+  from bounded retained excerpts and makes no human-authorship claim.

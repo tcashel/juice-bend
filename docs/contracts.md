@@ -166,3 +166,15 @@ the sole OS worker completes or times out before another read starts. Successful
 cross-snapshot text loads clear stale view metadata, whereas failed/pending reads
 preserve the old identity. Copy/export uses exact displayed evidence. Automatic
 capture remains suspended during Usage; History's actual interval is observed.
+
+## Recorded-request provenance
+
+File/commit Why uses read-time policy `recorded-request-v1` over verified retained
+records. Known context, relay and typed Claude metadata remain visible but cannot
+supply a request; a later eligible recorded request keeps its original record/event
+citation. Malformed recognized envelopes or metadata before that request leave
+explicit ineligibility. A request is not proof of human authorship. The request
+preview and each retained event field are limited to 2048 decoded characters;
+complete bytes remain in raw export. Parser/schema/projection versions, normalized
+text/roles and immutable capture/citation identity do not change. No rebuild is
+required. The existing first-16-record and 64-generation bounds remain explicit.

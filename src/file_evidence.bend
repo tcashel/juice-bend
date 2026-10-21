@@ -398,7 +398,9 @@ def actor_context(actor: Maybe<&2,Actors.Actor>,+all: List<&2,Actors.Actor>,+db:
         request : Result<&2,&2,String,String> <- Evidence.resolve_citation(db,Actors.key(value))
         parent : String <- Bool.pick(IO(String),String.is_empty(Actors.parent(value)),
           IO.pure(String,""),parent_text(Actors.parent_actor(value,all,repo),db))
-        return "Captured first request; this is recorded intent, not an inferred reason:\n" ++
+        return "Recorded request policy: " ++ Actors.request_policy() ++ "; not proof of human authorship or an inferred reason.\n" ++
+          "Recorded request preview (at most 2048 decoded characters):\n" ++ Actors.request_preview(value) ++
+          "\nRetained request event excerpt and immutable citation (text, arguments, result: at most 2048 decoded characters each; context prefixes remain quoted; complete bytes remain available in raw export):\n" ++
           resolved_text(request) ++ parent
 
 def quote_keys(keys: List<&2,String>,+db: U32,+actors: List<&2,Actors.Actor>,+repo: String) -> IO(String):

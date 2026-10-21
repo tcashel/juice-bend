@@ -5,6 +5,8 @@ import ./json.bend as Json
 import ./domain.bend as Domain
 import ./providers.bend as Providers
 import ./evidence.bend as Evidence
+import ./request_evidence.bend as Request
+import ./request_origin.bend as Origin
 
 # Only verified retained records establish actor identity and eligibility.
 # These bounds are reported by the file-evidence surface.
@@ -38,6 +40,13 @@ def parent(actor: Actor) -> String:
 def repository(actor: Actor) -> String:
   Actor{_,_,_,_,value,_,_,_,_} = actor
   value
+
+def request_preview(actor: Actor) -> String:
+  Actor{_,_,_,_,_,_,value,_,_} = actor
+  value
+
+def request_policy() -> String:
+  Request.policy()
 
 def scope(+repo: String,actor: Actor) -> Bool:
   Actor{_,_,_,_,+cwd,_,_,_,_} = actor
@@ -139,29 +148,63 @@ def header_actor(+raw: Json.Json,actor: Actor) -> Actor:
     Store.nonempty(blocked,Store.nonempty(blocked_header(raw),
       Bool.pick(String,unsupported_child,"unsupported or parentless Codex subagent","")))}
 
-def event_actor(event: Providers.Record,record: Evidence.Verified,index: U32,
-  actor: Actor) -> Actor:
-  Providers.ProviderEvent{+role,+text,_,_,_,_,r,+s,_,_,_,_,_} = event
+def guarded_text(+text: String) -> String:
+  Bool.pick(String,String.contains(text,"[juice:benchmark-synthetic:v1]"),
+    "synthetic marker or source namespace",
+    Bool.pick(String,String.starts_with(text,"## ") || String.starts_with(text,"# Diagnostic") ||
+      String.contains(text,"[juice:internal") || String.contains(text,"[juice:scratchpad"),
+      "origin requires review: diagnostic-style first request",""))
+
+def request_state(candidate: Bool,provider: String,meta: Origin.MetaFlag,hint: Maybe<&2,String>,
+  +event: Providers.Record) -> String & String:
+  match candidate:
+    case False{}: ("","")
+    case True{}:
+      Providers.ProviderEvent{_,text,_,_,_,_,_,_,_,_,_,_,_} = event
+      +assessment = Request.assess_aligned(provider,meta,hint,event)
+      +request = Request.request(assessment)
+      (request,Store.nonempty(guarded_text(text),
+        Store.nonempty(Request.uncertainty(assessment),guarded_text(request))))
+
+def event_state(state: String & String,r: String,+s: String,record: Evidence.Verified,
+  index: U32,actor: Actor) -> Actor:
+  (+selected,uncertain) = state
   Actor{provider,source,snapshot,+session,repo,parent,+request,key,blocked} = actor
-  +human = String.eq(role,"user") && Bool.not(String.is_empty(text)) && String.is_empty(request)
+  +chosen = Bool.not(String.is_empty(selected)) && String.is_empty(request)
   +identity_conflict = Bool.not(String.is_empty(session)) && Bool.not(String.is_empty(s)) &&
     Bool.not(String.eq(session,s))
   Actor{provider,source,snapshot,Store.nonempty(session,s),Store.nonempty(repo,r),parent,
-    Bool.pick(String,human,String.take(text,2048n),request),
-    Bool.pick(String,human,Evidence.citation(record,index),key),
-    Store.nonempty(blocked,Bool.pick(String,identity_conflict,"conflicting captured session identities",""))}
+    Bool.pick(String,chosen,String.take(selected,2048n),request),
+    Bool.pick(String,chosen,Evidence.citation(record,index),key),
+    Store.nonempty(blocked,Store.nonempty(uncertain,
+      Bool.pick(String,identity_conflict,"conflicting captured session identities","")))}
 
-def event_scan(events: List<&2,Providers.Record>,+record: Evidence.Verified,
+def event_actor(+event: Providers.Record,meta: Origin.MetaFlag,hint: Maybe<&2,String>,record: Evidence.Verified,index: U32,
+  +actor: Actor) -> Actor:
+  Providers.ProviderEvent{role,text,_,_,_,_,r,s,_,_,_,_,_} = event
+  event_state(request_state(String.eq(role,"user") && Bool.not(String.is_empty(text)) &&
+    String.is_empty(request_preview(actor)),provider(actor),meta,hint,event),r,s,record,index,actor)
+
+def event_scan(events: List<&2,Providers.Record>,hints: List<&2,Maybe<&2,String>>,
+  +meta: Origin.MetaFlag,+record: Evidence.Verified,
   +index: U32,actor: Actor) -> Actor:
-  match events:
-    case []:
+  match events hints:
+    case [] _:
       actor
-    case event <> rest:
-      event_scan(rest,record,U32.add(index,1),event_actor(event,record,index,actor))
+    case Con{event,rest} Con{hint,tail}:
+      event_scan(rest,tail,meta,record,U32.add(index,1),event_actor(event,meta,hint,record,index,actor))
+    case Con{event,rest} Nil{}:
+      event_scan(rest,[],meta,record,U32.add(index,1),event_actor(event,meta,None{},record,index,actor))
 
-def scanned(+record: Evidence.Verified,raw: Json.Json,actor: Actor) -> Actor:
+def request_header(+raw: Json.Json,actor: Actor) -> Actor:
+  Actor{+provider,source,snapshot,session,repo,parent,+request,key,blocked} = actor
+  Actor{provider,source,snapshot,session,repo,parent,request,key,Store.nonempty(blocked,
+    Bool.pick(String,String.is_empty(request),Request.frame_issue(provider,raw),""))}
+
+def scanned(+record: Evidence.Verified,+raw: Json.Json,+actor: Actor) -> Actor:
   Evidence.Verified{_,_,_,_,_,_,events} = record
-  event_scan(events,record,0,header_actor(raw,actor))
+  event_scan(events,Request.texts(provider(actor),raw),Origin.metadata(raw),record,0,
+    request_header(raw,header_actor(raw,actor)))
 
 def frame_json(+rows: List<&2,List<&2,Sql.Cell>>) -> Json.Json:
   Bool.pick(Json.Json,String.eq(Store.field(Store.first(rows),6n),"0"),

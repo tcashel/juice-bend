@@ -1,5 +1,21 @@
 # Acceptance evidence
 
+## Recorded requests in file Why — 2026-10-21
+
+App `668cf892…` applies a conservative read-time request policy to verified
+retained records. Context, relay and typed metadata stay visible but cannot
+supply a request; malformed input remains ineligible. Native Tart checks passed
+all six positive/negative Files → Why cases, exact Unicode copy, three exports,
+retained selection/pixels across append/rewrite/source relocation, and exact
+Why after restart with source paths absent. Eight production gates passed 423
+checks with 147 unchanged inputs; all 57 application build inputs stayed fixed.
+
+See [receipt](receipts/request-origin-native.txt) and
+[structured summary](../benchmarks/results/tart-request-origin-summary.json).
+Raw/projection/citation identity and parser/schema versions are unchanged; no
+rebuild is required. History `why-scope` is unchanged. This is bounded recorded
+intent, not proof of human authorship or full origin-classification parity.
+
 ## Native reading polish — 2026-10-21
 
 App `fabcd506…` now uses a licensed 204-glyph grayscale font, word-aware result

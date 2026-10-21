@@ -2,115 +2,76 @@
 
 ## Goal and boundaries
 
-The owner goal is functional and UX/visual parity with SwiftUI Juice, excluding
-embeddings and model features. This is **not complete**. Tens-of-seconds initial
-import is acceptable; further marginal append tuning is deferred while product
-work advances. All maintained application behavior remains **Bend 2**. The
-unchanged 418-line SQLite bridge is the native exception. Lean is optional
-proof checking and is not linked into the app. Mise pins Bun 1.4.2 and Bend 2.0.37
-revision 60ca80aedeec9d8f0629b5f10dd19457d8ad67af; 88 upstream hashes verify.
+Functional and pleasant native UX parity with SwiftUI Juice, excluding embeddings
+and model features, remains **in progress**. No user answer or approval is pending.
+All maintained app behavior/UI is Bend 2; the unchanged 418-line SQLite bridge is
+the native exception. Lean is optional development proof checking, not app runtime.
+Mise pins Bun 1.4.2 and Bend 2.0.37 at 60ca80aedeec9d8f0629b5f10dd19457d8ad67af.
+Original Juice and provider data remain read-only; all validation is synthetic.
+Only update tcashel/juice-bend draft PR #1; no merge, force push or distribution.
+Preserve the protected checkout index and all existing changes. Publication uses
+an explicit allowlist and separate index in ignored build/publication.git.
 
-PR #1 remains draft and unmerged on `codex/juice-bend-implementation`.
-Publication is authorized only in `tcashel/juice-bend`, without force pushes.
-Original Juice, its database and provider logs remain read-only. All fixtures
-and native observations use isolated synthetic storage. Do not discard the
-checkout's existing changes; its protected index predates published commits.
+## Working executable
 
-## Working executable and validated changes
+Standard `build/juice-bend`, named `build/juice-bend-request-origin`, and
+`build/Juice Bend Request.app` contain verified native binary
+`668cf892677f2bc8b1ea1be48f26a9a06d12735ba1efa6933df36f45e821cb6e`
+(13,161,720 bytes; 57 unchanged application inputs and 88 upstream hashes).
+Isolated launcher status passed. Prior Polished/Usage/Context apps remain.
+`mise run run -- --demo` builds current source into a synthetic isolated demo.
 
-`build/juice-bend-polish`, standard `build/juice-bend`, and
-`build/Juice Bend Polished.app` contain the exact observed native executable:
-SHA256 `fabcd5069359c929455412003623990927b2a2e371ade7352841b2a57844945e`,
-13,039,632 bytes. All 55 app inputs and 88 upstream hashes stayed unchanged.
-Isolated empty-library launcher status passed. Earlier named working apps remain.
-Use the named executable for repeatable validation; `mise run run -- --demo`
-builds current source and creates a synthetic demo.
-
-- Reading polish passed 604 focused native checks with 131 unchanged inputs.
-  Actual final-binary Tart observations passed Files → Settings → History exact
-  selection/pixel restoration, Why export, Page Down/Up, fresh empty-library
-  Unicode clipboard/Delete/replacement and Back during a real 100,001-record
-  Usage worker. Licensed grayscale font, word-aware rows, full status inspection
-  and effective capture-hold status are integrated. See `receipts/polish-native.txt`.
-
-- Whole-session Usage now scans verified retained raw bytes in its own bounded
-  SQLite read transaction. Claude call mirrors, Codex cumulative/fork accounting,
-  unknown counts and partial coverage stay explicit. Separate native gates:
-  reader 105, Codex 68, adapter 85, actual CLI dispatch 48, client 9; final GUI 88 plus
-  265 existing regressions. These do not constitute a new full-suite run.
-- Actual Tart interaction passed exact Claude/Codex summaries, scope refusal,
-  Back/Why/Tools transitions, two exact mode 0600 exports, manual append capture,
-  a real 30-second automatic rewrite capture from History, and retained old/latest
-  reads after source paths were hidden. A 100,001-record pending Usage worker
-  could finish after Back without changing the restored text/selection/screenshot.
-  The initial provider-transition failure was fixed and retested; strict capture
-  identity guards remain. See `receipts/usage-ui-native.txt` and the sanitized
-  `benchmarks/results/tart-usage-summary.json`.
-- Context batching passed 3,315 checks across 12 native targets, including all 27
-  actual crash cuts, with 106 unchanged inputs. No schema/codec change or removed
-  verification pass. Physical-Mac 100k observation: initial 36.194 s, unchanged 3.910 s,
-  append 16 records 23.816 s; search/late/scoped-late p95 42/7/17 ms. Single observations
-  do not establish statistical speedups. See `receipts/context-batched-native.txt`.
-- One native Time Profiler recording resolved 42,190 CPU samples. String building
-  and reference-count costs warrant investigation, but its whole-process sample
-  percentages cannot be attributed solely to append. Sanitized flamegraph and
-  exact caveats are in `receipts/append-profile-native.txt`.
-- The authorized Linux laptop passed 300 portable checks across six unchanged
-  executables and 116 unchanged inputs. Its first integration harness refusal was
-  corrected without changing the binary. No macOS UI/performance/proof claim
-  follows. See `benchmarks/results/linux-portable-summary.json`.
-
-The preceding full suite passed 40 executables / 2,960 checks. Twelve production
-Bend laws passed BendTT and pinned Lean 4.34.0; Domain `f2f68a4a…` is unchanged.
-Historical Files, Tools, Related, Settings, preservation and export receipts
-remain linked from `acceptance.md` and `native-validation.md`.
+- Read-time recorded-request policy is integrated in file/commit Why. Eight
+  production gates passed 423 checks; 147 union inputs and six adoption hashes
+  stayed unchanged. Actual native Files Why passed six positive/negative cases,
+  exact Unicode copy, three mode 0600 exports and retained text/selection/pixels
+  across append, rewrite and source relocation. Restart after source absence
+  reopened long-context Why exactly. See `receipts/request-origin-native.txt`.
+- Reading polish passed 604 focused checks and actual native Files/Settings/
+  History selection restoration, status/clipboard/paging and pending-Usage Back.
+  Licensed grayscale font, grouped controls, word-aware rows and visible capture
+  hold are integrated. See `receipts/polish-native.txt`.
+- Whole-session Usage, Settings/source controls, pinned Files, Tools and Related
+  have separate actual-native receipts linked in `native-validation.md`.
+- Context batching passed 3,315 checks including 27 process-crash cuts. Physical-Mac
+  100k observations: initial 36.194 s, unchanged 3.910 s, append 16 records 23.816 s;
+  search/late/scoped-late p95 42/7/17 ms. Further marginal append tuning is deferred
+  per owner priorities. No Swift comparison; any future comparison uses the same
+  host or same VM and equivalent work. See `performance.md`.
+- The earlier full suite passed 40 executables / 2,960 checks; later focused gates
+  are distinct. Twelve unchanged production laws passed BendTT and Lean 4.34.
+  Linux separately passed 300 portable checks; no macOS UI/performance claim.
 
 ## Exact continuation
 
-1. Validated Usage/context batching is published at
-   `e354d4bd83946dc81084ddb5283b9940be893347`, tree
-   `03b8c3686334a2c9c3f520e1f459ea783fa96a09` (18 commits in draft PR #1).
-   Bare ref `published-usage-validation`, `build/usage-remote.json` and the
-   explicit `build/usage-publication-*` files retain the exact identity. Verify
-   live PR head before the next fast-forward; never merge. The source tree was
-   bound to the app and context-batched benchmark input manifests.
-2. Verified polish is prepared for publication through the explicit
-   `build/polish-publication-files.txt` allowlist and separate bare Git index.
-   `build/polish-publication.json` will record exact tree/commit identity; refresh
-   live PR head before fast-forwarding. Do not stage the protected checkout index
-   or publish ignored fixtures/traces. Standard and named polished apps are ready.
-3. Normal scoped transcripts still put citations before payload; an older parity
-   sentence incorrectly generalized the payload-first Tools change. Corrected
-   documentation distinguishes them. Consider that small presentation change
-   with exact text/copy/export tests; no evidence may be omitted.
-4. Usage suspends capture; the UI now shows Capture suspended / Back to History.
-   Back retires its request but cannot cancel the upstream OS worker handle.
-   Final native observation confirms late completion preserves the restored view.
-5. Next isolated provider slice is frozen in `build/request-origin-integration`:
-   206 native checks (61 integration, 110 classifier, 35 file-evidence) passed
-   with unchanged inputs. `adoption.patch` SHA256 `585e01d0…` adds read-time
-   recorded-request eligibility and honest bounded Why excerpts; no parser,
-   raw/projection identity or rebuild change. Review `result.json`, then adopt
-   after the polish publication, rerun production provenance/export gates and
-   observe native Why. It is not integrated or claimed as current behavior.
-6. Resume the outstanding parity rows after native typography acceptance:
-   provider/archive coverage, deterministic context preparation, owned-storage
-   actions and explicit opt-in account/connection surfaces. Do not invent billing
-   facts or access real histories/accounts by default. Full IME/shaping,
-   accessibility, resize and latency remain unverified/upstream-limited.
+1. Native polish is published at 405aaba482819dd14d2ac42427ed2d831970d993,
+   tree 1fca903ce608ed6d89a8d93f6f1fb4e57fe5b2dd, verified open/draft/unmerged.
+   Current recorded-request slice is ready for publication. Use explicit
+   `build/request-origin-publication-files.txt`; generated metadata and remote
+   identity belong in `build/request-origin-publication.json` and
+   `build/request-origin-remote.json`. Bind the tree to the 57-input receipt,
+   refresh live PR head and use expected-SHA fast-forward only.
+2. Next small readability slice is isolated in `build/scoped-readability`.
+   Patch SHA256 0c0baac0c5afb8b75309b2f58a1ba89502652b06aeba0564f5a79826609ad66f;
+   only scoped_reader and its tests change. It moves scoped transcript payload
+   before complete citation, keeps Why/scope/identity unchanged and passed 27
+   isolated checks with 217 unchanged inputs. Production is untouched. Review
+   adoption.json/receipt.json, adopt after this publication, run production
+   display/scoped-reader/export gates, build a distinct app and observe native
+   scoped reading/copy/export before promoting it. Default unfiltered pages use
+   Store.page and are not changed by that patch.
+3. Native Why currently requires paging past verbose evidence to see a request.
+   Improve this presentation without omitting evidence or altering exact copy/
+   export semantics. Unsupported glyphs, full IME/shaping, accessibility, resize
+   and input-to-photon latency remain open/upstream-limited.
+4. Continue richer provider/archive support, deterministic context preparation,
+   owned-storage actions and explicit opt-in connection/account surfaces. Do not
+   invent billing facts, read real histories or change provider configuration.
+   Request policy still bounds first 16 actor records / 64 generations and is not
+   complete origin parity; no parser/schema/rebuild change was introduced.
 
-Tart run `build/tart/usage-batched-5n_wbswg` is complete: owned windows closed,
-runner 92760 exited 130, VM `juice-tests` stopped and owned lease was released.
-Raw trace/XML, remote payloads and all private synthetic artifacts stay ignored.
-Linux validation has no remaining owned processes. No Swift timing comparison
-has run; any comparison must use the same host or same VM and equivalent work.
-
-Upstream research confirmed linked-list String operations and continuation
-arity limits in the actual pin. No separately packaged official Bend skill was
-found in the searched public repositories. See `decisions.md`; this is not an
-exhaustive claim about all repositories or a reason to move app logic out of Bend.
-
-Polish Tart run `build/tart/polish-jnqg_ft_` is complete. All owned windows
-closed, Dock autohide was restored to 0, runner62007 exited130, VM juice-tests
-stopped and the exact owned lease was released. Final native receipt files are
-under its ignored artifacts directory. No user input or approval is pending.
+Tart `build/tart/request-origin-vq5gt_di` is complete: owned windows closed,
+Dock unchanged, runner 84758 exited 130, VM stopped and owned lease released.
+Earlier polish/Usage runs are also stopped; no owned Linux workload remains.
+All raw screenshots/traces and synthetic fixture outputs stay ignored. The
+latest source/binary/manifest receipts are frozen; no compiler remains active.

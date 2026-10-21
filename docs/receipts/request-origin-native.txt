@@ -1,0 +1,61 @@
+Recorded-request provenance production gates — 2026-10-21
+
+Native macOS arm64; Bend 2.0.37 pinned compiler, Bun 1.4.2 via mise.
+Read-time policy only; parser/schema/raw/projection and citation encoding unchanged.
+
+request_origin: 110 checks, exit0, 101 unchanged inputs; binary SHA256 ecee12a3b0f143807d383b6a4c9793e71f2f004d8c31cf5feb12981dbae44186
+request_origin_integration: 61 checks, exit0, 119 unchanged inputs; binary SHA256 cd663f57b21916b33167fe8787f09522656baf3e0fd537e2bb548c1db6720857
+provenance: 36 checks, exit0, 100 unchanged inputs; binary SHA256 2f171cd9d2f84e6fc39229403ccfd8102466f589fb3c6ceee48cf1cb446ebae2
+evidence: 42 checks, exit0, 112 unchanged inputs; binary SHA256 6b8a27f6dd0eeb3ea5dd42e4ca5a56ca123d43dec46e18e138c0739293973751
+file_evidence: 35 checks, exit0, 118 unchanged inputs; binary SHA256 c017bc6457fe48eae374e4673d84da25f23397c4e066b5e7e5f8974b21ea497c
+maintenance: 30 checks, exit0, 111 unchanged inputs; binary SHA256 764d5b870288bb24fabcf281565b070639faed0b71936245a1c947085ffe71f0
+cli: 9 checks, exit0, 139 unchanged inputs; binary SHA256 cf841b7805ebbcd09e0a70efb4de8dafc46d5b641e46c8d624a3a01fa97facce
+repository_cli: 100 checks, exit0, 141 unchanged inputs; binary SHA256 a85512c87af51be15a00f6ac741a3c0aa89259bca0ca591d6d29120135a45ab0
+
+Total 423 checks; all 147 union inputs and six adoption hashes unchanged.
+All receipt, binary, generated-C and log hashes rechecked after completion.
+No storage/performance/full-suite/proof rerun is implied.
+
+App: 13,161,720 bytes; SHA256 668cf892677f2bc8b1ea1be48f26a9a06d12735ba1efa6933df36f45e821cb6e.
+All 57 application inputs and 88 upstream hashes unchanged.
+Input manifest: request-origin-build-inputs.sha256.
+Actual native Tart observation (same binary):
+- All six Files → Why bodies copied exactly against independently saved Bend
+  Browser evidence: wrapped request, long-context Unicode request, context-only,
+  relay-only, metadata-only and malformed wrapper. Only the first two were exact;
+  the other four were not_indexed with no request preview.
+- Both positive requests selected physical record 1/event 1. The long request
+  suffix remained exact after a 3000-character prefix; policy, bounded-preview
+  and retained-excerpt labels were visible by keyboard paging. Unsupported
+  glyphs remained boxes while the complete clipboard preserved Unicode.
+- Guarded synthetic append published snapshot 7; rewrite published 8 in a new
+  generation/session; all six original source paths were then moved away.
+  Already displayed snapshot 1 Why, selection and full-window PNG stayed exact.
+  The Bend fixture verified its original raw bytes, citation and projection.
+- Restarting the actual app after source absence reopened long-request Why
+  exactly from retained snapshot 2 and allowed paging to its request preview.
+- Three exact displayed-body exports passed at mode 0600: wrapped 3904 bytes,
+  long 7767 bytes, retained wrapped 3904 bytes. Wrapped exports shared SHA256
+  27cc39974f6ff3ee4378e4556c07a21cdd478cba22e67cdcb8383b356c9d7f68;
+  long SHA256 82bf03a13d510324c54bd8196b304114acc003a09f432202be5f0ffeb4c7f752.
+- All owned windows closed, Dock unchanged, runner exit 130, VM stopped and
+  its owned lease released. Standard binary and named Request app now contain
+  this verified build; isolated empty-library launcher status passed.
+
+Fixture: benchmarks/native_request_origin.bend, native binary SHA256
+3bbdc1dd3212fb3fc9468339aa02e6f31dca977ddd35c5520dee8e40ff10d6fc;
+94 unchanged inputs. Local create/advance and existing-root/reentry/invalid-UUID/
+Git-override refusal checks passed. Its initial parse/type errors were corrected
+before native success; no foreign-effect proof success is claimed.
+
+Automation: a one-second initial launch probe preceded the visible window.
+A subsequent read found it normally; the restart used bounded window polling.
+An initial external preflight used a nonexistent /usr/bin/test path; the shell
+builtin corrected that harness error. Neither establishes startup latency.
+
+This changes file/commit provenance, not History why-scope. No parser/schema/
+projection/citation-format change or rebuild. Request eligibility is a bounded
+conservative subset; no proof of human authorship or complete reference parity.
+No new performance, full IME/shaping/accessibility/resize acceptance. Raw traces,
+screenshots and fixture paths remain ignored. Structured summary:
+benchmarks/results/tart-request-origin-summary.json.
