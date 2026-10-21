@@ -1,0 +1,203 @@
+{
+  "date": "2026-10-21",
+  "host": "macOS27.0.1 arm64 (26A434)",
+  "guest": "macOS27.0 arm64 (26A428)",
+  "tart": "2.40.1",
+  "network": "host-only",
+  "app": {
+    "inputs": 57,
+    "unchanged": true,
+    "bytes": 13162384,
+    "sha256": "9af66798e81d4a1c77407c744aa9f3e8aec35c10a4e4fe9e8d90dcb838645117",
+    "generated_c_sha256": "7c86a17b962e7ef696a283f75f6f21a134f8df48e95fa91530fc510d2706dbab"
+  },
+  "fixture": {
+    "inputs": 30,
+    "unchanged": true,
+    "bytes": 4279128,
+    "sha256": "d183ee7a837c27cef782a5bb7a9f95531f5ed119d989d8657db752c321f03e1d",
+    "generated_c_sha256": "5bddfded5a0ad47ae078408a43b16bc613b358095bd2bd1c5d681ff2bf001563"
+  },
+  "production_tests": {
+    "gates": [
+      {
+        "name": "display",
+        "checks": 6,
+        "receipt_sha256": "432e5408ffdbbe337896e9229b28ffd46982836c7dccfd7b8f835244cfc30cc1",
+        "binary": {
+          "bytes": 106616,
+          "sha256": "84683a477db2bfa388e4fb619fad7a80a9295a4d106dd81b4b4009bdee22ce4f"
+        }
+      },
+      {
+        "name": "scoped-final",
+        "checks": 21,
+        "receipt_sha256": "3dbe71166b3ab68ce8556f7a5cdca3f4c3a230f5604a97247f07d4f6b57b549e",
+        "binary": {
+          "bytes": 7489248,
+          "sha256": "d6b1ac431083fd6f28626a30b7d93ea8b1029c6f37562533f2830e0203dc3aba"
+        }
+      },
+      {
+        "name": "rebuild-route",
+        "checks": 16,
+        "receipt_sha256": "f682bcecb3fa3fc2c00899a41d97500a674ddf30d00492f891cfe1789088a0e6",
+        "binary": {
+          "bytes": 4118672,
+          "sha256": "f4f0be6d6c681b830e3a7b4d520e7274f066c4247f92d47334b49b449d31e7f8"
+        }
+      },
+      {
+        "name": "tab",
+        "checks": 21,
+        "receipt_sha256": "9931848a81bf2f35a69bb97a0bd30db4aa26f8608081f8d5c6604186d7ecd5c3",
+        "binary": {
+          "bytes": 343856,
+          "sha256": "c7e0795d8bebe56e227ac6a004c7d3228d93a41776d71a17136e84d4cf3b9108"
+        }
+      },
+      {
+        "name": "why",
+        "checks": 16,
+        "receipt_sha256": "bb295bc954061aacdfceef1e50cff01498a43f066aaac7764a9888c2128c960f",
+        "binary": {
+          "bytes": 3828528,
+          "sha256": "81d05b2a569c4a58dbc8896a4e6aa1b79791e1a5d5629eef2d12de001a0a4594"
+        }
+      },
+      {
+        "name": "settings",
+        "checks": 27,
+        "receipt_sha256": "07145145a664a8839cfb8a4e9f3e4340d27dc947307593dfb07c24e0109ea1cd",
+        "binary": {
+          "bytes": 4147552,
+          "sha256": "656b7613fca8382f36e87e53a0de5e98bd2947dc2c62ae890b10859aca4e3499"
+        }
+      }
+    ],
+    "passed_checks": 107,
+    "input_count": 155,
+    "all_inputs_still_match": true,
+    "scope": "Six focused native production test executables; not a full-suite rerun or native-window receipt."
+  },
+  "native": {
+    "why_cases": 6,
+    "positive_cases": 2,
+    "excluded_cases": 4,
+    "exact_exports": 4,
+    "retained_window_pixels_identical": true,
+    "scoped_copy_cli_and_back_exact": true,
+    "native_rebuild_confirmed": true,
+    "raw_before_after_rebuild_sha256": "b8a1f556def2fbe1609934f6cbc803d539a6bb063a9f497fb1c8935975830fce",
+    "empty_rebuild_refused": true,
+    "empty_library_unchanged": true,
+    "retained_restart_exact": true,
+    "owned_windows_closed": true,
+    "dock_preference_restored": true,
+    "exports": [
+      {
+        "bytes": 4161,
+        "sha256": "bd5cd0313edce65efcd7dfc2b8be151c4ab7c91ca65fff6c7a71d2a320ba5dcf"
+      },
+      {
+        "bytes": 1003,
+        "sha256": "ed73fbe55d924b81bf9784e7454f32458d2126c675c7d52d1f559f56eec8fc01"
+      },
+      {
+        "bytes": 8029,
+        "sha256": "821bbae7dec8c49e9e37ed7ccd0181d3d116d31e8afc010d1160f7388abe4503"
+      },
+      {
+        "bytes": 4161,
+        "sha256": "bd5cd0313edce65efcd7dfc2b8be151c4ab7c91ca65fff6c7a71d2a320ba5dcf"
+      }
+    ],
+    "request_visible_in_first_view": true,
+    "tab_drawn_as_arrow": true,
+    "six_clipboard_bodies_exact": true,
+    "export_mode": "0600",
+    "scoped_payload_precedes_citation": true,
+    "all_sources_absent_after_advance": true,
+    "append_snapshot": "7",
+    "rewrite_snapshot": "8",
+    "runner_exit": 130,
+    "vm_stopped": true,
+    "owned_lease_released": true,
+    "cases": [
+      {
+        "case": "01-wrapped-request",
+        "attribution": "exact",
+        "exact_clipboard": true,
+        "bytes": 3990,
+        "sha256": "c1de8b8f0b714fcd99fbc379273f523a3cd7faf4929a4416f1a161ccade947ff"
+      },
+      {
+        "case": "02-long-context-unicode",
+        "attribution": "exact",
+        "exact_clipboard": true,
+        "bytes": 7858,
+        "sha256": "caefe1022724e63e1726879aa2d70785bb5ea6841f89558de778429f0c9a18ea"
+      },
+      {
+        "case": "03-context-only",
+        "attribution": "not_indexed",
+        "exact_clipboard": true,
+        "bytes": 1777,
+        "sha256": "6ba4a6e4cc5a66fb6a57b503e414d18330fda26c970dea8d712edd769c355db7"
+      },
+      {
+        "case": "04-relay-only",
+        "attribution": "not_indexed",
+        "exact_clipboard": true,
+        "bytes": 1773,
+        "sha256": "ae5e44dd474a049e27bbc9db7636046eba0035aec6bc5c6291411f60f354a79c"
+      },
+      {
+        "case": "05-meta-only",
+        "attribution": "not_indexed",
+        "exact_clipboard": true,
+        "bytes": 1771,
+        "sha256": "04b6e3519433d052003949f8903d95cf1190b5fb585f01b4d6d6f766fbf10195"
+      },
+      {
+        "case": "06-malformed-wrapper",
+        "attribution": "not_indexed",
+        "exact_clipboard": true,
+        "bytes": 1787,
+        "sha256": "46185a7ddfd5436e3827b6a1ac120b1d2ff402d7af4ea0dc90bf7402b3e34dba"
+      }
+    ]
+  },
+  "promotion": {
+    "binary_sha256": "9af66798e81d4a1c77407c744aa9f3e8aec35c10a4e4fe9e8d90dcb838645117",
+    "empty_launcher_status": {
+      "columns": [
+        "sources",
+        "generations",
+        "accepted_snapshots",
+        "raw_bytes",
+        "projected_events"
+      ],
+      "rows": [
+        [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ]
+      ]
+    },
+    "all_57_inputs_unchanged": true,
+    "named_bundle": "build/Juice Bend Reading.app",
+    "previous_named_binary_retained": true
+  },
+  "limitations": [
+    "Focused gates, not a full-suite rerun.",
+    "No new performance or proof run.",
+    "CJK, emoji and combining marks still have fallback glyphs; copied Unicode is exact.",
+    "Full shaping, IME, accessibility, resize and input latency remain unverified.",
+    "Request eligibility remains bounded and conservative; this presentation change does not expand it."
+  ],
+  "automation": "Guest Dock initially intercepted footer clicks. It was temporarily hidden for the status inspector, then restored to its original setting. Earlier miscopied footer attempts are not status evidence."
+}

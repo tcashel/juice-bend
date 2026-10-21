@@ -29,8 +29,8 @@ exact target captures and two-level Back restoration. It does not reconstruct
 a complete historical graph or resolve every provider's child convention.
 The combined event-seal/readability candidate passed 2,262 storage and 219
 presentation checks, plus actual native Refresh, retained text and exports.
-Tools payloads now precede their full citations; normal scoped transcripts
-still put the citation first. Standard 100k append improved from
+Tools payloads preceded their full citations at that gate; the later reading
+slice below also puts scoped transcript content first. Standard 100k append improved from
 33.392 to 28.226 seconds in single observations; the following context-prefix
 cache measured 27.262 seconds and passed 990 focused checks. It still needs work.
 The retained-chunk comparator passed 2,225 checks, including all 27 crash cuts,
@@ -70,10 +70,17 @@ retained reads and exact exports; 423 production checks passed. Runtime origin
 registration, overrides, configured synthetic roots and full legacy signatures
 remain unsupported; this is not complete reference-origin classification.
 
+Request-first reading is now observed in app `9af66798…`: long request on the
+first screen, scoped payload before citation, visible tab marker with exact copy,
+and Settings Rebuild for the exact selected snapshot. Raw bytes stay unchanged;
+empty selection is visibly refused. Six native Why cases, four exports,
+retained/restarted reads and 107 focused production checks passed. See
+`receipts/reading-native.txt`. Eligibility and capture identity are unchanged.
+
 Current priority: transcript/evidence readability, remaining validation gaps,
 richer provider/archive support, deterministic context
-preparation, owned-storage actions and explicit opt-in connection/subscription
-surfaces. Further marginal append tuning is deferred. Functional parity also
+preparation and explicit opt-in connection/subscription surfaces. Rebuild is
+reachable in Settings; model-specific storage cleanup is excluded. Further marginal append tuning is deferred. Functional parity also
 requires pleasant interaction and visual quality; exact SwiftUI layout matching
 is unnecessary. These remaining items are not implemented claims. Synthetic
 fixtures only; no real account access or provider configuration changes by default.

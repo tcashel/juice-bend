@@ -388,6 +388,13 @@ def parent_text(parent: Maybe<&2,Actors.Actor>,+db: U32) -> IO(String):
         text : Result<&2,&2,String,String> <- Evidence.resolve_citation(db,Actors.key(actor))
         return "Parent request for navigation only; child actor, model and event ordinal are unchanged:\n" ++ resolved_text(text)
 
+def request_context(+actor: Actors.Actor,request: String,parent: String) -> String:
+  "Recorded request policy: " ++ Actors.request_policy() ++ "; not proof of human authorship or an inferred reason.\n" ++
+    "Recorded request preview (at most 2048 decoded characters):\n" ++ Actors.request_preview(actor) ++
+    "\nRecorded request citation: " ++ Actors.key(actor) ++
+    "\nRetained request event excerpt and immutable citation (text, arguments, result: at most 2048 decoded characters each; context prefixes remain quoted; complete bytes remain available in raw export):\n" ++
+    request ++ parent
+
 def actor_context(actor: Maybe<&2,Actors.Actor>,+all: List<&2,Actors.Actor>,+db: U32,
   +repo: String) -> IO(String):
   match actor:
@@ -398,10 +405,7 @@ def actor_context(actor: Maybe<&2,Actors.Actor>,+all: List<&2,Actors.Actor>,+db:
         request : Result<&2,&2,String,String> <- Evidence.resolve_citation(db,Actors.key(value))
         parent : String <- Bool.pick(IO(String),String.is_empty(Actors.parent(value)),
           IO.pure(String,""),parent_text(Actors.parent_actor(value,all,repo),db))
-        return "Recorded request policy: " ++ Actors.request_policy() ++ "; not proof of human authorship or an inferred reason.\n" ++
-          "Recorded request preview (at most 2048 decoded characters):\n" ++ Actors.request_preview(value) ++
-          "\nRetained request event excerpt and immutable citation (text, arguments, result: at most 2048 decoded characters each; context prefixes remain quoted; complete bytes remain available in raw export):\n" ++
-          resolved_text(request) ++ parent
+        return request_context(value,resolved_text(request),parent)
 
 def quote_keys(keys: List<&2,String>,+db: U32,+actors: List<&2,Actors.Actor>,+repo: String) -> IO(String):
   match keys:
@@ -412,7 +416,7 @@ def quote_keys(keys: List<&2,String>,+db: U32,+actors: List<&2,Actors.Actor>,+re
         event : Result<&2,&2,String,String> <- Evidence.resolve_citation(db,key)
         context : String <- actor_context(actor_for_key(key,actors),actors,db,repo)
         tail : String <- quote_keys(rest,db,actors,repo)
-        return "Selected captured evidence:\n" ++ resolved_text(event) ++ context ++ "\n" ++ tail
+        return context ++ "\nSelected captured evidence:\n" ++ resolved_text(event) ++ "\n" ++ tail
 
 def commit_notes(commits: List<&2,Commit>) -> String:
   match commits:
@@ -422,7 +426,22 @@ def commit_notes(commits: List<&2,Commit>) -> String:
       "Read-only Git commit " ++ sha ++ "\n" ++ String.take(message,2048n) ++
         "\n" ++ error ++ "\n" ++ commit_notes(rest)
 
-def file_result(+db: U32,+scope: Scope.Scope,+path: String,+regions: List<&2,P.Region>,why: Bool) -> IO(String):
+def file_notices() -> String:
+  "\nRead-only current Git resolution; this may differ from a previously displayed Blame." ++
+    "\nCaptured source bounds: 64 generation snapshots, first 16 records for actor identity, newest 256 edit events." ++
+    "\nFile evidence is independent of transcript filters. Exact means a unique eligible captured identity named by an explicit commit trailer; it does not prove sole authorship." ++
+    "\nContent uses each commit diff hunk and original-line coordinates; unmatched regions never borrow a neighboring match." ++
+    "\nUnknown, excluded, diagnostic, synthetic, ambiguous or orphaned actors cannot supply user-work evidence. Diagnostic-style Markdown first requests are conservatively held for review." ++
+    "\nTool arguments record intent; success and rationale are not inferred. No timestamp-only attribution.\n\n"
+
+def file_text(why: Bool,+scope: Scope.Scope,path: String,selected: List<&2,Selection>,
+  commits: List<&2,Commit>,excerpts: String) -> String:
+  head = "Juice Bend · file evidence\nCanonical repository: " ++ Scope.canonical(scope) ++
+    "\nGit checkout: " ++ Scope.checkout(scope) ++ "\nFile: " ++ path
+  details = file_notices() ++ render_selections(selected) ++ commit_notes(commits)
+  head ++ Bool.pick(String,why,"\n\n" ++ excerpts,"") ++ details
+
+def file_result(+db: U32,+scope: Scope.Scope,+path: String,+regions: List<&2,P.Region>,+why: Bool) -> IO(String):
   +ids = commit_ids(regions,[])
   +repo = Scope.canonical(scope)
   do IO<String>:
@@ -435,15 +454,7 @@ def file_result(+db: U32,+scope: Scope.Scope,+path: String,+regions: List<&2,P.R
     +selected : List<&2,Selection> = selections(regions,commits)
     excerpts : String <- Bool.pick(IO(String),why,
       quote_keys(selection_keys(selected,[]),db,actors,repo),IO.pure(String,""))
-    return "Juice Bend · file evidence\nCanonical repository: " ++ repo ++
-      "\nGit checkout: " ++ Scope.checkout(scope) ++ "\nFile: " ++ path ++
-      "\nRead-only current Git resolution; this may differ from a previously displayed Blame." ++
-      "\nCaptured source bounds: 64 generation snapshots, first 16 records for actor identity, newest 256 edit events." ++
-      "\nFile evidence is independent of transcript filters. Exact means a unique eligible captured identity named by an explicit commit trailer; it does not prove sole authorship." ++
-      "\nContent uses each commit diff hunk and original-line coordinates; unmatched regions never borrow a neighboring match." ++
-      "\nUnknown, excluded, diagnostic, synthetic, ambiguous or orphaned actors cannot supply user-work evidence. Diagnostic-style Markdown first requests are conservatively held for review." ++
-      "\nTool arguments record intent; success and rationale are not inferred. No timestamp-only attribution.\n\n" ++
-      render_selections(selected) ++ commit_notes(commits) ++ excerpts
+    return file_text(why,scope,path,selected,commits,excerpts)
 
 def blamed(result: Result<&2,&2,String,List<&2,P.Region>>,db: U32,scope: Scope.Scope,path: String,
   why: Bool) -> IO(String):
@@ -483,6 +494,11 @@ def blame(db: U32,repo: String,path: String,start: U32,count: U32) -> IO(String)
 def why(db: U32,repo: String,path: String,start: U32,count: U32) -> IO(String):
   file(db,repo,path,start,count,True{})
 
+def commit_text(sha: String,message: String,link: P.Attribution,excerpts: String) -> String:
+  "Juice Bend · commit Why\nRead-only Git commit " ++ sha ++ "\n" ++ Evidence.attribution_text(link) ++
+    "\nCoverage: unique eligible trailer/body associations only; no time-based guess or generated rationale. File content matching requires a selected file range.\n\n" ++
+    excerpts ++ "Read-only Git commit message:\n" ++ String.take(message,8192n) ++ "\n"
+
 def commit_why_message(result: Result<&2,&2,String,String>,+db: U32,+scope: Scope.Scope,sha: String) -> IO(String):
   match result:
     case Fail{error}:
@@ -495,9 +511,7 @@ def commit_why_message(result: Result<&2,&2,String,String>,+db: U32,+scope: Scop
         +link : P.Attribution = commit_attribution(commit_identity(repo,message,actors),commit_body(repo,message,actors),[],0)
         excerpts : String <- quote_keys(Bool.pick(List<&2,String>,String.is_empty(attribution_key(link)),[],[attribution_key(link)]),
           db,actors,repo)
-        return "Juice Bend · commit Why\nRead-only Git commit " ++ sha ++ "\n" ++ String.take(message,8192n) ++
-          "\n" ++ Evidence.attribution_text(link) ++
-          "\nCoverage: unique eligible trailer/body associations only; no time-based guess or generated rationale. File content matching requires a selected file range.\n\n" ++ excerpts
+        return commit_text(sha,message,link,excerpts)
 
 def commit_scope(result: Result<&2,&2,String,Scope.Scope>,+db: U32,+sha: String) -> IO(String):
   match result:

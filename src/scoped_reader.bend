@@ -41,7 +41,7 @@ def event_text(why: Bool,record: Evidence.Verified,index: U32,event: Providers.R
     case True{}:
       Evidence.why_event(record,index,event)
     case False{}:
-      "Citation: " ++ Evidence.citation(record,index) ++ "\n" ++ Store.display_event(event) ++ "\n"
+      Store.display_event(event) ++ "Citation: " ++ Evidence.citation(record,index) ++ "\n\n"
 
 def include(allowed: Bool,output: Output,record: Evidence.Verified,index: U32,
   event: Providers.Record,why: Bool) -> Output:

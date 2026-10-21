@@ -143,7 +143,8 @@ def positive_why(+text: String,+value: Actors.Actor,+index: U32) -> IO(Unit):
   checked(String.contains(text,"\nexact\nCitation: " ++ Actors.key(value)) &&
     String.contains(text,"Recorded request policy: recorded-request-v1") &&
     String.contains(text,"not proof of human authorship") &&
-    String.contains(text,"Recorded request preview (at most 2048 decoded characters):\n" ++ preview(index) ++ "\nRetained") &&
+    String.contains(text,"Recorded request preview (at most 2048 decoded characters):\n" ++ preview(index) ++
+      "\nRecorded request citation: " ++ Actors.key(value) ++ "\nRetained") &&
     String.contains(text,"text, arguments, result: at most 2048 decoded characters each") &&
     String.contains(text,"context prefixes remain quoted; complete bytes remain available in raw export") &&
     String.contains(text,Actors.key(value)) && String.contains(text,"<system-reminder>"),

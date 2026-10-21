@@ -473,7 +473,7 @@ def sidebar_normal(+s: State,index: U32) -> State & Action:
     case 9: (s,OpenLatest{})
     case 10: (s,Settings{})
     case 11: (s,Storage{})
-    case 12: (s,Rebuild{})
+    case 12: (s,Settings{})
     case 13: copy_action(s,String.is_empty(selection(s)))
     case 14: paste_query(s)
     case 15: (set_query(s,""),Search{})
@@ -500,7 +500,7 @@ def sidebar_settings(+s: State,index: U32) -> State & Action:
     case 14: (s,SettingsInterval{86400})
     case 15: (set_query(s,""),Search{})
     case 16: (select_all(s),NoAction{})
-    case 17: (s,Settings{})
+    case 17: (s,Rebuild{})
     case _: (s,NoAction{})
 
 def sidebar_mode(s: State,row: U32,settings: Bool) -> State & Action:
@@ -802,10 +802,17 @@ def glyph.put(+c: Canvas,+bits: Font.Glyph,+x: U32,+y: U32,+foreground: U32,+bac
   top = canvas.set(8n,c,x,y,Tile{Font.half(bits,True{}),foreground,background})
   canvas.set(8n,top,x,U32.add(y,1),Tile{Font.half(bits,False{}),foreground,background})
 
+# Tabs occupy one existing character cell. Only their painted glyph changes;
+# canonical text, scalar offsets, selection and export retain the original tab.
+def display_glyph(+code: U32) -> Font.Glyph:
+  match code:
+    case 9: Font.glyph(8594)
+    case _: Font.glyph(code)
+
 def write(+count: Nat,+c: Canvas,text: String,+x: U32,+y: U32,+foreground: U32,+background: U32) -> Canvas:
   match count text:
     case 1n+n SCon{Chr{code},rest}:
-      write(n,glyph.put(c,Font.glyph(code),x,y,foreground,background),rest,U32.add(x,1),y,foreground,background)
+      write(n,glyph.put(c,display_glyph(code),x,y,foreground,background),rest,U32.add(x,1),y,foreground,background)
     case _ _: c
 
 def fill.row(+width: Nat,+c: Canvas,+x: U32,+y: U32,+color: U32) -> Canvas:
@@ -851,7 +858,7 @@ def draw_line(+count: Nat,+c: Canvas,text: String,+x: U32,+y: U32,+at: U32,+low:
   match count text:
     case 1n+n SCon{Chr{code},rest}:
       +bg = Bool.pick(U32,(at >= low && at < high : U32),selection_bg(),paper())
-      next = glyph.put(c,Font.glyph(code),x,y,ink(),bg)
+      next = glyph.put(c,display_glyph(code),x,y,ink(),bg)
       draw_line(n,next,rest,U32.add(x,1),y,U32.add(at,1),low,high)
     case _ _: c
 
@@ -942,6 +949,7 @@ def side_label(settings: Bool,index: U32,files: Bool) -> String:
         case 14: "Every 24 hours"
         case 15: "Clear input"
         case 16: "Select all"
+        case 17: "Rebuild capture"
         case _: "Back to history"
     case False{}:
       match index:
@@ -957,7 +965,7 @@ def side_label(settings: Bool,index: U32,files: Bool) -> String:
         case 9: "Open latest"
         case 10: "Settings"
         case 11: "Storage"
-        case 12: "Rebuild index"
+        case 12: "Index settings"
         case 13: "Copy selection"
         case 14: "Paste"
         case 15: "Clear search"

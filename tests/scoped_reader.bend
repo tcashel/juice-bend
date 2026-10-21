@@ -4,6 +4,8 @@ import ../src/sql.bend as Sql
 import ../src/json.bend as Json
 import ../src/scoped_reader.bend as Scoped
 import ../src/cli.bend as Cli
+import ../src/evidence.bend as Evidence
+import ../src/providers.bend as Providers
 
 def assert(ok: Bool,name: String) -> IO(Unit):
   match ok:
@@ -19,6 +21,25 @@ def record(role: String,repo: String,time: String,body: String) -> String:
 
 def scope() -> Scoped.Scope:
   Scoped.Scope{"claude","/synthetic/a","user","2026-10-02"}
+
+def presentation() -> IO(Unit):
+  shown = Scoped.event_text(False{},
+    Evidence.Verified{"claude","/synthetic/quoted\"café 中文 🙂.jsonl","3","5","120","7",[]},2,
+    Providers.ProviderEvent{"assistant","Café é 中文 🙂\nsecond line","Write","call-1",
+      "{\"path\":\"x\"}","recorded result","/synthetic/repo","session",
+      "2026-10-20T00:00:00Z","recorded-model","{\"input_tokens\":9007199254740993}",
+      "parent-session","partial_content"})
+  expected = "[assistant] 2026-10-20T00:00:00Z\nCafé é 中文 🙂\nsecond line\n" ++
+    "\nTool: Write\n\nCall ID: call-1\n\nArguments: {\"path\":\"x\"}\n" ++
+    "\nResult: recorded result\n\nRecorded model: recorded-model\n" ++
+    "\nRecorded usage (source fact; mirrors are not additive): {\"input_tokens\":9007199254740993}\n" ++
+    "\nParent reference: parent-session\n\nCoverage: partial_content\n" ++
+    "Citation: {\"provider\":\"claude\",\"source\":\"/synthetic/quoted\\\"café 中文 🙂.jsonl\",\"generation\":\"3\",\"snapshot\":\"5\",\"extent\":\"120\",\"record\":\"7\",\"event\":\"2\"}\n\n"
+  assert(String.eq(shown,expected),
+    "scoped transcript presents complete role and payload before exact immutable citation")
+
+def long_body() -> String:
+  "visible-a-first\n" ++ String.repeat("x",4096n) ++ "\nTAIL café é 中文 🙂 END"
 
 def allowed(+text: String) -> Bool:
   String.contains(text,"visible-a-first") && String.contains(text,"visible-a-later") &&
@@ -52,10 +73,11 @@ def read(path: String) -> IO(String):
 
 def suite(+self: String) -> IO(Unit):
   do IO<Unit>:
+    presentation()
     +db : U32 <- Store.open(".build/scoped.sqlite")
     Store.write_text("scope.jsonl","w",
       record("user","/synthetic/a","2026-10-01T12:00:00Z","excluded-old-date") ++
-      record("user","","2026-10-02T12:00:00Z","visible-a-first") ++
+      record("user","","2026-10-02T12:00:00Z",long_body()) ++
       record("assistant","","2026-10-03T12:00:00Z","excluded-assistant") ++
       record("user","/synthetic/b","2026-10-03T12:00:00Z","excluded-other-repo") ++
       record("user","","2026-10-04T12:00:00Z","excluded-inherited-repo") ++
@@ -64,6 +86,8 @@ def suite(+self: String) -> IO(Unit):
     +snapshot : String <- Store.import_file(db,"claude","scope.jsonl")
     +page : String <- Scoped.page(db,snapshot,0,100,scope(),False{})
     assert(allowed(page),"transcript preserves provider repository role and date scope")
+    assert(String.contains(page,long_body()),
+      "scoped transcript retains the complete payload beyond 4096 characters and its Unicode tail")
     assert(String.contains(page,"Visible events in this physical range: 2"),
       "scoped count includes only visible events in selected physical range")
     +late : String <- Scoped.page(db,snapshot,4,3,scope(),False{})
@@ -89,8 +113,11 @@ def suite(+self: String) -> IO(Unit):
     assert(String.eq(forged,page),"forged projection fields cannot widen raw transcript scope")
     command(self,["export-range-scope",snapshot,"0","100","claude","/synthetic/a","user","2026-10-02","scoped.md"],
       True{},"scoped CLI export succeeds with frozen selection filters")
-    exported : String <- read("scoped.md")
+    +exported : String <- read("scoped.md")
     assert(allowed(exported),"scoped export contains only the visible captured events")
+    assert(String.eq(exported,"# Juice Bend scoped captured evidence\n\n" ++
+      "This is a bounded physical-record range, not a complete transcript export.\n\n" ++ page),
+      "scoped export preserves exact displayed page including full payload citations and scope disclosure")
     command(self,["export-why-scope",snapshot,"0","20","claude","/synthetic/a","user","2026-10-02","scoped-why.md"],
       True{},"scoped Why export uses the same visibility rules")
     exported_why : String <- read("scoped-why.md")

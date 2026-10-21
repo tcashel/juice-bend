@@ -882,9 +882,18 @@ def settings_source_text(+source: Maybe<&2,Settings.Source>) -> String:
     case Some{Settings.Source{+provider,+path,+enabled}}:
       "Selected folder: " ++ provider ++ " / " ++ Bool.pick(String,enabled,"enabled","disabled") ++ "\n" ++ path ++ "\n"
 
+def settings_rebuild_text(snapshot: String) -> String:
+  match snapshot:
+    case "":
+      "No captured snapshot selected. Choose a captured transcript first.\n" ++
+      "Rebuild changes only derived rows; retained raw remains unchanged.\n\n"
+    case value:
+      "Rebuild target: captured snapshot " ++ value ++ ".\n" ++
+      "Rebuild capture changes only its derived rows; retained raw remains unchanged.\n\n"
+
 def settings_body(+dir: String,+snapshot: String,+provider: String,+model: Settings.Model) -> String:
   Settings.Model{+phase,+prefs,+desired,+sources,+loaded,+selected,+offset,+last} = model
-  "INDEXING / EXPLICIT SOURCES\n\n" ++ settings_pref_text(model) ++ settings_pending_text(desired) ++
+  "INDEXING / EXPLICIT SOURCES\n\n" ++ settings_rebuild_text(snapshot) ++ settings_pref_text(model) ++ settings_pending_text(desired) ++
   "Provider for new paths: " ++ provider ++ "\n\n" ++ settings_source_text(selected) ++
   "\nChoose Claude or Codex; paste a literal absolute path above. Add folder registers it; Import file captures one JSONL file. " ++
   "Enable / Disable act only on the selected registered folder. Disabling keeps all captured evidence.\n\n" ++

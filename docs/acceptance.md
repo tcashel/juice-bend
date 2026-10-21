@@ -1,5 +1,22 @@
 # Acceptance evidence
 
+## Request-first reading and reachable rebuild — 2026-10-21
+
+App `9af66798…` passed actual Tart Files → Why for six cases, exact Unicode
+copy, four mode 0600 exports, scoped content before citations, and retained text,
+selection and pixels across append/rewrite/source removal. The long recorded
+request is visible on the first screen. Tabs paint an arrow but copy unchanged.
+Index settings opens the exact selected target; Rebuild capture now completes
+from Settings, preserves the full raw export, and refuses an empty selection.
+Back restores the scoped transcript. Restart after source absence also passed.
+
+Six focused production gates passed 107 checks with 155 unchanged inputs;
+57 application inputs and 88 upstream hashes stayed fixed. Standard executable
+and Reading app contain this observed build. VM stopped and lease released.
+See [receipt](receipts/reading-native.txt) and
+[summary](../benchmarks/results/tart-reading-summary.json). This is not a new
+full-suite, performance or proof run; glyph/shaping/accessibility gaps remain.
+
 ## Recorded requests in file Why — 2026-10-21
 
 App `668cf892…` applies a conservative read-time request policy to verified

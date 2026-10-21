@@ -1,0 +1,64 @@
+Native reading and rebuild — 2026-10-21
+
+All maintained application behavior/UI is Bend 2. SQLite bridge unchanged.
+Bend 2.0.37 / 60ca80aedeec9d8f0629b5f10dd19457d8ad67af; Bun 1.4.2 via mise.
+macOS 27.0.1 arm64 host; Tart 2.40.1, macOS 27.0 arm64 guest, host-only network.
+
+App: 13162384 bytes; SHA256 9af66798e81d4a1c77407c744aa9f3e8aec35c10a4e4fe9e8d90dcb838645117.
+All 57 application inputs and 88 pinned upstream hashes unchanged.
+Generated C SHA256 7c86a17b962e7ef696a283f75f6f21a134f8df48e95fa91530fc510d2706dbab.
+Input manifest: reading-build-inputs.sha256.
+
+Focused production native gates (all exit 0):
+display: 6 checks; binary SHA256 84683a477db2bfa388e4fb619fad7a80a9295a4d106dd81b4b4009bdee22ce4f
+scoped-final: 21 checks; binary SHA256 d6b1ac431083fd6f28626a30b7d93ea8b1029c6f37562533f2830e0203dc3aba
+rebuild-route: 16 checks; binary SHA256 f4f0be6d6c681b830e3a7b4d520e7274f066c4247f92d47334b49b449d31e7f8
+tab: 21 checks; binary SHA256 c7e0795d8bebe56e227ac6a004c7d3228d93a41776d71a17136e84d4cf3b9108
+why: 16 checks; binary SHA256 81d05b2a569c4a58dbc8896a4e6aa1b79791e1a5d5629eef2d12de001a0a4594
+settings: 27 checks; binary SHA256 656b7613fca8382f36e87e53a0de5e98bd2947dc2c62ae890b10859aca4e3499
+
+107 checks total; all 155 union inputs unchanged. Not a full-suite rerun.
+Initial Rebuild test binder error was corrected before native success;
+scoped-reader was rerun after final Why adoption to bind final sources.
+
+Actual native observations:
+- All six Files -> Why clipboard bodies matched Bend fixture evidence.
+  Wrapped/long Unicode requests remained eligible; context/relay/meta/
+  malformed cases remained ineligible. Long request is visible on the
+  first screen. The leading tab paints an arrow but copies as a tab.
+- Scoped search opened snapshot 2, record 2. Tool content precedes its
+  citation. Copy exactly matched CLI scoped output; Settings Back restored it.
+- Index settings opened the selected target without mutation. Rebuild
+  capture completed for snapshot 2; the full status inspector confirmed it.
+  Full raw export SHA256 before/after:
+  b8a1f556def2fbe1609934f6cbc803d539a6bb063a9f497fb1c8935975830fce
+  Full extent verification passed; source/generation/snapshot/raw/event
+  counts remained 6/6/6/8030/16.
+- Empty-library Index settings exposed no target. Rebuild was visibly
+  refused; counts remained 0/0/0/0/0 and Back returned to History.
+- Four exact displayed-text exports passed at mode 0600:
+  4161 bytes; SHA256 bd5cd0313edce65efcd7dfc2b8be151c4ab7c91ca65fff6c7a71d2a320ba5dcf
+  1003 bytes; SHA256 ed73fbe55d924b81bf9784e7454f32458d2126c675c7d52d1f559f56eec8fc01
+  8029 bytes; SHA256 821bbae7dec8c49e9e37ed7ccd0181d3d116d31e8afc010d1160f7388abe4503
+  4161 bytes; SHA256 bd5cd0313edce65efcd7dfc2b8be151c4ab7c91ca65fff6c7a71d2a320ba5dcf
+- Synthetic append/rewrite produced snapshots 7/8, then all source paths
+  moved away. Selected Why text, selection and full-window pixels stayed
+  identical. Restart reopened retained long Why exactly and allowed paging.
+- All owned windows closed, Dock restored, runner exit 130, VM stopped
+  and owned lease released. Standard executable and Reading app promoted;
+  isolated empty-library launcher status passed. Prior named apps retained.
+
+Fixture: benchmarks/native_request_origin.bend; 30 unchanged inputs,
+binary SHA256 d183ee7a837c27cef782a5bb7a9f95531f5ed119d989d8657db752c321f03e1d.
+Create/advance assertions ran in the guest; no foreign-effect proof claim.
+
+Automation: Dock initially intercepted footer clicks. It was temporarily
+hidden for the status inspector and restored. Earlier miscopied footer
+attempts are not status receipts; confirmed inspector text is retained.
+
+No parser/schema/request-eligibility/citation change. Default unfiltered
+transcripts remain unchanged; Blame remains byte-identical. CJK/emoji/
+combining-mark fallback, shaping/IME/accessibility/resize and latency
+remain open. No new performance, full-suite or proof run is claimed.
+Raw traces/screenshots stay ignored; only synthetic sanitized receipts
+are public. Summary: benchmarks/results/tart-reading-summary.json.
