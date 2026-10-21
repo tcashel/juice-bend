@@ -1,0 +1,68 @@
+Juice Bend compact native window — 2026-10-21
+
+Observed app SHA256
+e780c37b4866aa759f75c2471ae1c13be6bb0c910761b34fa322405f37bb86eb
+17,817,896 bytes; 79 unchanged application inputs; 88 upstream hashes verified.
+Generated C dad7a00c1bbafc6206a1b056256aff3e3c8b9ebb263f0dce10f32b705451dd19.
+Physical Mac build: macOS 27.0.1 arm64, Bend 2.0.37 pinned revision
+60ca80aedeec9d8f0629b5f10dd19457d8ad67af; 604.478 seconds.
+Application/UI remain Bend; the existing SQLite bridge is unchanged.
+
+The initial 1200x680 layout passed 256 pure / 359 combined GUI checks (the
+latter includes the former). Actual screen measurement required a final
+1200x664 content size. Its focused Mac geometry/UI/polish gate passed 190 checks,
+exit 0, empty stderr, 264 unchanged inputs. These are distinct build scopes,
+not additive unique test counts or a fresh full-suite/proof result.
+
+Actual UI: macOS 27.0 (26A428) arm64, Tart 2.40.1, host-only networking,
+1280x800 logical/pixel display at scale 1, Dock autohide false throughout.
+172 guarded observations confirmed the 1200x696 decorated window was fully
+inside the visible frame. All sixteen navigation rows, footer, Back and export
+controls fit. Font size, 32-pixel targets and nineteen reader rows are preserved.
+General resizing/arbitrary Dock configuration is not implemented.
+
+Native Settings import, filtered late-record search, transcript selection/copy,
+bounded evidence, complete logical JSONL and original archive exports passed.
+Page Down moved the viewport; Page Up restored it. Wheel down/up moved/restored
+three rows. All preserved the full selected transcript. Status Copy-and-close,
+Close and Escape preserved it too; Escape dismissal was photographed BEFORE
+Command-C, which independently can close status details. Toolbar Select all/Copy
+preserved exactly "café 中文 🙂 compact geometry"; CJK/emoji still draw fallback
+boxes. This is Unicode byte preservation, not glyph/IME acceptance.
+
+Brief showed the recorded request and tool evidence before its detailed footer.
+Whole/selected copy, export and Back matched exact expected text. After moving
+the synthetic sources away and restarting the same app/library, both retained
+readers and full exports remained exact. Plain-file archive export and truncated
+archive import were visibly refused; accepted snapshots/raw/events and history
+stayed unchanged. Eighteen exact clipboard comparisons and six new private
+mode 0600 exports passed. Export hashes and byte counts are in
+benchmarks/results/tart-compact-summary.json.
+
+Failures were preserved. V3's cliclick Escape/Page calls delivered no native
+Key events. A rebuilt Base-only probe on V4 confirmed none for all three calls;
+guarded CoreGraphics events delivered exact down/up 27/63277/63276. The actual
+app then passed those interactions without a keyboard implementation change.
+V4 later stopped when process exit preceded removal of its stale WindowServer
+entry. A bounded fresh window observation corrected only the external driver.
+Retained/refusal checks resumed on the same unchanged executable and already
+moved fixture. They passed with empty stderr; no imports or data were reset.
+
+Receipts: build/compact-native-v4-plan/artifacts and its resume-1 directory.
+Nonce d997155e-16a1-49a3-8944-903885957e07. All owned windows closed; both display
+holder lifetimes independently restored 1600x1000; Dock preference unchanged.
+Payload/driver hashes remained exact. Runner 72330 ended exit 130 after explicit
+stop, VM stopped and lease absent. build/juice-bend and build/juice-bend-compact
+now contain the observed app; Juice Bend Compact.app matches. The prior archive
+binary and bundle remain preserved. See build/compact-promotion.json.
+
+Reproduce with mise run build, the synthetic benchmarks/native_archive.bend
+fixture and an isolated library; use the import/search/export journey described
+in archive-native.txt at a 1280x800 desktop with Dock shown. Native input checks
+must observe received events and actual viewport/modal effects, not just sends.
+
+No hardware typing, full shaping/IME/accessibility, arbitrary resize, input
+latency, fresh full-suite/proof or comparative performance claim. A generic
+guest OS Tips notification overlapped the upper-right search area. The separate
+attachment sandbox discriminator failed before its ready marker (loader abort);
+it establishes no attachment containment capability and is not an app test pass.

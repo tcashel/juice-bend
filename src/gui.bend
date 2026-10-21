@@ -1,5 +1,6 @@
 import Base
 import ./ui.bend as UI
+import ./ui_geometry.bend as Geometry
 import ./store.bend as Store
 import ./sql.bend as Sql
 import ./client.bend as Client
@@ -3228,4 +3229,4 @@ def initial(+db: U32,+dir: String,+program: String) -> State:
     Jobs{0,None{},None{},None{},False{}},0n,0})
 
 def run(+db: U32,+dir: String,+program: String) -> IO(Unit):
-  App.run(~State,~App{view,tick},"Juice Bend",1408,896,initial(db,dir,program))
+  App.run(~State,~App{view,tick},"Juice Bend",Geometry.width(),Geometry.height(),initial(db,dir,program))

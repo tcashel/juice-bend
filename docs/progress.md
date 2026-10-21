@@ -1,97 +1,90 @@
 # Implementation checkpoint
 
-## Active goal and boundaries
+## Goal and boundaries
 
 Functional and pleasant native UX parity with SwiftUI Juice, excluding embeddings
-and model features, remains **in progress**. No user answer/approval is pending.
-App/UI/parser/policy behavior is Bend 2; this validated build retains the unchanged
-418-line SQLite bridge. Lean is optional development proof checking. Mise pins
+and models, remains **in progress**. No user answer/approval is pending.
+Application/UI/parser/policy stay Bend 2; current production retains the unchanged
+418-line SQLite bridge. Lean is an optional development proof checker. Mise pins
 Bun 1.4.2 and Bend 2.0.37 at 60ca80aedeec9d8f0629b5f10dd19457d8ad67af.
-Original Juice/provider data remain read-only; all evidence is synthetic.
-Update only tcashel/juice-bend branch codex/juice-bend-implementation and draft
-PR #1, without merging. Preserve local changes and the protected checkout index.
-Publication uses explicit paths and a separate index in build/publication.git.
+Original Juice and provider data remain read-only. All tests use isolated synthetic
+data. Update only codex/juice-bend-implementation and draft PR #1; never merge.
+Preserve the protected checkout index/local edits. Publication uses explicit paths
+and a separate index under build/publication.git.
 
-## Current executable and latest observation
+## Working app and latest evidence
 
-`build/juice-bend`, `build/juice-bend-archive` and `build/Juice Bend Archive.app`
-contain observed native binary
-`d06447f6d25624f2a6fc6c1ccdb1c7256e36badb516d2a61a9023f4109ee66de`
-(17,834,568 bytes, 79 unchanged app inputs, 88 upstream hashes verified).
-The prior Brief executable/bundle remain preserved. Physical-Mac empty-library
-launcher status passed. `mise run run -- --demo` builds/launches an isolated demo.
+`build/juice-bend`, `build/juice-bend-compact` and `build/Juice Bend Compact.app`
+contain observed binary
+`e780c37b4866aa759f75c2471ae1c13be6bb0c910761b34fa322405f37bb86eb`.
+It is 17,817,896 bytes; build 604.478s, 79 unchanged inputs, 88 upstream pins.
+The prior archive binary/bundle `d06447f6…` remain preserved. Use
+`mise run run -- --demo` for an isolated native demo.
 
-Actual Tart archive import, scoped search/copy, bounded export, full JSONL and
-original-container exports passed. Retained reads and full exports stayed exact
-after source removal/restart. Native plain-file archive-export and truncated
-archive-import refusals preserved accepted data. Request-first Brief whole/selected
-copy, export and Back passed. Nine clipboard comparisons and six mode 0600 exact
-exports passed. Combined production export/Brief/keyboard/readability emitted
-251 PASS lines including suite/fixture lines; existing UI/polish emitted 162.
-No new full-suite, proof or comparative performance claim.
+The 1200×664 content / 1200×696 decorated window fits fully at actual 1280×800
+with Dock shown. Native import/search/transcript, Page Down/Up, wheel, status
+Close/Escape, Unicode toolbar copy, Brief, retained reads after source loss and
+restart, complete/bounded exports and invalid-input refusals passed. Eighteen
+clipboard comparisons, six private exports, 172 containment observations.
+Final geometry/UI/polish gate: 190 checks; initial compact GUI gate: 359 including
+its pure tests. These are distinct scopes, not a new full suite or proof run.
 
-Receipt: `docs/receipts/archive-native.txt`; summary:
-`benchmarks/results/tart-archive-summary.json`; inputs:
-`docs/receipts/archive-build-inputs.sha256`. Local evidence:
-`build/archive-production-v5`, `build/archive-native-v3/artifacts/resume-2`,
-`build/archive-promotion.json`. Successful native workflow resumed after preserved
-automation failures without app changes. All owned windows closed, original Dock
-setting restored, runner 27715 ended exit 130, VM stopped and lease absent.
-The fixed 1408x896 content window's footer was obscured by the visible Dock on the
-1600x1000 guest; that usability gap is real and remains open.
+Receipts: `docs/receipts/compact-native.txt`, `compact-build-inputs.sha256`,
+`benchmarks/results/tart-compact-summary.json`, `build/compact-promotion.json`.
+Local evidence: `build/compact-production-v2`, `build/compact-native-v4-plan/artifacts`
+and its `resume-1`. V3 missing cliclick keys and V4 stale-window shutdown race
+are preserved; corrected external automation kept the app and fixture unchanged.
+V4 guest 53821 ended1 after successful key/geometry/Brief steps; resume81289
+ended0 for retained/refusal/cleanup. Runner72330 ended130; VM stopped, lease
+absent, original display restored, Dock unchanged. No live VM is reserved.
 
-## Durable archive contract and validation scope
+## Publication and next integration
 
-Schema 3 owns exact compressed bytes separately from logical JSONL records;
-immutable snapshots/citations retain logical-source offsets. Bounded pure Bend
-Zstandard supports ordinary Huffman/FSE/LZ, raw/RLE, checksum, concatenated and
-skippable frames. Initial limits: 1 MiB compressed / 4 MiB logical / 8 MiB window,
-64 frames / 4096 blocks per frame; dictionaries refused. Complete archive parity
-is not achieved. Final source-byte comparison and typed publication gates remain.
-Old schema 2 startup is fenced; an already-open old connection is not protected.
+Latest verified remote head before compact publication:
+`164348b0277daaf6463180ac8050679cc710bcd1`, tree
+`2b6e8416089baa0900000e46f569efc9e509c90a` (PR open/draft/unmerged).
+Prepare the compact-only tree with `build/prepare-compact-publication.py`;
+verify its exact 19-path allowlist and app-input manifest, then expected-SHA
+fast-forward and update PR #1. Do not publish all dirty/untracked checkout paths.
 
-Final isolated metadata/migration/maintenance gates emitted 99/92/60 PASS lines.
-Earlier gates retain distinct builds: decoder 485, capture 40, atomic 3412
-(including 43 rejections and 30 actual process interruptions), storage 303,
-transport 220, UI-state 92, resource 24. See `receipts/archive-backend.txt`.
-Physical-Mac boundary fixtures measured 4 MiB logical capture 3709 ms and 1 MiB
-compressed capture 1598 ms; suite peak RSS 229.48 MiB. These are not typical
-throughput or general-memory guarantees. Earlier broad tests predate final fixes.
+1. Connections candidate: `build/quota-ui-integration/HANDOFF.md`. Passive local
+   Claude quota observations, explicit Enable, strict existing-store admission,
+   unknown/zero separation and epoch retirement. WAL pre-open refusal now passed.
+   Ten frozen Linux gates passed 492 printed assertions across separate scopes.
+   Mac build/run sequence is live at `mac/6a39c755-6b8e-4d61-8d87-11e7f0f78380`,
+   runner38322, main-build38337. Poll existing ownership/receipts; do not restart
+   on an observation timeout. No production adoption or native UI acceptance yet.
+2. Attachment extractor and retained inventory are frozen under
+   `build/attachments-integration` and `build/attachment-inventory-integration`.
+   Extractor75 Linux checks; inventory38 Mac assertions plus2 fixture receipts.
+   Inline exact-byte resolver/export is in progress in a separate isolation.
+   External asset capture is still missing. Strict Base-only sandbox attempt08
+   failed before ready, exit134 in dyld ignition/cache startup; controls passed.
+   Exact synthetic crash/log receipts are under compact-v4 artifacts. A reporting-
+   only follow-up is being prepared; no outside-root content grant or signing.
+3. Bounded archive streaming is being implemented in
+   `build/archive-streaming-integration`: staged container, measured extent,
+   bounded decode/replay/verify/export, separate immutable commitments. Not adopted.
+   Existing production profile remains 1MiB compressed/4MiB logical/8MiB window;
+   dictionaries refused. Schema3 preserves logical offsets and owned container.
+4. Transcript readability isolation: `build/transcript-polish-integration`.
+   Conversation first, exact citations/metadata appendix, one selectable/copyable
+   canonical string; scoped/unscoped verification unchanged, Why unchanged.
+   Pure formatter19 Linux checks passed; renderer integration still needs gates
+   and actual native inspection before adoption.
 
-Earlier full-suite: 40 executables / 2960 checks. Twelve production laws passed
-BendTT and Lean 4.34; Linux portable 300 checks. Those are historical receipts.
-Physical-Mac 100k: initial 36.194 s, unchanged 3.910 s, append 16 records 23.816 s;
-search/late/scoped-late p95 = 42/7/17 ms. Marginal tuning deferred per owner
-priority; no Swift comparison. Comparisons must use the same host/work/contract.
+## Remaining goal and measured limits
 
-## Exact continuation
+Wider provider/attachment/archive coverage, active-to-archive presentation aliases,
+connection functionality and pleasant visual/interaction quality remain incomplete.
+CJK/emoji/combining glyphs, full shaping/IME/accessibility, resize and measured
+input-to-photon latency remain open/upstream-limited. A separate hypothesis or
+portable test is never native acceptance. Keep the working app until successors
+pass relevant actual interactions; original private source/data remain untouched.
 
-1. This checkpoint accompanies the archive publication slice. Its explicit
-   allowlist is `build/archive-publication-files.txt`. Prepared/remote records
-   belong in `build/archive-publication.json`, `build/archive-remote.json` and
-   `build/archive-publication-status.json`. Verify the live PR head before an
-   expected-SHA fast-forward. Prior published head is
-   `f4c68e3739b8cf10258761682e062196c68ce7f4`, tree
-   `6b1a80f84a7eba653b5c133f67b93e95ca484cd2` (open/draft/unmerged, 23 commits).
-   Do not republish all dirty/untracked paths against the stale protected index.
-2. Optional passive Claude quota observation is isolated under
-   `build/connections-integration`, owned by ux_polish_audit. Initial Linux gates
-   emitted 167 PASS lines with 101 unchanged inputs. Private opener work is still
-   underway. A minimal SQLite no-create/NOFOLLOW open primitive is authorized
-   within that isolation; application flags/policy stay in Bend. No production
-   bridge/source adoption, native UI validation, account observation or provider
-   configuration changes have occurred. Status/callback must never provision;
-   explicit enable alone can create. Review owner/mode/ACL/sidecar/no-clobber,
-   epoch retirement and unknown/freshness semantics before adoption. Path-only
-   parent checks do not guarantee handle-bound identity against same-UID races.
-3. Window polish is isolated under `build/window-polish-integration`, owned by
-   archive_adoption_review. The pin has no resize event/setter or visible-screen
-   query. Improve default fit without shrinking text or hiding tools; preserve
-   text/selection and pointer geometry. No native helper/runtime exception is
-   authorized. Review patch/tests, then build and validate with the Dock visible.
-4. Remaining full goal work includes wider provider/archive/attachment coverage,
-   opt-in connection/subscription surfaces, pleasant visual/interaction quality,
-   and remaining acceptance/performance gaps. CJK/emoji/combining glyphs,
-   shaping/IME/accessibility, resize and measured input-to-photon latency remain
-   open/upstream-limited. Keep the current observed executable until its successor
-   passes relevant actual native interaction. Continue with synthetic data only.
+Historical broad evidence: 40 executables/2960 checks; twelve production laws
+checked by BendTT and Lean4.34; Linux portable300 checks. Later changes have their
+own focused gates and are not covered by that old full-suite count. Physical-Mac
+100k: import36.194s, unchanged3.910s, append16 records23.816s; search/late/scoped
+late p95=42/7/17ms. Marginal tuning deferred per owner priority. No Swift timing
+comparison; any future comparison must use the same host and equivalent work.

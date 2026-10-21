@@ -1,5 +1,11 @@
 # Capabilities
 
+The current compact app `e780c37b…` fits completely at observed 1280×800 with
+the Dock visible. Actual keyboard/wheel paging, status return, eighteen clipboard
+comparisons and six exports passed, including retained source-absent reads.
+See [compact receipt](receipts/compact-native.txt). This closes the observed
+footer obstruction; it does not add upstream resize or text-shaping facilities.
+
 This is an evidence ledger, not an acceptance declaration. Product acceptance
 is recorded in `acceptance.md`.
 

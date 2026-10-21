@@ -88,23 +88,23 @@ def selection() -> IO(Unit):
     require(String.eq(copied(UI.event(Key{99,True{}},UI.set_modifiers(query_unicode,True{},False{}))),"\t🙂"),"query Command-C emits original tab and emoji")
     require(String.eq(copied(UI.event(Key{99,True{}},UI.set_modifiers(reader_unicode,True{},False{}))),"\t🙂"),"reader Command-C emits original tab and emoji")
     require(String.eq(copied(UI.text_action(all,0)),text),"reader Copy action retains exact canonical full text")
-    require(exported(UI.event(Mouse{680,88,0,True{}},all)),"Export action remains available with tab selection")
-    require(String.eq(UI.reader(state(UI.event(Mouse{680,88,0,True{}},all))),text),"Export dispatch leaves canonical reader untouched")
+    require(exported(UI.event(Mouse{552,88,0,True{}},all)),"Export action remains available with tab selection")
+    require(String.eq(UI.reader(state(UI.event(Mouse{552,88,0,True{}},all))),text),"Export dispatch leaves canonical reader untouched")
     require(String.eq(UI.query(query_unicode),text) && String.eq(UI.reader(reader_unicode),text),"painting marker never substitutes the stored tab")
 
 def wrapping() -> IO(Unit):
-  +text = repeat(103n,"x") ++ "\t🙂\nZ"
+  +text = repeat(79n,"x") ++ "\t🙂\nZ"
   +lines = UI.wrap(text)
   +reader = UI.set_reader(UI.init(),"Wrapped tab",text)
-  +pressed = state(UI.event(Mouse{1360,168,0,True{}},reader))
+  +pressed = state(UI.event(Mouse{1168,168,0,True{}},reader))
   +dragged = state(UI.event(Move{544,192},pressed))
   do IO<Unit>:
-    require(line(UI.line_at(lines,0),0,repeat(103n,"x") ++ "\t"),"tab occupies final existing column without expansion")
-    require(line(UI.line_at(lines,1),104,"🙂") && line(UI.line_at(lines,2),106,"Z"),"tab wrap preserves emoji and newline source offsets")
-    require(U32.is_eq(UI.reader_at(reader,1360,168),103) && U32.is_eq(UI.reader_at(reader,544,192),105),"reader hit testing crosses tab wrap at exact scalar offsets")
+    require(line(UI.line_at(lines,0),0,repeat(79n,"x") ++ "\t"),"tab occupies final existing column without expansion")
+    require(line(UI.line_at(lines,1),80,"🙂") && line(UI.line_at(lines,2),82,"Z"),"tab wrap preserves emoji and newline source offsets")
+    require(U32.is_eq(UI.reader_at(reader,1168,168),79) && U32.is_eq(UI.reader_at(reader,544,192),81),"reader hit testing crosses tab wrap at exact scalar offsets")
     require(String.eq(UI.selection(dragged),"\t🙂"),"pointer selection across tab wrap retains original characters")
     require(String.eq(copied(UI.event(Key{99,True{}},UI.set_modifiers(dragged,True{},False{}))),"\t🙂"),"copy across tab wrap does not insert the display arrow")
-    require(U32.is_eq(G.cell(),8) && U32.is_eq(G.reader_columns(),104),"tab marker retains existing cell and reader geometry")
+    require(U32.is_eq(G.cell(),8) && U32.is_eq(G.reader_columns(),80),"tab marker retains existing cell and reader geometry")
 
 def main() -> IO(Unit):
   do IO<Unit>:

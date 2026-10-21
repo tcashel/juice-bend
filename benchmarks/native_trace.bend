@@ -2,6 +2,7 @@ import Base
 import ../src/main.bend as Main
 import ../src/gui.bend as Gui
 import ../src/ui.bend as UI
+import ../src/ui_geometry.bend as Geometry
 import ../src/store.bend as Store
 import ../src/sql.bend as Sql
 import ../src/json.bend as Json
@@ -214,7 +215,7 @@ def launch(+program: String,+dir: String,+enabled: Bool) -> IO(Unit):
     log : File <- write(log,header(enabled))
     IO.print("Native diagnostic trace: " ++ trace ++ "/trace.jsonl")
     +db : U32 <- Store.open(dir ++ "/juice-bend.sqlite")
-    App.run(~State,~App{view,tick},"Juice Bend native trace",1408,896,
+    App.run(~State,~App{view,tick},"Juice Bend native trace",Geometry.width(),Geometry.height(),
       State{Gui.initial(db,dir,program),Book{1,"",enabled},log})
     IO.try(Unit,Sql.close(db))
 

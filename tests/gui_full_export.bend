@@ -32,12 +32,12 @@ def rail(index: U32) -> String:
 
 def routes() -> IO(Unit):
   do IO<Unit>:
-    require(String.eq(rail(14),"whole") && String.eq(UI.side_label(False{},14,False{}),"Export full JSONL"),"native normal sidebar row14 points to full JSONL export")
-    require(String.eq(rail(16),"container") && String.eq(UI.side_label(False{},16,False{}),"Export archive"),"native normal sidebar row16 points to compressed container export")
+    require(String.eq(rail(13),"whole") && String.eq(UI.side_label(False{},14,False{}),"Export full JSONL"),"native compact sidebar row13 points to full JSONL export")
+    require(String.eq(rail(14),"container") && String.eq(UI.side_label(False{},16,False{}),"Export archive"),"native compact sidebar row14 points to compressed container export")
     require(String.eq(action(UI.top_action(Fixture.origin_ui(),4)),"bounded") && String.eq(action(UI.key_down(Fixture.origin_ui(),101,True{})),"bounded"),"toolbar and Command E retain bounded evidence export")
     require(String.eq(action(UI.key_down(UI.set_edit(Fixture.origin_ui(),UI.Edit{0,0,0,False{},0}),118,True{})),"paste"),"Command V remains the ordinary native paste action")
     require(String.eq(UI.selection(next_ui(UI.key_down(Fixture.origin_ui(),97,True{}))),UI.reader(Fixture.origin_ui())),"Command A still selects the entire reader independently of sidebar export")
-    require(String.eq(UI.side_label(True{},16,False{}),"Select all") && String.eq(action(UI.sidebar_settings(Fixture.origin_ui(),14)),"interval"),"Settings sidebar retains interval and Select all controls")
+    require(String.eq(action(UI.sidebar_settings(Fixture.origin_ui(),14)),"interval") && String.eq(UI.selection(next_ui(UI.event(Mouse{1112,136,0,True{}},UI.set_results(Fixture.origin_ui(),UI.SettingsResults{0,0,"Resume",True{}})))),UI.reader(Fixture.origin_ui())),"Settings keeps daily refresh and toolbar Select all")
     require(String.eq(UI.brief_side_label(4),"Paste root") && String.eq(UI.brief_side_label(6),"Select all"),"Brief sidebar retains its separate text controls")
     require(String.contains(Gui.write_start_text(35),"including all records outside current filters") && String.contains(Gui.write_start_text(36),"Plain captures have no archive container"),"running statuses disclose complete capture scope and plain-source refusal")
 

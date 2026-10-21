@@ -186,10 +186,11 @@ Implementation and native acceptance are still in progress. See
 [acceptance](docs/acceptance.md), [performance](docs/performance.md),
 [capabilities](docs/capabilities.md), and the exact
 [continuation checkpoint](docs/progress.md). Backend timing does not establish
-native responsiveness. The tested renderer uses a fixed window and a limited
-204-glyph atlas. On the tested 1600×1000 guest, a visible Dock obscures the
-footer; window sizing remains open. Complete shaping, IME and accessibility
-parity are not claimed.
+native responsiveness. The tested renderer uses a fixed 1200×664 content window
+and a limited 204-glyph atlas. Its entire decorated window fits at 1280×800 with
+the Dock shown; native paging, selection, copy and exports passed. See the
+[compact native receipt](docs/receipts/compact-native.txt). General resizing,
+complete shaping, IME and accessibility parity are not claimed.
 
 All maintained application logic and UI are Bend 2. The sole maintained native
 adapter is the narrow SQLite bridge. The compiled app needs neither Bun nor the

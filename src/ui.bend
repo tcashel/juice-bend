@@ -441,9 +441,9 @@ def key_down(+s: State, +code: U32, +command: Bool) -> State & Action:
     case 63233 _:
       arrow(s, True{})
     case 63276 _:
-      (scroll_by(s, False{}, U32.sub(G.reader_rows(),2)), NoAction{})
+      (scroll_by(s, False{}, G.reader_page_step()), NoAction{})
     case 63277 _:
-      (scroll_by(s, True{}, U32.sub(G.reader_rows(),2)), NoAction{})
+      (scroll_by(s, True{}, G.reader_page_step()), NoAction{})
     case 9 _:
       tab(s)
     case 27 _:
@@ -589,11 +589,11 @@ def mouse_reader(+s: State,+x: U32,+y: U32,inside: Bool) -> State & Action:
 def mouse_text(+s: State,+x: U32,+y: U32,actions: Bool) -> State & Action:
   match actions:
     case True{}: text_action(s,U32.div(U32.sub(x,G.text_actions_x()),G.text_action_width()))
-    case False{}: mouse_reader(s,x,y,G.rect(x,y,G.list_end(),G.reader_y(),1408,G.footer_y()))
+    case False{}: mouse_reader(s,x,y,G.rect(x,y,G.list_end(),G.reader_y(),G.width(),G.footer_y()))
 
 def mouse_body(+s: State,+x: U32,+y: U32,+col: U32,+row: U32,+sidebar: Bool,+list: Bool) -> State & Action:
   match sidebar list:
-    case True{} _: sidebar_action(s,G.side_index(y))
+    case True{} _: sidebar_action(s,G.sidebar_action_index(G.side_index(y),is_settings(s),is_brief(s)))
     case False{} True{}: list_click(s,col,row)
     case False{} False{}: mouse_text(s,x,y,G.rect(x,y,G.text_actions_x(),G.text_actions_y(),G.text_action_x(4),U32.add(G.text_actions_y(),G.control_height())))
 
@@ -667,7 +667,7 @@ def mouse_top.query(+s: State,+col: U32,+x: U32,+y: U32,inside: Bool) -> State &
 def mouse_top(+s: State,+col: U32,+row: U32) -> State & Action:
   +x = U32.mul(col,G.cell())
   +y = U32.mul(row,G.cell())
-  mouse_top.query(s,col,x,y,G.rect(x,y,192,24,1384,64))
+  mouse_top.query(s,col,x,y,G.rect(x,y,G.query_left(),24,G.query_right(),64))
 
 # A UI-only inspector. Canonical evidence and its reader scroll stay untouched.
 def status_text(s: State) -> String:
@@ -703,7 +703,7 @@ def status_mouse(+s: State,+x: U32,+y: U32,down: Bool) -> State & Action:
   match down:
     case False{}: (s,NoAction{})
     case True{}:
-      status_mouse_target(s,G.rect(x,y,1296,120,1408,152) || U32.is_ge(y,G.footer_y()),G.rect(x,y,1120,120,1288,152))
+      status_mouse_target(s,G.rect(x,y,G.status_close_x(),120,G.status_right(),152) || U32.is_ge(y,G.footer_y()),G.rect(x,y,G.status_copy_x(),120,U32.sub(G.status_close_x(),8),152))
 
 def status_key(+s: State,code: U32,down: Bool,command: Bool) -> State & Action:
   match code down command:
@@ -717,8 +717,8 @@ def status_key(+s: State,code: U32,down: Bool,command: Bool) -> State & Action:
     case 27 True{} _: (status_close(s),NoAction{})
     case 63232 True{} _: (status_scroll(s,False{},1),NoAction{})
     case 63233 True{} _: (status_scroll(s,True{},1),NoAction{})
-    case 63276 True{} _: (status_scroll(s,False{},26),NoAction{})
-    case 63277 True{} _: (status_scroll(s,True{},26),NoAction{})
+    case 63276 True{} _: (status_scroll(s,False{},G.reader_page_step()),NoAction{})
+    case 63277 True{} _: (status_scroll(s,True{},G.reader_page_step()),NoAction{})
     case _ _ _: (s,NoAction{})
 
 def status_wheel(+s: State,+dy: F32,zero: Bool) -> State & Action:
@@ -746,7 +746,7 @@ def mouse_toolbar(+s: State,+x: U32,+y: U32,+col: U32,+row: U32,toolbar: Bool) -
     case False{}: mouse_toolbar.body(s,x,y,col,row,U32.is_ge(y,G.footer_y()))
 
 def mouse_zone(+s: State,+x: U32,+y: U32,+col: U32,+row: U32) -> State & Action:
-  mouse_toolbar(s,x,y,col,row,U32.is_lt(y,112))
+  mouse_toolbar(s,x,y,col,row,U32.is_lt(y,G.header_height()))
 
 def mouse(+s: State, +x: U32, +y: U32, +down: Bool) -> State & Action:
   State{content, Input{selected, scroll, Edit{focus, caret, anchor, drag, viewport}, command, shift}, image, dirty} = s
@@ -991,11 +991,11 @@ def side_label(settings: Bool,index: U32,files: Bool) -> String:
         case 7: "Reload settings"
         case 8: "Enable selected"
         case 9: "Disable selected"
-        case 10: "Every 30 seconds"
-        case 11: "Every 2 hours"
-        case 12: "Every 4 hours"
-        case 13: "Every 8 hours"
-        case 14: "Every 24 hours"
+        case 10: "Refresh: 30 sec"
+        case 11: "Refresh: 2 hours"
+        case 12: "Refresh: 4 hours"
+        case 13: "Refresh: 8 hours"
+        case 14: "Refresh: 24 hours"
         case 15: "Clear input"
         case 16: "Select all"
         case 17: "Rebuild capture"
@@ -1044,9 +1044,10 @@ def draw_side(fuel: Nat,c: Canvas,+index: U32,+files: Bool,+settings: Bool,+scop
     case 0n: c
     case 1n+n:
       +y = G.sidebar_y(index)
-      +bg = Bool.pick(U32,Bool.not(brief) && side_active(index,scope) && (Bool.not(settings) || U32.is_ne(index,1)),selected_bg(),rail())
+      +logical = G.sidebar_action_index(index,settings,brief)
+      +bg = Bool.pick(U32,Bool.not(brief) && side_active(logical,scope) && (Bool.not(settings) || U32.is_ne(logical,1)),selected_bg(),rail())
       base = box(c,8,y,160,32,bg)
-      label = text(base,Bool.pick(String,brief,brief_side_label(index),side_label(settings,index,files)),16,U32.add(y,8),18,ink(),bg)
+      label = text(base,Bool.pick(String,brief,brief_side_label(logical),side_label(settings,logical,files)),16,U32.add(y,8),18,ink(),bg)
       draw_side(n,label,U32.add(index,1),files,settings,scope,brief)
 
 def whole_usage(s: State) -> Bool:
@@ -1060,7 +1061,7 @@ def top_label(index: U32,files: Bool,settings: Bool,whole: Bool,automatic: Strin
     case 3: Bool.pick(String,settings,"Import file","Why")
     case 4: Bool.pick(String,settings,"Enable selected","Export evidence")
     case 5: Bool.pick(String,settings,"Disable selected",Bool.pick(String,whole,"Whole session","Previous page"))
-    case _: Bool.pick(String,settings,"Reload settings",Bool.pick(String,whole,"All retained records","Next page"))
+    case _: Bool.pick(String,settings,"Reload settings",Bool.pick(String,whole,"All records","Next page"))
 
 def brief_top_label(+index: U32) -> String:
   match index:
@@ -1085,41 +1086,38 @@ def draw_status(modal: Bool,+s: State,c: Canvas) -> Canvas:
     case False{}: c
     case True{}:
       State{content,Input{selected,scroll,Edit{focus,+caret,+anchor,drag,viewport},command,shift},image,dirty} = s
-      base = box(c,G.list_end(),112,896,744,paper())
-      label = text(base,"Current status · Scroll to read · Esc to return",G.reader_x(),128,64,accent(),paper())
-      copy = text(label,"Copy and close",1128,128,19,accent(),paper())
-      close = text(copy,"Close",1304,128,11,accent(),paper())
+      base = box(c,G.list_end(),G.header_height(),U32.sub(G.width(),G.list_end()),G.body_height(),paper())
+      label = text(base,"Current status · Scroll · Esc to return",G.reader_x(),128,G.status_heading_columns(),accent(),paper())
+      copy = text(label,"Copy and close",U32.add(G.status_copy_x(),8),128,21,accent(),paper())
+      close = text(copy,"Close",U32.add(G.status_close_x(),8),128,11,accent(),paper())
       draw_reader(U32.to_nat(G.reader_rows()),close,List.drop(&2,Line,wrap(status_text(s)),U32.to_nat(U32.min(viewport,minus(U32.from_nat(List.length(&2,Line,wrap(status_text(s)))),G.reader_rows())))),U32.div(G.reader_y(),G.cell()),0,0)
 
 def capture_hint(suspended: Bool) -> String:
   Bool.pick(String,suspended,"Capture suspended","")
 
 def draw_capture_hint(c: Canvas,+suspended: Bool) -> Canvas:
-  first = text(c,capture_hint(suspended),824,80,26,muted(),rail())
-  text(first,Bool.pick(String,suspended,"Back to History",""),824,96,26,muted(),rail())
+  first = text(c,capture_hint(suspended),G.capture_hint_x(),80,G.capture_hint_columns(),muted(),rail())
+  text(first,Bool.pick(String,suspended,"Back to History",""),G.capture_hint_x(),96,G.capture_hint_columns(),muted(),rail())
 
-def draw_automatic_capture(+s: State,automatic: String,suspended: Bool) -> Image:
+def draw_canvas_capture(+s: State,automatic: String,suspended: Bool) -> Canvas:
   State{Content{+q,rows,reader,lines,title,status,+scope,+results,+files},Input{+selected,scroll,Edit{+focus,+caret,+anchor,drag,viewport},command,shift},image,dirty} = s
-  base = box(Flat{paper()},0,0,1408,112,rail())
-  side = box(base,0,112,176,744,rail())
-  list = box(side,176,112,336,744,panel())
-  foot = box(list,0,G.footer_y(),1408,40,rail())
+  base = box(Flat{paper()},0,0,G.width(),G.header_height(),rail())
+  side = box(base,0,G.header_height(),G.sidebar_end(),G.body_height(),rail())
+  list = box(side,G.sidebar_end(),G.header_height(),U32.sub(G.list_end(),G.sidebar_end()),G.body_height(),panel())
+  foot = box(list,0,G.footer_y(),G.width(),40,rail())
   brand = text(foot,"JUICE BEND",16,24,18,accent(),rail())
   tagline = text(brand,"Your captured work",16,48,18,muted(),rail())
   input_label = text(tagline,Bool.pick(String,is_brief(s),"Repository folder for this brief",Bool.pick(String,is_settings(s),"Source file or folder path",Bool.pick(String,files,"Repository folder path","Search captured history"))),192,8,60,muted(),rail())
-  query_bg = box(input_label,192,24,1192,40,paper())
+  query_bg = box(input_label,G.query_left(),24,U32.sub(G.query_right(),G.query_left()),40,paper())
   query = draw_line(U32.to_nat(G.query_columns()),query_bg,String.append(String.drop(q,U32.to_nat(query_offset(s)))," "),U32.div(G.query_x(),G.cell()),U32.div(G.query_y(),G.cell()),query_offset(s),Bool.pick(U32,U32.is_eq(focus,0),U32.min(caret,anchor),0),Bool.pick(U32,U32.is_eq(focus,0),Bool.pick(U32,U32.is_eq(caret,anchor),U32.add(caret,1),U32.max(caret,anchor)),0))
   top = draw_top(7n,query,0,files,is_settings(s),whole_usage(s),automatic_label(results,automatic),is_brief(s))
   capture = draw_capture_hint(top,suspended)
-  group1 = text(capture,Bool.pick(String,is_brief(s),"BRIEF",Bool.pick(String,is_settings(s),"SOURCES","PROVIDERS")),16,160,18,muted(),rail())
-  group2 = text(group1,Bool.pick(String,is_brief(s),"REVIEW",Bool.pick(String,is_settings(s),"FOLDER ACTIONS","CAPTURED EVIDENCE")),16,320,18,muted(),rail())
-  group3 = text(group2,Bool.pick(String,is_brief(s),"",Bool.pick(String,is_settings(s),"REFRESH INTERVAL","LIBRARY")),16,536,18,muted(),rail())
-  navigation = draw_side(18n,group3,0,files,is_settings(s),scope,is_brief(s))
+  navigation = draw_side(U32.to_nat(G.sidebar_rows()),capture,0,files,is_settings(s),scope,is_brief(s))
   heading = text(navigation,list_heading(results,files),192,128,38,ink(),panel())
   range = text(heading,result_label(results),192,152,38,muted(),panel())
   prev = text(range,"Previous",192,G.list_pager_y(),16,Bool.pick(U32,result_available(results,False{}),accent(),muted()),panel())
   next = text(prev,"Next",360,G.list_pager_y(),16,Bool.pick(U32,result_available(results,True{}),accent(),muted()),panel())
-  title = text(next,title,G.reader_x(),128,56,accent(),paper())
+  title = text(next,title,G.reader_x(),128,G.reader_title_columns(),accent(),paper())
   copy = text(title,"Copy",U32.add(G.text_action_x(0),8),U32.add(G.text_actions_y(),8),10,accent(),paper())
   paste = text(copy,"Paste",U32.add(G.text_action_x(1),8),U32.add(G.text_actions_y(),8),10,accent(),paper())
   clear = text(paste,"Clear",U32.add(G.text_action_x(2),8),U32.add(G.text_actions_y(),8),10,accent(),paper())
@@ -1128,10 +1126,13 @@ def draw_automatic_capture(+s: State,automatic: String,suspended: Bool) -> Image
   items = draw_rows(U32.to_nat(G.list_rows()),all,List.drop(&2,String,rows,U32.to_nat(offset)),0,minus(selected,offset))
   body = draw_reader(U32.to_nat(G.reader_rows()),items,List.drop(&2,Line,lines,U32.to_nat(scroll)),U32.div(G.reader_y(),G.cell()),Bool.pick(U32,U32.is_eq(focus,2),U32.min(caret,anchor),0),Bool.pick(U32,U32.is_eq(focus,2),U32.max(caret,anchor),0))
   +summary = String.join(String.lines(status)," ")
-  status1 = text(body,String.take(summary,174n),8,G.footer_y(),174,ink(),rail())
-  status2 = text(status1,String.take(String.drop(summary,174n),148n),8,U32.add(G.footer_y(),16),148,ink(),rail())
-  hint = text(status2,"Click status for details",1200,U32.add(G.footer_y(),16),25,accent(),rail())
-  canvas.image(draw_status(U32.is_ge(focus,3),s,hint))
+  status1 = text(body,String.take(summary,U32.to_nat(G.footer_columns())),8,G.footer_y(),G.footer_columns(),ink(),rail())
+  status2 = text(status1,String.take(String.drop(summary,U32.to_nat(G.footer_columns())),U32.to_nat(G.footer_second_columns())),8,U32.add(G.footer_y(),16),G.footer_second_columns(),ink(),rail())
+  hint = text(status2,"Click status for details",G.footer_hint_x(),U32.add(G.footer_y(),16),25,accent(),rail())
+  draw_status(U32.is_ge(focus,3),s,hint)
+
+def draw_automatic_capture(s: State,automatic: String,suspended: Bool) -> Image:
+  canvas.image(draw_canvas_capture(s,automatic,suspended))
 
 def view_dirty_capture(+s: State,+dirty: Bool,automatic: String,suspended: Bool) -> State & Image:
   State{content,input,+old,clean} = s

@@ -1,0 +1,92 @@
+{
+  "accepted": true,
+  "native_workflow_exit": 0,
+  "resumed_workflow": true,
+  "binary_sha256": "e780c37b4866aa759f75c2471ae1c13be6bb0c910761b34fa322405f37bb86eb",
+  "binary_bytes": 17817896,
+  "build_seconds": 604.478,
+  "application_inputs": 79,
+  "upstream_hashes": 88,
+  "content_size": [
+    1200,
+    664
+  ],
+  "decorated_size": [
+    1200,
+    696
+  ],
+  "observed_display": [
+    1280,
+    800
+  ],
+  "dock_autohide": false,
+  "containment_observations": 172,
+  "exact_clipboard_comparisons": 18,
+  "exports": [
+    {
+      "name": "entropy-full",
+      "bytes": 16104,
+      "sha256": "bb1899c2327261d722694df5fa626f722ec31d714286a7b3fc4defb45682fde4"
+    },
+    {
+      "name": "entropy-container",
+      "bytes": 889,
+      "sha256": "05e94ed3b227a125b53865392b79e596a5e89877cd31e73703b3c43ab0d0698f"
+    },
+    {
+      "name": "entropy-bounded",
+      "bytes": 936,
+      "sha256": "311d792b317dadb54f35d5302467e6f4df9359c602203845199cfe40c00c99c1"
+    },
+    {
+      "name": "brief",
+      "bytes": 2949,
+      "sha256": "70164d92231ced23607da2f714121fb0ee1990369fd13fdda7e82862016f8c7b"
+    },
+    {
+      "name": "retained-entropy-full",
+      "bytes": 16104,
+      "sha256": "bb1899c2327261d722694df5fa626f722ec31d714286a7b3fc4defb45682fde4"
+    },
+    {
+      "name": "retained-entropy-container",
+      "bytes": 889,
+      "sha256": "05e94ed3b227a125b53865392b79e596a5e89877cd31e73703b3c43ab0d0698f"
+    }
+  ],
+  "nonce": "d997155e-16a1-49a3-8944-903885957e07",
+  "native_receipts": [
+    "build/compact-native-v4-plan/artifacts",
+    "build/compact-native-v4-plan/artifacts/resume-1"
+  ],
+  "observed": [
+    "native archive import",
+    "filtered search and transcript",
+    "Page Down and Page Up",
+    "wheel down and up",
+    "status Copy-and-close, Close, Escape before copy",
+    "exact Unicode toolbar copy",
+    "Brief copy/export/Back",
+    "source-absent restart and retained reads/exports",
+    "plain archive-export refusal",
+    "truncated archive import refusal with accepted history preserved"
+  ],
+  "cleanup": {
+    "vm_stopped": true,
+    "lease_absent": true,
+    "display_restored": true,
+    "dock_setting_unchanged": true,
+    "owned_windows_closed": true,
+    "vm_runner_exit": 130
+  },
+  "preserved_failures": [
+    "v3 cliclick Escape/Page events not received",
+    "v4 shutdown observed stale WindowServer entry after process exit; bounded fresh observation on resume"
+  ],
+  "limits": [
+    "No hardware keyboard, full shaping/IME, accessibility, resizing, input latency, full-suite, proof or speed comparison claim",
+    "CJK/emoji fallback boxes remain; clipboard bytes are exact",
+    "Generic guest OS Tips notification overlaps upper-right search area",
+    "Separate attachment sandbox startup probe failed before ready and is not accepted"
+  ]
+}

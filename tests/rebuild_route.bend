@@ -44,7 +44,7 @@ def actions() -> IO(Unit):
       "Settings exposes Rebuild capture and keeps its first Back control")
     require(String.eq(pointer_action(UI.event(Mouse{24,U32.add(G.sidebar_y(12),8),0,True{}},Fixture.ui(Fixture.ready()))),"brief"),
       "actual normal pointer hit emits Brief without Rebuild")
-    require(String.eq(pointer_action(UI.event(Mouse{24,U32.add(G.sidebar_y(17),8),0,True{}},Fixture.ui(Fixture.panel()))),"rebuild"),
+    require(String.eq(pointer_action(UI.event(Mouse{24,U32.add(G.sidebar_y(15),8),0,True{}},Fixture.ui(Fixture.panel()))),"rebuild"),
       "actual Settings pointer hit emits Rebuild")
 
 def target_shown(states: List<&2,Gui.State>) -> Bool:
@@ -105,7 +105,7 @@ def route() -> IO(Unit):
     +opened : List<&2,Gui.State> <- click([Fixture.ready()],10)
     require(target_shown(opened),"Index settings pointer route shows exact target and starts no writer")
     require(existing_fields(opened),"Rebuild target notice preserves every existing Settings field group")
-    +started : List<&2,Gui.State> <- click(opened,17)
+    +started : List<&2,Gui.State> <- click(opened,15)
     require(String.eq(writer(started),"16|rebuild|7|7|0"),
       "Settings Rebuild pointer dispatch queues the exact immutable selected snapshot")
     +back : List<&2,Gui.State> <- click(started,0)
@@ -118,7 +118,7 @@ def missing() -> IO(Unit):
   do IO<Unit>:
     +opened : List<&2,Gui.State> <- click([no_target(Fixture.ready())],10)
     require(no_target_shown(opened),"Settings without a captured snapshot explains how to select its target")
-    +refused : List<&2,Gui.State> <- click(opened,17)
+    +refused : List<&2,Gui.State> <- click(opened,15)
     require(String.eq(writer(refused),"none") && String.contains(status(refused),"Select a captured transcript"),
       "actual Rebuild pointer route refuses an empty target without starting work")
 
@@ -131,7 +131,7 @@ def busy() -> IO(Unit):
   do IO<Unit>:
     +started : List<&2,Gui.State> <- busy_origin()
     require(String.eq(writer(started),"8|refresh-all||0"),"busy fixture owns one existing capture writer")
-    +refused : List<&2,Gui.State> <- click(started,17)
+    +refused : List<&2,Gui.State> <- click(started,15)
     require(String.eq(writer(refused),"8|refresh-all||0") && String.contains(status(refused),"already running"),
       "Rebuild pointer route preserves a busy writer and reports refusal")
     +back : List<&2,Gui.State> <- click(refused,0)
@@ -149,7 +149,7 @@ def completed(states: List<&2,Gui.State>) -> List<&2,Gui.State>:
 def completion() -> IO(Unit):
   do IO<Unit>:
     opened : List<&2,Gui.State> <- click([Fixture.ready()],10)
-    started : List<&2,Gui.State> <- click(opened,17)
+    started : List<&2,Gui.State> <- click(opened,15)
     +done : List<&2,Gui.State> <- IO.pure(List<&2,Gui.State>,completed(started))
     require(String.eq(writer(done),"none") && String.contains(status(done),"Verified search rows rebuilt for Snapshot 7"),
       "existing successful rebuild reply reports its exact snapshot without a remaining writer")

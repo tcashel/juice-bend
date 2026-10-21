@@ -1,5 +1,23 @@
 # Native interaction observations
 
+## Compact native window — 2026-10-21
+
+Current app `e780c37b…` fits completely at actual 1280×800 with the Dock shown.
+Native Page Down/Up, wheel, status Close/Escape, exact Unicode copy, Brief and
+retained archive workflows passed. Eighteen clipboard comparisons and six
+private exact exports passed; source removal/restart and invalid-input refusals
+preserved accepted history. The standard executable is promoted; prior archive
+build remains preserved. See [receipt](receipts/compact-native.txt),
+[build inputs](receipts/compact-build-inputs.sha256) and
+[summary](../benchmarks/results/tart-compact-summary.json).
+
+The run resumed after an external shutdown-observation race; earlier key-delivery
+failures are retained and diagnosed. All owned windows closed, the original
+display restored, Dock preference unchanged, VM stopped and lease released.
+This supersedes the footer obstruction described in the historical archive
+receipt below. General resizing, missing glyphs, IME/accessibility, full parity
+and new full-suite/proof/performance validation remain open.
+
 ## Native archives, full exports and readable Brief — 2026-10-21
 
 App `d06447f6…` passed actual Tart Settings import of an ordinary compressed
@@ -11,8 +29,8 @@ left accepted history unchanged. Nine clipboard comparisons and six exact mode
 0600 exports passed. Brief now puts the request/tool evidence before its footer;
 whole/selected copy, export and Back passed on that same application.
 
-The standard executable and `Juice Bend Archive.app` contain this observed
-build: 79 unchanged application inputs and 88 verified upstream hashes. The
+The preserved `juice-bend-archive` and `Juice Bend Archive.app` contain this
+observed build: 79 unchanged application inputs and 88 verified upstream hashes. The
 combined production export/Brief/keyboard/readability gate passed 251 PASS lines
 including suite/fixture lines; existing UI/polish controls passed 162 PASS lines.
 Earlier isolated backend gates and final metadata/migration/maintenance checks
@@ -21,7 +39,7 @@ comparative performance run.
 
 The successful native workflow resumed after preserved automation failures.
 A visible Dock obscured the fixed window footer on the 1600×1000 guest; it was
-temporarily hidden and restored. This window-sizing gap remains open. All owned
+temporarily hidden and restored. The later compact validation above closes this measured footer obstruction. All owned
 windows closed, Tart stopped and its lease was released. Archive admission is
 still capped at 1 MiB compressed / 4 MiB logical; unrestricted archive parity,
 hardware typing, full IME/shaping/accessibility and measured latency remain open.

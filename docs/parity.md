@@ -1,5 +1,11 @@
 # Reference parity
 
+The current compact native app `e780c37b…` fits its full navigation/footer above
+the visible Dock at 1280×800. Keyboard/wheel paging, status Close/Escape, Unicode
+copy, Brief and retained archive workflows passed. The prior footer obstruction
+is closed for this measured desktop; general resizing and broader visual parity
+remain open. See [compact native receipt](receipts/compact-native.txt).
+
 Inspected read-only Juice revision:
 `ca66da7d9cc56f665900ba71ee9d97c37787c77d`. Reference locations below are relative
 to its source tree. No reference source or personal history is copied here.

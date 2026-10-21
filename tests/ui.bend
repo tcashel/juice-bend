@@ -1,5 +1,6 @@
 import Base
 import ../src/ui.bend as UI
+import ../src/ui_geometry.bend as G
 
 def require(ok: Bool, name: String) -> IO(Unit):
   match ok:
@@ -43,15 +44,15 @@ def tests() -> IO(Unit):
   +reader = UI.select_all(UI.set_edit(UI.set_reader(UI.init(), "Unicode", "é 漢字 🙂\nsecond"), UI.Edit{2, 0, 0, False{}, 0}))
   +dragged = apply(Move{232, 40}, apply(Mouse{216, 40, 0, True{}}, UI.set_query(UI.init(), "A🙂B")))
   +command_reader = apply(Key{65591, True{}}, reader)
-  +wrapped = UI.wrap(repeat(104n,"x") ++ "X\nZ")
+  +wrapped = UI.wrap(repeat(80n,"x") ++ "X\nZ")
   do IO<Unit>:
     Unit <- require(String.eq(UI.query(typed), "naive cafe é 漢字 🙂"), "committed Unicode Text event")
     Unit <- require(String.eq(UI.selection(selected), "naive cafe é 漢字 🙂"), "query select-all preserves Unicode")
     Unit <- require(String.eq(UI.query(placed), "Aé🙂B"), "cursor insertion counts Unicode scalars")
     Unit <- require(String.eq(UI.query(UI.backspace(placed)), "A🙂B"), "backspace deletes selected scalar")
     Unit <- require(String.eq(UI.selection(reader), "é 漢字 🙂\nsecond"), "reader copy retains combining CJK emoji")
-    Unit <- line_test(UI.line_at(wrapped, 1), 104, "X", "wrap retains source offset")
-    Unit <- line_test(UI.line_at(wrapped, 2), 106, "Z", "newline retains source offset")
+    Unit <- line_test(UI.line_at(wrapped, 1), 80, "X", "wrap retains source offset")
+    Unit <- line_test(UI.line_at(wrapped, 2), 82, "Z", "newline retains source offset")
     Unit <- require(U32.is_eq(UI.length(UI.query(UI.insert(UI.init(), repeat(600n, "x")))), 512), "query input limit is explicit")
     Unit <- require(String.eq(UI.scope(UI.set_scope(UI.init(), "codex")), "codex"), "provider scope reaches UI state")
     Unit <- require(String.eq(UI.query(apply(Key{97, True{}}, UI.init())), ""), "physical keys never fabricate typed characters")
@@ -79,24 +80,24 @@ def buttons() -> IO(Unit):
   +query = UI.select_all(UI.set_query(UI.init(),"replace me"))
   +settings = UI.set_results(UI.select_all(UI.set_query(UI.init(),"café 中文 🙂")),UI.SettingsResults{0,0,"Resume",True{}})
   do IO<Unit>:
-    Unit <- require(String.eq(copied(UI.event(Mouse{16,696,0,True{}},reader)),"é 漢字 🙂"),"pointer Copy retains selected reader Unicode")
-    Unit <- require(String.eq(button_export(UI.event(Mouse{16,728,0,True{}},query)),"full-jsonl"),"normal sidebar pointer requests full JSONL export")
-    Unit <- require(String.eq(button_export(UI.event(Mouse{16,792,0,True{}},reader)),"archive") && String.eq(UI.selection(changed(UI.event(Mouse{16,792,0,True{}},reader))),"é 漢字 🙂"),"normal sidebar pointer requests archive export without changing reader selection")
-    Unit <- require(button_paste(UI.event(Mouse{1112,136,0,True{}},query)),"reader toolbar pointer Paste requests clipboard input")
-    Unit <- require(String.eq(UI.selection(changed(UI.event(Mouse{1112,136,0,True{}},query))),"replace me"),"reader toolbar pointer Paste preserves query replacement selection")
-    Unit <- require(String.eq(UI.query(changed(UI.event(Mouse{16,760,0,True{}},query))),""),"pointer Clear empties query")
-    Unit <- require(String.eq(UI.selection(changed(UI.event(Mouse{1304,136,0,True{}},UI.set_query(UI.init(),"whole query")))),"whole query"),"reader toolbar pointer Select all uses focused text")
-    Unit <- require(button_paste(UI.event(Mouse{1112,136,0,True{}},settings)) && String.eq(UI.selection(changed(UI.event(Mouse{1112,136,0,True{}},settings))),"café 中文 🙂"),"Settings pointer Paste retains exact Unicode replacement selection")
-    require(String.eq(UI.selection(changed(UI.event(Mouse{16,792,0,True{}},UI.set_edit(settings,UI.Edit{0,2,1,False{},0})))),"café 中文 🙂"),"Settings sidebar pointer Select all expands a partial Unicode selection")
+    Unit <- require(String.eq(copied(UI.event(Mouse{824,136,0,True{}},reader)),"é 漢字 🙂"),"pointer Copy retains selected reader Unicode")
+    Unit <- require(String.eq(button_export(UI.event(Mouse{16,536,0,True{}},query)),"full-jsonl"),"normal sidebar pointer requests full JSONL export")
+    Unit <- require(String.eq(button_export(UI.event(Mouse{16,568,0,True{}},reader)),"archive") && String.eq(UI.selection(changed(UI.event(Mouse{16,568,0,True{}},reader))),"é 漢字 🙂"),"normal sidebar pointer requests archive export without changing reader selection")
+    Unit <- require(button_paste(UI.event(Mouse{920,136,0,True{}},query)),"reader toolbar pointer Paste requests clipboard input")
+    Unit <- require(String.eq(UI.selection(changed(UI.event(Mouse{920,136,0,True{}},query))),"replace me"),"reader toolbar pointer Paste preserves query replacement selection")
+    Unit <- require(String.eq(UI.query(changed(UI.event(Mouse{1016,136,0,True{}},query))),""),"pointer Clear empties query")
+    Unit <- require(String.eq(UI.selection(changed(UI.event(Mouse{1112,136,0,True{}},UI.set_query(UI.init(),"whole query")))),"whole query"),"reader toolbar pointer Select all uses focused text")
+    Unit <- require(button_paste(UI.event(Mouse{920,136,0,True{}},settings)) && String.eq(UI.selection(changed(UI.event(Mouse{920,136,0,True{}},settings))),"café 中文 🙂"),"Settings pointer Paste retains exact Unicode replacement selection")
+    require(String.eq(UI.selection(changed(UI.event(Mouse{1112,136,0,True{}},UI.set_edit(settings,UI.Edit{0,2,1,False{},0})))),"café 中文 🙂"),"Settings toolbar pointer Select all expands a partial Unicode selection")
 
 def long_drag() -> IO(Unit):
   +pressed = apply(Mouse{208,40,0,True{}},UI.set_query(UI.init(),repeat(20n,"0123456789")))
   +moved = apply(Move{288,40},pressed)
   +arrival = UI.set_reader(pressed,"new reader","asynchronous evidence")
   do IO<Unit>:
-    Unit <- require(U32.is_eq(UI.query_offset(pressed),56) && U32.is_eq(UI.query_offset(moved),56) &&
-      String.eq(UI.selection(moved),"6789012345"),"long query drag freezes its original viewport")
-    require(String.eq(UI.selection(apply(Move{288,40},arrival)),"6789012345"),"reader arrival preserves an active query drag")
+    Unit <- require(U32.is_eq(UI.query_offset(pressed),81) && U32.is_eq(UI.query_offset(moved),81) &&
+      String.eq(UI.selection(moved),"1234567890"),"long query drag freezes its original viewport")
+    require(String.eq(UI.selection(apply(Move{288,40},arrival)),"1234567890"),"reader arrival preserves an active query drag")
 
 def navigation_kind(result: UI.State & UI.Action) -> U32:
   (state,action) = result
@@ -137,8 +138,8 @@ def related_navigation() -> IO(Unit):
   +original = UI.set_edit(UI.set_position(UI.set_reader(UI.init(),"title","Unicode café 🙂"),3,8),UI.Edit{2,8,2,True{},4})
   +restored = UI.restore(UI.init(),UI.bookmark(UI.set_modifiers(original,True{},True{})))
   do IO<Unit>:
-    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,416,0,True{}},state)),13) &&
-      U32.is_eq(navigation_kind(UI.event(Mouse{32,832,0,True{}},state)),14),"Related and Back have dedicated nonoverlapping pointer controls")
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,344,0,True{}},state)),13) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{32,600,0,True{}},state)),14),"Related and Back have dedicated nonoverlapping pointer controls")
     require(U32.is_eq(navigation_kind(UI.event(Key{103,True{}},UI.set_modifiers(state,True{},False{}))),13) &&
       U32.is_eq(navigation_kind(UI.event(Key{91,True{}},UI.set_modifiers(state,True{},False{}))),14),"Command-G and Command-left-bracket navigate Related and Back")
     require(String.eq(UI.result_label(UI.RelatedResults{2,0,True{},True{}}),"Page 2 | 0 links") &&
@@ -152,18 +153,18 @@ def result_navigation() -> IO(Unit):
   +last = UI.set_results(first,UI.Results{100,1,False{},True{}})
   +pending = UI.set_results(first,UI.Results{100,0,False{},False{}})
   do IO<Unit>:
-    require(U32.is_eq(navigation_kind(UI.event(Mouse{400,832,0,True{}},first)),2),
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{400,592,0,True{}},first)),2),
       "result Next control emits a distinct list action")
-    require(U32.is_eq(navigation_kind(UI.event(Mouse{208,832,0,True{}},last)),1),
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{208,592,0,True{}},last)),1),
       "result Previous control emits a distinct list action")
-    require(U32.is_eq(navigation_kind(UI.event(Mouse{208,832,0,True{}},first)),0) &&
-      U32.is_eq(navigation_kind(UI.event(Mouse{400,832,0,True{}},last)),0),
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{208,592,0,True{}},first)),0) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{400,592,0,True{}},last)),0),
       "result controls are inert at first and final boundaries")
-    require(U32.is_eq(navigation_kind(UI.event(Mouse{208,832,0,True{}},pending)),0) &&
-      U32.is_eq(navigation_kind(UI.event(Mouse{400,832,0,True{}},pending)),0),
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{208,592,0,True{}},pending)),0) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{400,592,0,True{}},pending)),0),
       "pending result navigation is disabled")
-    require(U32.is_eq(navigation_kind(UI.event(Mouse{1064,96,0,True{}},first)),3) &&
-      U32.is_eq(navigation_kind(UI.event(Mouse{1224,96,0,True{}},first)),4),
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{864,96,0,True{}},first)),3) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{1040,96,0,True{}},first)),4),
       "transcript toolbar paging remains separate")
     require(U32.is_eq(navigation_kind(UI.event(Mouse{208,144,0,True{}},first)),0) &&
       U32.is_eq(navigation_kind(UI.event(Mouse{208,248,0,True{}},first)),0),
@@ -174,31 +175,31 @@ def result_navigation() -> IO(Unit):
     require(String.eq(UI.result_label(UI.Results{100,100,True{},True{}}),"101-200 + more") &&
       String.eq(UI.result_label(UI.Results{200,1,False{},True{}}),"201-201 / end"),
       "result range labels use global ordinal ranges")
-    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,448,0,True{}},first)),6) &&
-      U32.is_eq(navigation_kind(UI.event(Mouse{32,480,0,True{}},first)),7),
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,376,0,True{}},first)),6) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{32,408,0,True{}},first)),7),
       "saved versions and explicit latest have distinct pointer actions")
-    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,600,0,True{}},first)),8),
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,472,0,True{}},first)),8),
       "Storage inventory has a dedicated Settings action")
 
 def files_navigation() -> IO(Unit):
   +files = UI.set_files(UI.init(),True{})
   do IO<Unit>:
-    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,144,0,True{}},UI.init())),9) &&
-      U32.is_eq(navigation_kind(UI.event(Mouse{32,144,0,True{}},files)),9),
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,128,0,True{}},UI.init())),9) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{32,128,0,True{}},files)),9),
       "Files and History share a dedicated sidebar target")
-    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,96,0,True{}},files)),10),
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{24,96,0,True{}},files)),10),
       "Files exposes explicit Open repo instead of capture Refresh")
     require(U32.is_eq(navigation_kind(UI.event(Mouse{208,128,0,True{}},files)),11) &&
       U32.is_eq(navigation_kind(UI.event(Mouse{208,128,0,True{}},UI.init())),0),
       "Up folder occupies only the Files list header")
-    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,600,0,True{}},files)),8) &&
-      U32.is_eq(navigation_kind(UI.event(Mouse{32,448,0,True{}},files)),6),
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,472,0,True{}},files)),8) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{32,376,0,True{}},files)),6),
       "Files controls preserve Storage and Versions hit targets")
 
 def tools_navigation() -> IO(Unit):
   +state = UI.set_query(UI.init(),"literal query")
   do IO<Unit>:
-    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,352,0,True{}},state)),12),
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,280,0,True{}},state)),12),
       "Tools has a distinct sidebar row below Scope")
     require(U32.is_eq(navigation_kind(UI.event(Key{116,True{}},UI.set_modifiers(state,True{},False{}))),12),
       "Command-T opens recorded Tools")
@@ -226,20 +227,20 @@ def settings_navigation() -> IO(Unit):
   do IO<Unit>:
     require(String.eq(UI.result_label(UI.SettingsResults{0,0,"Loading",False{}}),"Inventory not loaded") &&
       String.eq(UI.result_label(UI.SettingsResults{0,0,"Pause",True{}}),"No registered folders"),"unloaded source inventory is distinct from confirmed empty inventory")
-    require(String.eq(settings_action(UI.event(Mouse{32,96,0,True{}},state)),"refresh") &&
-      String.eq(settings_action(UI.event(Mouse{224,96,0,True{}},state)),"automatic"),"Settings retains independent manual Refresh and durable automatic controls")
-    require(String.eq(settings_action(UI.event(Mouse{416,96,0,True{}},state)),"add") &&
-      String.eq(settings_action(UI.event(Mouse{608,96,0,True{}},state)),"import"),"Settings Add folder and Import file have distinct hit targets")
-    require(String.eq(settings_action(UI.event(Mouse{800,96,0,True{}},state)),"enable") &&
-      String.eq(settings_action(UI.event(Mouse{1064,96,0,True{}},state)),"disable"),"Settings Enable and Disable are separate selected-row actions")
-    require(String.eq(settings_action(UI.event(Mouse{1224,96,0,True{}},state)),"reload"),"Settings Reload has its own toolbar target")
-    require(String.eq(settings_action(UI.event(Mouse{32,568,0,True{}},state)),"30") &&
-      String.eq(settings_action(UI.event(Mouse{32,600,0,True{}},state)),"7200"),"Settings exposes exact thirty-second and two-hour choices")
-    require(String.eq(settings_action(UI.event(Mouse{32,632,0,True{}},state)),"14400") &&
-      String.eq(settings_action(UI.event(Mouse{32,696,0,True{}},state)),"28800") &&
-      String.eq(settings_action(UI.event(Mouse{32,728,0,True{}},state)),"86400"),"Settings exposes exact four-hour eight-hour and daily choices")
-    require(String.eq(settings_action(UI.event(Mouse{32,144,0,True{}},state)),"back") &&
-      String.eq(settings_action(UI.event(Mouse{32,832,0,True{}},state)),"rebuild"),"Settings keeps its first Back control and reachable final Rebuild action")
+    require(String.eq(settings_action(UI.event(Mouse{24,96,0,True{}},state)),"refresh") &&
+      String.eq(settings_action(UI.event(Mouse{168,96,0,True{}},state)),"automatic"),"Settings retains independent manual Refresh and durable automatic controls")
+    require(String.eq(settings_action(UI.event(Mouse{312,96,0,True{}},state)),"add") &&
+      String.eq(settings_action(UI.event(Mouse{432,96,0,True{}},state)),"import"),"Settings Add folder and Import file have distinct hit targets")
+    require(String.eq(settings_action(UI.event(Mouse{552,96,0,True{}},state)),"enable") &&
+      String.eq(settings_action(UI.event(Mouse{864,96,0,True{}},state)),"disable"),"Settings Enable and Disable are separate selected-row actions")
+    require(String.eq(settings_action(UI.event(Mouse{1040,96,0,True{}},state)),"reload"),"Settings Reload has its own toolbar target")
+    require(String.eq(settings_action(UI.event(Mouse{32,440,0,True{}},state)),"30") &&
+      String.eq(settings_action(UI.event(Mouse{32,472,0,True{}},state)),"7200"),"Settings exposes exact thirty-second and two-hour choices")
+    require(String.eq(settings_action(UI.event(Mouse{32,504,0,True{}},state)),"14400") &&
+      String.eq(settings_action(UI.event(Mouse{32,536,0,True{}},state)),"28800") &&
+      String.eq(settings_action(UI.event(Mouse{32,568,0,True{}},state)),"86400"),"Settings exposes exact four-hour eight-hour and daily choices")
+    require(String.eq(settings_action(UI.event(Mouse{32,128,0,True{}},state)),"back") &&
+      String.eq(settings_action(UI.event(Mouse{32,600,0,True{}},state)),"rebuild"),"Settings keeps its first Back control and reachable final Rebuild action")
     require(UI.result_available(UI.SettingsResults{0,32,"Pause",True{}},True{}) &&
       Bool.not(UI.result_available(UI.SettingsResults{28,32,"Pause",True{}},True{})) &&
       String.eq(UI.result_label(UI.SettingsResults{28,32,"Pause",True{}}),"29-32/32"),"Settings folder paging reaches all thirty-two bounded rows and stops at the end")
@@ -295,7 +296,7 @@ def probe_tick(events: List<Event>, state: UI.State) -> IO(Maybe<UI.State>):
 def probe() -> IO(Unit):
   s = UI.set_reader(UI.set_rows(UI.init(), ["Synthetic native input probe"]), "Native text / selection probe",
     String.append("USER\nThis is an isolated native Bend UI probe.\n\nType in Search. Cmd+A selects the query.\nCmd+C copies selection; Cmd+V pastes.\n\nUnicode survives selection and clipboard:\né cafe 漢字 🙂\nUnsupported glyphs appear as boxes.\n\nClick and drag in this reader to select.\n\nScroll to exercise the bounded reader.\n\n", repeat(50n, "Captured synthetic transcript line.\n")))
-  App.run(~UI.State, ~App{UI.view, probe_tick}, "Juice Bend UI Probe", 1408, 896, s)
+  App.run(~UI.State, ~App{UI.view, probe_tick}, "Juice Bend UI Probe", G.width(), G.height(), s)
 
 def dispatch(args: List<String>) -> IO(Unit):
   match args:
