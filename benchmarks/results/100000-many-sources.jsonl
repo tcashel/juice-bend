@@ -1,0 +1,10 @@
+{"benchmark":"many-sources-v1","seed":1337,"sources":100,"raw_records_per_source":1000,"raw_records_before":100000,"normalized_events_per_raw_record":1,"providers":["claude","codex"],"target_source_index":50,"timing_enabled":true,"setup_and_validation_outside_timers":true}
+{"operation":"first_import_all_sources","duration_ms":27875}
+{"operation":"last_source_unchanged","duration_ms":50}
+{"operation":"middle_source_append_16","duration_ms":477}
+{"operation":"first_scoped_search_after_append","duration_ms":17}
+{"operation":"warm_scoped_search","trials_ms":[17,17,17,16,16],"median_ms":17,"p95_ms":17,"trials":5}
+{"operation":"first_scoped_late_page","duration_ms":14}
+{"operation":"warm_scoped_late_page","trials_ms":[15,15,15,15,15],"median_ms":15,"p95_ms":15,"trials":5}
+{"preservation_checks_passed":true,"untouched_sources":99,"old_target_page_and_citation_exact":true,"current_search_events":100016}
+{"benchmark_complete":true,"timing_enabled":true}

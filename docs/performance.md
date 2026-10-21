@@ -16,7 +16,57 @@ repositories, timestamps, tool arguments/results and usage. Each four physical
 JSONL records yield five normalized events. Events include tools and are not
 presented as five independent human/assistant messages.
 
-## Current backend candidate — reusable verified event prefix
+## Current backend candidate — identical context hash prefixes
+
+The context-prefix cache preserves the exact scalar digest bytes while sharing
+complete SHA blocks for each bounded context batch. Both scans and every row
+comparison remain. Its [990-check native gate](receipts/context-prefix-native.txt)
+and independent reviews passed. The unchanged standard 100k fixture measured
+first import 33,304 ms, unchanged refresh 4,579 ms and append **27,262 ms**.
+That is 3.4% below the preceding 28,226 ms observation; the small single-run
+difference is not a statistical guarantee. Long-session append remains slow.
+Warm search/late/scoped-late p95 were 40/8/17 ms. Five-trial p95 is the maximum.
+
+Frozen native binary `5ecad019…` is 3,067,408 bytes. All 19 transitive inputs and
+88 upstream hashes matched before/after build and run. Benchmark assertions,
+independent prefix equivalence, exact counts, latest-only FTS and database
+integrity passed; logical page bytes remained 216,109,056. No task build, test
+or Tart workload overlapped timers; unrelated host activity was uncontrolled.
+See [raw results](../benchmarks/results/100000-context-prefix.jsonl),
+[build/input receipt](../benchmarks/results/100000-context-prefix-build.txt) and
+[postflight](../benchmarks/results/100000-context-prefix-db-check.json).
+
+A separate many-source fixture contains 100 independent Claude/Codex sources,
+each with 1,000 physical records and 1,000 normalized events. Source paths,
+session IDs and repositories are distinct; generator version 1 uses seed 1337.
+This differs from the long-session fixture and is not a direct speed comparison.
+
+| Many-source observation | Duration |
+|---|---:|
+| Import all 100 sources | 27,875 ms |
+| Unchanged refresh of last source | 50 ms |
+| Append 16 records to middle source | 477 ms |
+| Warm scoped search median / p95 | 17 / 17 ms |
+| Warm scoped late page median / p95 | 15 / 15 ms |
+
+The middle source is Claude; separate small native correctness runs covered
+Claude and Codex append targets with clocks disabled. The timed run preserved
+all 99 untouched source/header/seal records and FTS cells/types/rowids. It also
+preserved the old target page, citation and event values, verified both target
+seals and shared raw IDs, and passed exact current-only index/integrity checks.
+It does not compare every unrelated non-FTS context byte. Latest search contains
+100,016 events; database logical page bytes are 110,604,288.
+
+Binary `d6402fa4…` is 3,732,376 bytes, with 19 unchanged recorded inputs and
+88 upstream hashes. Fixture generation and validation are outside timers; the
+first search follows index validation and is not cold-cache. The fresh private
+working directory is required. No task build/test/Tart overlapped timings.
+See [raw results](../benchmarks/results/100000-many-sources.jsonl),
+[build receipt](../benchmarks/results/100000-many-sources-build.txt) and
+[postflight](../benchmarks/results/100000-many-sources-db-check.json).
+These observations do not measure UI latency, memory or a 1M stress workload.
+
+## Preceding backend candidate — reusable verified event prefix
 
 The new event-seal candidate appended 16 records in **28,226 ms**, versus the
 preceding 33,392 ms observation: a 15.5% reduction. Append remains slow. This is

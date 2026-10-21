@@ -68,3 +68,13 @@
   VM user released it before our nonce-owned lease; only synthetic payload and
   results were shared, with host-only networking. The app closed, the owned VM
   stopped, both shared locks were absent, and the other chat was notified.
+- **2026-10-20 — Bounded retained Related navigation.** Relationship pages pin
+  accepted-capture watermarks and exact target references. Recorded parent IDs
+  and path associations stay distinct; coverage/ambiguity never imply a complete
+  graph. Two saved navigation levels restore the exact origin. A Bend list holds
+  the saved navigation indirectly to respect the pinned compiler's continuation
+  arity bound. Native UI validation and focused tests have separate receipts.
+- **2026-10-20 — Context-prefix hashing.** Reuse only identical complete header
+  blocks within the existing bounded context batch. Keep the scalar digest as
+  the comparison oracle, all predicates, both raw passes and transaction limits.
+  The measured long-session improvement is small; no append-complete claim.

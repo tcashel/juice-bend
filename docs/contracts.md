@@ -25,6 +25,12 @@ or older seals take verified raw replay; malformed new state fails/rolls back.
 Older writers safely treat the new version as unfamiliar and replay too.
 IDs remain signed-64-bit decimal strings; bounded event counts are checked U32.
 
+Context hash-prefix reuse is local to one bounded batch. Only complete 64-byte
+blocks of the identical typed snapshot header are cached; the remainder and
+row suffix follow the scalar digest path. Digest bytes and every validation
+predicate remain unchanged. Mixed-generation copying falls back to scalar
+validation. Both complete raw/source comparison passes remain in capture.
+
 Listing pages contain at most 100 rows and a same-transaction one-row
 lookahead. CLI `offset` and `limit` are JSON numbers; `has_more` is Boolean.
 Identifiers and SQLite quantities remain exact decimal strings in row cells.
@@ -76,3 +82,28 @@ proof of successful execution. One canonical string serves display/copy/export.
 
 No real home history scan by default. Synthetic demo and tests use explicit,
 isolated data directories. Original Juice and source repositories are read-only.
+
+Related captures own a deferred read transaction and reject an existing caller
+transaction. The anchor is an exact provider/source/generation/snapshot/extent
+reference. A fixed accepted-ID watermark chooses one accepted capture per
+candidate source across generations. A page scans at most 15 candidate sources,
+up to 16 verified physical records per source plus anchor: 256 records and
+2 MiB aggregate retained raw bytes. CLI output, including JSON escaping and
+newline, is bounded to 1 MiB. Partial/skipped/conflicting/unsupported coverage
+is explicit; a cursor advances through candidate sources rather than links.
+
+The first Codex session metadata header controls recorded parent authority.
+Later conflicting headers cannot create a new parent. Claude nested locator
+association is separately labeled; parentUuid alone is not a session edge.
+No parent event ordinal is invented. Ambiguity is page-local; only self/direct
+two-way cycles are detected. Missing links do not prove absence or uniqueness.
+Provider/repository constrain relationship discovery. Role/date remain frozen
+target-reader filters and do not silently discard metadata relationships.
+
+Native Related navigation saves the complete origin and one Related page.
+Targets open exact row snapshots with the frozen filters. Back returns to the
+saved page, then origin text, list/query, range, selection and scroll. Refresh
+rereads the current watermark; fresh entry after Back explicitly reanchors.
+Automatic capture is suspended while navigating Related. Already-running
+capture completion cannot replace its anchor, page or target. Copy/export use
+the same displayed string, and a loading placeholder is not exportable evidence.

@@ -1,0 +1,17 @@
+{"benchmark":"juice-bend-backend","generator":1,"seed":1337,"raw_records":100000,"expected_normalized_events":125000,"session_count":1,"ui_timings":"not_measured","memory":"not_measured"}
+{"fixture_ready":true,"source_bytes":35601602}
+{"operation":"empty_library_open","duration_ms":8}
+{"operation":"first_import","duration_ms":33304}
+{"operation":"unchanged_refresh","duration_ms":4579}
+{"operation":"append_16_raw_records","duration_ms":27262}
+{"operation":"first_search_after_import","duration_ms":39}
+{"operation":"warm_scoped_search","trials_ms":[39,40,40,39,40],"median_ms":40,"p95_ms":40,"trials":5}
+{"operation":"first_page_beginning_100_raw_records","duration_ms":7}
+{"operation":"first_page_middle_100_raw_records","duration_ms":8}
+{"operation":"first_page_late_100_raw_records","duration_ms":7}
+{"operation":"warm_late_page_100_raw_records","trials_ms":[7,8,7,7,7],"median_ms":7,"p95_ms":8,"trials":5}
+{"operation":"first_repository_scoped_late_page_100_raw_records","duration_ms":17}
+{"operation":"warm_repository_scoped_late_page_100_raw_records","trials_ms":[16,16,17,16,16],"median_ms":16,"p95_ms":17,"trials":5}
+{"sqlite_logical_page_bytes":216109056,"accepted_snapshots":2,"raw_records_latest":100016,"normalized_events_latest":125020}
+{"operation":"existing_library_open_and_status","duration_ms":16}
+{"benchmark_complete":true}

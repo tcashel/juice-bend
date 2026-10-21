@@ -8,6 +8,7 @@ import ./query.bend as Query
 import ./domain.bend as Domain
 import ./provenance.bend as P
 import ./gui_files.bend as Files
+import ./gui_relations.bend as Related
 
 # The window owns no effectful database path. Every operation is a bounded call
 # to this same native executable. One reader and one writer can be outstanding;
@@ -35,8 +36,14 @@ type Listing is Data:
   Listing{kind: U32, filters: Query.Filters, offset: U32, has_more: Bool, loaded: Bool,
     anchor: String}
 
+type Navigation is Data:
+  NoNavigation{}
+  RelatedNavigation{origin: Selection,origin_view: UI.Bookmark,origin_search: String,
+    page: Maybe<&2,Related.Page>,page_view: Maybe<&2,UI.Bookmark>,
+    previous: List<&2,String>,phase: U32,target: Maybe<&2,Related.Reference>}
+
 type Form is Data:
-  Form{mode: U32, search: String, source: String, blame: String, files: Files.State}
+  Form{mode: U32, search: String, source: String, blame: String, files: Files.State, navigation: List<&2,Navigation>}
 
 type Jobs is Data:
   Jobs{revision: U32, wanted: Maybe<&2,Request>, reader: Maybe<&2,Pending>,
@@ -183,6 +190,253 @@ def invalidate(+state: State) -> State:
   State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
   State{db,dir,program,ui,selection,form,Jobs{U32.add(revision,1),None{},reader,writer,paused},refresh_at,serial}
 
+# Navigation is boxed in a zero/one list so its two exact UI bookmarks do not
+# inflate every generated State continuation. Only [] and [value] are written;
+# malformed multiple entries are inactive rather than selecting an arbitrary one.
+def navigation_value(values: List<&2,Navigation>) -> Navigation:
+  match values:
+    case value <> []: value
+    case _: NoNavigation{}
+
+def navigation_box(value: Navigation) -> List<&2,Navigation>:
+  match value:
+    case NoNavigation{}: []
+    case _: [value]
+
+def navigation(state: State) -> Navigation:
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,navigation},jobs,deadline,serial} = state
+  navigation_value(navigation)
+
+def set_navigation(state: State,navigation: Navigation) -> State:
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,old},jobs,deadline,serial} = state
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,navigation_box(navigation)},jobs,deadline,serial}
+
+def navigation_active(value: Navigation) -> Bool:
+  match value:
+    case NoNavigation{}: False{}
+    case _: True{}
+
+def related_active(state: State) -> Bool:
+  navigation_active(navigation(state))
+
+def navigation_phase(value: Navigation) -> U32:
+  match value:
+    case NoNavigation{}: 3
+    case RelatedNavigation{origin,view,search,page,page_view,previous,phase,target}: phase
+
+def related_filters(value: Navigation) -> Query.Filters:
+  match value:
+    case NoNavigation{}: empty_filters()
+    case RelatedNavigation{Selection{items,snap,start,kind,args,filters,listing},view,search,page,page_view,previous,phase,target}: filters
+
+def related_restore_value(+state: State,value: Navigation) -> State:
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,old},jobs,deadline,serial} = state
+  match value:
+    case NoNavigation{}: state
+    case RelatedNavigation{origin,view,search,page,page_view,previous,phase,target}:
+      invalidate(State{db,dir,program,UI.restore(ui,view),origin,Form{0,search,source,blame,files,[]},jobs,0n,serial})
+
+def related_restore(+state: State) -> State:
+  related_restore_value(state,navigation(state))
+
+def related_selection(origin: Selection) -> Selection:
+  Selection{items,snap,start,displayed,args,filters,listing} = origin
+  Selection{items,snap,start,25,[],filters,listing}
+
+def related_back_view(+state: State,value: Navigation,bookmark: Maybe<&2,UI.Bookmark>) -> State:
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,old},jobs,deadline,serial} = state
+  match value bookmark:
+    case RelatedNavigation{+origin,view,+search,page,saved,previous,phase,target} Some{+page_view}:
+      invalidate(State{db,dir,program,UI.restore(ui,page_view),related_selection(origin),
+        Form{0,search,source,blame,files,[RelatedNavigation{origin,view,search,page,Some{page_view},previous,0,None{}}]},jobs,0n,serial})
+    case _ _: related_restore(state)
+
+def related_back_value(+state: State,+value: Navigation) -> State:
+  match value:
+    case NoNavigation{}: status(state,"No Related navigation to return from.")
+    case RelatedNavigation{origin,view,search,page,+page_view,previous,0,target}: related_restore(state)
+    case RelatedNavigation{origin,view,search,page,+page_view,previous,phase,target}: related_back_view(state,value,page_view)
+
+def related_back(+state: State) -> State:
+  related_back_value(state,navigation(state))
+
+def related_enter_ready(+state: State,valid: Bool) -> State:
+  State{db,dir,program,+ui,Selection{items,+snap,start,kind,args,+filters,listing},Form{mode,+search,source,blame,files,old},jobs,deadline,serial} = state
+  match valid:
+    case False{}: status(state,"Related needs a captured History reader. Return to History and choose a transcript.")
+    case True{}:
+      +selection = {Selection{items,snap,start,kind,args,filters,listing} : Selection}
+      +view = UI.bookmark(ui)
+      next = UI.set_reader(UI.set_results(UI.set_rows(ui,[]),UI.RelatedResults{1,0,False{},False{}}),
+        "Related | pinning captured anchor", "Loading a bounded relationship page from retained evidence.\nBack returns the exact captured reader.\nNo latest capture or original log is opened.")
+      queue(State{db,dir,program,next,related_selection(selection),
+        Form{0,search,source,blame,files,[RelatedNavigation{selection,view,search,None{},None{},[],0,None{}}]},jobs,0n,serial},
+        Request{25,Related.open_args(snap,filters),snap,0,"Related captured sessions"})
+
+def related_enter_value(+state: State,value: Navigation) -> State:
+  State{db,dir,program,ui,Selection{items,+snap,start,+kind,args,filters,listing},Form{mode,search,source,blame,files,old},jobs,deadline,serial} = state
+  match value:
+    case NoNavigation{}:
+      related_enter_ready(state,U32.is_eq(mode,0) && Bool.not(String.is_empty(snap)) &&
+        (U32.is_eq(kind,3) || U32.is_eq(kind,4) || U32.is_eq(kind,14) || U32.is_eq(kind,24)))
+    case _: status(state,"Related is already anchored. Use Back before starting another relationship navigation.")
+
+def related_enter(+state: State) -> State:
+  related_enter_value(state,navigation(state))
+
+def related_next_args(+state: State,+page: Related.Page,cursor: String,step: U32,valid: Bool) -> State:
+  match valid:
+    case False{}: status(state,"No requested Related page is available. This does not establish absence of relatives.")
+    case True{}:
+      queue(state,Request{26,Related.page_args(page,cursor),Related.snapshot(Related.anchor(page)),step,"Related | pinned library watermark"})
+
+def related_previous(+state: State,page: Related.Page,previous: List<&2,String>) -> State:
+  match previous:
+    case []: status(state,"Already at the first Related page.")
+    case cursor <> rest: related_next_args(state,page,cursor,2,True{})
+
+def related_forward_ready(+state: State,+page: Related.Page,room: Bool) -> State:
+  match room:
+    case False{}: status(state,"Related cursor history reached its 4096-page bound. Back to origin to restart; this is not a completeness claim.")
+    case True{}: related_next_args(state,page,Related.next(page),1,Bool.not(String.is_empty(Related.next(page))))
+
+def related_page_step(+state: State,+page: Related.Page,+previous: List<&2,String>,forward: Bool) -> State:
+  match forward:
+    case True{}:
+      related_forward_ready(state,page,Nat.is_lt(List.length(&2,String,previous),4096n))
+    case False{}: related_previous(state,page,previous)
+
+def related_page_value(+state: State,forward: Bool,value: Navigation) -> State:
+  match value:
+    case RelatedNavigation{origin,view,search,Some{+page},saved,+previous,0,target}:
+      related_page_step(state,page,previous,forward)
+    case _: status(state,"Back to the Related page before paging candidate sources.")
+
+def related_paging(+state: State,forward: Bool) -> State:
+  related_page_value(state,forward,navigation(state))
+
+def related_reload_value(+state: State,value: Navigation) -> State:
+  match value:
+    case RelatedNavigation{origin,view,search,Some{+page},saved,previous,0,target}:
+      related_next_args(state,page,Related.after(page),0,True{})
+    case _: status(state,"Related keeps its pinned anchor and target. Back to its page to reread the same watermark.")
+
+def related_reload(+state: State) -> State:
+  related_reload_value(state,navigation(state))
+
+def related_saved_selected(saved: Maybe<&2,UI.Bookmark>,index: U32) -> Maybe<&2,UI.Bookmark>:
+  match saved:
+    case None{}: None{}
+    case Some{view}: Some{UI.bookmark_selected(view,index)}
+
+def related_open_row(+state: State,+index: U32,+value: Navigation,row: Maybe<&2,Related.Row>) -> State:
+  State{db,dir,program,+ui,selection,Form{mode,search,source,blame,files,old},jobs,deadline,serial} = state
+  match value row:
+    case RelatedNavigation{origin,view,+search,page,saved,previous,phase,target} Some{Related.Row{+reference,direction,basis,ambiguous}}:
+      +snap = Related.snapshot(reference)
+      +saved_view = Bool.pick(Maybe<&2,UI.Bookmark>,U32.is_eq(phase,0),Some{UI.bookmark_selected(UI.bookmark(ui),index)},related_saved_selected(saved,index))
+      queue(State{db,dir,program,ui,selection,Form{0,search,source,blame,files,
+        [RelatedNavigation{origin,view,search,page,saved_view,previous,1,Some{reference}}]},jobs,0n,serial},
+        Request{3,scoped_args("session-scope",snap,0,"40",related_filters(value)),snap,0,
+          "Related target | snapshot " ++ snap ++ " | record 0"})
+    case _ _: status(state,"Choose a candidate row. An empty page is not proof that no relatives exist.")
+
+def related_open_value(+state: State,+index: U32,+value: Navigation) -> State:
+  match value:
+    case RelatedNavigation{origin,view,search,Some{Related.Page{anchor,watermark,after,next,scanned,rows,text,filters}},saved,previous,phase,target}:
+      related_open_row(state,index,value,Related.select(rows,index))
+    case _: status(state,"Wait for the bounded Related page before choosing a target.")
+
+def related_open(+state: State,index: U32) -> State:
+  related_open_value(state,index,navigation(state))
+
+def related_scope_args(args: List<&2,String>) -> Query.Filters:
+  match args:
+    case "relations-scope" <> snap <> "15" <> provider <> repo <> role <> after <> []: Query.Filters{"",provider,repo,role,after}
+    case "relations-page" <> p <> source <> gen <> snap <> extent <> watermark <> cursor <> "15" <> provider <> repo <> role <> after <> []:
+      Query.Filters{"",provider,repo,role,after}
+    case _: empty_filters()
+
+def related_request_cursor(args: List<&2,String>) -> String:
+  match args:
+    case "relations-page" <> p <> source <> gen <> snap <> extent <> watermark <> cursor <> rest: cursor
+    case _: "0"
+
+def related_prior_cursor(previous: List<&2,String>) -> String:
+  match previous:
+    case []: ""
+    case cursor <> rest: cursor
+
+def related_matches_prior(+request: Request,+page: Related.Page,+value: Navigation) -> Bool:
+  Request{+kind,+args,+snap,+step,title} = request
+  Related.Page{+anchor,+watermark,+after,next,scanned,rows,text,filters} = page
+  match value:
+    case RelatedNavigation{origin,view,search,None{},saved,previous,0,target}:
+      U32.is_eq(kind,25) && U32.is_eq(step,0) && String.eq(Related.snapshot(anchor),snap) && String.eq(after,"0") &&
+        String.eq(String.join(args,"\0"),String.join(Related.open_args(snap,related_filters(value)),"\0"))
+    case RelatedNavigation{origin,view,search,Some{+prior},saved,+previous,0,target}:
+      U32.is_eq(kind,26) && Related.same(anchor,Related.anchor(prior)) && String.eq(watermark,Related.watermark(prior)) &&
+        String.eq(snap,Related.snapshot(anchor)) &&
+        String.eq(after,Bool.pick(String,U32.is_eq(step,1),Related.next(prior),Bool.pick(String,U32.is_eq(step,2),related_prior_cursor(previous),Related.after(prior)))) &&
+        String.eq(String.join(args,"\0"),String.join(Related.page_args(prior,after),"\0"))
+    case _: False{}
+
+def related_trail(step: U32,prior: String,previous: List<&2,String>) -> List<&2,String>:
+  match step previous:
+    case 1 rest: prior <> rest
+    case 2 head <> rest: rest
+    case _ rest: rest
+
+def related_old_after(page: Maybe<&2,Related.Page>) -> String:
+  match page:
+    case None{}: "0"
+    case Some{Related.Page{anchor,watermark,after,next,scanned,rows,text,filters}}: after
+
+def related_apply(+state: State,+request: Request,+page: Related.Page,value: Navigation) -> State:
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,old},jobs,deadline,serial} = state
+  Request{kind,args,snap,step,title} = request
+  Related.Page{anchor,watermark,after,+next,+scanned,+rows,text,filters} = page
+  match value:
+    case NoNavigation{}: state
+    case RelatedNavigation{+origin,view,+search,+prior,saved,previous,phase,target}:
+      +trail = related_trail(step,related_old_after(prior),previous)
+      +number = U32.inc(U32.from_nat(List.length(&2,String,trail)))
+      +shown = UI.set_status(UI.set_reader(UI.set_results(UI.set_rows(ui,Related.titles(rows)),
+        UI.RelatedResults{number,U32.from_nat(List.length(&2,Related.Row,rows)),Bool.not(String.is_empty(next)),Bool.not(List.is_empty(&2,String,trail))}),
+        "Related | snap " ++ Related.snapshot(anchor) ++ " | page " ++ U32.show(number),text),
+        "Inspected " ++ U32.show(scanned) ++ " sources. Links/ambiguity are page-local; absent links do not prove no relatives. Back restores origin.")
+      State{db,dir,program,shown,related_selection(origin),Form{0,search,source,blame,files,
+        [RelatedNavigation{origin,view,search,Some{page},Some{UI.bookmark(shown)},trail,0,None{}}]},jobs,0n,serial}
+
+def related_validated(+state: State,request: Request,page: Related.Page,valid: Bool) -> State:
+  match valid:
+    case True{}: related_apply(state,request,page,navigation(state))
+    case False{}: status(state,"Related response did not match its pinned request. Displayed evidence is unchanged.")
+
+def related_decoded(+state: State,+request: Request,result: Result<&2,&2,String,Related.Page>) -> State:
+  match result:
+    case Fail{message}: status(state,message)
+    case Done{+page}:
+      related_validated(state,request,page,related_matches_prior(request,page,navigation(state)))
+
+def related_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
+  Request{kind,args,snap,start,title} = request
+  match result:
+    case Fail{message}: status(state,message)
+    case Done{value}: related_decoded(state,request,Related.decode(value,related_scope_args(args)))
+
+def related_tool_identity(value: Navigation,response: Json.Json) -> Bool:
+  match value:
+    case NoNavigation{}: True{}
+    case RelatedNavigation{origin,view,search,page,saved,previous,2,Some{target}}:
+      Related.same(target,Related.reference(response))
+    case _: False{}
+
+def related_export_available(value: Navigation) -> Bool:
+  match value:
+    case RelatedNavigation{origin,view,search,Some{page},saved,previous,phase,target}: True{}
+    case _: False{}
+
 def list_args(kind: U32,filters: Query.Filters,offset: U32) -> List<&2,String>:
   match kind:
     case 1:
@@ -269,15 +523,15 @@ def reload_listing(+state: State) -> State:
 
 # Files owns a separate pinned Git identity and never mutates Selection.
 def files_model(state: State) -> Files.State:
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files},jobs,deadline,serial} = state
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,+navigation},jobs,deadline,serial} = state
   files
 
 def files_replace(state: State,files: Files.State) -> State:
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame,old},jobs,deadline,serial} = state
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files},jobs,deadline,serial}
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,old,+navigation},jobs,deadline,serial} = state
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,navigation},jobs,deadline,serial}
 
 def files_active(state: State) -> Bool:
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files},jobs,deadline,serial} = state
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,+navigation},jobs,deadline,serial} = state
   U32.is_eq(mode,3)
 
 def files_saved_valid(+kind: U32) -> Bool:
@@ -310,24 +564,24 @@ def files_return_ready(+state: State,+snap: String,start: U32,filters: Query.Fil
       files_return_missing(state,snap,start,filters,String.is_empty(snap))
 
 def files_leave(+state: State) -> State:
-  State{db,dir,program,ui,Selection{+items,+snap,+start,+displayed,+args,+filters,Listing{+kind,+full,+offset,+more,+loaded,+anchor}},Form{mode,+search,source,blame,+files},jobs,deadline,serial} = state
+  State{db,dir,program,ui,Selection{+items,+snap,+start,+displayed,+args,+filters,Listing{+kind,+full,+offset,+more,+loaded,+anchor}},Form{mode,+search,source,blame,+files,+navigation},jobs,deadline,serial} = state
   match mode:
     case 3:
       Files.State{input,identity,directory,file_source,saved} = files
       Files.Saved{title,text,scroll} = saved
       restored = UI.set_position(UI.set_reader(UI.set_query(UI.set_files(ui,False{}),search),title,text),0,scroll)
       rows = UI.set_results(UI.set_rows(restored,item_titles(items)),UI.Results{offset,U32.from_nat(List.length(&2,Item,items)),more,loaded})
-      files_return_ready(invalidate(State{db,dir,program,rows,Selection{items,snap,start,Bool.pick(U32,files_saved_valid(displayed),displayed,0),args,filters,Listing{kind,full,offset,more,loaded,anchor}},Form{0,search,source,blame,files},jobs,deadline,serial}),
+      files_return_ready(invalidate(State{db,dir,program,rows,Selection{items,snap,start,Bool.pick(U32,files_saved_valid(displayed),displayed,0),args,filters,Listing{kind,full,offset,more,loaded,anchor}},Form{0,search,source,blame,files,navigation},jobs,deadline,serial}),
         snap,start,filters,files_saved_valid(displayed))
     case _:
       state
 
 def files_enter(+state: State) -> State:
-  State{db,dir,program,+ui,selection,Form{mode,search,source,blame,+files},jobs,deadline,serial} = state
+  State{db,dir,program,+ui,selection,Form{mode,search,source,blame,+files,+navigation},jobs,deadline,serial} = state
   +next = Files.begin(files,files_saved_for(state))
   view = UI.set_reader(UI.set_results(UI.set_rows(UI.set_query(UI.set_files(ui,True{}),Files.input(next)),[]),UI.Results{0,0,False{},False{}}),
     "Files | explicit local repository", "Paste a local checkout path above.\nClick Open repo or press Return to pin HEAD.\n\nDirectory rows open committed folders/files.\nUp folder returns to the parent directory.\nPrev/Next list page directory entries.\nPrev/Next text page committed source lines.\nBlame and Why use the displayed source range.\n\nThe full pinned commit is shown in each result.\nWorking-tree edits are excluded. Symlinks and submodules are listed but never followed.\n\nCopy and Export use exactly displayed text.\nClick History at left to restore the prior captured transcript.\nNo home-folder scan or logged command is run.")
-  status(invalidate(State{db,dir,program,view,selection,Form{3,search,source,blame,next},jobs,0n,serial}),
+  status(invalidate(State{db,dir,program,view,selection,Form{3,search,source,blame,next,navigation},jobs,0n,serial}),
     "Enter an explicit checkout path, then Open repo. History selection is retained.")
 
 def files_toggle(+state: State,active: Bool) -> State:
@@ -453,7 +707,7 @@ def files_rows(kind: U32,+ui: UI.State,+files: Files.State) -> UI.State:
       ui
 
 def files_apply(+state: State,+request: Request,+value: Json.Json,valid: Bool) -> State:
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files},jobs,deadline,serial} = state
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,+navigation},jobs,deadline,serial} = state
   Request{+kind,args,snap,start,title} = request
   match valid:
     case False{}:
@@ -462,7 +716,7 @@ def files_apply(+state: State,+request: Request,+value: Json.Json,valid: Bool) -
       +next = Files.apply(kind,files,value)
       view = UI.set_reader(files_rows(kind,ui,next),Files.title(next),Json.get(value,"text"))
       State{db,dir,program,UI.set_status(view,"Committed view loaded. Copy/export preserve this exact displayed text; History restores the captured reader."),
-        selection,Form{mode,search,source,blame,next},jobs,deadline,serial}
+        selection,Form{mode,search,source,blame,next,navigation},jobs,deadline,serial}
 
 def files_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
   Request{kind,args,snapshot,start,title} = request
@@ -474,7 +728,7 @@ def files_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.
 
 def list_paging_capture(+state: State,forward: Bool) -> State:
   State{db,dir,program,ui,Selection{items,snap,start,displayed,args,filters,+listing},
-    Form{mode,search,source,blame,+files},jobs,refresh_at,serial} = state
+    Form{mode,search,source,blame,+files,+navigation},jobs,refresh_at,serial} = state
   list_page_ready(state,listing,forward,U32.is_eq(mode,0) && listing_loaded(listing))
 
 def list_paging_mode(+state: State,forward: Bool,active: Bool) -> State:
@@ -489,16 +743,16 @@ def list_paging(+state: State,forward: Bool) -> State:
 
 
 def form_text(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation},+jobs,+refresh_at,+serial} = state
   match mode:
     case 1:
-      State{db,dir,program,ui,selection,Form{1,search,UI.query(ui),blame,files},jobs,refresh_at,serial}
+      State{db,dir,program,ui,selection,Form{1,search,UI.query(ui),blame,files,navigation},jobs,refresh_at,serial}
     case 2:
-      invalidate(State{db,dir,program,ui,selection,Form{2,search,source,UI.query(ui),files},jobs,refresh_at,serial})
+      invalidate(State{db,dir,program,ui,selection,Form{2,search,source,UI.query(ui),files,navigation},jobs,refresh_at,serial})
     case 3:
-      invalidate(State{db,dir,program,ui,selection,Form{3,search,source,blame,Files.edit(files,UI.query(ui))},jobs,refresh_at,serial})
+      invalidate(State{db,dir,program,ui,selection,Form{3,search,source,blame,Files.edit(files,UI.query(ui)),navigation},jobs,refresh_at,serial})
     case _:
-      reload(State{db,dir,program,ui,selection,Form{0,UI.query(ui),source,blame,files},jobs,refresh_at,serial})
+      reload(State{db,dir,program,ui,selection,Form{0,UI.query(ui),source,blame,files,navigation},jobs,refresh_at,serial})
 
 def open_item(+state: State,item: Maybe<&2,Item>) -> State:
   match item:
@@ -529,8 +783,8 @@ def why_nonempty(+state: State,+snap: String,+start: U32,+filters: Query.Filters
         "Why | pinned snapshot " ++ snap})
 
 def selected_file_form(+state: State,+text: String) -> State:
-  State{db,dir,program,ui,selection,Form{mode,search,source,old,+files},jobs,refresh_at,serial} = state
-  State{db,dir,program,UI.set_query(ui,text),selection,Form{2,search,source,text,files},jobs,refresh_at,serial}
+  State{db,dir,program,ui,selection,Form{mode,search,source,old,+files,+navigation},jobs,refresh_at,serial} = state
+  State{db,dir,program,UI.set_query(ui,text),selection,Form{2,search,source,text,files,navigation},jobs,refresh_at,serial}
 
 def why_file(+state: State,args: List<&2,String>) -> State:
   match args:
@@ -629,7 +883,7 @@ def tools_ready(state: State,snap: String,start: U32,filters: Query.Filters,vali
       status(state,"Tools needs a captured History reader. Return to History and choose a transcript first.")
 
 def tools(+state: State) -> State:
-  State{db,dir,program,ui,Selection{items,+snap,start,displayed,args,filters,listing},Form{mode,search,source,blame,files},jobs,deadline,serial} = state
+  State{db,dir,program,ui,Selection{items,+snap,start,displayed,args,filters,listing},Form{mode,search,source,blame,files,+navigation},jobs,deadline,serial} = state
   tools_ready(state,snap,start,filters,U32.is_eq(mode,0) && files_saved_valid(displayed) && Bool.not(String.is_empty(snap)))
 
 def tools_page_ready(state: State,snap: String,start: U32,filters: Query.Filters,valid: Bool) -> State:
@@ -684,16 +938,16 @@ def paging(+state: State,forward: Bool) -> State:
 
 
 def browse_capture(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files},+jobs,+refresh_at,+serial} = state
-  reload(State{db,dir,program,UI.set_query(ui,search),selection,Form{0,search,source,blame,files},jobs,refresh_at,serial})
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation},+jobs,+refresh_at,+serial} = state
+  reload(State{db,dir,program,UI.set_query(ui,search),selection,Form{0,search,source,blame,files,navigation},jobs,refresh_at,serial})
 
 def browse(state: State) -> State:
   browse_capture(files_leave(state))
 
 
 def capture_browse_capture(+state: State) -> State:
-  State{db,dir,program,ui,selection,Form{mode,+search,source,blame,+files},jobs,refresh_at,serial} = state
-  State{db,dir,program,UI.set_query(ui,search),selection,Form{0,search,source,blame,files},jobs,refresh_at,serial}
+  State{db,dir,program,ui,selection,Form{mode,+search,source,blame,+files,+navigation},jobs,refresh_at,serial} = state
+  State{db,dir,program,UI.set_query(ui,search),selection,Form{0,search,source,blame,files,navigation},jobs,refresh_at,serial}
 
 def capture_browse(state: State) -> State:
   capture_browse_capture(files_leave(state))
@@ -756,22 +1010,22 @@ def source_rows(+state: State,result: Result<&2,&2,String,List<&2,List<&2,Sql.Ce
         "Explicit source configuration loaded. Disabled roots keep captured evidence."),selection,form,jobs,refresh_at,serial}
 
 def settings_capture(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation},+jobs,+refresh_at,+serial} = state
   match mode:
     case 1:
-      browse(State{db,dir,program,ui,selection,Form{mode,search,source,blame,files},jobs,refresh_at,serial})
+      browse(State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,navigation},jobs,refresh_at,serial})
     case _:
       queue(clear_rows(State{db,dir,program,UI.set_reader(UI.set_query(ui,source),"Settings | explicit sources",settings_text(dir,selection_snapshot(selection))),
-        no_display(selection),Form{1,search,source,blame,files},jobs,refresh_at,serial}),Request{6,["sources"],"",0,"Registered sources"})
+        no_display(selection),Form{1,search,source,blame,files,navigation},jobs,refresh_at,serial}),Request{6,["sources"],"",0,"Registered sources"})
 
 def settings(state: State) -> State:
   settings_capture(files_leave(state))
 
 
 def storage_capture(+state: State) -> State:
-  State{db,dir,program,ui,selection,Form{mode,search,+source,blame,+files},jobs,deadline,serial} = state
+  State{db,dir,program,ui,selection,Form{mode,search,+source,blame,+files,+navigation},jobs,deadline,serial} = state
   queue(clear_rows(State{db,dir,program,UI.set_query(ui,source),no_display(selection),
-    Form{1,search,source,blame,files},jobs,deadline,serial}),Request{19,["storage"],"",0,"Storage inventory"})
+    Form{1,search,source,blame,files,navigation},jobs,deadline,serial}),Request{19,["storage"],"",0,"Storage inventory"})
 
 def storage(state: State) -> State:
   storage_capture(files_leave(state))
@@ -788,20 +1042,20 @@ def storage_done(+state: State,result: Result<&2,&2,String,String>) -> State:
         no_display(selection),form,jobs,deadline,serial}
 
 def filter_help_capture(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation},+jobs,+refresh_at,+serial} = state
   invalidate(State{db,dir,program,UI.set_reader(UI.set_query(ui,search),"Search filters | literal terms",
     "Type words or a quoted phrase above.\n\nOptional filters:\nprovider:claude\nprovider:codex\nrepo:\"/absolute/path with spaces\"\nrole:user\nrole:assistant\nrole:tool\nafter:2026-10-01\n\nExample:\ncache role:assistant after:2026-10-01\n\nProvider tokens override the sidebar scope.\nDates are inclusive calendar dates.\nEmpty words with filters browse matching records.\nPunctuation is literal; FTS syntax is not executed.\n\nTyping applies filters. Click a result to read its exact accepted snapshot."),
-    no_display(selection),Form{0,search,source,blame,files},jobs,refresh_at,serial})
+    no_display(selection),Form{0,search,source,blame,files,navigation},jobs,refresh_at,serial})
 
 def filter_help(state: State) -> State:
   filter_help_capture(files_leave(state))
 
 
 def blame_help_capture(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation},+jobs,+refresh_at,+serial} = state
   invalidate(State{db,dir,program,UI.set_reader(UI.set_query(ui,blame),"Blame | local repository evidence",
     "Enter literal fields separated by |:\n\n/absolute/repository|relative/file|first|count\n\nOr exact commit Why:\n/absolute/repository|commit:full40hex\n\nExample:\n/tmp/demo-repo|src/cache.txt|1|20\n\nClick Blame again or press Return to run.\nThe final field is a count, from 1 to 100.\nSpaces are allowed in paths. | is reserved.\n\nGit is read-only. No logged command is run.\nMissing or ambiguous evidence remains explicit.\nContent overlap does not prove authorship.\nFile evidence searches captured sources for this repository independently of transcript filters.\n\nClick Filter to return to search."),
-    no_display(selection),Form{2,search,source,blame,files},jobs,refresh_at,serial})
+    no_display(selection),Form{2,search,source,blame,files,navigation},jobs,refresh_at,serial})
 
 def blame_help(state: State) -> State:
   blame_help_capture(files_leave(state))
@@ -852,7 +1106,7 @@ def blame_result(+state: State,result: Result<&2,&2,String,List<&2,String>>) -> 
       blame_request(state,args)
 
 def blame_capture(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+form,+files},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+form,+files,+navigation},+jobs,+refresh_at,+serial} = state
   match mode:
     case 2:
       blame_result(state,blame_fields(String.split(UI.query(ui),'|')))
@@ -871,7 +1125,7 @@ def blame(+state: State) -> State:
 
 
 def scope_changed(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation},+jobs,+refresh_at,+serial} = state
   match mode:
     case 0:
       reload(state)
@@ -898,6 +1152,10 @@ def read_job(+program: String,+dir: String,args: List<&2,String>) -> IO(Reply):
       read_scoped(program,dir,"why-scope" <> rest)
     case "activity-scope" <> rest:
       read_scoped(program,dir,"activity-scope" <> rest)
+    case "relations-scope" <> rest:
+      read_scoped(program,dir,"relations-scope" <> rest)
+    case "relations-page" <> rest:
+      read_scoped(program,dir,"relations-page" <> rest)
     case other:
       do IO<Reply>:
         result : Result<&2,&2,String,Json.Json> <- Client.call(program,dir,linear_args(other))
@@ -986,8 +1244,8 @@ def refresh_listing(state: State,mode: U32) -> State:
     case _:
       state
 
-def refresh(+state: State) -> IO(State):
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files},+jobs,+refresh_at,+serial} = state
+def refresh_normal(+state: State) -> IO(State):
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation},+jobs,+refresh_at,+serial} = state
   match mode:
     case 1:
       import_checked(state,scope(ui),String.trim(UI.query(ui)),writer_of(state))
@@ -995,6 +1253,14 @@ def refresh(+state: State) -> IO(State):
       IO.pure(State,files_tree_guard(state,False{},Files.pinned(Files.identity(files))))
     case _:
       start_write(refresh_listing(state,mode),Request{8,["refresh-all"],"",0,"Refresh registered sources"},writer_of(state))
+
+def refresh_mode(state: State,related: Bool) -> IO(State):
+  match related:
+    case True{}: IO.pure(State,related_reload(state))
+    case False{}: refresh_normal(state)
+
+def refresh(+state: State) -> IO(State):
+  refresh_mode(state,related_active(state))
 
 def rebuild_allowed(+state: State,+snap: String,allowed: Bool) -> IO(State):
   match allowed:
@@ -1004,7 +1270,7 @@ def rebuild_allowed(+state: State,+snap: String,allowed: Bool) -> IO(State):
       IO.pure(State,status(state,"Select a captured transcript, then open Settings to rebuild that snapshot's derived search rows."))
 
 def rebuild(+state: State) -> IO(State):
-  State{db,dir,program,ui,Selection{items,+snap,start,displayed,args,filters,+listing},Form{mode,search,source,blame,+files},jobs,refresh_at,serial} = state
+  State{db,dir,program,ui,Selection{items,+snap,start,displayed,args,filters,+listing},Form{mode,search,source,blame,+files,+navigation},jobs,refresh_at,serial} = state
   rebuild_allowed(state,snap,U32.is_eq(mode,1) && Bool.not(String.is_empty(snap)))
 
 def copy_done(+state: State,result: Result<&1,&1,U32 & String,U32 & (String & String)>) -> State:
@@ -1062,7 +1328,7 @@ def export_begin(+state: State,+valid: Bool) -> IO(State):
         export_at(state,now)
 
 def export_capture(+state: State) -> IO(State):
-  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters,+listing},Form{+mode,+search,+source,+form,+files},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters,+listing},Form{+mode,+search,+source,+form,+files,+navigation},+jobs,+refresh_at,+serial} = state
   export_begin(state,Bool.not(U32.is_eq(mode,1)) && ((displayed >= 3 && displayed <= 4 : U32) || file_kind(displayed) || U32.is_eq(displayed,14) || U32.is_eq(displayed,24)))
 
 def files_export_args(ui: UI.State,path: String) -> List<&2,String>:
@@ -1096,6 +1362,21 @@ def export_mode(+state: State,active: Bool) -> IO(State):
 
 def export(+state: State) -> IO(State):
   export_mode(state,files_active(state))
+
+def related_export_at(+state: State,now: Nat) -> IO(State):
+  State{db,+dir,program,+ui,selection,form,jobs,deadline,+serial} = state
+  +path = dir ++ "/evidence-related-" ++ Nat.show(now) ++ "-" ++ U32.show(serial) ++ ".md"
+  start_write(State{db,dir,program,ui,selection,form,jobs,deadline,U32.inc(serial)},
+    Request{9,files_export_args(ui,path),"",0,path},writer_of(state))
+
+def related_export_ready(state: State,ready: Bool) -> IO(Maybe<State>):
+  match ready:
+    case False{}: IO.pure(Maybe<State>,Some{status(state,"Wait for a verified Related page before exporting evidence.")})
+    case True{}:
+      do IO<Maybe<State>>:
+        now : Nat <- IO.now()
+        next : State <- related_export_at(state,now)
+        return Some{next}
 
 
 def clear_reader(+state: State) -> State:
@@ -1175,16 +1456,37 @@ def latest_done(+state: State,+request: Request,result: Result<&2,&2,String,Json
         Bool.not(Cmp.is_gt(P.decimal_compare(Json.get(value,"snapshot"),"9223372036854775807"))))
 
 def text_done(+state: State,+request: Request,result: Result<&2,&2,String,String>) -> State:
-  State{+db,+dir,+program,+ui,Selection{+items,+old,+oldstart,+displayed,+blame,+filters,+listing},Form{+mode,+search,+source,+form,+files},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+old,+oldstart,+displayed,+blame,+filters,+listing},Form{+mode,+search,+source,+form,+files,+navigation},+jobs,+refresh_at,+serial} = state
   Request{+kind,+args,+snap,+start,+title} = request
   match result:
     case Fail{message}:
-      status(State{db,dir,program,ui,Selection{items,old,oldstart,displayed,blame,filters,listing},Form{mode,search,source,form,files},jobs,refresh_at,serial},message)
+      status(State{db,dir,program,ui,Selection{items,old,oldstart,displayed,blame,filters,listing},Form{mode,search,source,form,files,navigation},jobs,refresh_at,serial},message)
     case Done{text}:
       State{db,dir,program,UI.set_status(UI.set_reader(Bool.pick(UI.State,file_kind(kind) || U32.is_eq(mode,0),ui,UI.set_query(ui,search)),title,text),"Captured evidence loaded. Scroll or drag to select; Cmd+C copies."),
         Selection{items,Bool.pick(String,file_kind(kind),old,snap),start,kind,
           Bool.pick(List<&2,String>,file_kind(kind),args,blame),
-          Bool.pick(Query.Filters,file_kind(kind) || U32.is_eq(kind,14),filters,request_filters(args)),listing},Form{Bool.pick(U32,file_kind(kind),2,0),search,source,form,files},jobs,refresh_at,serial}
+          Bool.pick(Query.Filters,file_kind(kind) || U32.is_eq(kind,14),filters,request_filters(args)),listing},Form{Bool.pick(U32,file_kind(kind),2,0),search,source,form,files,navigation},jobs,refresh_at,serial}
+
+def related_target_result(+state: State,+request: Request,value: Navigation,valid: Bool,+result: Result<&2,&2,String,String>) -> State:
+  match value valid result:
+    case NoNavigation{} _ _: text_done(state,request,result)
+    case RelatedNavigation{origin,view,search,page,saved,previous,phase,target} True{} Done{text}:
+      text_done(set_navigation(state,RelatedNavigation{origin,view,search,page,saved,previous,2,target}),request,Done{text})
+    case _ True{} Fail{message}: status(state,message)
+    case _ False{} _: status(state,"Captured target reply did not match the Related selection; displayed evidence is unchanged.")
+
+def related_target_valid(+request: Request,+value: Navigation) -> Bool:
+  Request{kind,+args,+snap,start,title} = request
+  match value:
+    case NoNavigation{}: True{}
+    case RelatedNavigation{origin,view,search,page,saved,previous,+phase,Some{target}}:
+      (U32.is_eq(phase,1) || U32.is_eq(phase,2)) && String.eq(snap,Related.snapshot(target)) &&
+        (U32.is_eq(phase,2) || U32.is_eq(start,0)) &&
+        String.eq(String.join(args,"\0"),String.join(scoped_args("session-scope",snap,start,"40",related_filters(value)),"\0"))
+    case _: False{}
+
+def related_target_done(+state: State,+request: Request,result: Result<&2,&2,String,String>) -> State:
+  related_target_result(state,request,navigation(state),related_target_valid(request,navigation(state)),result)
 
 # The activity worker returns immutable identity and physical-record cursors,
 # not search-hit counts. Keep this metadata in Selection's tagged view_args;
@@ -1270,7 +1572,7 @@ def tools_request_valid(request: Request) -> Bool:
   U32.is_eq(kind,24) && tools_request_args(args,snapshot,start)
 
 def tools_valid(state: State,+request: Request,+value: Json.Json) -> Bool:
-  State{db,dir,program,ui,Selection{items,snap,start,displayed,view_args,filters,listing},Form{mode,search,source,blame,files},jobs,deadline,serial} = state
+  State{db,dir,program,ui,Selection{items,snap,start,displayed,view_args,filters,listing},Form{mode,search,source,blame,files,+navigation},jobs,deadline,serial} = state
   Request{kind,+args,+snapshot,first,title} = request
   U32.is_eq(mode,0) && tools_request_valid(request) && tools_text_matches(value,"kind","recorded_activity") &&
     tools_text_matches(value,"snapshot",snapshot) && tools_id(value,"snapshot") && tools_locator(value) && tools_id(value,"generation") &&
@@ -1278,7 +1580,7 @@ def tools_valid(state: State,+request: Request,+value: Json.Json) -> Bool:
     (String.eq(Json.get(value,"provider"),"claude") || String.eq(Json.get(value,"provider"),"codex")) &&
     Files.text_valid(Json.field(value,"extent")) && Files.number_valid(Json.JNumber{Json.get(value,"extent")}) &&
     Files.text_valid(Json.field(value,"text")) && tools_scope(Json.field(value,"scope"),request_filters(args)) &&
-    tools_range(value,first,request_filters(args)) && tools_same_identity(value,snapshot,view_args)
+    tools_range(value,first,request_filters(args)) && tools_same_identity(value,snapshot,view_args) && related_tool_identity(navigation_value(navigation),value)
 
 def tools_metadata(+value: Json.Json) -> List<&2,String>:
   ["activity",Json.get(value,"snapshot"),Json.get(value,"source"),Json.get(value,"generation"),Json.get(value,"extent"),
@@ -1316,6 +1618,8 @@ def read_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.J
       listing_done(state,request,result)
     case 2:
       listing_done(state,request,result)
+    case 3:
+      related_target_done(state,request,Client.text_result(result))
     case 17:
       listing_done(state,request,result)
     case 18:
@@ -1334,6 +1638,10 @@ def read_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.J
       files_done(state,request,result)
     case 24:
       tools_done(state,request,result)
+    case 25:
+      related_done(state,request,result)
+    case 26:
+      related_done(state,request,result)
     case _:
       text_done(state,request,Client.text_result(result))
 
@@ -1380,9 +1688,17 @@ def refresh_idle(+state: State,wanted: Maybe<&2,Request>,reader: Maybe<&2,Pendin
     case _ _:
       status(state,"Capture finished. Your current view stays pinned.")
 
-def refresh_finished(+state: State) -> State:
+def refresh_finished_normal(+state: State) -> State:
   State{db,dir,program,ui,selection,form,Jobs{revision,wanted,reader,writer,paused},refresh_at,serial} = state
   refresh_idle(state,wanted,reader)
+
+def refresh_finished_mode(state: State,related: Bool) -> State:
+  match related:
+    case True{}: status(state,"Capture finished. Related keeps its exact anchor, watermark, page and target.")
+    case False{}: refresh_finished_normal(state)
+
+def refresh_finished(+state: State) -> State:
+  refresh_finished_mode(state,related_active(state))
 
 def refresh_error_kind(failed: String,discovery: Json.Json,partial: Bool,bad_discovery: Bool) -> String:
   match partial bad_discovery:
@@ -1448,10 +1764,10 @@ def write_value(+state: State,+kind: U32,+title: String,+mode: U32,result: Resul
       write_success(state,kind,title,mode,value)
 
 def write_done(+state: State,+request: Request,+reply: Reply) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation},+jobs,+refresh_at,+serial} = state
   Request{+kind,+args,+snap,+start,+title} = request
   Reply{+value} = reply
-  write_value(State{db,dir,program,ui,selection,Form{mode,search,source,blame,files},jobs,refresh_at,serial},kind,title,mode,value)
+  write_value(State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,navigation},jobs,refresh_at,serial},kind,title,mode,value)
 
 def poll_write_ready(+state: State,+request: Request,chan: Chan(Reply),result: Maybe<&1,Reply>) -> IO(State):
   match result:
@@ -1532,9 +1848,17 @@ def auto_mode(+state: State,mode: U32,now: Nat) -> IO(State):
     case _:
       IO.pure(State,refresh_deadline(state,0n))
 
-def auto_refresh(+state: State,+now: Nat) -> IO(State):
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame,+files},jobs,refresh_at,serial} = state
+def auto_refresh_normal(+state: State,+now: Nat) -> IO(State):
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,+files,+navigation},jobs,refresh_at,serial} = state
   auto_mode(state,mode,now)
+
+def auto_refresh_mode(state: State,now: Nat,related: Bool) -> IO(State):
+  match related:
+    case True{}: IO.pure(State,refresh_deadline(state,0n))
+    case False{}: auto_refresh_normal(state,now)
+
+def auto_refresh(+state: State,now: Nat) -> IO(State):
+  auto_refresh_mode(state,now,related_active(state))
 
 def service_start(+state: State) -> IO(State):
   State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
@@ -1577,7 +1901,7 @@ def open_selected(+state: State,index: U32,active: Bool) -> State:
 
 
 def enter(+state: State,+index: U32) -> IO(State):
-  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+args,+filters,+listing},Form{+mode,+search,+source,+blameform,+files},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+args,+filters,+listing},Form{+mode,+search,+source,+blameform,+files,+navigation},+jobs,+refresh_at,+serial} = state
   match mode:
     case 1:
       refresh(state)
@@ -1588,7 +1912,7 @@ def enter(+state: State,+index: U32) -> IO(State):
     case _:
       IO.pure(State,open_item(state,select_item(items,U32.to_nat(index))))
 
-def handle(+state: State,action: UI.Action) -> IO(Maybe<State>):
+def handle_normal(+state: State,action: UI.Action) -> IO(Maybe<State>):
   State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+args,+filters,+listing},+form,+jobs,+refresh_at,+serial} = state
   match action:
     case UI.Quit{}:
@@ -1645,6 +1969,10 @@ def handle(+state: State,action: UI.Action) -> IO(Maybe<State>):
       IO.pure(Maybe<State>,Some{usage(state)})
     case UI.Tools{}:
       IO.pure(Maybe<State>,Some{tools(state)})
+    case UI.Related{}:
+      IO.pure(Maybe<State>,Some{related_enter(state)})
+    case UI.Back{}:
+      IO.pure(Maybe<State>,Some{related_back(state)})
     case UI.Rebuild{}:
       do IO<Maybe<State>>:
         next : State <- rebuild(state)
@@ -1659,6 +1987,64 @@ def handle(+state: State,action: UI.Action) -> IO(Maybe<State>):
         return Some{next}
     case _:
       IO.pure(Maybe<State>,Some{state})
+
+def related_reader_action(state: State,action: UI.Action,ready: Bool) -> IO(Maybe<State>):
+  match ready:
+    case True{}: handle_normal(state,action)
+    case False{}: IO.pure(Maybe<State>,Some{status(state,"Choose a Related target first. Back restores the prior reader.")})
+
+def related_query_restore(state: State,query: String) -> State:
+  State{db,dir,program,ui,selection,form,jobs,deadline,serial} = state
+  State{db,dir,program,UI.set_query(ui,query),selection,form,jobs,deadline,serial}
+
+def related_search_exit(+state: State) -> State:
+  State{db,dir,program,ui,selection,form,jobs,deadline,serial} = state
+  related_query_restore(related_restore(state),UI.query(ui))
+
+def related_scope_restore(state: State,provider: String) -> State:
+  State{db,dir,program,ui,selection,form,jobs,deadline,serial} = state
+  State{db,dir,program,UI.set_scope(ui,provider),selection,form,jobs,deadline,serial}
+
+def related_scope_exit(state: State,provider: String) -> State:
+  related_scope_restore(related_restore(state),provider)
+
+def handle_related(+state: State,action: UI.Action,+phase: U32) -> IO(Maybe<State>):
+  State{db,dir,program,+ui,selection,form,jobs,deadline,serial} = state
+  match action:
+    case UI.Back{}: IO.pure(Maybe<State>,Some{related_back(state)})
+    case UI.Related{}: IO.pure(Maybe<State>,Some{related_enter(state)})
+    case UI.Open{index}: IO.pure(Maybe<State>,Some{related_open(state,index)})
+    case UI.Submit{}: IO.pure(Maybe<State>,Some{related_open(state,UI.selected(ui))})
+    case UI.ListPrevious{}: IO.pure(Maybe<State>,Some{related_paging(state,False{})})
+    case UI.ListNext{}: IO.pure(Maybe<State>,Some{related_paging(state,True{})})
+    case UI.Refresh{}: IO.pure(Maybe<State>,Some{related_reload(state)})
+    case UI.Previous{}: related_reader_action(state,UI.Previous{},U32.is_eq(phase,2))
+    case UI.Next{}: related_reader_action(state,UI.Next{},U32.is_eq(phase,2))
+    case UI.Why{}: related_reader_action(state,UI.Why{},U32.is_eq(phase,2))
+    case UI.Tools{}: related_reader_action(state,UI.Tools{},U32.is_eq(phase,2))
+    case UI.Usage{}: related_reader_action(state,UI.Usage{},U32.is_eq(phase,2))
+    case UI.Export{}:
+      related_export_ready(state,related_export_available(navigation(state)))
+    case UI.Search{}: handle_normal(related_search_exit(state),UI.Search{})
+    case UI.Scope{+provider}: handle_normal(related_scope_exit(state,provider),UI.Scope{provider})
+    case UI.Paste{}: handle_normal(related_restore(state),UI.Paste{})
+    case UI.Settings{}: handle_normal(related_restore(state),UI.Settings{})
+    case UI.Storage{}: handle_normal(related_restore(state),UI.Storage{})
+    case UI.Files{}: handle_normal(related_restore(state),UI.Files{})
+    case UI.Filter{}: handle_normal(related_restore(state),UI.Filter{})
+    case UI.Blame{}: handle_normal(related_restore(state),UI.Blame{})
+    case UI.Versions{}: IO.pure(Maybe<State>,Some{status(state,"Back to the origin before browsing saved versions. Related targets stay exact.")})
+    case UI.OpenLatest{}: IO.pure(Maybe<State>,Some{status(state,"Back to the origin before Open latest. Related never resolves a newer target.")})
+    case UI.Rebuild{}: IO.pure(Maybe<State>,Some{status(state,"Back to the origin and open Settings before rebuilding a captured snapshot.")})
+    case other: handle_normal(state,other)
+
+def handle_navigation(+state: State,action: UI.Action,phase: U32) -> IO(Maybe<State>):
+  match phase:
+    case 3: handle_normal(state,action)
+    case phase: handle_related(state,action,phase)
+
+def handle(+state: State,action: UI.Action) -> IO(Maybe<State>):
+  handle_navigation(state,action,navigation_phase(navigation(state)))
 
 def event(+state: State,result: UI.State & UI.Action) -> IO(Maybe<State>):
   (ui,action) = result
@@ -1737,7 +2123,7 @@ def tick(es: List<Event>,state: State) -> IO(Maybe<State>):
       tick_input(e <> rest,state,True{})
 
 def initial(+db: U32,+dir: String,+program: String) -> State:
-  reload(State{db,dir,program,UI.init(),Selection{[],"",0,0,[],empty_filters(),empty_listing()},Form{0,"","","",Files.empty()},
+  reload(State{db,dir,program,UI.init(),Selection{[],"",0,0,[],empty_filters(),empty_listing()},Form{0,"","","",Files.empty(),[]},
     Jobs{0,None{},None{},None{},False{}},0n,0})
 
 def run(+db: U32,+dir: String,+program: String) -> IO(Unit):

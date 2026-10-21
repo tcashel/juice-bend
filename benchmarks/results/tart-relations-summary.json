@@ -1,0 +1,219 @@
+{
+  "receipt_version": 1,
+  "date": "2026-10-20",
+  "host": "macOS 27.0.1 arm64",
+  "guest": "macOS 27.0 arm64",
+  "tart": "2.40.1",
+  "network": "host-only",
+  "application_sha256": "784d48c4d180b5e711613dbf43797c869c526a2cbf8082c53f6b3bbb9e789ab2",
+  "application_bytes": 10462024,
+  "build_inputs_verified": 42,
+  "upstream_hashes_verified": 88,
+  "fixture_sha256": "50d553d189c64691d48d1d514a179c06abe5c9c456f0acc44aaff2b6ffcd2b12",
+  "observed": [
+    "Scoped lexical hit opens snapshot1 at physical record40 with all four frozen filters",
+    "Related candidate pages contain five then one links under watermark22",
+    "Pinned child transcript and Tools keep exact target snapshot and reader filters",
+    "Back restores both Related page2 and original reader/list/query/scroll/selection pixel regions",
+    "A second instance of the exact native app accepts append/rewrite through its Refresh button:22 to24 snapshots",
+    "The original instance remains pinned while the second captures and closes",
+    "All22 owned synthetic sources are hidden; fresh target/Tools reads still use retained evidence",
+    "Related Refresh reuses watermark22; explicit Back and fresh Related entry advances to24 and excludes the rewritten child",
+    "Thirteen clipboard comparisons and three displayed-evidence exports match exact UTF8 text",
+    "Command+Q closes each owned window; runner stops its own VM and releases both leases"
+  ],
+  "clipboard": {
+    "origin-copy": {
+      "selection": "origin",
+      "bytes": 1518,
+      "exact": true,
+      "sha256": "b896c8f66dc6c6257e00605e0102715269b23f3098e47db21d76640224167675"
+    },
+    "related-first-copy": {
+      "selection": "related-first",
+      "bytes": 5829,
+      "exact": true,
+      "sha256": "ed8b37d706d21cf5e0723985bd9febb20ae343c355c43a1137e216f7e92a1466"
+    },
+    "related-second-copy": {
+      "selection": "related-second",
+      "bytes": 2414,
+      "exact": true,
+      "sha256": "efe6b9e3bf6c40392b910b32bae73471e516490dadb1e0f4d315a890e18bc472"
+    },
+    "child-copy": {
+      "selection": "child",
+      "bytes": 1132,
+      "exact": true,
+      "sha256": "5100dc6985b762d9c1ba32ba86dfb9dd647688681da90c61febd0085c1559c96"
+    },
+    "child-tools-copy": {
+      "selection": "child-tools",
+      "bytes": 2228,
+      "exact": true,
+      "sha256": "08728881640d256403ec2b6f4acccda7734adee680329ddf54fa82277c6c12b3"
+    },
+    "back-origin-copy": {
+      "selection": "origin",
+      "bytes": 1518,
+      "exact": true,
+      "sha256": "b896c8f66dc6c6257e00605e0102715269b23f3098e47db21d76640224167675"
+    },
+    "late-child-copy": {
+      "selection": "late-child",
+      "bytes": 1114,
+      "exact": true,
+      "sha256": "a9e45e006295713ef75a7e6103be91bacd729d2c0e38e8944fb822fc4ee5faa4"
+    },
+    "child-after-refresh-copy": {
+      "selection": "child",
+      "bytes": 1132,
+      "exact": true,
+      "sha256": "5100dc6985b762d9c1ba32ba86dfb9dd647688681da90c61febd0085c1559c96"
+    },
+    "retained-child-tools-copy": {
+      "selection": "child-tools",
+      "bytes": 2228,
+      "exact": true,
+      "sha256": "08728881640d256403ec2b6f4acccda7734adee680329ddf54fa82277c6c12b3"
+    },
+    "related-old-after-hide-copy": {
+      "selection": "related-first",
+      "bytes": 5829,
+      "exact": true,
+      "sha256": "ed8b37d706d21cf5e0723985bd9febb20ae343c355c43a1137e216f7e92a1466"
+    },
+    "retained-child-copy": {
+      "selection": "child",
+      "bytes": 1132,
+      "exact": true,
+      "sha256": "5100dc6985b762d9c1ba32ba86dfb9dd647688681da90c61febd0085c1559c96"
+    },
+    "origin-after-hide-copy": {
+      "selection": "origin",
+      "bytes": 1518,
+      "exact": true,
+      "sha256": "b896c8f66dc6c6257e00605e0102715269b23f3098e47db21d76640224167675"
+    },
+    "related-fresh-copy": {
+      "selection": "related-fresh",
+      "bytes": 4982,
+      "exact": true,
+      "sha256": "37515debf3ce0cf41bb20a516a051397ed218f1ce437fefcb1837b488a743268"
+    }
+  },
+  "pixel_restoration": {
+    "back-origin/reader_and_title": {
+      "exact": true,
+      "rectangle": [
+        632,
+        198,
+        1464,
+        900
+      ]
+    },
+    "back-origin/query": {
+      "exact": true,
+      "rectangle": [
+        264,
+        118,
+        1448,
+        164
+      ]
+    },
+    "back-origin/list": {
+      "exact": true,
+      "rectangle": [
+        248,
+        198,
+        632,
+        900
+      ]
+    },
+    "origin-after-hide/reader_and_title": {
+      "exact": true,
+      "rectangle": [
+        632,
+        198,
+        1464,
+        900
+      ]
+    },
+    "origin-after-hide/query": {
+      "exact": true,
+      "rectangle": [
+        264,
+        118,
+        1448,
+        164
+      ]
+    },
+    "origin-after-hide/list": {
+      "exact": true,
+      "rectangle": [
+        248,
+        198,
+        632,
+        900
+      ]
+    },
+    "page-two-after-target/reader_and_list": {
+      "exact": true,
+      "rectangle": [
+        248,
+        198,
+        1464,
+        900
+      ]
+    }
+  },
+  "exports": [
+    {
+      "selection": "child-tools",
+      "bytes": 2399,
+      "body_bytes": 2228,
+      "mode": "0600",
+      "sha256": "688ff51e820c06a6dd380a74f818e3697bf557ebda9516a61313d4505b182b79"
+    },
+    {
+      "selection": "related-first",
+      "bytes": 6000,
+      "body_bytes": 5829,
+      "mode": "0600",
+      "sha256": "cf24400633a17876cc7a1546208d37b1e5fa1b3110b36eeb4c224b4bb698bf53"
+    },
+    {
+      "selection": "related-fresh",
+      "bytes": 5153,
+      "body_bytes": 4982,
+      "mode": "0600",
+      "sha256": "f500406e587314dd1ae71e079514e6d758d5c0f17a1ad5e2eef86a98a13bb4f9"
+    }
+  ],
+  "database": {
+    "quick_check": "ok",
+    "foreign_key_violations": 0,
+    "sources": 22,
+    "generations": 23,
+    "snapshots": 24,
+    "raw": 97,
+    "records": 142,
+    "events": 142,
+    "current_search": 91,
+    "context": 142,
+    "projection_checks": 24
+  },
+  "cleanup": {
+    "app_windows_after_close": 0,
+    "vm_state": "stopped",
+    "runner_exit": 130,
+    "leases_absent": true
+  },
+  "limitations": [
+    "Some Unicode glyphs display boxes; byte-exact clipboard/export does not prove shaping or IME behavior",
+    "No input-to-display latency, scroll cadence or statistical performance measurement",
+    "Related Refresh rereads its pinned watermark; capture was triggered in a second native instance",
+    "Native observation is distinct from focused GUI regression tests and does not replace them",
+    "No signing, notarization or distribution validation"
+  ]
+}

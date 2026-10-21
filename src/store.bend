@@ -675,6 +675,42 @@ def context_digest(snapshot: String,generation: String,extent: U32,ordinal: U32,
       Sql.Cell.Text{digest},Sql.Cell.Text{repository},Sql.Cell.Text{session},
       Sql.Cell.Text{model},Sql.Cell.Text{parent}])))
 
+# An ephemeral cache of the exact scalar digest preimage's constant header.
+# Hash only complete blocks: a pending prefix would force the current Domain
+# implementation onto its partial-byte path for the whole suffix. The forward
+# remainder is prepended exactly once, and HashContext.size counts only the
+# compressed prefix bytes. Nothing is finalized or persisted here.
+type ContextPrefix is Data:
+  ContextPrefix{snapshot: String,generation: String,extent: U32,
+    hash: Domain.HashContext,remainder: List<&2,U32>}
+
+def context_prefix_bytes(snapshot: String,generation: String,extent: U32,
+  +bytes: List<&2,U32>,+complete: Nat) -> ContextPrefix:
+  ContextPrefix{snapshot,generation,extent,
+    Domain.hash_bytes(List.take(&2,U32,bytes,complete),
+      Domain.HashContext{Domain.hash_initial(),[],0,0}),
+    List.drop(&2,U32,bytes,complete)}
+
+def context_prefix_sized(snapshot: String,generation: String,extent: U32,
+  bytes: List<&2,U32>,+size: Nat) -> ContextPrefix:
+  context_prefix_bytes(snapshot,generation,extent,bytes,Nat.sub(size,Nat.mod(size,64n)))
+
+def context_prefix(+snapshot: String,+generation: String,+extent: U32) -> ContextPrefix:
+  +bytes = Domain.encode(context_version() ++ "|" ++
+    projection_cells([Sql.Cell.Text{snapshot},Sql.Cell.Text{generation},
+      Sql.Cell.Integer{U32.show(extent)}]))
+  context_prefix_sized(snapshot,generation,extent,bytes,List.length(&2,U32,bytes))
+
+def context_digest_cached(prefix: ContextPrefix,ordinal: U32,offset: U32,
+  length: U32,digest: String,context: Context) -> String:
+  ContextPrefix{_,_,_,hash,remainder} = prefix
+  Context{repository,session,model,parent} = context
+  Domain.hash_finish(Domain.hash_bytes(List.append(&2,U32,remainder,
+    Domain.encode(projection_cells([Sql.Cell.Integer{U32.show(ordinal)},
+      Sql.Cell.Integer{U32.show(offset)},Sql.Cell.Integer{U32.show(length)},
+      Sql.Cell.Text{digest},Sql.Cell.Text{repository},Sql.Cell.Text{session},
+      Sql.Cell.Text{model},Sql.Cell.Text{parent}]))),hash))
+
 def context_cells(+snapshot: String,generation: String,extent: U32,
   +ordinal: U32,offset: U32,length: U32,digest: String,+context: Context) -> List<&2,Sql.Cell>:
   Context{repository,session,model,parent} = context
@@ -682,6 +718,15 @@ def context_cells(+snapshot: String,generation: String,extent: U32,
      Sql.Cell.Text{repository},Sql.Cell.Text{session},Sql.Cell.Text{model},
      Sql.Cell.Text{parent},Sql.Cell.Text{context_version()},
      Sql.Cell.Text{context_digest(snapshot,generation,extent,ordinal,offset,length,digest,context)}]
+
+def context_cells_cached(+prefix: ContextPrefix,+ordinal: U32,offset: U32,
+  length: U32,digest: String,+context: Context) -> List<&2,Sql.Cell>:
+  ContextPrefix{snapshot,_,_,_,_} = prefix
+  Context{repository,session,model,parent} = context
+  [Sql.Cell.Integer{snapshot},Sql.Cell.Integer{U32.show(ordinal)},
+     Sql.Cell.Text{repository},Sql.Cell.Text{session},Sql.Cell.Text{model},
+     Sql.Cell.Text{parent},Sql.Cell.Text{context_version()},
+     Sql.Cell.Text{context_digest_cached(prefix,ordinal,offset,length,digest,context)}]
 
 def put_context(db: U32,snapshot: String,generation: String,extent: U32,
   ordinal: U32,offset: U32,length: U32,digest: String,context: Context) -> IO(Unit):
@@ -1068,14 +1113,34 @@ def prefix_context_valid(+row: List<&2,Sql.Cell>,snapshot: String,+generation: S
     String.eq(field(row,10n),context_digest(snapshot,generation,extent,ordinal,
       number(field(row,2n)),number(field(row,3n)),field(row,4n),prefix_context(row)))
 
-def context_prefix_valid_rows(rows: List<&2,List<&2,Sql.Cell>>,+snapshot: String,
-  +generation: String,+extent: U32,+ordinal: U32) -> Bool:
+def prefix_context_valid_cached(+row: List<&2,Sql.Cell>,+prefix: ContextPrefix,
+  +ordinal: U32) -> Bool:
+  ContextPrefix{_,generation,_,_,_} = prefix
+  numeric(field(row,1n)) && numeric(field(row,2n)) && numeric(field(row,3n)) &&
+    is_text(cell(row,5n)) && is_text(cell(row,6n)) &&
+    is_text(cell(row,7n)) && is_text(cell(row,8n)) &&
+    String.eq(field(row,0n),generation) && String.eq(field(row,1n),U32.show(ordinal)) &&
+    String.eq(field(row,9n),context_version()) &&
+    String.eq(field(row,10n),context_digest_cached(prefix,ordinal,
+      number(field(row,2n)),number(field(row,3n)),field(row,4n),prefix_context(row)))
+
+def context_prefix_valid_rows_cached(rows: List<&2,List<&2,Sql.Cell>>,
+  +prefix: ContextPrefix,+ordinal: U32) -> Bool:
   match rows:
     case []:
       True{}
     case row <> rest:
-      prefix_context_valid(row,snapshot,generation,extent,ordinal) &&
-        context_prefix_valid_rows(rest,snapshot,generation,extent,U32.add(ordinal,1))
+      prefix_context_valid_cached(row,prefix,ordinal) &&
+        context_prefix_valid_rows_cached(rest,prefix,U32.add(ordinal,1))
+
+def context_prefix_valid_rows(rows: List<&2,List<&2,Sql.Cell>>,snapshot: String,
+  generation: String,extent: U32,ordinal: U32) -> Bool:
+  match rows:
+    case []:
+      True{}
+    case row <> rest:
+      context_prefix_valid_rows_cached(row <> rest,
+        context_prefix(snapshot,generation,extent),ordinal)
 
 def context_prefix_continue(valid: Bool,next: Unit -> IO(Bool)) -> IO(Bool):
   match valid:
@@ -1106,16 +1171,41 @@ def context_prefix_valid(db: U32,+previous: List<&2,Sql.Cell>,projection_ok: Boo
       number(field(previous,2n)),number(field(previous,4n)),0,
       U32.is_eq(number(field(previous,4n)),0)))
 
+def copy_context_row_scalar(+row: List<&2,Sql.Cell>,prefix: ContextPrefix) -> List<&2,Sql.Cell>:
+  ContextPrefix{snapshot,_,extent,_,_} = prefix
+  context_cells(snapshot,field(row,0n),extent,number(field(row,1n)),
+    number(field(row,2n)),number(field(row,3n)),field(row,4n),prefix_context(row))
+
+def copy_context_row_cached(+row: List<&2,Sql.Cell>,prefix: ContextPrefix,
+  matches: Bool) -> List<&2,Sql.Cell>:
+  match matches:
+    case True{}:
+      context_cells_cached(prefix,number(field(row,1n)),number(field(row,2n)),
+        number(field(row,3n)),field(row,4n),prefix_context(row))
+    case False{}:
+      # The append path has verified a single generation. Preserve the generic
+      # helper's scalar behavior for any mixed-generation caller instead of
+      # silently hashing a later row with the first row's generation.
+      copy_context_row_scalar(row,prefix)
+
+def copy_context_cells_cached(rows: List<&2,List<&2,Sql.Cell>>,+prefix: ContextPrefix) -> List<&2,Sql.Cell>:
+  match rows:
+    case []:
+      []
+    case +row <> rest:
+      ContextPrefix{_,generation,_,_,_} = prefix
+      List.append(&2,Sql.Cell,
+        copy_context_row_cached(row,prefix,String.eq(field(row,0n),generation)),
+        copy_context_cells_cached(rest,prefix))
+
 def copy_context_cells(rows: List<&2,List<&2,Sql.Cell>>,+snapshot: String,+extent: U32) ->
   List<&2,Sql.Cell>:
   match rows:
     case []:
       []
     case +row <> rest:
-      List.append(&2,Sql.Cell,
-        context_cells(snapshot,field(row,0n),extent,number(field(row,1n)),
-          number(field(row,2n)),number(field(row,3n)),field(row,4n),prefix_context(row)),
-        copy_context_cells(rest,snapshot,extent))
+      copy_context_cells_cached(row <> rest,
+        context_prefix(snapshot,field(row,0n),extent))
 
 # The existing context reader supplies at most32 rows/1MiB. Re-seal every row
 # with the same snapshot/extent-bound digest, then use one typed INSERT for the

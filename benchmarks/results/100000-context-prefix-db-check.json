@@ -1,0 +1,28 @@
+{
+  "inspection": "external read-only SQLite postflight, outside operation timers",
+  "quick_check": "ok",
+  "foreign_key_violations": 0,
+  "table_counts": {
+    "sources": 1,
+    "generations": 1,
+    "snapshots": 2,
+    "raw": 100016,
+    "records": 200016,
+    "events": 250020,
+    "search": 125020,
+    "projection_checks": 2,
+    "snapshot_context": 200016
+  },
+  "prefix_event_equivalence": "both SQL EXCEPT directions",
+  "fts_snapshot_counts": [
+    [
+      2,
+      125020
+    ]
+  ],
+  "source_latest": 2,
+  "new_seals": 2,
+  "all_inputs_unchanged": true,
+  "upstream_hashes_verified": 88,
+  "checks_passed": true
+}

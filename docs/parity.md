@@ -23,13 +23,19 @@ pinning across changed HEAD/dirty worktree and retained History restoration.
 Recorded Tools now has a retained, scoped reader, CLI and native control.
 Its 435 focused checks and actual Tart observations cover page boundaries,
 old snapshots after append/source removal, explicit latest and exact exports.
-Pairing is page-local and conservative; child/subagent navigation remains open.
+Pairing is page-local and conservative. Related now provides bounded retained
+parent/child navigation, distinct recorded-parent/path-association labels,
+exact target captures and two-level Back restoration. It does not reconstruct
+a complete historical graph or resolve every provider's child convention.
 The combined event-seal/readability candidate passed 2,262 storage and 219
 presentation checks, plus actual native Refresh, retained text and exports.
 Payloads now precede their full citations. Standard 100k append improved from
-33.392 to 28.226 seconds in single observations; it still needs work.
+33.392 to 28.226 seconds in single observations; the following context-prefix
+cache measured 27.262 seconds and passed 990 focused checks. It still needs work.
+The separate 100-source benchmark measured a 477 ms middle-source append;
+that is a different workload, not a long-session speedup claim.
 Priority order: finish long-history append improvements; close remaining
-native validation gaps; child/subagent navigation; Settings;
+native validation gaps; Settings and persistent refresh/source controls;
 richer provider/archive
 support; full Usage and deterministic context preparation; owned-storage
 management and explicit opt-in connection/subscription surfaces. UI polish
@@ -64,6 +70,7 @@ not established by the current bitmap reader.
 | Read-only Git | Same | Literal `/usr/bin/git` command; helper disabling; path validation; ≤500 lines / 1 MiB / 3 seconds | Native test exercised actual Git against public destination `AGENTS.md`; parser synthetic Unicode and overflow tests pass |
 | Per-region evidence | Same | File evidence matches individual commit diff hunks using original-line coordinates; unmatched regions never borrow a neighboring match. Unique eligible final session trailers provide exact identity association; standalone body IDs remain probable | `tests/file_evidence.bend` and `tests/git_diff.bend`; final integration receipts are in `acceptance.md`. Exact identity association does not prove sole authorship or tool success |
 | Child attribution/model | Same | Claude nested-path and Codex recorded-parent identities retain the child actor; parent requests receive separate citations for navigation | No parent event ordinal or model replaces the child. Missing, ambiguous, cyclic or unsupported parent identity makes attribution ineligible. Final integrated child/orphan receipts are in `acceptance.md` |
+| Related capture navigation | Reference parent/subagent links | Fixed accepted-ID watermark, exact snapshot references, bounded verified metadata, distinct recorded-parent/path association labels, preserved target filters and original reader | 163 backend/CLI checks. Native app `784d48c4…` passed two pages, scoped target/Tools, both Back levels, concurrent native capture, retained rereads after source removal and exact exports. Role/date scope applies to target readers, not metadata discovery. Self/direct two-way cycles only; incomplete or page-local evidence does not prove global absence/uniqueness |
 | Why | `Juice/Packages/Sources/JuiceXPC/WhyBuilder.swift` | Transcript, file/range and exact-commit entry points quote captured requests/tool intent with immutable descriptors; no generated rationale | Descriptor consumption verifies provider, locator, generation, snapshot, extent, record and event. File evidence inspects at most 64 generation snapshots, the first 16 actor records, newest 256 edit events and eight commits per selected range. Recorded commit-command SHA mapping and time-only probable attribution are not implemented |
 | Origin and repository eligibility | Same | Verified raw metadata excludes explicit non-user-work/excluded origins, synthetic markers and unsupported orphan actors. Explicit Git checkout/worktree roots map to a shared canonical repository | Diagnostic-style Markdown first requests are conservatively held for review. Relative edit cwd lookup is bounded to 16 records. This is a conservative supported subset, not complete reference origin classification |
 | Evidence exports | Preserve/search ADRs | Full retained raw export verifies all bytes; bounded transcript/Why exports retain selected scope and snapshot. GUI file evidence and Usage export the exact displayed text | Non-replacing atomic publication protects original locators and existing paths. Displayed-text exports explicitly say they are not reverified and do not rerun mutable Git attribution |

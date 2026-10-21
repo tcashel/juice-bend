@@ -16,7 +16,7 @@ def require(ok: Bool,name: String) -> IO(Unit):
 def state() -> Gui.State:
   Gui.State{0,"/tmp/juice-bend-gui-contract","/usr/bin/false",
     UI.set_reader(UI.set_query(UI.init(),"needle"),"Pinned","stable evidence"),
-    Gui.Selection{[],"7",0,3,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"needle","","",Files.empty()},
+    Gui.Selection{[],"7",0,3,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"needle","","",Files.empty(),[]},
     Gui.Jobs{2,None{},None{},None{},False{}},0n,0}
 
 def ui(s: Gui.State) -> UI.State:
@@ -28,7 +28,7 @@ def snapshot(s: Gui.State) -> String:
   snap
 
 def mode(s: Gui.State) -> U32:
-  Gui.State{db,dir,program,ui,selection,Gui.Form{mode,search,source,blame,files},jobs,refresh_at,serial} = s
+  Gui.State{db,dir,program,ui,selection,Gui.Form{mode,search,source,blame,files,navigation},jobs,refresh_at,serial} = s
   mode
 
 def wanted_args(value: Maybe<&2,Gui.Request>) -> String:
@@ -89,13 +89,13 @@ def readers() -> IO(Unit):
 
 def initial() -> IO(Unit):
   +empty = {Gui.State{0,"/tmp/juice-bend-gui-contract","/usr/bin/false",UI.init(),
-    Gui.Selection{[],"",0,0,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"","","",Files.empty()},Gui.Jobs{0,None{},None{},None{},False{}},0n,0} : Gui.State}
+    Gui.Selection{[],"",0,0,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"","","",Files.empty(),[]},Gui.Jobs{0,None{},None{},None{},False{}},0n,0} : Gui.State}
   +next = Gui.with_rows(empty,[Gui.Item{"9",0,"initial source","claude","/tmp/repo","2",Gui.empty_filters()}])
   require(String.eq(wanted(next),"session-scope|9|0|40||||"),"initial unpinned browse opens first accepted snapshot")
 
 def initial_late_hit() -> IO(Unit):
   +empty = {Gui.State{0,"/tmp/juice-bend-gui-contract","/usr/bin/false",UI.init(),
-    Gui.Selection{[],"",0,0,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"","","",Files.empty()},Gui.Jobs{0,None{},None{},None{},False{}},0n,0} : Gui.State}
+    Gui.Selection{[],"",0,0,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"","","",Files.empty(),[]},Gui.Jobs{0,None{},None{},None{},False{}},0n,0} : Gui.State}
   +next = Gui.with_rows(empty,[Gui.Item{"9",500,"late matching record","codex","/tmp/repo","2",
     Query.Filters{"","codex","/tmp/repo","assistant","2026-10-01"}}])
   require(String.eq(wanted(next),"session-scope|9|500|40|codex|/tmp/repo|assistant|2026-10-01"),

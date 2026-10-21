@@ -1,0 +1,20 @@
+Context-prefix cache standard production benchmark, macOS 27.0.1 arm64.
+2026-10-20; Bend 2.0.37, pinned revision, Apple clang -O3.
+Build: ./scripts/build benchmarks/main.bend build/juice-bend-bench-context-prefix
+Run: absolute native binary with argument 100000 in a fresh private temporary cwd.
+Build, native child and independent postflight exit 0; stderr empty.
+Binary SHA256: 5ecad0199261b1224b91ae5f3af1929881b8026452a7033eab50927e7821baf5
+Binary bytes: 3067408
+Generated C SHA256: f815053daa809363516be60a70a5f244a9894c93d9f5e5b11b9aa18951ecd87b
+All 19 transitive inputs and 88 upstream hashes matched before/after build and run.
+Same unchanged generator/workload as event-seal candidate; first 33304 ms,
+unchanged 4579 ms, append 16 records 27262 ms. Search/late/scoped-late p95 40/8/17 ms.
+All benchmark assertions and independent database checks passed.
+Full raw/source verification, exact context digest bytes and event seals remain.
+No task build/test/Tart overlapped timers; unrelated host activity uncontrolled.
+One observation per version, not a statistical comparison or UI measurement.
+Five-trial p95 is the observed maximum. Fixture generation outside timers.
+5e81ddce882ecc6f7d7fba9477c2e0584b1f542230743aa0520e0faf21ad13c4  benchmarks/results/100000-context-prefix-sources.sha256
+d10db29f873ad8be0f1f7eff74cd9656ecb6d1e06e7fc900b03c5c5a6f26d5ec  benchmarks/results/100000-context-prefix.jsonl
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  benchmarks/results/100000-context-prefix-stderr.txt
+be41b2219db129e5faaf69ccf7f6a43259b5f1ff399cdc9c2246a75f61b90c26  benchmarks/results/100000-context-prefix-db-check.json

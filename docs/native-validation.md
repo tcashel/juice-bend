@@ -1,5 +1,39 @@
 # Native interaction observations
 
+## Related captures and context-prefix candidate
+
+App `784d48c4d180b5e711613dbf43797c869c526a2cbf8082c53f6b3bbb9e789ab2`
+(10,462,024 bytes) ran in the host-only macOS 27.0 arm64 Tart guest. All 42 build
+inputs stayed unchanged and 88 pinned upstream hashes passed before/after.
+The fixture created 22 synthetic sources. A lexical hit opened snapshot 1 at
+physical record 40 with provider/repository/role/date filters. Related pages
+showed five then one links at watermark 22. Selecting targets opened exact
+scoped transcripts and Tools; Back restored page 2 and the original reader.
+Seven reader/list/query pixel regions matched, including scroll and selection.
+
+While the original child remained open, a second instance of the exact app
+accepted the fixture's parent append and child rewrite through its real
+Refresh button: 22 snapshots / 89 raw records became 24 / 97. Closing that instance
+left the original reader unchanged. After all 22 original source paths were
+hidden, new child transcript/Tools requests still read captured evidence.
+Related Refresh reread watermark 22 unchanged. Back followed by fresh Related
+entry used watermark 24 and omitted the rewritten child's former parent link.
+Related Refresh itself does not start source capture; the second instance did.
+
+Thirteen clipboard comparisons matched exact CLI text, including Unicode.
+Three mode-0600 exports contained the exact displayed Tools/old-Related/fresh-
+Related bodies (2,399 / 6,000 / 5,153 bytes with headers). Integrity/FK checks passed:
+22 sources, 23 generations, 24 snapshots, 97 raw records, 142 retained records/
+events/context rows and 91 current search events. Command+Q closed both owned
+windows. Runner exit 130 verified the VM stopped and both leases were absent.
+
+Some Unicode glyphs still display boxes. This run does not measure latency,
+scroll cadence, full IME or accessibility. Backend/CLI and GUI test results
+are separate receipts. See `receipts/relations-host-lifecycle.txt`,
+`receipts/relations-build-inputs.sha256` and
+`benchmarks/results/tart-relations-summary.json`. Raw synthetic artifacts stay
+under ignored `build/tart/relations-v9utxn_y`.
+
 ## Event-seal and readable Tools candidate
 
 App `5ef9603de4cb1f618476e7885170ea0ac174370ceef2fa30023cea1d5b3a87ca`

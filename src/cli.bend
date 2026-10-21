@@ -15,6 +15,7 @@ import ./catalog.bend as Catalog
 import ./storage_inventory.bend as Inventory
 import ./repository_cli.bend as Repository
 import ./activity_cli.bend as Activity
+import ./relations_cli.bend as Relations
 
 type Page is Data:
   Page{offset: U32, rows: List<&2,List<&2,Sql.Cell>>, has_more: Bool}
@@ -519,6 +520,8 @@ def help() -> IO(Unit):
     "\"why SNAPSHOT [START COUNT]\",\"session-scope SNAP START COUNT PROVIDER REPO ROLE AFTER\"," ++
     "\"why-scope SNAP START COUNT PROVIDER REPO ROLE AFTER\",\"blame REPOSITORY FILE START END\"," ++
     "\"activity-scope SNAPSHOT START COUNT PROVIDER REPOSITORY ROLE AFTER\"," ++
+    "\"relations-scope SNAPSHOT LIMIT FILTER_PROVIDER FILTER_REPOSITORY FILTER_ROLE FILTER_AFTER\"," ++
+    "\"relations-page PROVIDER SOURCE GENERATION SNAPSHOT EXTENT WATERMARK AFTER_SOURCE LIMIT FILTER_PROVIDER FILTER_REPOSITORY FILTER_ROLE FILTER_AFTER\"," ++
     "\"why-file REPOSITORY FILE START END\",\"why-commit REPOSITORY SHA\"," ++
     "\"repo-open REPO\",\"repo-tree REPO COMMIT PATH OFFSET\"," ++
     "\"repo-source REPO COMMIT PATH FIRST COUNT\",\"repo-blame REPO COMMIT PATH FIRST COUNT\"," ++
@@ -613,6 +616,10 @@ def command(db: U32,data_dir: String,cmd: String,args: List<String>) -> IO(Unit)
       read_scoped(db,args,True{})
     case "activity-scope":
       Activity.command(db,args)
+    case "relations-scope":
+      Relations.command(db,"relations-scope",args)
+    case "relations-page":
+      Relations.command(db,"relations-page",args)
     case "export-range-scope":
       export_scoped(db,args,False{})
     case "export-why-scope":

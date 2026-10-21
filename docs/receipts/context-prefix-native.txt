@@ -1,0 +1,42 @@
+Context prefix cache native correctness receipt
+No application/benchmark timing or native UI claim is made by this receipt.
+
+Commands:
+./scripts/build tests/context.bend build/context-prefix-smoke > build/context-prefix-build.log 2>&1
+build/context-prefix-smoke ran in the private directory recorded by build/context-prefix-smoke-root.txt, with .build created there.
+./scripts/test tests/context_prefix_cache.bend > build/context-prefix-cache-test.log 2>&1
+./scripts/test tests/append_integrity.bend tests/event_seal_append.bend tests/append_batches.bend tests/scoped_reader.bend tests/maintenance.bend > build/context-prefix-regression.log 2>&1
+
+All three native run commands exited 0. The five-suite command session91340 returned exit0 on final poll.
+PASS lines: context22; context_prefix_cache362; append_integrity49; event_seal_append283; append_batches226; scoped_reader18; maintenance30. Total990 across7 entry points.
+Five-suite footer: Completed 5 Bend test executables.
+
+Scope: src/store.bend context-prefix caching and new tests/context_prefix_cache.bend only. Scalar context_digest remains the exact compatibility oracle. No SQL/schema/Domain/Seal/bridge/capture/publication boundary change.
+Independent read-only review by providers cleared every scalar predicate, ordinal progression, mixed-generation scalar fallback, complete-block SHA byte accounting and single forward remainder.
+Metadata type mutations are compared to the scalar helper; stricter raw SQLite type checks remain the responsibility of unchanged full raw verification.
+
+SHA256 inputs, executables and receipts:
+c5b0e67906e754f7cc71933c791a5b414e471331d6bc6920eee1f1f75c0cd9aa  src/store.bend
+f2f68a4a9781ea102f3e275781380a885e3057e178d75c8d45b310c3c5002191  src/domain.bend
+eba657f6476109b035a3c4daf0ffdb87e0017524425caecb572b3af39d688b30  src/projection_seal.bend
+e3bf2ed16fd237a9422a30fc06716159fa093308219ad0426949d293929b817d  src/maintenance.bend
+919cb2abd8bad19a3e8cdf12c676f586717121a9c7222a557345ade8f7ab753e  native/sqlite.c
+31b7f8d5752dce4da6420ea2bc27f7e476998377eb44c07b240dec13fc6d341e  build/context-prefix-baseline/store.bend
+2aa7f4a3daa54d68256a0b8ddf798c4b1e9fb4fa43b8df41b7941475545b4c66  tests/context_prefix_cache.bend
+2bdeff8cb7d467730eda959935581984d8cda17a3075aa64c4f8bf159430c97e  tests/context.bend
+41a133946aace732b8549de390d2ce38fd230625760e8d0c5785140eb19c26f0  tests/append_integrity.bend
+1a21f4b3e12505836c4aa5929ffc05d44678ffaf9244c88bd9b749a4acb010a5  tests/event_seal_append.bend
+66e1e27c42f512fd09c0fb1e9cd0285e59044f8e990b3b4dbc4f5490a1e4464a  tests/append_batches.bend
+a1850553f5031a0c5dca85b15028bd7421c132217dd20f6e588aece9b2504de7  tests/scoped_reader.bend
+a7bb7428776b02cb71215d4d3f6fec5fe37644b6cff9410ebfc08a8e41a47aa1  tests/maintenance.bend
+741eafd8654a0b845bd8e4ab82c153cac2f5b857da3ec15aa1033c1c9a993668  build/context-prefix-smoke
+4139ac14b84913fb2e2c258bddba54e7e622ffb9a89a7e0e1ed78c5cb87d5498  build/tests/context_prefix_cache
+e57bb3d74d0e1ee1caf7d2edf127ef994172f0809b99ad2cfb56ee972b25ee23  build/tests/append_integrity
+9563b73b3a8faaf6ca51b6c8915c9b9287413a0795b75714fe1c05fff6fbd1c0  build/tests/event_seal_append
+2d816f3b96922517d7d63c2838be37b142d6cfe14a67b34aa45788a525618093  build/tests/append_batches
+0873d57edc8910a5a227a4ebcb2335dc13ff741af48266d352584db7560b911d  build/tests/scoped_reader
+b40073d1f6ec57ef4ac5ff38ba9809680822637cdd6149b6f9fe1a4270355313  build/tests/maintenance
+526f350bd6a1129a532f987f73e0af774dd202c0151a81f4c7b8d4fd36e7eb12  build/context-prefix-build.log
+5d4f1c4a27caa971c2f903984495ab289f12f955cebf75bbbad47e71fd005565  build/context-prefix-smoke.log
+bacdc869ced52a86d51a7c5c2a9a9332092aca18206f5952bb3558f2aa1a18b5  build/context-prefix-cache-test.log
+3b714dc8f01062d9a8a62eff551d95fe4649d26ccdb2a5ea5cf461aade08e780  build/context-prefix-regression.log

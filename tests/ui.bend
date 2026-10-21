@@ -113,8 +113,27 @@ def navigation_kind(result: UI.State & UI.Action) -> U32:
       11
     case UI.Tools{}:
       12
+    case UI.Related{}:
+      13
+    case UI.Back{}:
+      14
     case _:
       0
+
+def related_navigation() -> IO(Unit):
+  +state = UI.set_results(UI.init(),UI.RelatedResults{2,0,True{},True{}})
+  +original = UI.set_edit(UI.set_position(UI.set_reader(UI.init(),"title","Unicode café 🙂"),3,8),UI.Edit{2,8,2,True{},4})
+  +restored = UI.restore(UI.init(),UI.bookmark(UI.set_modifiers(original,True{},True{})))
+  do IO<Unit>:
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,752,0,True{}},state)),13) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{32,800,0,True{}},state)),14),"Related and Back have dedicated nonoverlapping pointer controls")
+    require(U32.is_eq(navigation_kind(UI.event(Key{103,True{}},UI.set_modifiers(state,True{},False{}))),13) &&
+      U32.is_eq(navigation_kind(UI.event(Key{91,True{}},UI.set_modifiers(state,True{},False{}))),14),"Command-G and Command-left-bracket navigate Related and Back")
+    require(String.eq(UI.result_label(UI.RelatedResults{2,0,True{},True{}}),"Page 2 | 0 links") &&
+      UI.result_available(UI.RelatedResults{2,0,True{},True{}},True{}),"empty Related page preserves continuation without claiming no relatives")
+    require(U32.is_eq(UI.selected(restored),3) && U32.is_eq(UI.scroll(restored),8) &&
+      String.eq(UI.selection(restored),UI.selection(original)),"bookmark preserves exact row scroll and Unicode character selection")
+    require(U32.is_eq(navigation_kind(UI.event(Key{103,True{}},restored)),0),"bookmark restoration clears transient command state")
 
 def result_navigation() -> IO(Unit):
   +first = UI.set_results(UI.set_rows(UI.init(),["one result"]),UI.Results{0,100,True{},True{}})
@@ -236,6 +255,7 @@ def dispatch(args: List<String>) -> IO(Unit):
         result_navigation()
         files_navigation()
         tools_navigation()
+        related_navigation()
 
 def main() -> IO(Unit):
   do IO<Unit>:

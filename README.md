@@ -88,6 +88,15 @@ recorded result does not prove successful execution. Copy and Export retain
 the displayed text. `activity-scope SNAPSHOT START COUNT PROVIDER REPOSITORY
 ROLE AFTER` exposes the same reader through the CLI, with at most 100 records.
 
+Related (or Command+G) opens bounded parent/child links from retained metadata.
+It pins an accepted-capture watermark and keeps the selected reader's filters.
+Prev/Next list pages candidate sources; selecting a row opens its exact capture.
+Back returns to the Related page, then the original reader and selection.
+Recorded parent IDs and retained path associations have distinct labels;
+missing or ambiguous links remain explicit. Refresh rereads the pinned page;
+Back and a new Related entry explicitly choose a fresh watermark. The CLI
+commands `relations-scope` and `relations-page` expose the same evidence.
+
 ## Validation and current limits
 
 ```sh
@@ -111,9 +120,9 @@ Tests, fixture generators, benchmarks and proof logic are Bend.
 its measurements and limits are in [native validation](docs/native-validation.md).
 `mise run build-vm` produces a separate macOS 26-compatible executable.
 The optional `mise run vm-session -- PAYLOAD NEW_ARTIFACTS` reserves the existing
-external-SSD `juice-tests` VM with isolated shares. Coordinate with other VM
-users first; it starts a VM session only, not an app or test, and refuses an
-active VM or existing lease.
+external-SSD `juice-tests` VM with isolated shares and an exclusive lease.
+It starts a VM session only, not an app or test, and refuses an active VM or
+existing lease.
 Networking defaults to host-only. For an explicit toolchain download session,
 `JUICE_BEND_VM_NETWORK=shared mise run vm-session -- PAYLOAD NEW_ARTIFACTS`
 uses Tart's shared NAT; the selected mode is recorded in the artifacts. Native

@@ -35,6 +35,22 @@ separate receipts; see `receipts/seal-tools-native.txt` for the initial stale
 presentation assertion failure and final recheck. These do not establish full
 feature, font or accessibility parity.
 
+The following context-prefix cache passed 990 checks across seven native entry
+points. Its standard 100k long-session append was 27.262 s; a separate 100-source
+workload appended to one 1,000-record source in 477 ms. These are individual
+observations with unchanged manifests and independent database checks, not
+statistical guarantees or equivalent workloads.
+
+Related backend/CLI passed 163 checks; the combined native app `784d48c4…`
+passed the synthetic Tart workflow: scoped record 40 origin, two Related pages,
+exact child/Tools reads, two-level Back restoration, actual capture from a
+second instance, retained reads after hiding 22 sources, old versus fresh
+watermarks, 13 exact clipboard comparisons and 3 mode-0600 exports. Seven pixel
+regions matched before/after navigation. Native observation remains separate
+from the 291 focused GUI checks (51 Related plus 240 regressions) and does not
+establish complete graph/IME parity. See `receipts/relations-gui-tests.txt` for
+the test-only compiler failures, exact final gate and input-binding limits.
+
 | ID | Current result | Evidence and remaining work |
 |---|---|---|
 | A01 | Partial | The final `05cdff4f…` native executable opened a fresh empty library in the macOS 27.0 arm64 Tart guest, then captured and browsed the explicit synthetic source. Host desktop launches were observed on separately identified earlier builds. Fresh network setup remains unobserved. |

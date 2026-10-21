@@ -12,6 +12,7 @@ type Content is Data:
 
 type Results is Data:
   Results{offset: U32, count: U32, has_more: Bool, ready: Bool}
+  RelatedResults{page: U32, count: U32, has_more: Bool, has_previous: Bool}
 
 type Edit is Data:
   Edit{focus: U32, caret: U32, anchor: U32, dragging: Bool, viewport: U32}
@@ -21,6 +22,11 @@ type Input is Data:
 
 type State is Data:
   State{content: Content, input: Input, image: Image, dirty: Bool}
+
+# Bookmarks retain text, list position and character selection, never an image
+# or transient key/drag state. Restoration redraws with the current renderer.
+type Bookmark is Data:
+  Bookmark{content: Content,input: Input}
 
 type Action is Data:
   NoAction{}
@@ -34,6 +40,8 @@ type Action is Data:
   Why{}
   Usage{}
   Tools{}
+  Related{}
+  Back{}
   Rebuild{}
   Versions{}
   OpenLatest{}
@@ -92,6 +100,19 @@ def init() -> State:
     "Transcript", "Ready. Only explicitly enabled sources are scanned.", "all",Results{0,0,False{},False{}},False{}},
     Input{0, 0, Edit{0, 0, 0, False{}, 0}, False{}, False{}}, Pix{16777215}, True{}}
 
+def bookmark(state: State) -> Bookmark:
+  State{content,input,image,dirty} = state
+  Bookmark{content,input}
+
+def restore(state: State,bookmark: Bookmark) -> State:
+  State{old,oldinput,image,dirty} = state
+  Bookmark{content,Input{selected,scroll,Edit{focus,caret,anchor,drag,viewport},command,shift}} = bookmark
+  State{content,Input{selected,scroll,Edit{focus,caret,anchor,False{},viewport},False{},False{}},image,True{}}
+
+def bookmark_selected(bookmark: Bookmark,selected: U32) -> Bookmark:
+  Bookmark{content,Input{old,scroll,edit,command,shift}} = bookmark
+  Bookmark{content,Input{selected,scroll,edit,command,shift}}
+
 def is_files(s: State) -> Bool:
   State{Content{q,rows,reader,lines,title,status,scope,results,+files},input,image,dirty} = s
   files
@@ -142,8 +163,7 @@ def set_results(+s: State, results: Results) -> State:
   State{Content{q,rows,reader,lines,title,status,scope,old,+files},input,image,dirty} = s
   State{Content{q,rows,reader,lines,title,status,scope,results,files},input,image,True{}}
 
-def result_label(results: Results) -> String:
-  Results{+offset,+count,more,ready} = results
+def ordinary_result_label(+offset: U32,+count: U32,more: Bool,ready: Bool) -> String:
   match count ready:
     case _ False{}:
       "Results not loaded"
@@ -153,9 +173,18 @@ def result_label(results: Results) -> String:
       U32.show(U32.add(offset,1)) ++ "-" ++ Nat.show(Nat.add(U32.to_nat(offset),U32.to_nat(count))) ++
         Bool.pick(String,more," + more"," / end")
 
+def result_label(results: Results) -> String:
+  match results:
+    case Results{offset,count,more,ready}: ordinary_result_label(offset,count,more,ready)
+    case RelatedResults{page,count,more,previous}:
+      "Page " ++ U32.show(page) ++ " | " ++ U32.show(count) ++ " links"
+
 def result_available(results: Results,forward: Bool) -> Bool:
-  Results{+offset,count,more,ready} = results
-  ready && Bool.pick(Bool,forward,more && U32.is_le(offset,4294967095),U32.is_gt(offset,0))
+  match results:
+    case Results{+offset,count,more,ready}:
+      ready && Bool.pick(Bool,forward,more && U32.is_le(offset,4294967095),U32.is_gt(offset,0))
+    case RelatedResults{page,count,more,previous}:
+      Bool.pick(Bool,forward,more,previous)
 
 def result_action_if(+s: State,+forward: Bool,available: Bool) -> State & Action:
   match available:
@@ -362,6 +391,10 @@ def key_down(+s: State, +code: U32, +command: Bool) -> State & Action:
       (s, Filter{})
     case 116 True{}:
       (s, Tools{})
+    case 103 True{}:
+      (s, Related{})
+    case 91 True{}:
+      (s, Back{})
     case 13 _:
       (s, Submit{})
     case 127 False{}:
@@ -444,6 +477,10 @@ def sidebar_action(+s: State, +row: U32) -> State & Action:
       (s,Usage{})
     case 45:
       (s,Rebuild{})
+    case 47:
+      (s,Related{})
+    case 50:
+      (s,Back{})
     case 48:
       (s,Versions{})
     case 51:
@@ -681,6 +718,11 @@ def draw_query(+c: Canvas, +text: String, +x: U32, +y: U32, +at: U32,
   +low: U32, +high: U32, +count: Nat) -> Canvas:
   draw_line(count, c, text, x, y, at, low, high)
 
+def list_heading(results: Results,files: Bool) -> String:
+  match results:
+    case RelatedResults{page,count,more,previous}: "RELATED CAPTURES"
+    case _: Bool.pick(String,files,"Up folder","SESSIONS / RESULTS")
+
 def draw(+s: State) -> Image:
   State{Content{+q, rows, reader, lines, title, status, +scope,+results,+files},
     Input{+selected, scroll, Edit{+focus, +caret, +anchor, drag, viewport}, command, shift}, image, dirty} = s
@@ -716,9 +758,11 @@ def draw(+s: State) -> Image:
   select = write(10n, clear, "Select all", 1, 39, 3960107, 15396591)
   usage = write(10n, select, "Usage", 1, 42, 3960107, 15396591)
   rebuild = write(10n, usage, "Rebuild", 1, 45, 3960107, 15396591)
-  versions = write(10n,rebuild,"Versions",1,48,3960107,15396591)
-  latest = write(11n,versions,"Open latest",1,51,3960107,15396591)
-  r = write(23n, latest, Bool.pick(String,files,"Up folder","SESSIONS / RESULTS"), 13, 8, 6516081, 16119544)
+  related = write(10n,rebuild,"Related",1,47,3960107,15396591)
+  versions = write(10n,related,"Versions",1,48,3960107,15396591)
+  back = write(10n,versions,"Back",1,50,3960107,15396591)
+  latest = write(11n,back,"Open latest",1,51,3960107,15396591)
+  r = write(23n, latest, list_heading(results,files), 13, 8, 6516081, 16119544)
   range = write(22n,r,result_label(results),13,9,6516081,16119544)
   previous = write(10n,range,"Prev list",13,52,Bool.pick(U32,result_available(results,False{}),3960107,10066329),16119544)
   next = write(10n,previous,"Next list",25,52,Bool.pick(U32,result_available(results,True{}),3960107,10066329),16119544)

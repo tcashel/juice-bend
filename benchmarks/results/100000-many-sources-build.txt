@@ -1,0 +1,29 @@
+Many-source production benchmark; local macOS 27.0.1 arm64, 2026-10-20.
+Build: ./scripts/build benchmarks/many_sources.bend build/many-sources/benchmark
+Run: absolute binary with run 100 1000, in a fresh private temporary cwd.
+Build and native run exited 0. Independent postflight passed; stderr empty.
+Binary SHA256: d6402fa41d0b9df8ae8e3bd496f7de7cb5ed590dc4da4d6dc7f377b8ccac6828
+Binary bytes: 3732376
+Generated C SHA256: c006596b54460e4173226e73c36be00abd8f66055df57613b82f8b12f34c29d2
+All 19 recorded inputs and 88 pinned upstream hashes matched.
+Generator many-sources-v1, seed 1337: 100 independent sources, alternating
+Claude/Codex, 1000 physical records and normalized events each. The default
+middle index 50 is Claude; the check 6 24 correctness run covers Codex append.
+Small check 4 24 and check 6 24 both passed with clocks disabled; their zero
+durations are not measurements. Setup and validation are outside operation timers.
+First import all sources 27875 ms; unchanged last source 50 ms; middle-source
+append of 16 records 477 ms. Warm scoped search median/p95 17/17 ms; scoped
+late page median/p95 15/15 ms. First search follows index validation, not cold cache.
+Untouched 99 source/header/seal metadata and FTS cells/types/rowids are identical.
+This does not compare all unrelated non-FTS context bytes. Target old events,
+page and citation remain exact; raw IDs are shared and both target seals verify.
+Independent integrity, foreign keys, exact counts and latest-only FTS passed.
+No task build/test/Tart overlapped timers; unrelated host activity uncontrolled.
+One run; five-trial p95 is the maximum. No UI timing, memory, 1M stress or
+comparison with the long-session fixture or Swift Juice is claimed.
+The fresh private cwd is required; absent() is not general symlink protection.
+5d6c4a11d0bf785d9cfd3aeb4140180a6d3c4f190c9f6ab5c5b5c462b549217e  benchmarks/many_sources.bend
+66fac76f6c09bb838b677dbbe3aaef5a9e0355b41ba17ab87afe47f2bb0b3f0f  benchmarks/results/100000-many-sources-sources.sha256
+7a94ea95a7a96c0eb7e566d6d01d1c31490afb68369790be9de9ca175f0066fe  benchmarks/results/100000-many-sources.jsonl
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  benchmarks/results/100000-many-sources-stderr.txt
+a0494873e21ec9366ab435aaf67215a8a447c3f5e19c04b7eb64fa0c36f73aa3  benchmarks/results/100000-many-sources-db-check.json
