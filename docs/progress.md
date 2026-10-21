@@ -9,19 +9,20 @@ remains **Bend 2**; the unchanged 418-line SQLite bridge is the native exception
 Lean is optional development-time proof checking, not an app dependency.
 
 PR #1 is open, draft and unmerged on `codex/juice-bend-implementation`.
-Verified publication anchor: `75cc3e03f7bc2d48fc9867c1ee899d0d0487f7cd`,
-tree `47316236675c3d46fbd7a09473b954b29ca8afa3` (Related slice). The Settings
-slice below advances from this parent; inspect the live PR head and ignored
+Verified published Settings commit: `d400401801d392b1259096d9841223f7ca5a07de`,
+tree `ed75d25d4e87b0f00b83e35a9493f20663170fb4` (16 commits in draft PR #1).
+It advances from Related `75cc3e03…`; inspect the live PR head and ignored
 `build/settings-remote.json` before further publication. Bare published refs
 retain the exact remote identity without changing the protected checkout index.
 Publication is authorized only in `tcashel/juice-bend`; never merge automatically.
 Original Juice checkout, database and logs remain read-only. Use synthetic data.
 
-The current observed executable is `build/juice-bend-settings`, 11,561,056 bytes,
-SHA-256 `2e3191d9487b920a6a9aa4184239485f921e8a8f06d9b4378019f7f2eb226687`.
-The standard `build/juice-bend` and `build/Juice Bend Settings.app` contain
-this exact binary. Its isolated empty-library launcher status check passed.
-Previous named Related, Seal Tools, Tools, Files, Parity and Validated artifacts remain intact.
+The current observed executable is `build/juice-bend-context-v2`, 11,908,344 bytes,
+SHA-256 `503f1098ef910c153db717074311c692bd864030e1cf818f3484ad0b60a90694`.
+The standard `build/juice-bend` and `build/Juice Bend Context.app` contain this
+exact binary. Its isolated empty-library launcher status check passed. All 48
+application inputs and 88 upstream hashes stayed unchanged. Prior named
+Settings, Related, Seal Tools, Tools, Files, Parity and Validated artifacts remain.
 
 Mise pins Bun 1.4.2 and Bend 2.0.37 revision
 `60ca80aedeec9d8f0629b5f10dd19457d8ad67af`; 88 upstream hashes verify.
@@ -135,29 +136,57 @@ performance and native-validation records.
 
 ## Next execution steps
 
-1. Settings/raw-chunk slice is validated and promoted. Its publication artifacts
-   are `build/settings-publication.json`, `build/settings-remote.json` and bare
-   refs `codex/local-settings-validation` / `codex/published-settings-validation`.
-   Verify live head before advancing. Never merge or force push.
-2. The raw-chunk comparator is integrated and validated. Investigate the
-   dominant append staging cost before another optimization; the fresh standard
-   benchmark did not show an append improvement. Preserve every raw/digest/
-   coverage predicate, immutable identity and both source-verification passes.
-   A portable raw-ID-bound context codec passed 402 native checks; it is not
-   integrated or published. Candidate integration is being prepared under
-   ignored build artifacts. Keep Store frozen until Settings publication.
-   Then review/apply the concrete context-witness patch, preserve exact v1
-   compatibility, typed bidirectional raw/context mapping checks, both source
-   passes, trigger fallbacks and all nine publication boundaries. Validate
-   actual old-writer/open-connection compatibility and all 27 crash cuts before
-   timing the unchanged production 100k workload. No speedup is established yet.
+1. Portable context v2 is validated and promoted locally; publish its explicit
+   allowlist in `build/context-v2-publication-files.txt` on top of Settings
+   `d4004018…`, checking live PR head first. Never merge or force push. Current
+   application build/benchmark manifests must match the prepared staged tree.
+2. Live Store `7241d1bc…`, Maintenance `4248e415…`, ContextStore `2a29ab4e…`
+   and codec `6f69cc3e…` are frozen. The codec comment change is documented.
+   Storage passed 1,896 checks across ten targets, including all 27 crash cuts,
+   with 102 stable inputs. Isolated portable tests passed 812 and the actual
+   old-writer/held-connection driver passed 45; prior pure codec passed 402.
+   See `receipts/context-v2-native.txt` and ignored combined validation JSON.
+   Corrected byte accounting and earlier harness/compile failures remain
+   separately recorded; no weakened predicates. Both raw/source passes remain.
+   The complete post-publication context gate precedes COMMIT.
+
+   Production 100k binary `755adddd…` measured first import37.564s,
+   unchanged3.922s, append24.678s; preceding33.582/4.088/27.728s. This is an
+   initial-import regression alongside a shorter append observation, not a
+   finished performance goal. All22inputs/88upstreamhashes stayed unchanged;
+   independent counts, typed prefix contexts/events, rawIDs, FTS and integrity
+   passed. An inefficient external postflight join was interrupted after timers;
+   corrected point-lookup postflight passed against the same data. See receipt.
+
+   Native app503f1098 passed oldv1 capture read, native v2 Refresh, exact pinned
+   reader/selection, new scoped search and export in Tart. Five clipboard checks,
+   one pixel-region comparison and a921-byte mode0600 export passed. Full verify
+   passed for all3captures. V1 migration replay allocates all3rawrecords, so44→47;
+   oldtext/contextstayexact. Standardapp promoted; prior namedapp retained.
+   Run `build/tart/context-v2-4it0t0dm` is closed: runner130, VMstopped, leasesabsent.
+
+   Next isolated candidate owner sqlite_bridge: bind the duplicate raw_digest
+   once in put_piece, then128-key context paging with key/length selection before
+   payload materialization. Preserve all final map checks, source passes,
+   fractional/type/negative/byte-cut handling and trigger fallback. Files only
+   under `build/context-batched-candidate`; do not apply until review and native
+   gates. No new timing or speedup claim exists. Root owns final application
+   integration, quiet timing, native validation and publication.
 3. The isolated recorded-request classifier passed 110 native checks and exact
    text/Unicode-span review. It is not imported or published. Integrating it
    requires parser-version/rebuild and event-ordinal/scope compatibility tests;
    do not silently reinterpret existing captured evidence. Inline attachments
    and compressed archives also remain outstanding.
-4. Continue provider/archive coverage, full
-   Usage, deterministic context preparation, owned-storage management and
+4. Complete retained-session Usage backend is unimported and under test:
+   affine owned DEFERRED read transaction, bounded verified raw batches,
+   exact decimal counters and bounded Base.Map call dedup. Scan completeness
+   is distinct from attribution completeness. Claude mirrors/copies and the
+   inspected Codex ordinary/fork/reviewer reducers retain unknowns explicitly.
+   Codex reducer passed68nativechecks with95stableinputs; providers owns the
+   complete-reader/Claude gates and review fixes for main-table qualification
+   and duplicate metadata. No scratch ledger, billing/account lookup or current
+   UI/parser mutation.
+   Continue provider/archive coverage, deterministic context preparation, owned-storage management and
    explicit opt-in connection/subscription surfaces, then UI polish. Do not
    read real accounts or provider configuration by default.
 
@@ -171,7 +200,7 @@ Tart `juice-tests` uses the external SSD at `/Volumes/VM_disks/tart`.
 The owner authorizes necessary Tart sandbox access and no longer requires
 cross-chat coordination. Still acquire the exclusive runner lease and use
 host-only networking with isolated synthetic shares. Both the seal/Tools and
-Related and Settings runs stopped cleanly. Never terminate unrelated processes.
+Related, Settings and context-v2 runs stopped cleanly. Never terminate unrelated processes.
 Full IME/shaping/accessibility, exact input-to-display/scroll performance,
 fresh-network setup and some resource measurements remain unverified.
 Do not ask the owner to repeat unexplained physical-keyboard rituals.

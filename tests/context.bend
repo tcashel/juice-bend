@@ -105,7 +105,7 @@ def large(+db: U32) -> IO(Unit):
       [Sql.Cell.Integer{old},Sql.Cell.Integer{new}],"7",
       "context copying bounds large fields by bytes and retains verified prefix")
     found : Maybe<&2,Store.Context> <- context(db,new,7)
-    assert(has(found,repository ++ "|||"),"large inherited repository survives context resealing")
+    assert(has(found,repository ++ "|||"),"large inherited repository survives portable context copying")
 
 def suite(+self: String) -> IO(Unit):
   do IO<Unit>:
@@ -123,8 +123,8 @@ def suite(+self: String) -> IO(Unit):
     +new : String <- Store.import_file(db,"codex","context.jsonl")
     scalar(db,"SELECT count(*) FROM records a JOIN records b ON a.raw=b.raw WHERE a.snapshot=? AND b.snapshot=?",
       [Sql.Cell.Integer{old},Sql.Cell.Integer{new}],"3","valid checkpoints preserve append prefix reuse")
-    scalar(db,"SELECT count(*) FROM snapshot_context a JOIN snapshot_context b ON a.ordinal=b.ordinal AND a.digest<>b.digest WHERE a.snapshot=? AND b.snapshot=?",
-      [Sql.Cell.Integer{old},Sql.Cell.Integer{new}],"3","copied checkpoints are resealed to new snapshot and extent")
+    scalar(db,"SELECT count(*) FROM snapshot_context a JOIN snapshot_context b ON a.ordinal=b.ordinal AND a.digest=b.digest WHERE a.snapshot=? AND b.snapshot=?",
+      [Sql.Cell.Integer{old},Sql.Cell.Integer{new}],"3","identical mapped raw prefix retains portable checkpoint checksums")
     old_context : Maybe<&2,Store.Context> <- context(db,old,2)
     assert(has(old_context,"/synthetic/checkpoint|checkpoint-session|checkpoint-model|"),
       "append leaves old accepted context readable and stable")
@@ -139,7 +139,12 @@ def suite(+self: String) -> IO(Unit):
       "checkpoint checksum mutation is rejected")
     Store.exec(db,"UPDATE snapshot_context SET digest=(SELECT digest FROM snapshot_context WHERE snapshot=? AND ordinal=2) WHERE snapshot=? AND ordinal=2",
       [Sql.Cell.Integer{old},Sql.Cell.Integer{new}])
-    check_child(self,new,"checkpoint from another snapshot cannot replace selected identity")
+    same_raw : Maybe<&2,Store.Context> <- context(db,new,2)
+    assert(has(same_raw,"/synthetic/checkpoint|checkpoint-session|checkpoint-model|"),
+      "portable checkpoint from an identical mapped raw prefix remains valid")
+    Store.exec(db,"UPDATE snapshot_context SET digest=(SELECT digest FROM snapshot_context WHERE snapshot=? AND ordinal=0) WHERE snapshot=? AND ordinal=2",
+      [Sql.Cell.Integer{old},Sql.Cell.Integer{new}])
+    check_child(self,new,"portable checkpoint from a different raw record cannot replace selected identity")
     Maintenance.rebuild(db,new)
     Store.exec(db,"UPDATE snapshot_context SET version='future-parser' WHERE snapshot=? AND ordinal=2",
       [Sql.Cell.Integer{new}])

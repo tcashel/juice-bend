@@ -69,6 +69,17 @@ paging and elapsed interval timing were not exercised. Exact Unicode paste/copy
 does not establish font shaping or full IME support; no new latency, accessibility
 or export acceptance is claimed.
 
+Portable context v2 passed 1,896 live storage checks, including all 27 crash
+cuts, plus 812 isolated portable-context and 45 actual old-writer checks. The
+prior codec gate passed 402 checks; only a comment changed afterward. All
+recorded inputs remained unchanged. Native app `503f1098…` separately passed
+v1 read / v2 Refresh, pinned old text and selection, fresh scoped search, five
+clipboard comparisons, one pixel-region comparison and one exact mode-0600
+export. The 100k append measured 24.678 s, but initial import rose to 37.564 s;
+this is an observed tradeoff, not a completed performance goal. See
+[storage receipt](receipts/context-v2-native.txt), [native receipt](receipts/context-v2-ui-native.txt)
+and `performance.md`. These focused gates do not replace full-suite or UI parity.
+
 | ID | Current result | Evidence and remaining work |
 |---|---|---|
 | A01 | Partial | The final `05cdff4f…` native executable opened a fresh empty library in the macOS 27.0 arm64 Tart guest, then captured and browsed the explicit synthetic source. Host desktop launches were observed on separately identified earlier builds. Fresh network setup remains unobserved. |

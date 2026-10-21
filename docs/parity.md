@@ -42,6 +42,11 @@ Enable/Disable and persisted automatic refresh intervals. Native Tart app
 restoration and source-only append/search; 154 backend/CLI checks and 388 GUI
 assertions have separate receipts. This closes the named Settings workflow,
 not every native input or timing requirement.
+Portable context v2 subsequently passed 1,896 live storage checks, 812 adversarial
+context checks and 45 actual old-writer checks. Native app `503f1098…` passed old
+v1 reads, native v2 Refresh, pinned text and exact copy/export. The next 100k
+observation measured append24.678s versus27.728s, but first import37.564s versus
+33.582s. Long-history preservation performance is still an active gap.
 Priority order: finish long-history append improvements; close remaining
 native validation gaps; richer provider/archive
 support; full Usage and deterministic context preparation; owned-storage

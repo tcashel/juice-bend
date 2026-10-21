@@ -8,6 +8,8 @@ import ./query.bend as Query
 import ./timestamp.bend as Timestamp
 import ./json.bend as Json
 import ./projection_seal.bend as Seal
+import ./context_binding.bend as ContextBinding
+import ./context_store.bend as ContextStore
 
 type Context is Data:
   Context{repository: String, session: String, model: String, parent: String}
@@ -70,7 +72,7 @@ type ImportState is Type:
   ImportState{db: U32, file: File, provider: String, source: String,
     generation: String, snapshot: String, extent: U32, offset: U32, ordinal: U32,
     checkpoint: U32, checkpoint_ordinal: U32, context: Context,
-    observe: ImportObserver, seal: Seal.Validation}
+    observe: ImportObserver, seal: Seal.Validation, contexts: ContextStore.Plan}
 
 def text(cell: Sql.Cell) -> String:
   match cell:
@@ -636,9 +638,9 @@ def selected_record(db: U32,snapshot: String,generation: String,extent: U32,
       selected_records(db,snapshot,generation,extent,records,ordinal,1)
     return first(rows)
 
-# Incoming parser state is a bounded derivative, sealed when real raw parsing
-# produces it. The seal binds the snapshot, complete raw identity and parser
-# version. Like raw digests, this detects corruption relative to trusted
+# Historical v1 incoming-state codec remains frozen for compatibility tests
+# and existing accepted snapshots. New captures use ContextBinding portable v2;
+# the legacy seal below binds snapshot, raw metadata and parser version. Like raw digests, this detects corruption relative to trusted
 # metadata; an actor rewriting both data and checksums is outside the boundary.
 def projection_version() -> String:
   "providers-v4-utc-context-relay"
@@ -773,20 +775,90 @@ def context_rows(snapshot: String,extent: U32,raw: List<&2,Sql.Cell>,
     case +row <> _:
       context_checked(snapshot,extent,raw,row,String.eq(field(row,4n),context_version()))
 
-# Missing or old-version checkpoints use the caller's verified legacy replay.
-# Damaged current checkpoints fail explicitly. Only the selected raw record and
-# its immediate predecessor are read; earlier raw ranges are not rechecked.
-def context_before(+db: U32,+snapshot: String,generation: String,+extent: U32,
-  records: U32,+ordinal: U32) -> IO(Maybe<&2,Context>):
+# Missing/unknown checkpoints retain verified raw fallback. Historical v1 uses
+# its frozen snapshot-bound codec; portable v2 binds the exact selected raw ID.
+# The raw ID and source metadata come from the same existing context query,
+# after selected_record has checked raw bytes, position and its predecessor.
+def context_from_portable(context: ContextBinding.Context) -> Context:
+  ContextBinding.Context{repository,session,model,parent} = context
+  Context{repository,session,model,parent}
+
+def portable_context_read(+raw: List<&2,Sql.Cell>,+generation: String,+extent: U32,
+  +records: U32,+ordinal: U32,row: List<&2,Sql.Cell>) -> IO(Maybe<&2,Context>):
+  match row:
+    case [Sql.Cell.Text{repository},Sql.Cell.Text{session},Sql.Cell.Text{model},Sql.Cell.Text{parent},
+      Sql.Cell.Text{tag},Sql.Cell.Text{stored},Sql.Cell.Integer{identity},Sql.Cell.Integer{+raw_generation},
+      Sql.Cell.Integer{+raw_ordinal},Sql.Cell.Integer{+offset},Sql.Cell.Integer{+length},Sql.Cell.Text{+digest},
+      Sql.Cell.Integer{source},Sql.Cell.Text{provider},Sql.Cell.Text{locator},Sql.Cell.Integer{snapshot_generation},
+      Sql.Cell.Integer{snapshot_extent},Sql.Cell.Integer{snapshot_records}]:
+      do IO<Maybe<&2,Context>>:
+        checked(String.eq(generation,raw_generation) && String.eq(generation,snapshot_generation) &&
+          String.eq(snapshot_extent,U32.show(extent)) && String.eq(snapshot_records,U32.show(records)) &&
+          String.eq(raw_ordinal,U32.show(ordinal)) && String.eq(raw_generation,field(raw,0n)) &&
+          String.eq(raw_ordinal,field(raw,1n)) && String.eq(offset,field(raw,2n)) &&
+          String.eq(length,field(raw,3n)) && String.eq(digest,field(raw,4n)),
+          "Selected context raw identity or snapshot binding integrity mismatch")
+        +prefix : ContextBinding.Prefix <- ContextStore.prefix_required(ContextBinding.prefix(
+          ContextBinding.Binding{projection_version(),source,provider,locator,generation}))
+        +context : ContextBinding.Context = ContextBinding.Context{repository,session,model,parent}
+        checked(ContextStore.row_decoded(prefix,context,tag,stored,
+          ContextBinding.decode_raw([Sql.Cell.Integer{identity},Sql.Cell.Integer{raw_ordinal},
+            Sql.Cell.Integer{offset},Sql.Cell.Integer{length},Sql.Cell.Text{digest}])),
+          "Selected context checkpoint integrity mismatch; rebuild from retained raw")
+        return Some{context_from_portable(context)}
+    case _:
+      IO.die(Maybe<&2,Context>,1,"Selected context checkpoint integrity type mismatch")
+
+def selected_context_format(snapshot: String,generation: String,extent: U32,records: U32,
+  ordinal: U32,raw: List<&2,Sql.Cell>,row: List<&2,Sql.Cell>,portable: Bool) -> IO(Maybe<&2,Context>):
+  match portable:
+    case True{}:
+      portable_context_read(raw,generation,extent,records,ordinal,row)
+    case False{}:
+      context_rows(snapshot,extent,raw,[row])
+
+def selected_context_rows(snapshot: String,generation: String,extent: U32,records: U32,
+  ordinal: U32,raw: List<&2,Sql.Cell>,rows: List<&2,List<&2,Sql.Cell>>) -> IO(Maybe<&2,Context>):
+  match rows:
+    case []:
+      IO.pure(Maybe<&2,Context>,None{})
+    case +row <> _:
+      selected_context_format(snapshot,generation,extent,records,ordinal,raw,row,
+        String.eq(field(row,4n),ContextBinding.version_v2(projection_version())))
+
+def context_before(+db: U32,+snapshot: String,+generation: String,+extent: U32,
+  +records: U32,+ordinal: U32) -> IO(Maybe<&2,Context>):
   do IO<Maybe<&2,Context>>:
     raw : List<&2,Sql.Cell> <- selected_record(db,snapshot,generation,extent,records,ordinal)
     rows : List<&2,List<&2,Sql.Cell>> <- q(db,
-      "SELECT repository,session,model,parent,version,digest FROM snapshot_context WHERE snapshot=? AND ordinal=?",
+      "SELECT c.repository,c.session,c.model,c.parent,c.version,c.digest,i.raw,r.generation,r.ordinal,r.offset,r.n,r.digest,g.source,s.provider,s.locator,p.generation,p.extent,p.records FROM snapshot_context c LEFT JOIN records i ON i.snapshot=c.snapshot AND i.ordinal=c.ordinal LEFT JOIN raw r ON r.id=i.raw LEFT JOIN snapshots p ON p.id=c.snapshot LEFT JOIN generations g ON g.id=p.generation LEFT JOIN sources s ON s.id=g.source WHERE c.snapshot=? AND c.ordinal=?",
       [Sql.Cell.Integer{snapshot},Sql.Cell.Integer{U32.show(ordinal)}],1)
-    context_rows(snapshot,extent,raw,rows)
+    selected_context_rows(snapshot,generation,extent,records,ordinal,raw,rows)
+
+def portable_context(context: Context) -> ContextBinding.Context:
+  Context{repository,session,model,parent} = context
+  ContextBinding.Context{repository,session,model,parent}
+
+def portable_record_ready(db: U32,snapshot: String,prefix: ContextBinding.Prefix,context: Context,
+  parsed: Maybe<&2,ContextBinding.Raw>) -> IO(Unit):
+  match parsed:
+    case None{}:
+      IO.die(Unit,1,"Context checkpoint integrity: invalid verified replay raw identity")
+    case Some{raw}:
+      ContextStore.write(db,snapshot,prefix,raw,portable_context(context))
+
+# Replay supplies the standard nine validated raw columns plus its mapped raw
+# ID, read by the same SQL statement. There is no per-record identity lookup.
+def put_portable_record_context(db: U32,snapshot: String,+prefix: ContextBinding.Prefix,
+  +row: List<&2,Sql.Cell>,context: Context) -> IO(Unit):
+  ContextBinding.Prefix{ContextBinding.Binding{_,_,_,_,generation},_,_} = prefix
+  do IO<Unit>:
+    checked(String.eq(field(row,0n),generation),"Replay context generation integrity mismatch")
+    portable_record_ready(db,snapshot,prefix,context,ContextBinding.decode_raw(
+      [cell(row,9n),cell(row,1n),cell(row,2n),cell(row,3n),cell(row,4n)]))
 
 def put_piece(state: ImportState, piece: Piece) -> IO(ImportState):
-  ImportState{+db,file,+provider,+source,+gen,+snap,+extent,+off,+ord,+checkpoint,+checkpoint_ord,+ctx,observe,seal} = state
+  ImportState{+db,file,+provider,+source,+gen,+snap,+extent,+off,+ord,+checkpoint,+checkpoint_ord,+ctx,observe,seal,ContextStore.Plan{+context_prefix,context_reuse}} = state
   Piece{+bytes,+len,+newline,+oversized} = piece
   do IO<ImportState>:
     exec(db,"INSERT INTO raw(generation,ordinal,offset,n,digest,bytes,complete,oversized) VALUES(?,?,?,?,?,?,?,?)",
@@ -794,13 +866,13 @@ def put_piece(state: ImportState, piece: Piece) -> IO(ImportState):
        Sql.Cell.Integer{U32.show(len)},Sql.Cell.Text{raw_digest(gen,ord,off,len,bytes)},
        Sql.Cell.Blob{bytes},Sql.Cell.Integer{U32.show(Bool.to_u32(newline))},
        Sql.Cell.Integer{U32.show(Bool.to_u32(oversized))}])
-    rid : String <- last_id(db)
+    +rid : String <- last_id(db)
     exec(db,"INSERT INTO records VALUES(?,?,?)",[Sql.Cell.Integer{snap},Sql.Cell.Integer{U32.show(ord)},Sql.Cell.Integer{rid}])
-    put_context(db,snap,gen,extent,ord,off,len,raw_digest(gen,ord,off,len,bytes),ctx)
+    ContextStore.write(db,snap,context_prefix,ContextBinding.Raw{rid,ord,off,len,raw_digest(gen,ord,off,len,bytes)},portable_context(ctx))
     next : Context <- put_events(piece_events(oversized,provider,bytes),db,snap,ord,0,provider,ctx)
     return ImportState{db,file,provider,source,gen,snap,extent,(off + len : U32),(ord + 1 : U32),
       Bool.pick(U32,newline,(off + len : U32),checkpoint),
-      Bool.pick(U32,newline,(ord + 1 : U32),checkpoint_ord),next,observe,seal}
+      Bool.pick(U32,newline,(ord + 1 : U32),checkpoint_ord),next,observe,seal,ContextStore.Plan{context_prefix,context_reuse}}
 
 def put_pieces(pieces: List<&2,Piece>, state: ImportState) -> IO(ImportState):
   match pieces:
@@ -963,9 +1035,10 @@ def projection_digest(+db: U32,+snapshot: String) -> IO(String):
     seed : String = Domain.digest(Domain.encode(projection_version() ++ "|" ++ projection_cells(first(header))))
     projection_walk(4294967295n,db,snapshot,"-1","-1",seed)
 
-# Parser and incoming-context versions remain unchanged. Only the derivative
-# event seal has a new explicit format; old writers see an unknown tag and take
-# their existing verified full replay path in the same schema.
+# Parser and event-seal formats are unchanged. The v1 context helpers remain
+# historical compatibility codecs; production capture/rebuild writes portable
+# v2 checkpoints. Old writers see that unknown context tag and replay raw on
+# append, within the same schema; unchanged refresh does not migrate tags.
 def has_triggers(db: U32) -> IO(Bool):
   Seal.has_triggers(db)
 
@@ -995,7 +1068,7 @@ def projection_valid(db: U32,snapshot: String) -> IO(Bool):
     return Seal.is_verified(verified)
 
 def finish_verified(+db: U32,+source: String,+snap: String,got: File & Bool,
-  observe: ImportObserver,seal: Seal.Validation) -> IO(String):
+  observe: ImportObserver,seal: Seal.Validation,contexts: ContextStore.Plan) -> IO(String):
   (file,stable) = got
   do IO<String>:
     File.close(file)
@@ -1011,12 +1084,13 @@ def finish_verified(+db: U32,+source: String,+snap: String,got: File & Bool,
     latest_observer : ImportObserver <- observe_phase(removed_observer,LatestRepointed{})
     index_search_snapshot(db,snap)
     commit_observer : ImportObserver <- observe_phase(latest_observer,BeforeCommit{})
+    ContextStore.finish(db,snap,contexts)
     exec(db,"COMMIT",[])
     finished_observer : ImportObserver <- observe_phase(commit_observer,Committed{})
     return snap
 
 def finish(state: ImportState) -> IO(String):
-  ImportState{+db,file,provider,+source,gen,+snap,+extent,off,ord,checkpoint,checkpoint_ord,ctx,observe,seal} = state
+  ImportState{+db,file,provider,+source,gen,+snap,+extent,off,ord,checkpoint,checkpoint_ord,ctx,observe,seal,contexts} = state
   do IO<String>:
     checked(U32.is_eq(off,extent),"Capture extent mismatch")
     exec(db,"UPDATE snapshots SET checkpoint=?,checkpoint_ordinal=?,records=? WHERE id=?",
@@ -1024,7 +1098,7 @@ def finish(state: ImportState) -> IO(String):
        Sql.Cell.Integer{U32.show(ord)},Sql.Cell.Integer{snap}])
     staged_observer : ImportObserver <- observe_phase(observe,Staged{})
     verified : File & Bool <- verify_loop(4294967295n,db,snap,0,file)
-    finish_verified(db,source,snap,verified,staged_observer,seal)
+    finish_verified(db,source,snap,verified,staged_observer,seal,contexts)
 
 def finish_tail(state: ImportState, tail: List<&2,U32>, len: U32, oversized: Bool) ->
   IO(String):
@@ -1055,14 +1129,14 @@ def capture_bytes(state: ImportState,cursor: U32,tail: List<&2,U32>,
 def capture_step(state: ImportState, +cursor: U32, tail: List<&2,U32>,
   len: U32, oversized: Bool, done: Bool,
   next: ImportState -> U32 -> List<&2,U32> -> U32 -> Bool -> IO(String)) -> IO(String):
-  ImportState{db,file,provider,source,gen,snap,+extent,off,ord,checkpoint,cpord,ctx,observe,seal} = state
+  ImportState{db,file,provider,source,gen,snap,+extent,off,ord,checkpoint,cpord,ctx,observe,seal,contexts} = state
   match done:
     case True{}:
-      finish_tail(ImportState{db,file,provider,source,gen,snap,extent,off,ord,checkpoint,cpord,ctx,observe,seal},tail,len,oversized)
+      finish_tail(ImportState{db,file,provider,source,gen,snap,extent,off,ord,checkpoint,cpord,ctx,observe,seal,contexts},tail,len,oversized)
     case False{}:
       read(String,file,cursor,U32.min(65536,(extent - cursor : U32)),
         f => bytes => capture_bytes(
-          ImportState{db,f,provider,source,gen,snap,extent,off,ord,checkpoint,cpord,ctx,observe,seal},
+          ImportState{db,f,provider,source,gen,snap,extent,off,ord,checkpoint,cpord,ctx,observe,seal,contexts},
           cursor,tail,len,oversized,bytes,next))
 
 def capture_loop(fuel: Nat,state: ImportState,cursor: U32,tail: List<&2,U32>,
@@ -1071,9 +1145,9 @@ def capture_loop(fuel: Nat,state: ImportState,cursor: U32,tail: List<&2,U32>,
     case 0n:
       IO.die(String,1,"Capture budget exhausted")
     case 1n+rest:
-      ImportState{db,file,provider,source,gen,snap,+extent,off,ord,checkpoint,cpord,ctx,observe,seal} = state
+      ImportState{db,file,provider,source,gen,snap,+extent,off,ord,checkpoint,cpord,ctx,observe,seal,contexts} = state
       +pos = cursor
-      capture_step(ImportState{db,file,provider,source,gen,snap,extent,off,ord,checkpoint,cpord,ctx,observe,seal},
+      capture_step(ImportState{db,file,provider,source,gen,snap,extent,off,ord,checkpoint,cpord,ctx,observe,seal,contexts},
         pos,tail,length,oversized,(pos >= extent : U32),
         st => cur => pending => len => over => capture_loop(rest,st,cur,pending,len,over))
 
@@ -1086,13 +1160,16 @@ def new_capture(+db: U32, file: File, provider: String, +source: String, +extent
     exec(db,"INSERT INTO snapshots(generation,extent) VALUES(?,?)",
       [Sql.Cell.Integer{gen},Sql.Cell.Integer{U32.show(extent)}])
     snap : String <- last_id(db)
-    capture_loop(65537n,ImportState{db,file,provider,source,gen,snap,extent,0,0,0,0,Context{"","","",""},observe,Seal.SealReplay{}},
+    contexts : ContextStore.Plan <- ContextStore.fresh(db,projection_version(),gen)
+    capture_loop(65537n,ImportState{db,file,provider,source,gen,snap,extent,0,0,0,0,Context{"","","",""},observe,Seal.SealReplay{},contexts},
       0,[],0,False{})
 
 def append_context(row: List<&2,Sql.Cell>) -> Context:
   +r = row
   Context{field(r,0n),field(r,1n),field(r,2n),field(r,3n)}
 
+# Legacy diagnostic reader retained for the historical scalar/cache probes.
+# Production portable verification/copy uses ContextStore.
 # Prefix rows omit the BLOB because the import transaction has already verified
 # every old raw record against both its digest and source bytes. Batch size is
 # bounded by UTF-8 payload bytes as well as row count.
@@ -1286,8 +1363,8 @@ def copy_event_walk(fuel: Nat,+db: U32,+old: String,+snapshot: String,+count: St
         copy_event_batch(db,old,snapshot,ordinal,event,rows,
           ord => evt => copy_event_walk(rest,db,old,snapshot,count,ord,evt))
 
-def append_copy_with_seal(+db: U32,file: File,provider: String,source: String,+extent: U32,
-  +previous: List<&2,Sql.Cell>,observe: ImportObserver,seal: Seal.Validation) -> IO(String):
+def append_copy_planned(+db: U32,file: File,provider: String,source: String,+extent: U32,
+  +previous: List<&2,Sql.Cell>,observe: ImportObserver,seal: Seal.Validation,contexts: ContextStore.Plan) -> IO(String):
   +gen = field(previous,0n)
   +old = field(previous,1n)
   +checkpoint = number(field(previous,3n))
@@ -1298,17 +1375,12 @@ def append_copy_with_seal(+db: U32,file: File,provider: String,source: String,+e
     +snap : String <- last_id(db)
     copy_record_walk(4294967295n,db,old,snap,ord,0)
     copy_event_walk(4294967295n,db,old,snap,U32.show(ord),"-1","-1")
-    copy_context_walk(4294967295n,db,old,snap,extent,ord,0,U32.is_eq(ord,0))
+    ContextStore.copy_walk(4294967295n,db,old,snap,ord,0)
     ctxrows : List<&2,List<&2,Sql.Cell>> <- q(db,
       "SELECT repository,session,model,parent FROM events WHERE snapshot=? ORDER BY ordinal DESC,event DESC LIMIT 1",
       [Sql.Cell.Integer{snap}],1)
-    capture_loop(65537n,ImportState{db,file,provider,source,gen,snap,extent,checkpoint,ord,checkpoint,ord,append_context(first(ctxrows)),observe,seal},
+    capture_loop(65537n,ImportState{db,file,provider,source,gen,snap,extent,checkpoint,ord,checkpoint,ord,append_context(first(ctxrows)),observe,seal,contexts},
       checkpoint,[],0,False{})
-
-# Compatibility entry for diagnostics that explicitly request a full new seal.
-def append_copy(db: U32,file: File,provider: String,source: String,extent: U32,
-  previous: List<&2,Sql.Cell>,observe: ImportObserver) -> IO(String):
-  append_copy_with_seal(db,file,provider,source,extent,previous,observe,Seal.SealReplay{})
 
 # The source prefix was already checked against immutable raw records by
 # existing_verified. On seal mismatch, re-read and verify a full same-generation
@@ -1319,7 +1391,31 @@ def append_replay(+db: U32,file: File,provider: String,source: String,+extent: U
   do IO<String>:
     exec(db,"INSERT INTO snapshots(generation,extent) VALUES(?,?)",[Sql.Cell.Integer{generation},Sql.Cell.Integer{U32.show(extent)}])
     snapshot : String <- last_id(db)
-    capture_loop(65537n,ImportState{db,file,provider,source,generation,snapshot,extent,0,0,0,0,Context{"","","",""},observe,Seal.SealReplay{}},0,[],0,False{})
+    contexts : ContextStore.Plan <- ContextStore.fresh(db,projection_version(),generation)
+    capture_loop(65537n,ImportState{db,file,provider,source,generation,snapshot,extent,0,0,0,0,Context{"","","",""},observe,Seal.SealReplay{},contexts},0,[],0,False{})
+
+def append_context_validation(db: U32,file: File,provider: String,source: String,extent: U32,
+  previous: List<&2,Sql.Cell>,observe: ImportObserver,seal: Seal.Validation,
+  validation: ContextStore.Validation) -> IO(String):
+  match validation:
+    case ContextStore.Validation.Replay{}:
+      append_replay(db,file,provider,source,extent,previous,observe)
+    case ContextStore.Validation.Ready{contexts}:
+      append_copy_planned(db,file,provider,source,extent,previous,observe,seal,contexts)
+
+# Compatibility entry for diagnostics: still verifies actual old contexts before
+# reuse, and falls back to verified raw replay for legacy/missing/damaged rows.
+def append_copy_with_seal(+db: U32,file: File,provider: String,source: String,extent: U32,
+  +previous: List<&2,Sql.Cell>,observe: ImportObserver,seal: Seal.Validation) -> IO(String):
+  do IO<String>:
+    result : Maybe<&2,Seal.Header> <- Seal.read_header(db,field(previous,1n))
+    header : Seal.Header <- Seal.required_header(result)
+    validation : ContextStore.Validation <- ContextStore.verify(db,projection_version(),header)
+    append_context_validation(db,file,provider,source,extent,previous,observe,seal,validation)
+
+def append_copy(db: U32,file: File,provider: String,source: String,extent: U32,
+  previous: List<&2,Sql.Cell>,observe: ImportObserver) -> IO(String):
+  append_copy_with_seal(db,file,provider,source,extent,previous,observe,Seal.SealReplay{})
 
 def append_checked(db: U32,file: File,provider: String,source: String,extent: U32,
   previous: List<&2,Sql.Cell>,valid: Bool,observe: ImportObserver) -> IO(String):
@@ -1346,8 +1442,7 @@ def append_verified(+db: U32,file: File,+provider: String,+source: String,extent
       do IO<String>:
         bound : Seal.Prefix <- Seal.require_import(db,prefix,source,provider,field(previous,0n),
           field(previous,1n),field(previous,2n),field(previous,3n),field(previous,4n))
-        valid : Bool <- context_prefix_valid(db,previous,True{})
-        append_prefix_checked(db,file,provider,source,extent,previous,observe,bound,valid)
+        append_copy_with_seal(db,file,provider,source,extent,previous,observe,Seal.SealVerified{bound})
 
 def append_capture(+db: U32,file: File,provider: String,source: String,extent: U32,
   +previous: List<&2,Sql.Cell>,observe: ImportObserver) -> IO(String):

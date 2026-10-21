@@ -78,3 +78,10 @@
   blocks within the existing bounded context batch. Keep the scalar digest as
   the comparison oracle, all predicates, both raw passes and transaction limits.
   The measured long-session improvement is small; no append-complete claim.
+- **2026-10-20 — Portable context checkpoints.** Bind the derivative checkpoint
+  to exact source/generation/raw identity instead of the containing snapshot.
+  Retain V1 validation and conservative old-writer replay. A verified prefix
+  may be copied only within one write transaction, with typed bidirectional
+  equality and a final post-publication gate; triggers force a full scan.
+  Preserve both source passes. Native compatibility and adversarial tests are
+  separate from performance evidence; no speedup follows from the design alone.

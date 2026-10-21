@@ -9,7 +9,7 @@ is recorded in `acceptance.md`.
 | Native runtime | Actual macOS arm64 app launched and interacted with; browse/search/transcript, explicit capture, Blame/Why/export, Pause, Usage, rebuild and filters observed. See `native-validation.md` for build identities and remaining checks |
 | Capture scheduling and guest resources | The historical Bend trace measured callback progress; the final uninstrumented Tart build visibly accepted input and Pause during a successful 100,016-record capture. An intermediate candidate with the final GUI measured 1.55% of one core at settled idle. Final GUI physical footprint after capture/rebuild was 46.2M. Input-to-photon remains unmeasured. See `performance.md` and the separately identified receipts |
 | Compiler host | `scripts/bend version` executes Bend through mise-pinned Bun |
-| Application language / runtime | Application/UI/test/proof sources remain Bend 2, with one maintained native source `native/sqlite.c`. Fresh `otool -L` on app `784d48c4…` shows SQLite, libSystem/libobjc and upstream macOS frameworks; no Lean dependency. Bun hosts the compiler; optional Lean checks BendTT proofs during development. Neither runs application behavior |
+| Application language / runtime | Application/UI/test/proof sources remain Bend 2, with one maintained native source `native/sqlite.c`. Fresh `otool -L` on app `503f1098…` shows SQLite, libSystem/libobjc and upstream macOS frameworks; no Lean dependency. Bun hosts the compiler; optional Lean checks BendTT proofs during development. Neither runs application behavior |
 | Integrated native tests | The expanded suite completed 40 executables and 2,960 named checks, including 87 GUI-state checks, 226 append-batch checks and 27 publication crash cuts. All recorded inputs remained unchanged. See `receipts/test-parity-summary.txt`; the earlier 33-executable baseline receipt is preserved |
 | SQLite boundary / FTS5 | Native boundary suite covers typed/NUL/binary/exact-integer round trips, FTS5, rollback/reopen, stale handles, statement failure cleanup, BUSY, cancellation, registry exhaustion/reuse and timer responsiveness; current integrated counts belong in `acceptance.md` |
 | Exact file addressing | Pinned Base uses U32 file sizes/offsets; application must reject unsupported sizes explicitly |
@@ -17,6 +17,7 @@ is recorded in `acceptance.md`.
 | Source identity | Native maintenance tests confirm relative, absolute and explicit symlink aliases resolve to one canonical source |
 | Explicit source refresh | Native sources suite passes 24 checks; real main CLI registration, discovery/import, disabling and refresh were also observed with synthetic folders |
 | Settings / Indexing controls | Candidate `2e3191d9…` passed native Claude/Codex Add folder without capture, selected canonical-row Enable/Disable, explicit Import file, manual batches while paused, and durable disabled/two-hour preferences after restart. Back preserved scoped record 40, exact reader/query/list/selection; seven clipboard and four pixel-region comparisons passed. The 388 focused GUI and 154 preference backend/CLI checks are separate from historical full-suite results. See `receipts/settings-gui-tests.txt` and the [native summary](../benchmarks/results/tart-settings-summary.json) |
+| Portable context checkpoints | V2 binds source/generation/raw identity while retaining exact v1 reads and conservative old-writer replay. 1,896 live storage checks, 812 portable-context checks and 45 actual old-writer checks passed. App `503f1098…` observed old captures, native v2 Refresh, pinned text, exact copy/export. Single-run 100k append24.678s and first import37.564s; performance remains incomplete |
 | Scoped transcript / Why | Native scoped reader suite passed 18 checks, including frozen provider/repository/role/date scopes, inherited context, projection forgery rejection and corrupt checkpoint failure |
 | Displayed evidence export | Native CLI suite passed 9 checks for exact Unicode/citations, one MiB input bound, malformed UTF-8 rejection and existing-destination protection |
 | Git Blame / file and commit Why | Native file-evidence suite passed 35 checks plus 36 unified-diff cases; real synthetic Git workflows cover per-hunk content, explicit-trailer exact identity, body-reference probable identity, ambiguity, linked worktrees and eligible child navigation |
@@ -55,6 +56,15 @@ not exercised; focused model/UI tests cover the bounded 32-root inventory pages.
 The Settings run accepted a synthetic append from four snapshots/49 raw rows to
 five/50 and preserved the old reader. It adds no new timing, full IME, font
 shaping, accessibility or export claim.
+
+The upstream UI audit compared the pin with main `042e797e…` and release
+v2.0.38 (`0a57ca0d…`). Base, window runtime and Apache-2.0 license blobs are
+unchanged. The current API supports image pixels/quadrants and committed Unicode
+Text events, but has no font loading/metrics/shaping, resize/scale events or
+application accessibility tree. macOS window dimensions are fixed. Newer
+runtime option syntax also requires compatibility work. No pin change was made;
+see the [upstream comparison](https://github.com/bendlang/bend/compare/60ca80aedeec9d8f0629b5f10dd19457d8ad67af...042e797ebd1cfc060603e2682879909fe86fa8c2)
+and open [resize issue](https://github.com/bendlang/bend/issues/1021).
 
 Each import worker permits at most five minutes. The GUI refresh worker has a ten-minute outer
 limit. An unusually slow eight-file batch can exceed that outer limit: its

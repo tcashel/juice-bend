@@ -14,8 +14,8 @@ creates a new generation. Raw chunks and publication are transactional; normaliz
 events and FTS are projections, never authority. A selected snapshot never follows
 latest implicitly.
 
-The derivative event seal is `event-seal-v1`; schema version 2, parser and
-incoming-context formats remain unchanged. A full typed scan binds actual event
+The derivative event seal is `event-seal-v1`; schema version 2 and the
+provider parser remain unchanged. A full typed scan binds actual event
 rows, exact snapshot/source/generation identities, extent, checkpoint and counts.
 Its freshly verified complete-record prefix may be carried only through the
 same uninterrupted write transaction. Before reuse, copied maps/events must
@@ -25,11 +25,32 @@ or older seals take verified raw replay; malformed new state fails/rolls back.
 Older writers safely treat the new version as unfamiliar and replay too.
 IDs remain signed-64-bit decimal strings; bounded event counts are checked U32.
 
-Context hash-prefix reuse is local to one bounded batch. Only complete 64-byte
-blocks of the identical typed snapshot header are cached; the remainder and
-row suffix follow the scalar digest path. Digest bytes and every validation
-predicate remain unchanged. Mixed-generation copying falls back to scalar
-validation. Both complete raw/source comparison passes remain in capture.
+New context checkpoints use `incoming-context-v2`: the parser, provider,
+canonical locator, source and generation bind the exact raw ID, ordinal,
+offset, length, raw digest and incoming context fields. The accepted snapshot
+still selects and validates the raw mapping. V1 snapshot-bound checkpoints
+retain their exact validator; old-format append takes verified raw replay.
+Unknown selected formats fall back to verified prefix replay. Unchanged refresh
+never silently migrates an accepted capture. This changes only a derivative
+checkpoint format, not raw bytes or public evidence identities.
+
+A fresh complete typed context scan can authorize copying unchanged checksums
+only on the same connection and uninterrupted `BEGIN IMMEDIATE`. The witness
+is an affine internal contract, not an opaque security boundary. Before COMMIT,
+old headers and prefix raw maps/context must still match in both directions,
+including types; the fresh tail is validated. Main/temp triggers force a full
+target scan. The final context gate follows all publication SQL and BeforeCommit
+observers. Rebuild also gates context after refreshing search. Both complete
+raw/source comparison passes remain in capture. Privileged callbacks replacing
+trusted anchors and checksums are outside the corruption guarantee.
+
+Context queries inspect at most 32 candidates. Counted context/digest payload
+uses a 1 MiB budget with a first-row progress exception and fixed metadata
+allowances. Those allowances are not allocation measurements or guarantees for
+malformed metadata; the bridge separately rejects transport above 4 MiB. There
+is no 1 MiB total-memory or SQLite-work claim. Cursors continue strictly after
+the last accepted key, including fractional/mistyped keys between valid rows.
+Only complete identical header blocks are cached for hashing.
 
 Listing pages contain at most 100 rows and a same-transaction one-row
 lookahead. CLI `offset` and `limit` are JSON numbers; `has_more` is Boolean.

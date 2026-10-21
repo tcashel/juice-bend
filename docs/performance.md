@@ -16,7 +16,34 @@ repositories, timestamps, tool arguments/results and usage. Each four physical
 JSONL records yield five normalized events. Events include tools and are not
 presented as five independent human/assistant messages.
 
-## Current backend candidate — retained raw chunks
+## Current verified backend — portable context checkpoints
+
+The v2 checkpoint binds exact source/generation/raw identity, allowing unchanged
+context checksums to be copied within a verified write transaction. The complete
+raw/source passes and final post-publication context gate remain. The native
+storage gate passed 1,896 checks, plus 812 isolated portable-context and 45 actual
+old-writer checks; see [receipt](receipts/context-v2-native.txt).
+
+The unchanged 100k workload measured first import **37,564 ms**, unchanged refresh
+**3,922 ms**, and append **24,678 ms**. The preceding observations were
+33,582 / 4,088 / 27,728 ms. Append was about 11% shorter in these individual runs,
+while initial import was about 12% longer; long-session append remains slow.
+Warm scoped search / late read / scoped late read p95 were **38 / 8 / 17 ms**;
+five-trial p95 is the observed maximum. These are not paired statistical results.
+
+Frozen binary `755adddd…` is 3,414,392 bytes. All 22 transitive inputs and
+88 upstream hashes stayed unchanged. Exact table counts, typed context and event
+prefix equivalence, prefix raw IDs, latest FTS, seals and integrity passed.
+Logical page bytes remained 216,109,056. Task builds/tests/Tart were held during
+operation timers; unrelated host activity was uncontrolled. No memory or native
+latency was measured. An inefficient raw-ID-only join in external postflight was
+interrupted after timing; the resumed same-database check uses exact ordinal
+point lookups and raw-ID equality. No timed operation or app source changed.
+See [raw results](../benchmarks/results/100000-context-v2.jsonl),
+[build/input receipt](../benchmarks/results/100000-context-v2-build.txt) and
+[postflight](../benchmarks/results/100000-context-v2-db-check.json).
+
+## Preceding backend candidate — retained raw chunks
 
 The retained-byte comparator now walks validated raw BLOB chunks directly,
 without flattening them into another byte list. Its pure comparator and Store

@@ -1,0 +1,75 @@
+Portable context v2 native correctness receipt
+No production timing, throughput improvement, GUI or distribution claim is made here.
+
+Commands and outcomes:
+python3 build/context-v2-integration/run-gates.py: first 5 targets passed 614 checks; selected_integrity stopped before fixture creation because the custom runner used an incompatible temp-prefix/PWD.
+python3 build/context-v2-integration/run-gates.py selected_integrity coverage_integrity maintenance integration publication_crash: exit 0 after correcting runner prefix/PWD to scripts/test conventions.
+Each target uses ./scripts/build tests/NAME.bend build/context-v2-integration/bin/NAME, then that binary in its recorded private synthetic directory. Assertions and fault semantics are Bend. No standard app binary was overwritten.
+Live counts: context 23, append_batches 226, append_integrity 49, event_seal_append 283, storage_edges 33, selected_integrity 24, coverage_integrity 4, maintenance 30, integration 21, publication_crash 1203. Total 1,896 across 10 native executables.
+Publication crash matrix: initial/append/rewrite x 9 boundaries; 27 exact nonce/phase markers, 27 owned child timeout/SIGKILL/reap confirmations. All 1,203 checks passed.
+Complete live transitive Base/native/pinned compiler/build input manifest unchanged: 102 files. Per-target source/binary/generated C/log hashes and private roots: build/context-v2-integration/combined-validation.json.
+
+Expanded candidate gate:
+./scripts/build build/context-v2-candidate/tests/context_portable.bend build/context-v2-candidate/bin/context_portable
+Private-root executions: context_portable; context_portable compat ABSOLUTE_FROZEN_OLD_WORKER. Exit 0/0; 812 core + 45 compatibility checks. 107 candidate inputs unchanged; separately 88 old-worker inputs unchanged.
+Actual old worker was separately compiled against frozen pre-v2 Store 84ea / Maintenance e3bf. It writes real v1, reads/rebuilds old captures, fully replays unknown v2 on append, and safely waits on a parent transaction publishing v2 through an already-open connection. Unchanged refresh does not migrate tags.
+Portable checks cover raw/source/provider/locator/generation identity, odd IDs above 2^53, typed keys/fields, negative/REAL 31.5/63.5/text extras, row/byte cuts, empty/checkpoint 0, changed/cleared unfinished-tail context, exact copied checksums, historical rebuild/read, missing/legacy/damaged replay, and late main/temp publication-trigger rollback.
+Candidate Store/Maintenance/ContextStore match live. Candidate codec b407e694 differs from live 6f69cc3e only by removing the words currently unintegrated from a comment; its 402-check pure native codec gate is recorded at build/context-binding-gate/receipt.json.
+
+Scope and limits:
+V2 checksums bind parser/source/provider/canonical locator/generation and exact raw ID/ordinal/offset/length/digest plus incoming context. Snapshot/extent remain in verified header/map gates; identical raw prefix across snapshots intentionally retains the checksum.
+V1 bytes/reader remain exact. Reuse requires fresh whole-old-context validation, an affine same-connection witness in the uninterrupted write transaction, and late typed bidirectional copied-prefix/map equality. Main/temp triggers seen at verification or the final check force complete target-context validation.
+Final context integrity runs after all publication SQL and BeforeCommit, immediately before COMMIT; rebuild validates after search refresh. Both original BLOB/source passes and all observer positions remain. This is not a third raw/source pass or a defense against privileged callbacks rewriting trusted anchors and checksums together.
+Batch bound: at most 32 candidate rows; 1 MiB counted context/raw-digest payload plus 512 bytes/row allowance, with first-row progress. This is not a 1 MiB total-memory/internal SQLite-work bound: malformed metadata can exceed the allowance, and candidate materialization precedes the byte cut. The unchanged bridge independently enforces its 4 MiB output-payload ceiling.
+Read-only EXPLAIN confirms composite primary-key continuation seeks and bounded candidate sorts/point joins; build/context-v2-candidate/query-plans.txt is plan evidence, not runtime timing.
+
+Failed attempts retained:
+Initial source review found fractional-key cursor gaps and a too-early final gate; fixed before the frozen candidate native gate. Expanded native test reached 209 checks then exposed NULL-join byte undercount in its setup assertion; coalescing each surviving payload length fixed it, and the original 230 KiB fixture passes. Failure receipt: build/context-v2-candidate/portable-native-failure-01.json.
+Three test-only compile failures, one unexecuted alternate-fixture binary, and the interrupted old live gate (exit 130 after 23 checks) are retained under build/context-v2-candidate and build/context-v2-integration/before-byte-budget-fix. The later selected_integrity runner guard failure is retained under first-five-and-harness-failure; no production source correction was needed for that failure.
+
+SHA256 production inputs:
+7241d1bc5dda6a0d2187eee2b7ec671f888310befa70225e3d89b6069dac467a  src/store.bend
+4248e4156df6023178a7004cba4cef88bf2d7b5e0b92dfb2c3fdf512b727ba79  src/maintenance.bend
+2a29ab4ea5db321c793f2dc486f67e690b33a796e01091f2ba440f832af95ae8  src/context_store.bend
+6f69cc3e9afb19ea0f9a920e01cff92933e17910475d9a9c6ee462ee9c8ead57  src/context_binding.bend
+eba657f6476109b035a3c4daf0ffdb87e0017524425caecb572b3af39d688b30  src/projection_seal.bend
+f2f68a4a9781ea102f3e275781380a885e3057e178d75c8d45b310c3c5002191  src/domain.bend
+919cb2abd8bad19a3e8cdf12c676f586717121a9c7222a557345ade8f7ab753e  native/sqlite.c
+e8f08315fa90db8038b28e186ce78937a964aa3092f8e2c8beedd6b820d7ec52  src/raw_compare.bend
+f8eaaea049416a4de50769f73e058b308858fc994bd5213ba2cdaf397abd128e  tests/context_portable.bend
+68bbce6f4541fed38d407467fe5a2b6a8e8b13bf139f87345c33f3edb94822b0  tests/context_binding.bend
+2e3191d9487b920a6a9aa4184239485f921e8a8f06d9b4378019f7f2eb226687  build/juice-bend
+
+SHA256 expanded executables/receipts:
+bf4825b59b88698dd055f84fa448aa759caf97dfee0117726724e6c0a7082840  build/context-v2-candidate/bin/context_portable
+f470818d992ac7a28823afa5169c4129d5d161f3b9bc70443f4a0a2617c7609e  build/context-v2-candidate/bin/old-worker
+9aefd65cf1dee60b4800aa3c13429a58ead4b3c700fd0efc7a57ab0fe36906c3  build/context-v2-candidate/portable-native.log
+0b31e1cdf52fbbcc12e0acde8494e3e5309723ed7857161a812306950816045a  build/context-v2-candidate/portable-compat.log
+b76dc2c6614a63ef3e6e662bf4d78f6fe0dcbc00d6c6d92dc21e8154efeb4f44  build/context-v2-candidate/portable-inputs-before.json
+b76dc2c6614a63ef3e6e662bf4d78f6fe0dcbc00d6c6d92dc21e8154efeb4f44  build/context-v2-candidate/portable-inputs-after.json
+7b0b70159ea2ea709689c4b2dd22da4fea9b4fbdacd406d602b3a34f02d1cbcb  build/context-v2-candidate/portable-receipt.json
+8e82015d1bdd3bd4f3538d6bfc9a7870bfddd5a8c2d82d6cf0a30906cae4e9f1  build/context-v2-candidate/old-worker-runtime-receipt.json
+
+SHA256 live executable/log receipts:
+a2e665cd38dfb4ee4fced68b7970f63bf2eeb035eb52763f0d5bb08be5e9cb35  build/context-v2-integration/bin/context
+0387875c1e27e24283e635f8bbc74b8315aabb307bbe10d9f55fa158c819ff11  build/context-v2-integration/context.log
+f464e00a6588d520eb618ca45454df2ad72d41e8c58883304e990c125de34ced  build/context-v2-integration/bin/append_batches
+460234cceedb33eb6e5f8b07debf36f655946d48db0688e771f22e8c061c291b  build/context-v2-integration/append_batches.log
+cac87721609889a167cccb7abbe24c3dfa710f65556334739e8981b1524777d3  build/context-v2-integration/bin/append_integrity
+97bf123b1af9cad54fe4eecbe40c78ed2e89b64a7847d170f3a457c6a113cda0  build/context-v2-integration/append_integrity.log
+045877eeaf6bc5e8464572e64a2b17044cd5b66eca79cfd849c185f79ad69628  build/context-v2-integration/bin/event_seal_append
+27e8e38ced9c537f257ae3525e92eaa7a990bc65fa77005265330bf686ca6479  build/context-v2-integration/event_seal_append.log
+12e27cee3034d66d27f73d21d791bc8480a492f779267a77b9d4886d6b653cc9  build/context-v2-integration/bin/storage_edges
+0f3992d10a81b0613493df295750024560d926c7f1b63964b151f8154dcef0a3  build/context-v2-integration/storage_edges.log
+72bfaf7fd10860b2cb8bea078d3719d46d81c165712fc83087623a007ba25476  build/context-v2-integration/bin/selected_integrity
+162325e78cc1f409280e406b6b162bc662767cd7d6e8326d2b6c1499b438001a  build/context-v2-integration/selected_integrity.log
+b509841a8b3ce76cc3014607cf79f47e9c8c2927a22dc9fee2e9314b1ea530a5  build/context-v2-integration/bin/coverage_integrity
+4f3f9b89c10113d77ae1a1afeab72c5fe1778ebedf66765069557263de35af5f  build/context-v2-integration/coverage_integrity.log
+f950069cb2edbaa0193a27b1b3da712a30b27b45f8c7ec8542056a6b77e62800  build/context-v2-integration/bin/maintenance
+886633b17ffa3889393bb84e9ca1b10bb6eea93a06f051ada1d0fd044b304f4a  build/context-v2-integration/maintenance.log
+f67b86a5eb9d18db99979b1c7176d96d8ff6b49889c5984e05c9ae55b8bfa454  build/context-v2-integration/bin/integration
+5039b8627f2b20156fee73047b79a72bfcf2005081556e290333a384e8e0cb18  build/context-v2-integration/integration.log
+4b98aeaa56bf808ee7e3410d6591cf2584814b32babfde314fe2ecb9c7b8d544  build/context-v2-integration/bin/publication_crash
+8eb374b7e25daefd1d9e5a39b68f733bc03df1f7cb34fb0e8c547a871a1b06ee  build/context-v2-integration/publication_crash.log
+da3477ae67d38691276746fc43b356e1f10f33d06e652604fca1f80c960dd2b7  build/context-v2-integration/combined-validation.json
+a8a389e1d3d2be253ad957f3a7d92b9ceee11281268c8298c298ae4166deb77d  build/context-v2-integration/full-inputs-final.json

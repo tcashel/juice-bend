@@ -25,8 +25,12 @@ source becomes a reportable result while previous captures remain available.
 to selected snapshots, transcript ranges and exports. It applies the shared
 normalization and scope predicates to retained records, never to quoted SQL
 projection fields. Repository context checkpoints are created during real raw
-parsing and bound by checksums to the snapshot, parser version and selected raw
-identity. A read verifies that binding and the selected raw record/predecessor.
+parsing. V1 checksums bind the snapshot; V2 binds the parser, source/generation
+and exact retained raw identity so an unchanged prefix can be copied without
+resealing every row. A read validates the accepted snapshot mapping, matching
+versioned binding and selected raw record/predecessor. `context_binding.bend`
+owns the pure codec; `context_store.bend` owns bounded typed scans and the
+transaction-local reuse gate immediately before commit.
 Missing legacy checkpoints fall back to verified prefix replay; damaged current
 checkpoints fail explicitly. Rebuild creates checkpoints only after complete
 raw verification. These checks detect corruption relative to trusted metadata;

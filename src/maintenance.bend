@@ -2,6 +2,9 @@ import Base
 import ./store.bend as Store
 import ./sql.bend as Sql
 import ./paths.bend as Paths
+import ./context_binding.bend as ContextBinding
+import ./context_store.bend as ContextStore
+import ./projection_seal.bend as Seal
 
 # These operations never consult the original source. Raw bytes, positions and
 # digests are checked in a single SQLite snapshot before any projection change.
@@ -190,21 +193,36 @@ def export_raw(+db: U32,+snapshot: String,path: String) -> IO(Unit):
     Store.exec(db,"COMMIT",[])
     publish(temp,canonical)
 
-def replay_walk(fuel: Nat,+db: U32,+snapshot: String,+h: Header,
-  +ordinal: U32,+offset: U32,continued: Bool,+context: Store.Context) -> IO(Unit):
+def context_record(db: U32,snapshot: String,h: Header,+ordinal: U32,
+  offset: U32,continued: Bool) -> IO(List<&2,Sql.Cell>):
+  do IO<List<&2,Sql.Cell>>:
+    rows : List<&2,List<&2,Sql.Cell>> <- Store.q(db,
+      "SELECT r.generation,r.ordinal,r.offset,r.n,r.digest,r.bytes,r.oversized,r.complete,i.ordinal,i.raw FROM records i JOIN raw r ON r.id=i.raw WHERE i.snapshot=? AND i.ordinal=?",
+      [Sql.Cell.Integer{snapshot},Sql.Cell.Integer{U32.show(ordinal)}],1)
+    record_checked(rows,h,ordinal,offset,continued)
+
+def replay_context_walk(fuel: Nat,+db: U32,+snapshot: String,+h: Header,
+  +ordinal: U32,+offset: U32,continued: Bool,+context: Store.Context,+prefix: ContextBinding.Prefix) -> IO(Unit):
   match fuel:
     case 0n:
       complete(h,offset)
     case 1n+rest:
       Header{_,extent,_,+provider} = h
       do IO<Unit>:
-        +row : List<&2,Sql.Cell> <- record(db,snapshot,h,ordinal,offset,continued)
-        Store.put_record_context(db,snapshot,extent,row,context)
+        +row : List<&2,Sql.Cell> <- context_record(db,snapshot,h,ordinal,offset,continued)
+        Store.put_portable_record_context(db,snapshot,prefix,row,context)
         next : Store.Context <- Store.put_events(Store.piece_events(
           String.eq(Store.field(row,6n),"1"),provider,Store.blob(Store.cell(row,5n))),
           db,snapshot,ordinal,0,provider,context)
-        replay_walk(rest,db,snapshot,h,U32.add(ordinal,1),
-          U32.add(offset,Store.number(Store.field(row,3n))),next_continued(row),next)
+        replay_context_walk(rest,db,snapshot,h,U32.add(ordinal,1),
+          U32.add(offset,Store.number(Store.field(row,3n))),next_continued(row),next,prefix)
+
+def replay_walk(fuel: Nat,+db: U32,+snapshot: String,+h: Header,
+  ordinal: U32,offset: U32,continued: Bool,context: Store.Context) -> IO(Unit):
+  Header{generation,_,_,_} = h
+  do IO<Unit>:
+    prefix : ContextBinding.Prefix <- ContextStore.generation_prefix(db,Store.projection_version(),generation)
+    replay_context_walk(fuel,db,snapshot,h,ordinal,offset,continued,context,prefix)
 
 def rebuild_header(+db: U32,+snapshot: String,+h: Header) -> IO(Unit):
   Header{_,_,records,_} = h
@@ -214,7 +232,11 @@ def rebuild_header(+db: U32,+snapshot: String,+h: Header) -> IO(Unit):
     Store.exec(db,"DELETE FROM snapshot_context WHERE snapshot=?",[Sql.Cell.Integer{snapshot}])
     replay_walk(U32.to_nat(records),db,snapshot,h,0,0,False{},Store.Context{"","","",""})
     Store.seal_projection(db,snapshot)
+    context_header : Maybe<&2,Seal.Header> <- Seal.read_header(db,snapshot)
+    +checked_header : Seal.Header <- Seal.required_header(context_header)
+    prefix : ContextBinding.Prefix <- ContextStore.prefix_required(ContextBinding.prefix(ContextStore.header_binding(Store.projection_version(),checked_header)))
     Store.refresh_search(db,snapshot)
+    ContextStore.finish(db,snapshot,ContextStore.Plan{prefix,ContextStore.Reuse.Fresh{}})
 
 def rebuild(+db: U32,+snapshot: String) -> IO(Unit):
   do IO<Unit>:

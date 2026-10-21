@@ -1,5 +1,29 @@
 # Native interaction observations
 
+## Portable context checkpoints and old captures
+
+App `503f1098…` (11,908,344 bytes; 48 unchanged build inputs) ran in the isolated
+host-only Tart guest against captures made by the frozen v1 app and fixture.
+Scoped search opened both old captures, with exact Unicode selection/copy.
+Native Refresh after a source-only append published snapshot 3 using v2 context;
+v1 migration uses full replay, so raw rows advanced 44→47. A second Refresh was
+unchanged. Both old v1 checkpoint sets and exact old scoped reader text remained
+unchanged; the selected reader and selection matched its prior pixel region.
+Fresh scoped search opened the appended record. Five clipboard comparisons and
+one pixel-region comparison passed. Native Command+E wrote the exact 921-byte
+bounded export with mode 0600. Complete retained verification passed for all
+three snapshots; integrity/FK and replayed-prefix checks passed.
+
+The window closed, owned VM stopped and leases were released. The standard
+executable and `build/Juice Bend Context.app` now contain this exact observed
+binary; isolated empty-library launcher status passed. Prior named apps remain.
+Settings were preconfigured through the actual CLI. This does not establish
+latency, sustained scroll cadence, IME, shaping, accessibility or memory use.
+Unsupported glyphs still show boxes. External postflight assumptions about v1
+raw allocation and the export path were corrected before final assertions;
+no production source changed. See [receipt](receipts/context-v2-ui-native.txt)
+and [summary](../benchmarks/results/tart-context-v2-summary.json).
+
 ## Persisted Settings and explicit source controls
 
 App `2e3191d9487b920a6a9aa4184239485f921e8a8f06d9b4378019f7f2eb226687`
@@ -21,7 +45,8 @@ SQLite integrity/FK checks passed: four sources/generations, five snapshots,
 50 raw, 52 records/events/context and 50 current search events.
 
 Both owned windows closed; Tart stopped and leases were released. The standard
-executable and `build/Juice Bend Settings.app` contain this exact binary; its
+executable was promoted to this binary; `build/Juice Bend Settings.app` retains
+it. Its
 isolated empty-library launcher status check passed. Earlier named apps remain.
 Unsupported glyphs still show boxes. No new latency, IME, accessibility, export,
 long-interval timing or native source-list pagination claim is made. The 388

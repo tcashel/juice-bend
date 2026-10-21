@@ -273,8 +273,8 @@ def context_copy(+self: String) -> IO(Unit):
     Store.exec(db,"DROP TRIGGER fail_late_context",[])
     +latest : String <- Store.import_file(db,"codex",prefix ++ ".jsonl")
     reuse(db,old,latest,"66","context batch retry retains every verified prefix raw occurrence")
-    scalar(db,"SELECT count(*) FROM snapshot_context a JOIN snapshot_context b ON a.ordinal=b.ordinal AND a.digest<>b.digest WHERE a.snapshot=? AND b.snapshot=?",
-      [Sql.Cell.Integer{old},Sql.Cell.Integer{latest}],"66","every copied context digest is resealed for new snapshot and extent")
+    scalar(db,"SELECT count(*) FROM snapshot_context a JOIN snapshot_context b ON a.ordinal=b.ordinal AND a.digest=b.digest WHERE a.snapshot=? AND b.snapshot=?",
+      [Sql.Cell.Integer{old},Sql.Cell.Integer{latest}],"66","every identical mapped raw prefix keeps its portable context digest")
     check_context(db,latest,31,"model-M","record31 context precedes explicit model clear")
     check_context(db,latest,32,"","record32 at new context batch starts with cleared model")
     check_context(db,latest,63,"model-N","record63 retains replacement model at batch end")
