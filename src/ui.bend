@@ -13,6 +13,7 @@ type Content is Data:
 type Results is Data:
   Results{offset: U32, count: U32, has_more: Bool, ready: Bool}
   RelatedResults{page: U32, count: U32, has_more: Bool, has_previous: Bool}
+  SettingsResults{offset: U32,total: U32,automatic: String,ready: Bool}
 
 type Edit is Data:
   Edit{focus: U32, caret: U32, anchor: U32, dragging: Bool, viewport: U32}
@@ -50,6 +51,12 @@ type Action is Data:
   Refresh{}
   Pause{}
   Settings{}
+  SettingsAddFolder{}
+  SettingsImportFile{}
+  SettingsEnable{}
+  SettingsDisable{}
+  SettingsInterval{seconds: U32}
+  SettingsReload{}
   Storage{}
   Files{}
   RepoOpen{}
@@ -121,6 +128,12 @@ def set_files(s: State,files: Bool) -> State:
   State{Content{q,rows,reader,lines,title,status,scope,results,old},input,image,dirty} = s
   State{Content{q,rows,reader,lines,title,status,scope,results,files},input,image,True{}}
 
+def is_settings(s: State) -> Bool:
+  State{Content{q,rows,reader,lines,title,status,scope,results,files},input,image,dirty} = s
+  match results:
+    case SettingsResults{+offset,+total,automatic,ready}: True{}
+    case _: False{}
+
 def title(s: State) -> String:
   State{Content{q,rows,reader,lines,title,status,scope,results,+files},input,image,dirty} = s
   title
@@ -178,6 +191,8 @@ def result_label(results: Results) -> String:
     case Results{offset,count,more,ready}: ordinary_result_label(offset,count,more,ready)
     case RelatedResults{page,count,more,previous}:
       "Page " ++ U32.show(page) ++ " | " ++ U32.show(count) ++ " links"
+    case SettingsResults{+offset,+total,automatic,ready}:
+      Bool.pick(String,ready,Bool.pick(String,U32.is_eq(total,0),"No registered folders",U32.show(U32.add(offset,1)) ++ "-" ++ U32.show(U32.min(U32.add(offset,14),total)) ++ "/" ++ U32.show(total)),"Inventory not loaded")
 
 def result_available(results: Results,forward: Bool) -> Bool:
   match results:
@@ -185,6 +200,8 @@ def result_available(results: Results,forward: Bool) -> Bool:
       ready && Bool.pick(Bool,forward,more && U32.is_le(offset,4294967095),U32.is_gt(offset,0))
     case RelatedResults{page,count,more,previous}:
       Bool.pick(Bool,forward,more,previous)
+    case SettingsResults{+offset,+total,automatic,ready}:
+      ready && Bool.pick(Bool,forward,U32.is_lt(U32.add(offset,14),total),U32.is_gt(offset,0))
 
 def result_action_if(+s: State,+forward: Bool,available: Bool) -> State & Action:
   match available:
@@ -447,7 +464,7 @@ def paste_query(+s: State) -> State & Action:
   State{content,Input{selected,scroll,Edit{focus,caret,anchor,drag, viewport},command,shift},image,dirty} = s
   paste_query_at(s,focus)
 
-def sidebar_action(+s: State, +row: U32) -> State & Action:
+def sidebar_normal(+s: State, +row: U32) -> State & Action:
   match row:
     case 9:
       (s, Files{})
@@ -488,6 +505,37 @@ def sidebar_action(+s: State, +row: U32) -> State & Action:
     case _:
       (s, NoAction{})
 
+# Settings uses the same native hit testing and text controls. Its interval
+# choices occupy distinct rows and never overlap the ordinary sidebar actions.
+def sidebar_settings(+s: State,row: U32) -> State & Action:
+  match row:
+    case 9: (s,Settings{})
+    case 11: (s,Pause{})
+    case 14: (set_scope(s,"claude"),Scope{"claude"})
+    case 17: (set_scope(s,"codex"),Scope{"codex"})
+    case 20: (s,SettingsAddFolder{})
+    case 23: (s,Settings{})
+    case 25: (s,Storage{})
+    case 28: (s,SettingsImportFile{})
+    case 30: copy_action(s,String.is_empty(selection(s)))
+    case 33: paste_query(s)
+    case 36: (set_query(s,""),Search{})
+    case 39: (select_all(s),NoAction{})
+    case 42: (s,SettingsInterval{30})
+    case 44: (s,SettingsInterval{7200})
+    case 46: (s,SettingsInterval{14400})
+    case 48: (s,SettingsInterval{28800})
+    case 50: (s,SettingsInterval{86400})
+    case _: (s,NoAction{})
+
+def sidebar_mode(s: State,row: U32,settings: Bool) -> State & Action:
+  match settings:
+    case True{}: sidebar_settings(s,row)
+    case False{}: sidebar_normal(s,row)
+
+def sidebar_action(+s: State,row: U32) -> State & Action:
+  sidebar_mode(s,row,is_settings(s))
+
 def list_row_click(+s: State,+index: U32,valid: Bool) -> State & Action:
   match valid:
     case True{}:
@@ -518,7 +566,7 @@ def mouse_body(+s: State, +x: U32, +y: U32, +col: U32, +row: U32,
       +pos = reader_at(s, x, y)
       (set_edit(s, Edit{2, pos, pos, True{}, 0}), NoAction{})
 
-def top_action(+s: State, +group: U32) -> State & Action:
+def top_normal(+s: State, +group: U32) -> State & Action:
   match group:
     case 0:
       (s, Bool.pick(Action,is_files(s),RepoOpen{},Refresh{}))
@@ -538,6 +586,25 @@ def top_action(+s: State, +group: U32) -> State & Action:
       (s, Settings{})
     case _:
       (s, NoAction{})
+
+def top_settings(s: State,group: U32) -> State & Action:
+  match group:
+    case 0: (s,Refresh{})
+    case 1: (s,Pause{})
+    case 2: (s,SettingsAddFolder{})
+    case 3: (s,SettingsImportFile{})
+    case 4: (s,SettingsEnable{})
+    case 5: (s,SettingsDisable{})
+    case 6: (s,SettingsReload{})
+    case _: (s,Settings{})
+
+def top_mode(s: State,group: U32,settings: Bool) -> State & Action:
+  match settings:
+    case True{}: top_settings(s,group)
+    case False{}: top_normal(s,group)
+
+def top_action(+s: State,group: U32) -> State & Action:
+  top_mode(s,group,is_settings(s))
 
 def query_click(+s: State, col: U32) -> State & Action:
   +pos = query_at(s, col)
@@ -721,9 +788,38 @@ def draw_query(+c: Canvas, +text: String, +x: U32, +y: U32, +at: U32,
 def list_heading(results: Results,files: Bool) -> String:
   match results:
     case RelatedResults{page,count,more,previous}: "RELATED CAPTURES"
+    case SettingsResults{+offset,+total,automatic,ready}: "REGISTERED FOLDERS"
     case _: Bool.pick(String,files,"Up folder","SESSIONS / RESULTS")
 
-def draw(+s: State) -> Image:
+def automatic_label(results: Results,fallback: String) -> String:
+  match results:
+    case SettingsResults{+offset,+total,automatic,ready}: automatic
+    case _: fallback
+
+def settings_chrome(c: Canvas,active: Bool) -> Canvas:
+  match active:
+    case False{}: c
+    case True{}:
+      a = fill(46n,c,0,8,12n,15396591)
+      b = write(10n,a,"Back",1,9,3960107,15396591)
+      d = write(10n,b,"Automatic",1,11,3960107,15396591)
+      e = write(10n,d,"Claude",1,14,3960107,15396591)
+      f = write(10n,e,"Codex",1,17,3960107,15396591)
+      g = write(10n,f,"Add folder",1,20,3960107,15396591)
+      h = write(10n,g,"Back",1,23,3960107,15396591)
+      i = write(10n,h,"Storage",1,25,3960107,15396591)
+      j = write(11n,i,"Import file",1,28,3960107,15396591)
+      k = write(10n,j,"Copy text",1,30,3960107,15396591)
+      l = write(10n,k,"Paste",1,33,3960107,15396591)
+      m = write(10n,l,"Clear",1,36,3960107,15396591)
+      n = write(10n,m,"Select all",1,39,3960107,15396591)
+      o = write(10n,n,"Every 30s",1,42,3960107,15396591)
+      p = write(10n,o,"Every 2h",1,44,3960107,15396591)
+      q = write(10n,p,"Every 4h",1,46,3960107,15396591)
+      r = write(10n,q,"Every 8h",1,48,3960107,15396591)
+      write(10n,r,"Every 24h",1,50,3960107,15396591)
+
+def draw_automatic(+s: State,automatic: String) -> Image:
   State{Content{+q, rows, reader, lines, title, status, +scope,+results,+files},
     Input{+selected, scroll, Edit{+focus, +caret, +anchor, drag, viewport}, command, shift}, image, dirty} = s
   base = fill(8n, Flat{16777215}, 0, 0, 88n, 15988716)
@@ -732,17 +828,17 @@ def draw(+s: State) -> Image:
   foot = fill(2n, list, 0, 54, 88n, 15396591)
   a = write(16n, foot, "JUICE BEND", 1, 1, 3960107, 15988716)
   b = write(60n, a, "Captured history / lexical search / evidence", 18, 1, 6516081, 15988716)
-  c = write(10n, b, Bool.pick(String,files,"Repository","Search"), 1, 4, 6516081, 15988716)
+  c = write(10n, b, Bool.pick(String,is_settings(s),"Path",Bool.pick(String,files,"Repository","Search")), 1, 4, 6516081, 15988716)
   d = fill(3n, c, 13, 3, 74n, 16777215)
   e = draw_query(d, String.append(String.drop(q, U32.to_nat(query_offset(s))), " "), 14, 4, query_offset(s), Bool.pick(U32, U32.is_eq(focus, 0), U32.min(caret, anchor), 0),
     Bool.pick(U32, U32.is_eq(focus, 0), Bool.pick(U32, U32.is_eq(caret, anchor), U32.add(caret, 1), U32.max(caret, anchor)), 0), 72n)
   f = write(10n, e, Bool.pick(String,files,"Open repo","Refresh"), 1, 6, 3960107, 15988716)
-  g = write(10n, f, "Pause", 13, 6, 3960107, 15988716)
-  blame = write(10n, g, "Blame", 25, 6, 3960107, 15988716)
-  h = write(10n, blame, "Why", 38, 6, 3960107, 15988716)
-  i = write(10n, h, "Export", 49, 6, 3960107, 15988716)
-  j = write(10n, i, "Prev text", 61, 6, 3960107, 15988716)
-  k = write(10n, j, "Next text", 73, 6, 3960107, 15988716)
+  g = write(10n, f, automatic_label(results,automatic), 13, 6, 3960107, 15988716)
+  blame = write(10n, g, Bool.pick(String,is_settings(s),"Add folder","Blame"), 25, 6, 3960107, 15988716)
+  h = write(11n, blame, Bool.pick(String,is_settings(s),"Import file","Why"), 37, 6, 3960107, 15988716)
+  i = write(10n, h, Bool.pick(String,is_settings(s),"Enable","Export"), 49, 6, 3960107, 15988716)
+  j = write(10n, i, Bool.pick(String,is_settings(s),"Disable","Prev text"), 61, 6, 3960107, 15988716)
+  k = write(10n, j, Bool.pick(String,is_settings(s),"Reload","Next text"), 73, 6, 3960107, 15988716)
   l = write(10n, k, Bool.pick(String,files,"History","Files"), 1, 9, 6516081, 15396591)
   m = write(10n, l, "All", 1, 11, 3960107, 15396591)
   n = write(10n, m, "Claude", 1, 14, 3960107, 15396591)
@@ -762,7 +858,8 @@ def draw(+s: State) -> Image:
   versions = write(10n,related,"Versions",1,48,3960107,15396591)
   back = write(10n,versions,"Back",1,50,3960107,15396591)
   latest = write(11n,back,"Open latest",1,51,3960107,15396591)
-  r = write(23n, latest, list_heading(results,files), 13, 8, 6516081, 16119544)
+  chrome = settings_chrome(latest,is_settings(s))
+  r = write(23n, chrome, list_heading(results,files), 13, 8, 6516081, 16119544)
   range = write(22n,r,result_label(results),13,9,6516081,16119544)
   previous = write(10n,range,"Prev list",13,52,Bool.pick(U32,result_available(results,False{}),3960107,10066329),16119544)
   next = write(10n,previous,"Next list",25,52,Bool.pick(U32,result_available(results,True{}),3960107,10066329),16119544)
@@ -773,15 +870,24 @@ def draw(+s: State) -> Image:
   z = write(86n, w, "Cmd+F search | Cmd+T tools | arrows navigate | drag select | Cmd+C copy | Cmd+E export", 1, 55, 6516081, 15396591)
   canvas.image(z)
 
-def view_dirty(+s: State, +dirty: Bool) -> State & Image:
+def view_dirty_automatic(+s: State,+dirty: Bool,automatic: String) -> State & Image:
   State{content, input, +old, clean} = s
   match dirty:
     case True{}:
-      +next = draw(s)
+      +next = draw_automatic(s,automatic)
       (State{content, input, next, False{}}, next)
     case False{}:
       (State{content, input, old, False{}}, old)
 
+def draw(s: State) -> Image:
+  draw_automatic(s,"Pause")
+
+def view_dirty(s: State,dirty: Bool) -> State & Image:
+  view_dirty_automatic(s,dirty,"Pause")
+
+def view_automatic(s: State,automatic: String) -> State & Image:
+  State{content,input,image,dirty} = s
+  view_dirty_automatic(State{content,input,image,False{}},dirty,automatic)
+
 def view(s: State) -> State & Image:
-  State{content, input, image, dirty} = s
-  view_dirty(State{content, input, image, False{}}, dirty)
+  view_automatic(s,"Pause")

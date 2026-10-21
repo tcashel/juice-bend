@@ -16,6 +16,7 @@ import ./storage_inventory.bend as Inventory
 import ./repository_cli.bend as Repository
 import ./activity_cli.bend as Activity
 import ./relations_cli.bend as Relations
+import ./refresh_preferences_cli.bend as RefreshPreferences
 
 type Page is Data:
   Page{offset: U32, rows: List<&2,List<&2,Sql.Cell>>, has_more: Bool}
@@ -516,6 +517,7 @@ def help() -> IO(Unit):
     "\"versions SNAPSHOT [OFFSET]\",\"latest SNAPSHOT\"," ++
     "\"import PROVIDER PATH\",\"refresh PROVIDER PATH\",\"source-add PROVIDER ROOT\"," ++
     "\"source-disable PROVIDER ROOT\",\"sources\",\"refresh-all\"," ++
+    "\"refresh-preferences\",\"refresh-preferences-set true|false SECONDS\"," ++
     "\"search QUERY [PROVIDER REPOSITORY ROLE AFTER [OFFSET]]\",\"session SNAPSHOT START COUNT\"," ++
     "\"why SNAPSHOT [START COUNT]\",\"session-scope SNAP START COUNT PROVIDER REPO ROLE AFTER\"," ++
     "\"why-scope SNAP START COUNT PROVIDER REPO ROLE AFTER\",\"blame REPOSITORY FILE START END\"," ++
@@ -538,6 +540,10 @@ def help() -> IO(Unit):
 
 def command(db: U32,data_dir: String,cmd: String,args: List<String>) -> IO(Unit):
   match cmd:
+    case "refresh-preferences":
+      RefreshPreferences.command(db,"refresh-preferences",args)
+    case "refresh-preferences-set":
+      RefreshPreferences.command(db,"refresh-preferences-set",args)
     case "repo-open":
       Repository.command(db,"repo-open",args)
     case "repo-tree":

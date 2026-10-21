@@ -32,11 +32,18 @@ presentation checks, plus actual native Refresh, retained text and exports.
 Payloads now precede their full citations. Standard 100k append improved from
 33.392 to 28.226 seconds in single observations; the following context-prefix
 cache measured 27.262 seconds and passed 990 focused checks. It still needs work.
-The separate 100-source benchmark measured a 477 ms middle-source append;
+The retained-chunk comparator passed 2,225 checks, including all 27 crash cuts,
+but the next standard run measured 27.728 seconds; it does not establish an
+append improvement over 27.262 seconds. The separate 100-source benchmark measured a 477 ms middle-source append;
 that is a different workload, not a long-session speedup claim.
+Settings now has explicit provider/path Add folder, Import file, selected-root
+Enable/Disable and persisted automatic refresh intervals. Native Tart app
+`2e3191d9…` passed actual restart, manual refresh while paused, exact origin
+restoration and source-only append/search; 154 backend/CLI checks and 388 GUI
+assertions have separate receipts. This closes the named Settings workflow,
+not every native input or timing requirement.
 Priority order: finish long-history append improvements; close remaining
-native validation gaps; Settings and persistent refresh/source controls;
-richer provider/archive
+native validation gaps; richer provider/archive
 support; full Usage and deterministic context preparation; owned-storage
 management and explicit opt-in connection/subscription surfaces. UI polish
 follows functional parity. These are outstanding capabilities, not claims that
@@ -63,6 +70,7 @@ not established by the current bitmap reader.
 | Recorded usage | `Discovery/ClaudeCallUsage.swift`, `Discovery/CodexForkUsage.swift` under `JuiceCore` | Verified raw view: Claude session/message keys use bucket maxima; Codex adjacent cumulative deltas exclude first baseline, resets and known fork/unknown metadata attribution | 29 native Usage checks; exact decimal strings above 2^53. Maximum 100 selected records is explicitly incomplete. Missing counts remain unknown; no full-session, billing or quota total is claimed. Repository/role/date filtered GUI views cannot open an unfiltered usage summary |
 | Claude nested discovery | `JuiceCore/Discovery/ClaudeCodeDiscoverer.swift` | Explicit enabled roots recursively include parent histories and nested `subagents`; no default private-home scan or discovered symlink traversal | Native source tests cover enabled/disabled roots, canonical paths, nested files, missing sources and retry fairness. Discovery enumerates at most 2048 entries within 256 KiB / 2 seconds |
 | Codex active/archived discovery | `JuiceCore/Discovery/CodexDiscoverer.swift` | The same explicit-root walk covers active and archived plain JSONL paths; one root and at most four new plus four registered files per refresh | Maximum 32 configured roots. Oversized/failed enumeration retains the prior queue. `.jsonl.zst` decompression is unsupported. Extension selection does not imply support for arbitrary multiline `.json` documents |
+| Source and refresh Settings | Native Settings / indexing controls | Explicit provider/path registration, separate file import, authoritative selected-root Enable/Disable; atomic durable enabled/interval pair; manual Refresh while paused | App `2e3191d9…` observed both providers, no implicit capture on registration, restart persistence, exact Back and append/search. Automatic deadlines are checked; no elapsed two-hour timer acceptance claim. Inventory is bounded to 32 roots |
 | Content threshold | `JuiceCore/Blame/ContentMatcher.swift` | Nonempty eligible sequence; exact singleton or at least two hits and 60% overlap | `tests/provenance.bend`; production calls `Domain.eligible_match` |
 | Repeated lines and whitespace | `JuiceCore/Blame/FileEdit.swift` | Preserve repeated hunk occurrences and leading indentation; trim trailing ASCII whitespace | Native tests pass; non-ASCII-only lines conservatively cannot establish content attribution |
 | Deterministic attribution | `JuiceCore/Blame/BlameService.swift` | Exact rational score, newest normalized UTC timestamp rank, stable captured key | Nine native timestamp-attribution checks include equal offset instants, one-nanosecond differences and production content selection. No floating-point or incompatible epoch/calendar comparison; production calls `Domain.prefer_candidate` |

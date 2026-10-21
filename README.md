@@ -38,9 +38,15 @@ agents may lack display access even on a Mac.
 
 Without `--demo`, the default library is
 `~/Library/Application Support/JuiceBend/`. No provider history is scanned
-automatically. Settings lets you choose Claude or Codex and enter an explicit
-local file or directory. Registration is opt-in. Refresh processes registered
-roots in bounded batches; Pause stops automatic refresh scheduling.
+automatically. In Settings, choose Claude or Codex and enter a literal absolute
+path. **Add folder** registers a directory; **Import file** captures one JSONL
+file. Select a registered folder before using Enable or Disable. Disabling a
+folder preserves its captured history. Refresh processes bounded batches.
+
+Pause/Resume and the 30-second, 2-hour, 4-hour, 8-hour or daily interval are saved
+in the owned library. The UI distinguishes pending changes from acknowledged
+preferences. An active capture finishes safely; manual Refresh remains available
+while automatic refresh is paused. Back restores the prior reader and selection.
 
 CLI commands use the same Bend storage and parsing code:
 
@@ -49,6 +55,8 @@ APP=./build/juice-bend
 DATA=/tmp/juice-bend-explicit-library
 "$APP" --data-dir "$DATA" source-add claude /absolute/selected/history
 "$APP" --data-dir "$DATA" refresh-all
+"$APP" --data-dir "$DATA" refresh-preferences
+"$APP" --data-dir "$DATA" refresh-preferences-set false 7200
 "$APP" --data-dir "$DATA" history
 "$APP" --data-dir "$DATA" search '"captured evidence"' claude '' assistant ''
 "$APP" --data-dir "$DATA" session 1 0 20

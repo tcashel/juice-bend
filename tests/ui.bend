@@ -194,6 +194,43 @@ def tools_navigation() -> IO(Unit):
       U32.is_eq(navigation_kind(UI.event(Key{116,True{}},state)),0),
       "Tools shortcut preserves query and plain T is not a command")
 
+def settings_action(result: UI.State & UI.Action) -> String:
+  (state,action) = result
+  match action:
+    case UI.SettingsAddFolder{}: "add"
+    case UI.SettingsImportFile{}: "import"
+    case UI.SettingsEnable{}: "enable"
+    case UI.SettingsDisable{}: "disable"
+    case UI.SettingsReload{}: "reload"
+    case UI.SettingsInterval{seconds}: U32.show(seconds)
+    case UI.Refresh{}: "refresh"
+    case UI.Pause{}: "automatic"
+    case UI.Settings{}: "back"
+    case _: "other"
+
+def settings_navigation() -> IO(Unit):
+  +state = UI.set_results(UI.init(),UI.SettingsResults{0,32,"Pause",True{}})
+  do IO<Unit>:
+    require(String.eq(UI.result_label(UI.SettingsResults{0,0,"Loading",False{}}),"Inventory not loaded") &&
+      String.eq(UI.result_label(UI.SettingsResults{0,0,"Pause",True{}}),"No registered folders"),"unloaded source inventory is distinct from confirmed empty inventory")
+    require(String.eq(settings_action(UI.event(Mouse{32,96,0,True{}},state)),"refresh") &&
+      String.eq(settings_action(UI.event(Mouse{224,96,0,True{}},state)),"automatic"),"Settings retains independent manual Refresh and durable automatic controls")
+    require(String.eq(settings_action(UI.event(Mouse{416,96,0,True{}},state)),"add") &&
+      String.eq(settings_action(UI.event(Mouse{608,96,0,True{}},state)),"import"),"Settings Add folder and Import file have distinct hit targets")
+    require(String.eq(settings_action(UI.event(Mouse{800,96,0,True{}},state)),"enable") &&
+      String.eq(settings_action(UI.event(Mouse{992,96,0,True{}},state)),"disable"),"Settings Enable and Disable are separate selected-row actions")
+    require(String.eq(settings_action(UI.event(Mouse{1184,96,0,True{}},state)),"reload"),"Settings Reload has its own toolbar target")
+    require(String.eq(settings_action(UI.event(Mouse{32,672,0,True{}},state)),"30") &&
+      String.eq(settings_action(UI.event(Mouse{32,704,0,True{}},state)),"7200"),"Settings exposes exact thirty-second and two-hour choices")
+    require(String.eq(settings_action(UI.event(Mouse{32,736,0,True{}},state)),"14400") &&
+      String.eq(settings_action(UI.event(Mouse{32,768,0,True{}},state)),"28800") &&
+      String.eq(settings_action(UI.event(Mouse{32,800,0,True{}},state)),"86400"),"Settings exposes exact four-hour eight-hour and daily choices")
+    require(String.eq(settings_action(UI.event(Mouse{32,144,0,True{}},state)),"back") &&
+      String.eq(settings_action(UI.event(Mouse{32,368,0,True{}},state)),"back"),"Settings Back has visible nonrecursive exit controls")
+    require(UI.result_available(UI.SettingsResults{0,32,"Pause",True{}},True{}) &&
+      Bool.not(UI.result_available(UI.SettingsResults{28,32,"Pause",True{}},True{})) &&
+      String.eq(UI.result_label(UI.SettingsResults{28,32,"Pause",True{}}),"29-32/32"),"Settings folder paging reaches all thirty-two bounded rows and stops at the end")
+
 def after_clipboard(result: Result<&1, &1, U32 & String, U32 & (String & String)>, state: UI.State) -> IO(Maybe<UI.State>):
   match result:
     case Fail{(code, message)}:
@@ -256,6 +293,7 @@ def dispatch(args: List<String>) -> IO(Unit):
         files_navigation()
         tools_navigation()
         related_navigation()
+        settings_navigation()
 
 def main() -> IO(Unit):
   do IO<Unit>:

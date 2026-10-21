@@ -5,6 +5,8 @@ import ../src/json.bend as Json
 import ../src/query.bend as Query
 import ../src/sql.bend as Sql
 import ../src/gui_files.bend as Files
+import ../src/gui_settings.bend as Settings
+import ../src/refresh_preferences.bend as Refresh
 
 def require(ok: Bool,name: String) -> IO(Unit):
   match ok:
@@ -14,10 +16,10 @@ def require(ok: Bool,name: String) -> IO(Unit):
       IO.die(Unit,1,"FAIL " ++ name)
 
 def state() -> Gui.State:
-  Gui.State{0,"/tmp/juice-bend-gui-contract","/usr/bin/false",
+  Gui.settings_model_set(Gui.State{0,"/tmp/juice-bend-gui-contract","/usr/bin/false",
     UI.set_reader(UI.set_query(UI.init(),"needle"),"Pinned","stable evidence"),
-    Gui.Selection{[],"7",0,3,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"needle","","",Files.empty(),[]},
-    Gui.Jobs{2,None{},None{},None{},False{}},0n,0}
+    Gui.Selection{[],"7",0,3,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"needle","","",Files.empty(),[],[]},
+    Gui.Jobs{2,None{},None{},None{},False{}},0n,0},Settings.loaded(Settings.initial(),Refresh.defaults()))
 
 def ui(s: Gui.State) -> UI.State:
   Gui.State{db,dir,program,ui,selection,form,jobs,refresh_at,serial} = s
@@ -28,7 +30,7 @@ def snapshot(s: Gui.State) -> String:
   snap
 
 def mode(s: Gui.State) -> U32:
-  Gui.State{db,dir,program,ui,selection,Gui.Form{mode,search,source,blame,files,navigation},jobs,refresh_at,serial} = s
+  Gui.State{db,dir,program,ui,selection,Gui.Form{mode,search,source,blame,files,navigation,settings},jobs,refresh_at,serial} = s
   mode
 
 def wanted_args(value: Maybe<&2,Gui.Request>) -> String:
@@ -89,13 +91,13 @@ def readers() -> IO(Unit):
 
 def initial() -> IO(Unit):
   +empty = {Gui.State{0,"/tmp/juice-bend-gui-contract","/usr/bin/false",UI.init(),
-    Gui.Selection{[],"",0,0,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"","","",Files.empty(),[]},Gui.Jobs{0,None{},None{},None{},False{}},0n,0} : Gui.State}
+    Gui.Selection{[],"",0,0,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"","","",Files.empty(),[],[]},Gui.Jobs{0,None{},None{},None{},False{}},0n,0} : Gui.State}
   +next = Gui.with_rows(empty,[Gui.Item{"9",0,"initial source","claude","/tmp/repo","2",Gui.empty_filters()}])
   require(String.eq(wanted(next),"session-scope|9|0|40||||"),"initial unpinned browse opens first accepted snapshot")
 
 def initial_late_hit() -> IO(Unit):
   +empty = {Gui.State{0,"/tmp/juice-bend-gui-contract","/usr/bin/false",UI.init(),
-    Gui.Selection{[],"",0,0,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"","","",Files.empty(),[]},Gui.Jobs{0,None{},None{},None{},False{}},0n,0} : Gui.State}
+    Gui.Selection{[],"",0,0,[],Gui.empty_filters(),Gui.empty_listing()},Gui.Form{0,"","","",Files.empty(),[],[]},Gui.Jobs{0,None{},None{},None{},False{}},0n,0} : Gui.State}
   +next = Gui.with_rows(empty,[Gui.Item{"9",500,"late matching record","codex","/tmp/repo","2",
     Query.Filters{"","codex","/tmp/repo","assistant","2026-10-01"}}])
   require(String.eq(wanted(next),"session-scope|9|500|40|codex|/tmp/repo|assistant|2026-10-01"),
@@ -291,10 +293,10 @@ def refresh_clock() -> IO(Unit):
 def refresh_resume() -> IO(Unit):
   +armed = Gui.refresh_deadline(clean(state()),31000n)
   do IO<Unit>:
-    +paused : Gui.State <- Gui.auto_refresh(Gui.toggle_pause(armed),90000n)
+    +paused : Gui.State <- Gui.auto_refresh(Gui.preferences_apply(Gui.toggle_pause(armed),28,["refresh-preferences-set","false","30"],Done{Refresh.Preferences{False{},Refresh.Live30{}}}),90000n)
     require(Nat.is_eq(deadline(paused),0n) && Bool.not(has_writer(paused)),
       "pause disarms automatic refresh even after the deadline")
-    +resumed : Gui.State <- Gui.auto_refresh(Gui.toggle_pause(paused),100000n)
+    +resumed : Gui.State <- Gui.auto_refresh(Gui.preferences_apply(Gui.toggle_pause(paused),28,["refresh-preferences-set","true","30"],Done{Refresh.defaults()}),100000n)
     require(Nat.is_eq(deadline(resumed),130000n) && Bool.not(has_writer(resumed)),
       "resume starts a full interval rather than catching up missed refreshes")
     +source : Gui.State <- Gui.auto_refresh(Gui.settings(armed),90000n)

@@ -57,7 +57,7 @@ def evidence(kind: String,count: U32) -> Json.Json:
 def initial() -> Gui.State:
   Gui.State{0,"/tmp/juice-bend-gui-files","/usr/bin/false",UI.set_position(UI.set_reader(UI.set_query(UI.init(),"needle"),"Captured snapshot 7","retained captured Unicode café"),0,3),
     Gui.Selection{[],"7",500,3,[],Query.Filters{"","codex","/synthetic/main","assistant","2026-10-01"},Gui.empty_listing()},
-    Gui.Form{0,"needle","","",Files.empty(),[]},Gui.Jobs{9,None{},None{},None{},False{}},0n,0}
+    Gui.Form{0,"needle","","",Files.empty(),[],[]},Gui.Jobs{9,None{},None{},None{},False{}},0n,0}
 
 def ui(state: Gui.State) -> UI.State:
   Gui.State{db,dir,program,ui,selection,form,jobs,deadline,serial} = state

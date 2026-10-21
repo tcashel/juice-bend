@@ -16,7 +16,31 @@ repositories, timestamps, tool arguments/results and usage. Each four physical
 JSONL records yield five normalized events. Events include tools and are not
 presented as five independent human/assistant messages.
 
-## Current backend candidate — identical context hash prefixes
+## Current backend candidate — retained raw chunks
+
+The retained-byte comparator now walks validated raw BLOB chunks directly,
+without flattening them into another byte list. Its pure comparator and Store
+integration passed [2,225 native checks](receipts/raw-chunks-native.txt), including
+all 27 publication crash cuts. Both source passes, typed digest/coverage checks,
+SQL bounds and transaction boundaries remain unchanged.
+
+The standard 100k run measured first import **33,582 ms**, unchanged refresh
+**4,088 ms**, and append **27,728 ms**. The preceding append was 27,262 ms;
+this observation does **not** establish an append improvement. Long-history
+staging remains the next performance target. Warm search/late/scoped-late p95
+were 50/8/48 ms; five-trial p95 is the observed maximum.
+
+Frozen binary `1e3a30ae…` is 3,067,000 bytes. All 20 transitive inputs and
+88 upstream hashes matched before/after build and run. Independent prefix-event
+equivalence, exact counts, latest-only FTS, both seals and database integrity
+passed. Logical page bytes remained 216,109,056. Task builds/tests/Tart were held
+during timing; unrelated host activity was uncontrolled. This measures neither
+UI latency nor memory, and is one observation rather than a statistical comparison.
+See [raw results](../benchmarks/results/100000-raw-chunks.jsonl),
+[build/input receipt](../benchmarks/results/100000-raw-chunks-build.txt) and
+[postflight](../benchmarks/results/100000-raw-chunks-db-check.json).
+
+## Preceding backend candidate — identical context hash prefixes
 
 The context-prefix cache preserves the exact scalar digest bytes while sharing
 complete SHA blocks for each bounded context batch. Both scans and every row

@@ -50,7 +50,7 @@ def first() -> Json.Json:
 
 def state() -> Gui.State:
   Gui.State{0,"/tmp/juice-bend-gui-activity","/usr/bin/false",UI.set_reader(UI.set_query(UI.init(),"visible query"),"Transcript","retained transcript"),
-    Gui.Selection{[],"7",500,3,[],filters(),Gui.empty_listing()},Gui.Form{0,"visible query","","",Files.empty(),[]},
+    Gui.Selection{[],"7",500,3,[],filters(),Gui.empty_listing()},Gui.Form{0,"visible query","","",Files.empty(),[],[]},
     Gui.Jobs{9,None{},None{},None{},False{}},0n,0}
 
 def request(+start: U32) -> Gui.Request:

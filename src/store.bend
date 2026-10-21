@@ -1,6 +1,7 @@
 import Base
 import ./sql.bend as Sql
 import ./domain.bend as Domain
+import ./raw_compare.bend as RawCompare
 import ./providers.bend as Providers
 import ./paths.bend as Paths
 import ./query.bend as Query
@@ -835,34 +836,36 @@ def verify_batch(db: U32,snapshot: String,ordinal: U32,count: U32) ->
     [Sql.Cell.Integer{snapshot},Sql.Cell.Integer{U32.show(ordinal)},
      Sql.Cell.Integer{U32.show(count)}],128)
 
-def verify_batch_prepend(bytes: List<&2,U32>,following: Verify & List<&2,U32>) ->
-  Verify & List<&2,U32>:
+# Retain the original BLOB lists after every row validation succeeds.
+# Source comparison consumes those chunks without flattening their bytes.
+def verify_batch_prepend(bytes: List<&2,U32>,following: Verify & List<&2,List<&2,U32>>) ->
+  Verify & List<&2,List<&2,U32>>:
   (after,tail) = following
-  (after,List.append(&2,U32,bytes,tail))
+  (after,bytes <> tail)
 
 def verify_batch_records(rows: List<&2,List<&2,Sql.Cell>>,state: Verify) ->
-  IO(Verify & List<&2,U32>):
+  IO(Verify & List<&2,List<&2,U32>>):
   match rows:
     case []:
-      IO.pure(Verify & List<&2,U32>,(state,[]))
+      IO.pure(Verify & List<&2,List<&2,U32>>,(state,[]))
     case +row <> rest:
       Verify{snap,+gen,+extent,+count,+ordinal,+offset,continued} = state
-      do IO<Verify & List<&2,U32>>:
+      do IO<Verify & List<&2,List<&2,U32>>>:
         checked(record_valid(row,gen,extent,count,ordinal,offset,continued),
           "Retained raw integrity, snapshot binding or coverage mismatch; capture refused")
-        following : Verify & List<&2,U32> <- verify_batch_records(rest,
+        following : Verify & List<&2,List<&2,U32>> <- verify_batch_records(rest,
           Verify{snap,gen,extent,count,U32.add(ordinal,1),
             U32.add(offset,number(field(row,3n))),Bool.not(row_newline(row))})
         return verify_batch_prepend(blob(cell(row,5n)),following)
 
-def verify_batch_source(file: File,+offset: U32,got: Verify & List<&2,U32>,
+def verify_batch_source(file: File,+offset: U32,got: Verify & List<&2,List<&2,U32>>,
   next: Verify -> File -> IO(File & Bool)) -> IO(File & Bool):
   (+state,expected) = got
   Verify{snap,gen,extent,count,ordinal,+end,continued} = state
   do IO<File & Bool>:
     checked(U32.is_gt(end,offset),"Missing retained record; capture refused")
     result : File & Bool <- read(File & Bool,file,offset,U32.sub(end,offset),
-      f => bytes => IO.pure(File & Bool,(f,Domain.bytes_equal(expected,bytes))))
+      f => bytes => IO.pure(File & Bool,(f,RawCompare.equal(expected,bytes))))
     verify_result(result,f => next(state,f))
 
 def verify_step(+db: U32,file: File,state: Verify,done: Bool,
@@ -876,7 +879,7 @@ def verify_step(+db: U32,file: File,state: Verify,done: Bool,
     case False{}:
       do IO<File & Bool>:
         rows : List<&2,List<&2,Sql.Cell>> <- verify_batch(db,snap,ordinal,count)
-        batch : Verify & List<&2,U32> <- verify_batch_records(rows,
+        batch : Verify & List<&2,List<&2,U32>> <- verify_batch_records(rows,
           Verify{snap,gen,extent,count,ordinal,offset,continued})
         verify_batch_source(file,offset,batch,next)
 

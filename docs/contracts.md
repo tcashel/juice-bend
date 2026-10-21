@@ -107,3 +107,22 @@ rereads the current watermark; fresh entry after Back explicitly reanchors.
 Automatic capture is suspended while navigating Related. Already-running
 capture completion cannot replace its anchor, page or target. Copy/export use
 the same displayed string, and a loading placeholder is not exportable evidence.
+
+Refresh preferences are a complete owned pair: `refresh.enabled` is TEXT
+`true` or `false`; `refresh.interval_seconds` is TEXT `30`, `7200`, `14400`,
+`28800` or `86400`. Missing keys load independent defaults without writing.
+Malformed values fail visibly. Save owns an immediate transaction and requires
+both exact keys and values on readback before committing; ignored writes cannot
+look successful because a missing key happens to default to the desired value.
+Neither operation takes over an existing caller transaction.
+
+The GUI uses one serialized writer for capture and preference changes. It keeps
+the latest desired complete pair separate from acknowledged values. Automatic
+capture is disarmed while preferences are unknown, failed or pending, during
+forms and while the writer is occupied. Deadlines use checked monotonic Nat
+milliseconds; Pause does not cancel an active capture or disable manual Refresh.
+Source mutations require exact provider/path acknowledgments and a fresh typed
+inventory. A source-list operation nonce rejects older inventory replies.
+Settings saves the exact originating view independently of global preferences.
+Completed origins restore without another read; a request already pending at
+entry resumes with its original snapshot, range and scope.

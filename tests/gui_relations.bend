@@ -125,7 +125,7 @@ def origin_selection() -> Gui.Selection:
 
 def origin() -> Gui.State:
   Gui.State{0,"/tmp/juice-bend-related-tests","/usr/bin/false",origin_ui(),origin_selection(),
-    Gui.Form{0,"needle role:assistant","","",Files.empty(),[]},Gui.Jobs{9,None{},None{},None{},False{}},60000n,0}
+    Gui.Form{0,"needle role:assistant","","",Files.empty(),[],[]},Gui.Jobs{9,None{},None{},None{},False{}},60000n,0}
 
 def ui(state: Gui.State) -> UI.State:
   Gui.State{_,_,_,ui,_,_,_,_,_} = state
@@ -187,7 +187,7 @@ def ui_observation(+state: UI.State) -> String:
     Json.quote(UI.scope(state)),Json.quote(input(state)),Json.quote(chrome(state))],"\n")
 
 def captured_observation(state: Gui.State) -> String:
-  Gui.State{_,_,_,ui,selection,Gui.Form{_,search,_,_,_,_},_,_,_} = state
+  Gui.State{_,_,_,ui,selection,Gui.Form{_,search,_,_,_,_,_},_,_,_} = state
   Json.quote(selection_observation(selection)) ++ "\n" ++ ui_observation(ui) ++ "\n" ++ Json.quote(search)
 
 def origin_observation() -> String:

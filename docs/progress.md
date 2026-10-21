@@ -9,18 +9,19 @@ remains **Bend 2**; the unchanged 418-line SQLite bridge is the native exception
 Lean is optional development-time proof checking, not an app dependency.
 
 PR #1 is open, draft and unmerged on `codex/juice-bend-implementation`.
-This validated slice advances the preceding published commit
-`960873a2aa95c30be9e8dcba75ab8bc7a7458a80`, tree
-`22efb6739a7b376166466e1afe53c2f28aff2ef4`. Inspect the live PR head before
-further publication; the bare published-ref record below tracks the update.
+Verified publication anchor: `75cc3e03f7bc2d48fc9867c1ee899d0d0487f7cd`,
+tree `47316236675c3d46fbd7a09473b954b29ca8afa3` (Related slice). The Settings
+slice below advances from this parent; inspect the live PR head and ignored
+`build/settings-remote.json` before further publication. Bare published refs
+retain the exact remote identity without changing the protected checkout index.
 Publication is authorized only in `tcashel/juice-bend`; never merge automatically.
 Original Juice checkout, database and logs remain read-only. Use synthetic data.
 
-The current observed executable is `build/juice-bend-relations`, 10,462,024 bytes,
-SHA-256 `784d48c4d180b5e711613dbf43797c869c526a2cbf8082c53f6b3bbb9e789ab2`.
-The standard `build/juice-bend` and `build/Juice Bend Related.app` contain
-this exact binary. Its isolated empty-library launcher check passed.
-Previous named Seal Tools, Tools, Files, Parity and Validated artifacts remain intact.
+The current observed executable is `build/juice-bend-settings`, 11,561,056 bytes,
+SHA-256 `2e3191d9487b920a6a9aa4184239485f921e8a8f06d9b4378019f7f2eb226687`.
+The standard `build/juice-bend` and `build/Juice Bend Settings.app` contain
+this exact binary. Its isolated empty-library launcher status check passed.
+Previous named Related, Seal Tools, Tools, Files, Parity and Validated artifacts remain intact.
 
 Mise pins Bun 1.4.2 and Bend 2.0.37 revision
 `60ca80aedeec9d8f0629b5f10dd19457d8ad67af`; 88 upstream hashes verify.
@@ -106,25 +107,55 @@ performance and native-validation records.
   plus integrity/refusal checks passed. See `receipts/relations-host-lifecycle.txt`.
   The isolated Tart run `build/tart/relations-v9utxn_y` is complete: both owned
   windows closed, runner exit 130, VM stopped and both leases absent.
-- **Next-slice preparation, not integrated:** refresh preferences backend/tests
-  and a pure retained-chunk comparator are being implemented in new files.
-  They are excluded from the Related app/build and publication allowlist.
+- **Retained-chunk comparator:** the comparator and Store
+  integration passed 2,225 native checks, including all 27 crash cuts, with all
+  100 recorded regression inputs unchanged. The fresh production 100k benchmark
+  passed all assertions and independent postflight: first import 33.582 s,
+  unchanged 4.088 s, append 27.728 s. This does not establish an append speedup
+  over 27.262 s. Binary `1e3a30ae…`, all 20 inputs and 88 upstream hashes are frozen.
+  See `receipts/raw-chunks-native.txt` and `performance.md`.
+- **Settings:** refresh preferences backend/CLI passed 154 native
+  checks with 15 unchanged inputs. Atomic writes require strict presence and
+  value readback; tests cover ignored writes, rollback and commit failures.
+  Combined CLI dispatch is connected. GUI integration uses boxed saved origins,
+  authoritative source inventory and acknowledged durable preferences. All
+  388 focused GUI assertions passed; one test-only indentation failure is
+  retained separately. Production sources stayed frozen through those gates.
+  The isolated Settings fixture passed its native
+  build and host CLI lifecycle (24 stable inputs, binary `7cff09dd…`): 42→49→50
+  retained raw records, unchanged scoped origin, source-only append and refusal
+  checks. Actual combined Settings app `2e3191d9…` then passed host-only Tart
+  interaction: both source providers, registration without capture, selected
+  Enable/Disable, explicit Import file, durable Pause/2h through restart, manual
+  batches while paused, exact scoped record-40 restoration and appended search.
+  Seven clipboard and four pixel-region checks passed; final integrity/FK checks
+  passed. See `receipts/settings-ui-native.txt` and `native-validation.md`.
+  All 46 application inputs and 88 upstream hashes stayed unchanged. Both
+  owned windows closed, runner exit 130, VM stopped and leases absent.
 
 ## Next execution steps
 
-1. Verify the Related/cache publication completed using PR #1 and
-   `refs/heads/codex/published-relations-validation` in the ignored bare store.
-   If absent, publish the validated allowlist over `960873a2…` with the expected-
-   head guard. Prepared files/orchestration are `build/relations-publication-files.txt`
-   and `build/prepare-relations-publication.py`. Never merge or force push.
-2. Integrate the new pure chunk comparator only after its exact equality and
-   emitted-loop checks pass. Preserve every raw/digest/coverage predicate and
-   both source-verification passes. Run focused capture regressions and a fresh
-   standard100k production benchmark in a quiet task window; no performance
-   improvement is established by comparator unit tests.
-3. Integrate persisted refresh preferences and real source controls into
-   Settings, with explicit error states and exact originating-reader restoration.
-   New backend modules are isolated pending review; no default private scans.
+1. Settings/raw-chunk slice is validated and promoted. Its publication artifacts
+   are `build/settings-publication.json`, `build/settings-remote.json` and bare
+   refs `codex/local-settings-validation` / `codex/published-settings-validation`.
+   Verify live head before advancing. Never merge or force push.
+2. The raw-chunk comparator is integrated and validated. Investigate the
+   dominant append staging cost before another optimization; the fresh standard
+   benchmark did not show an append improvement. Preserve every raw/digest/
+   coverage predicate, immutable identity and both source-verification passes.
+   A portable raw-ID-bound context codec passed 402 native checks; it is not
+   integrated or published. Candidate integration is being prepared under
+   ignored build artifacts. Keep Store frozen until Settings publication.
+   Then review/apply the concrete context-witness patch, preserve exact v1
+   compatibility, typed bidirectional raw/context mapping checks, both source
+   passes, trigger fallbacks and all nine publication boundaries. Validate
+   actual old-writer/open-connection compatibility and all 27 crash cuts before
+   timing the unchanged production 100k workload. No speedup is established yet.
+3. The isolated recorded-request classifier passed 110 native checks and exact
+   text/Unicode-span review. It is not imported or published. Integrating it
+   requires parser-version/rebuild and event-ordinal/scope compatibility tests;
+   do not silently reinterpret existing captured evidence. Inline attachments
+   and compressed archives also remain outstanding.
 4. Continue provider/archive coverage, full
    Usage, deterministic context preparation, owned-storage management and
    explicit opt-in connection/subscription surfaces, then UI polish. Do not
@@ -140,7 +171,7 @@ Tart `juice-tests` uses the external SSD at `/Volumes/VM_disks/tart`.
 The owner authorizes necessary Tart sandbox access and no longer requires
 cross-chat coordination. Still acquire the exclusive runner lease and use
 host-only networking with isolated synthetic shares. Both the seal/Tools and
-Related runs stopped cleanly. Never terminate unrelated processes.
+Related and Settings runs stopped cleanly. Never terminate unrelated processes.
 Full IME/shaping/accessibility, exact input-to-display/scroll performance,
 fresh-network setup and some resource measurements remain unverified.
 Do not ask the owner to repeat unexplained physical-keyboard rituals.
@@ -156,11 +187,13 @@ connector with an expected-head fast-forward guard. Preserve local/remote
 commit identities in that bare store; never force push.
 Published seal/readability ref: `refs/heads/codex/published-seal-tools-validation`.
 Prepared local commit: `57e797e23fd9f144b47c1297cc267fb384d15ba6`.
-The next Related/cache local and published refs use the same names with
-`local-relations-validation` and `published-relations-validation` suffixes.
-Their exact commit/tree identities are in ignored `build/relations-publication.json`
-and `build/relations-remote.json` after publication. Shared-projection and
-next-slice preference/comparator files are excluded from that allowlist.
+Related/cache refs use `local-relations-validation` and
+`published-relations-validation` suffixes. Settings uses the corresponding
+`local-settings-validation` and `published-settings-validation` refs.
+Exact commit/tree identities are in the ignored publication/remote JSON files.
+The Settings allowlist includes preference/comparator implementation, tests and
+receipts; isolated context-binding/request-origin modules and shared-projection
+prototypes remain excluded.
 Reconcile ordinary checkout metadata only in a session with normal Git access.
 
 Repeatable gates: `mise run test`, `mise run prove`, `mise run bench -- 100000`.

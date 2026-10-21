@@ -16,6 +16,7 @@ is recorded in `acceptance.md`.
 | Raw file input / maintenance | `scripts/test tests/maintenance.bend` passed 30 checks, including exact UTF-8/NUL/invalid bytes, stale source independence, immutable append snapshots, oversized boundaries, full verification, rollback on rebuild failure and atomic export destination protection |
 | Source identity | Native maintenance tests confirm relative, absolute and explicit symlink aliases resolve to one canonical source |
 | Explicit source refresh | Native sources suite passes 24 checks; real main CLI registration, discovery/import, disabling and refresh were also observed with synthetic folders |
+| Settings / Indexing controls | Candidate `2e3191d9…` passed native Claude/Codex Add folder without capture, selected canonical-row Enable/Disable, explicit Import file, manual batches while paused, and durable disabled/two-hour preferences after restart. Back preserved scoped record 40, exact reader/query/list/selection; seven clipboard and four pixel-region comparisons passed. The 388 focused GUI and 154 preference backend/CLI checks are separate from historical full-suite results. See `receipts/settings-gui-tests.txt` and the [native summary](../benchmarks/results/tart-settings-summary.json) |
 | Scoped transcript / Why | Native scoped reader suite passed 18 checks, including frozen provider/repository/role/date scopes, inherited context, projection forgery rejection and corrupt checkpoint failure |
 | Displayed evidence export | Native CLI suite passed 9 checks for exact Unicode/citations, one MiB input bound, malformed UTF-8 rejection and existing-destination protection |
 | Git Blame / file and commit Why | Native file-evidence suite passed 35 checks plus 36 unified-diff cases; real synthetic Git workflows cover per-hunk content, explicit-trailer exact identity, body-reference probable identity, ambiguity, linked worktrees and eligible child navigation |
@@ -44,6 +45,16 @@ excluded and canonical paths rechecked; upstream lacks an atomic no-follow
 file-open primitive, so hostile concurrent path replacement is not a claimed
 filesystem sandbox. A running refresh can finish its bounded batch after pause;
 pause prevents subsequent automatic refreshes.
+
+Settings exposes explicit provider/path input and persisted automatic refresh
+choices of 30 seconds, 2, 4, 8 or 24 hours. Changes take effect after durable
+acknowledgment; invalid stored preferences remain a visible error and do not arm
+automatic capture. The observed native restart covered disabled/two-hour state,
+not elapsed scheduling at every interval. Native source-inventory pagination was
+not exercised; focused model/UI tests cover the bounded 32-root inventory pages.
+The Settings run accepted a synthetic append from four snapshots/49 raw rows to
+five/50 and preserved the old reader. It adds no new timing, full IME, font
+shaping, accessibility or export claim.
 
 Each import worker permits at most five minutes. The GUI refresh worker has a ten-minute outer
 limit. An unusually slow eight-file batch can exceed that outer limit: its

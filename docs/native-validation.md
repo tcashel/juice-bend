@@ -1,5 +1,35 @@
 # Native interaction observations
 
+## Persisted Settings and explicit source controls
+
+App `2e3191d9487b920a6a9aa4184239485f921e8a8f06d9b4378019f7f2eb226687`
+(11,561,056 bytes) ran in the host-only macOS 27.0 arm64 Tart guest. All 46
+build inputs remained unchanged; 88 upstream hashes passed before/after build.
+Native Pause and Every 2h persisted false/7200, which survived actual app restart.
+Claude/Codex Add folder registered sources without capture. Selecting each
+provider/root and disabling/enabling it changed only that authoritative row.
+Import file captured a separate explicit file; manual Refresh remained usable
+while paused and discovered both registered roots in bounded batches.
+
+Back restored the scoped snapshot-1 origin at physical record 40, query, result
+list, reader and selection. After restart and a source-only append, two actual
+Refresh batches changed four snapshots / 49 raw records to five / 50. The old
+origin stayed exact; a new scoped search opened snapshot 5, record 2. Seven
+clipboard comparisons and four reader/list/query pixel regions matched exactly.
+Normal History Resume/Pause also persisted preferences without changing 2h.
+SQLite integrity/FK checks passed: four sources/generations, five snapshots,
+50 raw, 52 records/events/context and 50 current search events.
+
+Both owned windows closed; Tart stopped and leases were released. The standard
+executable and `build/Juice Bend Settings.app` contain this exact binary; its
+isolated empty-library launcher status check passed. Earlier named apps remain.
+Unsupported glyphs still show boxes. No new latency, IME, accessibility, export,
+long-interval timing or native source-list pagination claim is made. The 388
+GUI assertions and 154 preference backend/CLI checks are separate gates.
+See `receipts/settings-ui-native.txt`, `receipts/settings-gui-tests.txt` and
+`benchmarks/results/tart-settings-summary.json`. Raw synthetic observations
+remain under ignored `build/tart/settings-2y8m6328`.
+
 ## Related captures and context-prefix candidate
 
 App `784d48c4d180b5e711613dbf43797c869c526a2cbf8082c53f6b3bbb9e789ab2`

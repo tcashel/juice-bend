@@ -51,6 +51,24 @@ from the 291 focused GUI checks (51 Related plus 240 regressions) and does not
 establish complete graph/IME parity. See `receipts/relations-gui-tests.txt` for
 the test-only compiler failures, exact final gate and input-binding limits.
 
+Settings candidate `2e3191d9…` (11,561,056 bytes; 46 unchanged application inputs)
+passed the macOS 27.0 arm64 Tart workflow. Claude/Codex folders registered
+without capture; selected-row Enable/Disable, explicit file import and manual
+Refresh while paused worked. A real restart retained automatic disabled with
+the two-hour interval. Source-only append followed by native Refresh advanced
+four snapshots/49 raw rows to five/50, while Back restored the scoped snapshot 1
+record 40 origin exactly. Seven clipboard comparisons and four pixel-region
+comparisons passed; database checks reported `quick_check=ok` and no foreign-key
+violations. The owned VM stopped and both leases were released.
+
+These observations are separate from the 388 focused GUI assertions and 154
+preference backend/CLI checks; they do not replace either historical full-suite
+run. See [Settings native summary](../benchmarks/results/tart-settings-summary.json)
+and [GUI test receipt](receipts/settings-gui-tests.txt). Native source-inventory
+paging and elapsed interval timing were not exercised. Exact Unicode paste/copy
+does not establish font shaping or full IME support; no new latency, accessibility
+or export acceptance is claimed.
+
 | ID | Current result | Evidence and remaining work |
 |---|---|---|
 | A01 | Partial | The final `05cdff4f…` native executable opened a fresh empty library in the macOS 27.0 arm64 Tart guest, then captured and browsed the explicit synthetic source. Host desktop launches were observed on separately identified earlier builds. Fresh network setup remains unobserved. |

@@ -9,6 +9,8 @@ import ./domain.bend as Domain
 import ./provenance.bend as P
 import ./gui_files.bend as Files
 import ./gui_relations.bend as Related
+import ./gui_settings.bend as Settings
+import ./refresh_preferences.bend as Refresh
 
 # The window owns no effectful database path. Every operation is a bounded call
 # to this same native executable. One reader and one writer can be outstanding;
@@ -42,8 +44,17 @@ type Navigation is Data:
     page: Maybe<&2,Related.Page>,page_view: Maybe<&2,UI.Bookmark>,
     previous: List<&2,String>,phase: U32,target: Maybe<&2,Related.Reference>}
 
+# Global acknowledged preferences outlive the Settings panel. Its origin is
+# boxed separately and deliberately excludes SettingsState to prevent nesting.
+type SettingsOrigin is Data:
+  SettingsOrigin{selection: Selection,view: UI.Bookmark,mode: U32,search: String,
+    source: String,blame: String,files: Files.State,navigation: List<&2,Navigation>,pending: Maybe<&2,Request>}
+
+type SettingsState is Data:
+  SettingsState{model: Settings.Model,origin: List<&2,SettingsOrigin>,input: String,provider: String}
+
 type Form is Data:
-  Form{mode: U32, search: String, source: String, blame: String, files: Files.State, navigation: List<&2,Navigation>}
+  Form{mode: U32, search: String, source: String, blame: String, files: Files.State, navigation: List<&2,Navigation>, settings: List<&2,SettingsState>}
 
 type Jobs is Data:
   Jobs{revision: U32, wanted: Maybe<&2,Request>, reader: Maybe<&2,Pending>,
@@ -204,12 +215,12 @@ def navigation_box(value: Navigation) -> List<&2,Navigation>:
     case _: [value]
 
 def navigation(state: State) -> Navigation:
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,navigation},jobs,deadline,serial} = state
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,navigation,settings},jobs,deadline,serial} = state
   navigation_value(navigation)
 
 def set_navigation(state: State,navigation: Navigation) -> State:
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,old},jobs,deadline,serial} = state
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,navigation_box(navigation)},jobs,deadline,serial}
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,old,settings},jobs,deadline,serial} = state
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,navigation_box(navigation),settings},jobs,deadline,serial}
 
 def navigation_active(value: Navigation) -> Bool:
   match value:
@@ -230,11 +241,11 @@ def related_filters(value: Navigation) -> Query.Filters:
     case RelatedNavigation{Selection{items,snap,start,kind,args,filters,listing},view,search,page,page_view,previous,phase,target}: filters
 
 def related_restore_value(+state: State,value: Navigation) -> State:
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,old},jobs,deadline,serial} = state
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,old,settings},jobs,deadline,serial} = state
   match value:
     case NoNavigation{}: state
     case RelatedNavigation{origin,view,search,page,page_view,previous,phase,target}:
-      invalidate(State{db,dir,program,UI.restore(ui,view),origin,Form{0,search,source,blame,files,[]},jobs,0n,serial})
+      invalidate(State{db,dir,program,UI.restore(ui,view),origin,Form{0,search,source,blame,files,[],settings},jobs,0n,serial})
 
 def related_restore(+state: State) -> State:
   related_restore_value(state,navigation(state))
@@ -244,11 +255,11 @@ def related_selection(origin: Selection) -> Selection:
   Selection{items,snap,start,25,[],filters,listing}
 
 def related_back_view(+state: State,value: Navigation,bookmark: Maybe<&2,UI.Bookmark>) -> State:
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,old},jobs,deadline,serial} = state
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,old,settings},jobs,deadline,serial} = state
   match value bookmark:
     case RelatedNavigation{+origin,view,+search,page,saved,previous,phase,target} Some{+page_view}:
       invalidate(State{db,dir,program,UI.restore(ui,page_view),related_selection(origin),
-        Form{0,search,source,blame,files,[RelatedNavigation{origin,view,search,page,Some{page_view},previous,0,None{}}]},jobs,0n,serial})
+        Form{0,search,source,blame,files,[RelatedNavigation{origin,view,search,page,Some{page_view},previous,0,None{}}],settings},jobs,0n,serial})
     case _ _: related_restore(state)
 
 def related_back_value(+state: State,+value: Navigation) -> State:
@@ -261,7 +272,7 @@ def related_back(+state: State) -> State:
   related_back_value(state,navigation(state))
 
 def related_enter_ready(+state: State,valid: Bool) -> State:
-  State{db,dir,program,+ui,Selection{items,+snap,start,kind,args,+filters,listing},Form{mode,+search,source,blame,files,old},jobs,deadline,serial} = state
+  State{db,dir,program,+ui,Selection{items,+snap,start,kind,args,+filters,listing},Form{mode,+search,source,blame,files,old,settings},jobs,deadline,serial} = state
   match valid:
     case False{}: status(state,"Related needs a captured History reader. Return to History and choose a transcript.")
     case True{}:
@@ -270,11 +281,11 @@ def related_enter_ready(+state: State,valid: Bool) -> State:
       next = UI.set_reader(UI.set_results(UI.set_rows(ui,[]),UI.RelatedResults{1,0,False{},False{}}),
         "Related | pinning captured anchor", "Loading a bounded relationship page from retained evidence.\nBack returns the exact captured reader.\nNo latest capture or original log is opened.")
       queue(State{db,dir,program,next,related_selection(selection),
-        Form{0,search,source,blame,files,[RelatedNavigation{selection,view,search,None{},None{},[],0,None{}}]},jobs,0n,serial},
+        Form{0,search,source,blame,files,[RelatedNavigation{selection,view,search,None{},None{},[],0,None{}}],settings},jobs,0n,serial},
         Request{25,Related.open_args(snap,filters),snap,0,"Related captured sessions"})
 
 def related_enter_value(+state: State,value: Navigation) -> State:
-  State{db,dir,program,ui,Selection{items,+snap,start,+kind,args,filters,listing},Form{mode,search,source,blame,files,old},jobs,deadline,serial} = state
+  State{db,dir,program,ui,Selection{items,+snap,start,+kind,args,filters,listing},Form{mode,search,source,blame,files,old,settings},jobs,deadline,serial} = state
   match value:
     case NoNavigation{}:
       related_enter_ready(state,U32.is_eq(mode,0) && Bool.not(String.is_empty(snap)) &&
@@ -330,13 +341,13 @@ def related_saved_selected(saved: Maybe<&2,UI.Bookmark>,index: U32) -> Maybe<&2,
     case Some{view}: Some{UI.bookmark_selected(view,index)}
 
 def related_open_row(+state: State,+index: U32,+value: Navigation,row: Maybe<&2,Related.Row>) -> State:
-  State{db,dir,program,+ui,selection,Form{mode,search,source,blame,files,old},jobs,deadline,serial} = state
+  State{db,dir,program,+ui,selection,Form{mode,search,source,blame,files,old,settings},jobs,deadline,serial} = state
   match value row:
     case RelatedNavigation{origin,view,+search,page,saved,previous,phase,target} Some{Related.Row{+reference,direction,basis,ambiguous}}:
       +snap = Related.snapshot(reference)
       +saved_view = Bool.pick(Maybe<&2,UI.Bookmark>,U32.is_eq(phase,0),Some{UI.bookmark_selected(UI.bookmark(ui),index)},related_saved_selected(saved,index))
       queue(State{db,dir,program,ui,selection,Form{0,search,source,blame,files,
-        [RelatedNavigation{origin,view,search,page,saved_view,previous,1,Some{reference}}]},jobs,0n,serial},
+        [RelatedNavigation{origin,view,search,page,saved_view,previous,1,Some{reference}}],settings},jobs,0n,serial},
         Request{3,scoped_args("session-scope",snap,0,"40",related_filters(value)),snap,0,
           "Related target | snapshot " ++ snap ++ " | record 0"})
     case _ _: status(state,"Choose a candidate row. An empty page is not proof that no relatives exist.")
@@ -393,7 +404,7 @@ def related_old_after(page: Maybe<&2,Related.Page>) -> String:
     case Some{Related.Page{anchor,watermark,after,next,scanned,rows,text,filters}}: after
 
 def related_apply(+state: State,+request: Request,+page: Related.Page,value: Navigation) -> State:
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,old},jobs,deadline,serial} = state
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,old,settings},jobs,deadline,serial} = state
   Request{kind,args,snap,step,title} = request
   Related.Page{anchor,watermark,after,+next,+scanned,+rows,text,filters} = page
   match value:
@@ -406,7 +417,7 @@ def related_apply(+state: State,+request: Request,+page: Related.Page,value: Nav
         "Related | snap " ++ Related.snapshot(anchor) ++ " | page " ++ U32.show(number),text),
         "Inspected " ++ U32.show(scanned) ++ " sources. Links/ambiguity are page-local; absent links do not prove no relatives. Back restores origin.")
       State{db,dir,program,shown,related_selection(origin),Form{0,search,source,blame,files,
-        [RelatedNavigation{origin,view,search,Some{page},Some{UI.bookmark(shown)},trail,0,None{}}]},jobs,0n,serial}
+        [RelatedNavigation{origin,view,search,Some{page},Some{UI.bookmark(shown)},trail,0,None{}}],settings},jobs,0n,serial}
 
 def related_validated(+state: State,request: Request,page: Related.Page,valid: Bool) -> State:
   match valid:
@@ -523,15 +534,15 @@ def reload_listing(+state: State) -> State:
 
 # Files owns a separate pinned Git identity and never mutates Selection.
 def files_model(state: State) -> Files.State:
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,+navigation},jobs,deadline,serial} = state
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,+navigation,+settings},jobs,deadline,serial} = state
   files
 
 def files_replace(state: State,files: Files.State) -> State:
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame,old,+navigation},jobs,deadline,serial} = state
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,navigation},jobs,deadline,serial}
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,old,+navigation,+settings},jobs,deadline,serial} = state
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,navigation,settings},jobs,deadline,serial}
 
 def files_active(state: State) -> Bool:
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,+navigation},jobs,deadline,serial} = state
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,+navigation,+settings},jobs,deadline,serial} = state
   U32.is_eq(mode,3)
 
 def files_saved_valid(+kind: U32) -> Bool:
@@ -564,24 +575,24 @@ def files_return_ready(+state: State,+snap: String,start: U32,filters: Query.Fil
       files_return_missing(state,snap,start,filters,String.is_empty(snap))
 
 def files_leave(+state: State) -> State:
-  State{db,dir,program,ui,Selection{+items,+snap,+start,+displayed,+args,+filters,Listing{+kind,+full,+offset,+more,+loaded,+anchor}},Form{mode,+search,source,blame,+files,+navigation},jobs,deadline,serial} = state
+  State{db,dir,program,ui,Selection{+items,+snap,+start,+displayed,+args,+filters,Listing{+kind,+full,+offset,+more,+loaded,+anchor}},Form{mode,+search,source,blame,+files,+navigation,+settings},jobs,deadline,serial} = state
   match mode:
     case 3:
       Files.State{input,identity,directory,file_source,saved} = files
       Files.Saved{title,text,scroll} = saved
       restored = UI.set_position(UI.set_reader(UI.set_query(UI.set_files(ui,False{}),search),title,text),0,scroll)
       rows = UI.set_results(UI.set_rows(restored,item_titles(items)),UI.Results{offset,U32.from_nat(List.length(&2,Item,items)),more,loaded})
-      files_return_ready(invalidate(State{db,dir,program,rows,Selection{items,snap,start,Bool.pick(U32,files_saved_valid(displayed),displayed,0),args,filters,Listing{kind,full,offset,more,loaded,anchor}},Form{0,search,source,blame,files,navigation},jobs,deadline,serial}),
+      files_return_ready(invalidate(State{db,dir,program,rows,Selection{items,snap,start,Bool.pick(U32,files_saved_valid(displayed),displayed,0),args,filters,Listing{kind,full,offset,more,loaded,anchor}},Form{0,search,source,blame,files,navigation,settings},jobs,deadline,serial}),
         snap,start,filters,files_saved_valid(displayed))
     case _:
       state
 
 def files_enter(+state: State) -> State:
-  State{db,dir,program,+ui,selection,Form{mode,search,source,blame,+files,+navigation},jobs,deadline,serial} = state
+  State{db,dir,program,+ui,selection,Form{mode,search,source,blame,+files,+navigation,+settings},jobs,deadline,serial} = state
   +next = Files.begin(files,files_saved_for(state))
   view = UI.set_reader(UI.set_results(UI.set_rows(UI.set_query(UI.set_files(ui,True{}),Files.input(next)),[]),UI.Results{0,0,False{},False{}}),
     "Files | explicit local repository", "Paste a local checkout path above.\nClick Open repo or press Return to pin HEAD.\n\nDirectory rows open committed folders/files.\nUp folder returns to the parent directory.\nPrev/Next list page directory entries.\nPrev/Next text page committed source lines.\nBlame and Why use the displayed source range.\n\nThe full pinned commit is shown in each result.\nWorking-tree edits are excluded. Symlinks and submodules are listed but never followed.\n\nCopy and Export use exactly displayed text.\nClick History at left to restore the prior captured transcript.\nNo home-folder scan or logged command is run.")
-  status(invalidate(State{db,dir,program,view,selection,Form{3,search,source,blame,next,navigation},jobs,0n,serial}),
+  status(invalidate(State{db,dir,program,view,selection,Form{3,search,source,blame,next,navigation,settings},jobs,0n,serial}),
     "Enter an explicit checkout path, then Open repo. History selection is retained.")
 
 def files_toggle(+state: State,active: Bool) -> State:
@@ -707,7 +718,7 @@ def files_rows(kind: U32,+ui: UI.State,+files: Files.State) -> UI.State:
       ui
 
 def files_apply(+state: State,+request: Request,+value: Json.Json,valid: Bool) -> State:
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,+navigation},jobs,deadline,serial} = state
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,+navigation,+settings},jobs,deadline,serial} = state
   Request{+kind,args,snap,start,title} = request
   match valid:
     case False{}:
@@ -716,7 +727,7 @@ def files_apply(+state: State,+request: Request,+value: Json.Json,valid: Bool) -
       +next = Files.apply(kind,files,value)
       view = UI.set_reader(files_rows(kind,ui,next),Files.title(next),Json.get(value,"text"))
       State{db,dir,program,UI.set_status(view,"Committed view loaded. Copy/export preserve this exact displayed text; History restores the captured reader."),
-        selection,Form{mode,search,source,blame,next,navigation},jobs,deadline,serial}
+        selection,Form{mode,search,source,blame,next,navigation,settings},jobs,deadline,serial}
 
 def files_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
   Request{kind,args,snapshot,start,title} = request
@@ -728,7 +739,7 @@ def files_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.
 
 def list_paging_capture(+state: State,forward: Bool) -> State:
   State{db,dir,program,ui,Selection{items,snap,start,displayed,args,filters,+listing},
-    Form{mode,search,source,blame,+files,+navigation},jobs,refresh_at,serial} = state
+    Form{mode,search,source,blame,+files,+navigation,+settings},jobs,refresh_at,serial} = state
   list_page_ready(state,listing,forward,U32.is_eq(mode,0) && listing_loaded(listing))
 
 def list_paging_mode(+state: State,forward: Bool,active: Bool) -> State:
@@ -742,17 +753,323 @@ def list_paging(+state: State,forward: Bool) -> State:
   list_paging_mode(state,forward,files_active(state))
 
 
+def no_display(+selection: Selection) -> Selection:
+  Selection{items,snap,start,displayed,blame,filters,+listing} = selection
+  Selection{items,snap,start,0,blame,filters,listing}
+
+def selection_snapshot(selection: Selection) -> String:
+  Selection{items,snap,start,displayed,args,filters,+listing} = selection
+  snap
+
+def settings_value(+values: List<&2,SettingsState>) -> SettingsState:
+  match values:
+    case [value]: value
+    case _: SettingsState{Settings.initial(),[],"","claude"}
+
+def settings_state(+state: State) -> SettingsState:
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation,+settings},+jobs,+deadline,+serial} = state
+  settings_value(settings)
+
+def settings_model_value(+state: State,+settingsValue: SettingsState) -> Settings.Model:
+  SettingsState{+model,+origin,+input,+provider} = settingsValue
+  model
+def settings_model(+state: State) -> Settings.Model:
+  settings_model_value(state,settings_state(state))
+
+
+def set_settings(state: State,value: SettingsState) -> State:
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,navigation,old},jobs,deadline,serial} = state
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,navigation,[value]},jobs,deadline,serial}
+
+def settings_model_set_value(+state: State,+model: Settings.Model,+settingsValue: SettingsState) -> State:
+  SettingsState{+old,+origin,+input,+provider} = settingsValue
+  set_settings(state,SettingsState{model,origin,input,provider})
+def settings_model_set(+state: State,+model: Settings.Model) -> State:
+  settings_model_set_value(state,model,settings_state(state))
+
+
+def settings_has_origin(+origin: List<&2,SettingsOrigin>) -> Bool:
+  match origin:
+    case [value]: True{}
+    case _: False{}
+
+def settings_active_value(+state: State,+settingsValue: SettingsState) -> Bool:
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation,+settings},+jobs,+deadline,+serial} = state
+  SettingsState{+model,+origin,+input,+provider} = settingsValue
+  U32.is_eq(mode,1) && settings_has_origin(origin)
+def settings_active(+state: State) -> Bool:
+  settings_active_value(state,settings_state(state))
+
+
+def settings_interval(+preferences: Refresh.Preferences) -> String:
+  Refresh.Preferences{+enabled,+interval} = preferences
+  match interval:
+    case Refresh.Live30{}: "30 seconds"
+    case Refresh.Hours2{}: "2 hours"
+    case Refresh.Hours4{}: "4 hours"
+    case Refresh.Hours8{}: "8 hours"
+    case Refresh.Daily{}: "24 hours"
+
+def settings_automatic_phase(+phase: U32,+enabled: Bool) -> String:
+  match phase:
+    case 2: Bool.pick(String,enabled,"Pause","Resume")
+    case 0: "Loading"
+    case 1: "Loading"
+    case _: "Auto error"
+
+def settings_automatic_pending(phase: U32,enabled: Bool,pending: Maybe<&2,Refresh.Preferences>) -> String:
+  match pending:
+    case Some{value}: "Saving"
+    case None{}: settings_automatic_phase(phase,enabled)
+
+def settings_automatic(+model: Settings.Model) -> String:
+  Settings.Model{phase,Refresh.Preferences{enabled,interval},desired,sources,loaded,selected,offset,last} = model
+  settings_automatic_pending(phase,enabled,desired)
+
+def settings_pref_phase(+phase: U32,+prefs: Refresh.Preferences) -> String:
+  match phase:
+    case 2:
+      Refresh.Preferences{+enabled,+interval} = prefs
+      "Automatic refresh: " ++ Bool.pick(String,enabled,"enabled","disabled") ++ " | every " ++ settings_interval(prefs) ++ ".\n"
+    case 0: "Automatic refresh: not loaded; no automatic work is armed.\n"
+    case 1: "Automatic refresh: loading saved preferences.\n"
+    case _: "Automatic refresh unavailable. Reload retries the saved preferences; no silent repair.\n"
+
+def settings_pref_text(+model: Settings.Model) -> String:
+  Settings.Model{+phase,+prefs,+desired,+sources,+loaded,+selected,+offset,+last} = model
+  settings_pref_phase(phase,prefs)
+
+def settings_pending_text(+desired: Maybe<&2,Refresh.Preferences>) -> String:
+  match desired:
+    case None{}: ""
+    case Some{+prefs}:
+      Refresh.Preferences{+enabled,+interval} = prefs
+      "Pending save: " ++ Bool.pick(String,enabled,"enabled","disabled") ++ " / " ++ settings_interval(prefs) ++
+        ". Current capture finishes first; changes apply after acknowledgment.\n"
+
+def settings_source_text(+source: Maybe<&2,Settings.Source>) -> String:
+  match source:
+    case None{}: "No registered folder selected.\n"
+    case Some{Settings.Source{+provider,+path,+enabled}}:
+      "Selected folder: " ++ provider ++ " / " ++ Bool.pick(String,enabled,"enabled","disabled") ++ "\n" ++ path ++ "\n"
+
+def settings_body(+dir: String,+snapshot: String,+provider: String,+model: Settings.Model) -> String:
+  Settings.Model{+phase,+prefs,+desired,+sources,+loaded,+selected,+offset,+last} = model
+  "INDEXING / EXPLICIT SOURCES\n\n" ++ settings_pref_text(model) ++ settings_pending_text(desired) ++
+  "Provider for new paths: " ++ provider ++ "\n\n" ++ settings_source_text(selected) ++
+  "\nChoose Claude or Codex; paste a literal absolute path above. Add folder registers it; Import file captures one JSONL file. " ++
+  "Enable / Disable act only on the selected registered folder. Disabling keeps all captured evidence.\n\n" ++
+  "Refresh checks a bounded batch of enabled sources and explicitly imported files. A batch result is not a full-library health check. " ++
+  "No private folders are scanned by default.\n\n" ++
+  "Choose an interval at left. Pause and Automatic use the same saved preference. In-flight work finishes; manual Refresh remains available.\n\n" ++
+  "Last operation (bounded report):\n" ++ Store.nonempty(last,"No result in this app session.") ++
+  "\n\nData directory:\n" ++ dir ++ "\nCaptured snapshot: " ++ Store.nonempty(snapshot,"none") ++
+  "\nBack restores the exact prior reader and selection. Storage is read-only."
+
+def settings_source_titles(+values: List<&2,Settings.Source>) -> List<&2,String>:
+  match values:
+    case []: []
+    case Settings.Source{+provider,+path,+enabled} <> rest:
+      (provider ++ Bool.pick(String,enabled," [on] "," [off] ") ++ path) <> settings_source_titles(rest)
+
+def settings_row_index(+rows: List<&2,Settings.Source>,+wanted: Settings.Source,+at: U32) -> U32:
+  match rows:
+    case []: 0
+    case first <> rest: Bool.pick(U32,Settings.same(first,wanted),at,settings_row_index(rest,wanted,U32.add(at,1)))
+
+def settings_selected_index(+model: Settings.Model,+selected: Maybe<&2,Settings.Source>) -> U32:
+  match selected:
+    case None{}: 0
+    case Some{source}: UI.minus(settings_row_index(Settings.sources(model),source,0),Settings.offset(model))
+
+def settings_render_value(+state: State,+settingsValue: SettingsState) -> State:
+  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+deadline,+serial} = state
+  SettingsState{+model,+origin,+input,+provider} = settingsValue
+  Settings.Model{+phase,+prefs,+desired,+sources,+loaded,+selected,+offset,+last} = model
+  +rows = settings_source_titles(List.take(&2,Settings.Source,List.drop(&2,Settings.Source,sources,U32.to_nat(offset)),14n))
+  +view = UI.set_results(UI.set_rows(UI.set_files(ui,False{}),rows),
+    UI.SettingsResults{offset,U32.from_nat(List.length(&2,Settings.Source,sources)),settings_automatic(model),loaded})
+  State{db,dir,program,UI.set_position(UI.set_reader(view,"Settings | Indexing",settings_body(dir,selection_snapshot(selection),provider,model)),
+    U32.min(13,settings_selected_index(model,Settings.selected(model))),0),selection,form,jobs,deadline,serial}
+def settings_render(+state: State) -> State:
+  settings_render_value(state,settings_state(state))
+
+
+def settings_show(+state: State,+active: Bool) -> State:
+  match active:
+    case True{}: settings_render(state)
+    case False{}: state
+
+def settings_update(+state: State,+model: Settings.Model) -> State:
+  settings_show(settings_model_set(state,model),settings_active(state))
+
+def settings_resume(+state: State,+pending: Maybe<&2,Request>) -> State:
+  match pending:
+    case None{}: state
+    case Some{+request}: queue(state,request)
+
+def settings_origin_reader(+revision: U32,+reader: Maybe<&2,Pending>) -> Maybe<&2,Request>:
+  match reader:
+    case Some{Pending{+ticket,+request,+channel}}: Bool.pick(Maybe<&2,Request>,U32.is_eq(revision,ticket),Some{request},None{})
+    case None{}: None{}
+
+def settings_origin_wanted(+revision: U32,+reader: Maybe<&2,Pending>,+wanted: Maybe<&2,Request>) -> Maybe<&2,Request>:
+  match wanted:
+    case Some{+request}: Some{request}
+    case None{}: settings_origin_reader(revision,reader)
+
+def settings_pending_origin(+jobs: Jobs) -> Maybe<&2,Request>:
+  Jobs{+revision,+wanted,+reader,+writer,+paused} = jobs
+  settings_origin_wanted(revision,reader,wanted)
+
+def settings_restore_value(+state: State,+saved: List<&2,SettingsOrigin>,+settingsValue: SettingsState) -> State:
+  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+deadline,+serial} = state
+  match saved:
+    case [SettingsOrigin{+origin,+view,+mode,+search,+source,+blame,+files,+navigation,+pending}]:
+      SettingsState{+model,+old,+input,+provider} = settingsValue
+      settings_resume(invalidate(State{db,dir,program,UI.restore(ui,view),origin,
+        Form{mode,search,source,blame,files,navigation,[SettingsState{model,[],input,provider}]},jobs,0n,serial}),pending)
+    case _: state
+def settings_restore(+state: State,+saved: List<&2,SettingsOrigin>) -> State:
+  settings_restore_value(state,saved,settings_state(state))
+
+
+def settings_leave_value(+state: State,+settingsValue: SettingsState) -> State:
+  SettingsState{+model,+origin,+input,+provider} = settingsValue
+  settings_restore(state,origin)
+def settings_leave(+state: State) -> State:
+  settings_leave_value(state,settings_state(state))
+
+
+def settings_enter_value(+state: State,+settingsValue: SettingsState) -> State:
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation,+old},+jobs,+deadline,+serial} = state
+  SettingsState{+model,+origin,+input,+provider} = settingsValue
+  +saved = {SettingsOrigin{selection,UI.bookmark(ui),mode,search,source,blame,files,navigation,settings_pending_origin(jobs)} : SettingsOrigin}
+  queue(settings_render(State{db,dir,program,UI.set_scope(UI.set_query(ui,input),provider),no_display(selection),
+    Form{1,search,input,blame,files,[],[SettingsState{model,[saved],input,provider}]},jobs,0n,serial}),
+    Request{6,["sources"],U32.show(serial),0,"Registered folders"})
+def settings_enter(+state: State) -> State:
+  settings_enter_value(state,settings_state(state))
+
+
+def settings_toggle(+state: State,+active: Bool) -> State:
+  match active:
+    case True{}: settings_leave(state)
+    case False{}: settings_enter(state)
+
+def settings(+state: State) -> State:
+  settings_toggle(state,settings_active(state))
+
+def settings_last(+model: Settings.Model,+message: String) -> Settings.Model:
+  Settings.Model{+phase,+prefs,+desired,+sources,+loaded,+selected,+offset,+last} = model
+  Settings.Model{phase,prefs,desired,sources,loaded,selected,offset,String.take(message,2048n)}
+
+def settings_report(+state: State,+message: String) -> State:
+  status(settings_update(state,settings_last(settings_model(state),message)),String.take(message,300n))
+
+# The operation nonce is shared with export naming; source inventory requests
+# freeze it and source acknowledgments advance it. Reader tickets alone cannot
+# reject an inventory read that raced a different writer.
+def source_nonce(+state: State) -> String:
+  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+deadline,+serial} = state
+  U32.show(serial)
+
+def source_barrier(+state: State) -> State:
+  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+deadline,+serial} = state
+  State{db,dir,program,ui,selection,form,jobs,deadline,U32.add(serial,1)}
+
+def settings_inventory_page(+model: Settings.Model,+selected: Maybe<&2,Settings.Source>) -> Settings.Model:
+  Settings.Model{phase,prefs,desired,+sources,loaded,chosen,offset,last} = model
+  match selected:
+    case None{}: model
+    case Some{source}:
+      Settings.Model{phase,prefs,desired,sources,loaded,chosen,U32.mul(U32.div(settings_row_index(sources,source,0),14),14),last}
+
+def settings_inventory(+model: Settings.Model) -> Settings.Model:
+  settings_inventory_page(model,Settings.selected(model))
+
+def source_rows(+state: State,+result: Result<&2,&2,String,List<&2,Settings.Source>>) -> State:
+  match result:
+    case Fail{+message}: settings_report(state,"Source list unavailable: " ++ message)
+    case Done{+rows}: settings_update(state,settings_inventory(Settings.with_sources(settings_model(state),rows)))
+
+def settings_sources(+state: State,+result: Result<&2,&2,String,Json.Json>) -> State:
+  match result:
+    case Fail{+message}: source_rows(state,Fail{message})
+    case Done{+value}: source_rows(state,Settings.sources_decode(value))
+
+def source_read_apply(+state: State,+result: Result<&2,&2,String,Json.Json>,+current: Bool) -> State:
+  match current:
+    case True{}: settings_sources(state,result)
+    case False{}: state
+
+def source_read_done(+state: State,+request: Request,+result: Result<&2,&2,String,Json.Json>) -> State:
+  Request{+kind,+args,+nonce,+start,+title} = request
+  source_read_apply(state,result,String.eq(nonce,source_nonce(state)))
+
+def settings_pick_selected(+state: State,+model: Settings.Model,+origin: List<&2,SettingsOrigin>,+selected: Maybe<&2,Settings.Source>) -> State:
+  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+deadline,+serial} = state
+  match selected:
+    case None{}: state
+    case Some{Settings.Source{+provider,+path,+enabled}}:
+      settings_render(set_settings(State{db,dir,program,UI.set_scope(UI.set_query(ui,path),provider),selection,form,jobs,deadline,serial},SettingsState{model,origin,path,provider}))
+
+def settings_pick_model(+state: State,+model: Settings.Model,+origin: List<&2,SettingsOrigin>) -> State:
+  settings_pick_selected(state,model,origin,Settings.selected(model))
+
+def settings_pick_value(+state: State,+index: U32,+settingsValue: SettingsState) -> State:
+  SettingsState{+model,+origin,+input,+provider} = settingsValue
+  settings_pick_model(state,Settings.select(model,U32.add(Settings.offset(model),index)),origin)
+
+def settings_pick(+state: State,+index: U32) -> State:
+  settings_pick_value(state,index,settings_state(state))
+
+def settings_page_value(+state: State,+forward: Bool,+settingsValue: Settings.Model) -> State:
+  Settings.Model{+phase,+prefs,+desired,+sources,+loaded,+selected,+offset,+last} = settingsValue
+  +total = U32.from_nat(List.length(&2,Settings.Source,sources))
+  +next = Bool.pick(U32,forward,Bool.pick(U32,U32.is_lt(U32.add(offset,14),total),U32.add(offset,14),offset),UI.minus(offset,14))
+  settings_update(state,Settings.Model{phase,prefs,desired,sources,loaded,None{},next,last})
+def settings_page(+state: State,+forward: Bool) -> State:
+  settings_page_value(state,forward,settings_model(state))
+
+
+def settings_input_value(+state: State,+settingsValue: SettingsState) -> State:
+  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+deadline,+serial} = state
+  SettingsState{+model,+origin,+input,+provider} = settingsValue
+  set_settings(state,SettingsState{model,origin,UI.query(ui),UI.scope(ui)})
+
+# Storage stays inside Settings so Back restores its original reader too.
+def settings_input(+state: State) -> State:
+  settings_input_value(state,settings_state(state))
+
+
+def storage_ready(state: State,active: Bool) -> State:
+  match active:
+    case True{}: queue(state,Request{19,["storage"],"",0,"Storage inventory"})
+    case False{}: queue(settings_enter(state),Request{19,["storage"],"",0,"Storage inventory"})
+
+def storage(+state: State) -> State:
+  storage_ready(state,settings_active(state))
+
+def storage_done(state: State,result: Result<&2,&2,String,String>) -> State:
+  State{db,dir,program,ui,selection,form,jobs,deadline,serial} = state
+  match result:
+    case Fail{message}: settings_report(state,message)
+    case Done{text}:
+      State{db,dir,program,UI.set_status(UI.set_reader(ui,"Settings | storage inventory",text),
+        "Read-only storage inventory. Back restores the prior reader."),selection,form,jobs,deadline,serial}
+
 def form_text(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation,+settings},+jobs,+refresh_at,+serial} = state
   match mode:
     case 1:
-      State{db,dir,program,ui,selection,Form{1,search,UI.query(ui),blame,files,navigation},jobs,refresh_at,serial}
+      settings_input(State{db,dir,program,ui,selection,Form{1,search,UI.query(ui),blame,files,navigation,settings},jobs,refresh_at,serial})
     case 2:
-      invalidate(State{db,dir,program,ui,selection,Form{2,search,source,UI.query(ui),files,navigation},jobs,refresh_at,serial})
+      invalidate(State{db,dir,program,ui,selection,Form{2,search,source,UI.query(ui),files,navigation,settings},jobs,refresh_at,serial})
     case 3:
-      invalidate(State{db,dir,program,ui,selection,Form{3,search,source,blame,Files.edit(files,UI.query(ui)),navigation},jobs,refresh_at,serial})
+      invalidate(State{db,dir,program,ui,selection,Form{3,search,source,blame,Files.edit(files,UI.query(ui)),navigation,settings},jobs,refresh_at,serial})
     case _:
-      reload(State{db,dir,program,ui,selection,Form{0,UI.query(ui),source,blame,files,navigation},jobs,refresh_at,serial})
+      reload(State{db,dir,program,ui,selection,Form{0,UI.query(ui),source,blame,files,navigation,settings},jobs,refresh_at,serial})
 
 def open_item(+state: State,item: Maybe<&2,Item>) -> State:
   match item:
@@ -783,8 +1100,8 @@ def why_nonempty(+state: State,+snap: String,+start: U32,+filters: Query.Filters
         "Why | pinned snapshot " ++ snap})
 
 def selected_file_form(+state: State,+text: String) -> State:
-  State{db,dir,program,ui,selection,Form{mode,search,source,old,+files,+navigation},jobs,refresh_at,serial} = state
-  State{db,dir,program,UI.set_query(ui,text),selection,Form{2,search,source,text,files,navigation},jobs,refresh_at,serial}
+  State{db,dir,program,ui,selection,Form{mode,search,source,old,+files,+navigation,+settings},jobs,refresh_at,serial} = state
+  State{db,dir,program,UI.set_query(ui,text),selection,Form{2,search,source,text,files,navigation,settings},jobs,refresh_at,serial}
 
 def why_file(+state: State,args: List<&2,String>) -> State:
   match args:
@@ -883,7 +1200,7 @@ def tools_ready(state: State,snap: String,start: U32,filters: Query.Filters,vali
       status(state,"Tools needs a captured History reader. Return to History and choose a transcript first.")
 
 def tools(+state: State) -> State:
-  State{db,dir,program,ui,Selection{items,+snap,start,displayed,args,filters,listing},Form{mode,search,source,blame,files,+navigation},jobs,deadline,serial} = state
+  State{db,dir,program,ui,Selection{items,+snap,start,displayed,args,filters,listing},Form{mode,search,source,blame,files,+navigation,+settings},jobs,deadline,serial} = state
   tools_ready(state,snap,start,filters,U32.is_eq(mode,0) && files_saved_valid(displayed) && Bool.not(String.is_empty(snap)))
 
 def tools_page_ready(state: State,snap: String,start: U32,filters: Query.Filters,valid: Bool) -> State:
@@ -938,19 +1255,19 @@ def paging(+state: State,forward: Bool) -> State:
 
 
 def browse_capture(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation},+jobs,+refresh_at,+serial} = state
-  reload(State{db,dir,program,UI.set_query(ui,search),selection,Form{0,search,source,blame,files,navigation},jobs,refresh_at,serial})
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation,+settings},+jobs,+refresh_at,+serial} = state
+  reload(State{db,dir,program,UI.set_query(ui,search),selection,Form{0,search,source,blame,files,navigation,settings},jobs,refresh_at,serial})
 
 def browse(state: State) -> State:
-  browse_capture(files_leave(state))
+  browse_capture(files_leave(settings_leave(state)))
 
 
 def capture_browse_capture(+state: State) -> State:
-  State{db,dir,program,ui,selection,Form{mode,+search,source,blame,+files,+navigation},jobs,refresh_at,serial} = state
-  State{db,dir,program,UI.set_query(ui,search),selection,Form{0,search,source,blame,files,navigation},jobs,refresh_at,serial}
+  State{db,dir,program,ui,selection,Form{mode,+search,source,blame,+files,+navigation,+settings},jobs,refresh_at,serial} = state
+  State{db,dir,program,UI.set_query(ui,search),selection,Form{0,search,source,blame,files,navigation,settings},jobs,refresh_at,serial}
 
 def capture_browse(state: State) -> State:
-  capture_browse_capture(files_leave(state))
+  capture_browse_capture(files_leave(settings_leave(state)))
 
 
 def versions_ready(state: State,snapshot: String,filters: Query.Filters,valid: Bool) -> State:
@@ -979,83 +1296,21 @@ def open_latest(+state: State) -> State:
   State{db,dir,program,ui,Selection{items,+snap,start,displayed,args,filters,listing},form,jobs,deadline,serial} = state
   latest_ready(state,snap,filters,Bool.not(String.is_empty(snap)))
 
-def no_display(+selection: Selection) -> Selection:
-  Selection{items,snap,start,displayed,blame,filters,+listing} = selection
-  Selection{items,snap,start,0,blame,filters,listing}
-
-def selection_snapshot(selection: Selection) -> String:
-  Selection{items,snap,start,displayed,args,filters,+listing} = selection
-  snap
-
-def settings_text(dir: String,snapshot: String) -> String:
-  "Data directory:\n" ++ dir ++ "\nSelected snapshot: " ++ Store.nonempty(snapshot,"none") ++
-  "\nRebuild restores this snapshot's derived search rows from verified raw bytes. Use Rebuild at left. Captured evidence is retained." ++
-  "\n\nEnable a history folder:\n1. Choose Claude or Codex at left.\n2. Paste its full local folder path above.\n3. Click Refresh or press Return.\n\nFor one JSONL file, use file:/absolute/log.jsonl.\nDisable a folder with disable:/canonical/root.\nUse the exact registered path listed below.\nRetained evidence is never deleted by disabling.\n\nThe input is a literal path, never a command.\nNo private home history is scanned by default.\n\nClick Settings again to return to search.\nRefresh rechecks registered folders and explicit files.\nPause stops automatic refresh; in-flight captures finish safely.\n\nReader: fixed 16px font. Unsupported glyphs are boxes; copy/export retain Unicode.\nUsage stays recorded facts, never billed spend.\n\nRegistered source folders:\n"
-
-def source_lines(rows: List<&2,List<&2,Sql.Cell>>) -> String:
-  match rows:
-    case []:
-      ""
-    case +row <> rest:
-      Store.field(row,0n) ++ " | " ++ Bool.pick(String,String.eq(Store.field(row,2n),"1"),"enabled","disabled") ++
-      "\n" ++ Store.field(row,1n) ++ "\n\n" ++ source_lines(rest)
-
-def source_rows(+state: State,result: Result<&2,&2,String,List<&2,List<&2,Sql.Cell>>>) -> State:
-  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+refresh_at,+serial} = state
-  match result:
-    case Fail{message}:
-      status(state,message)
-    case Done{rows}:
-      State{db,dir,program,UI.set_status(UI.set_reader(ui,"Settings | explicit sources",settings_text(dir,selection_snapshot(selection)) ++ source_lines(rows)),
-        "Explicit source configuration loaded. Disabled roots keep captured evidence."),selection,form,jobs,refresh_at,serial}
-
-def settings_capture(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation},+jobs,+refresh_at,+serial} = state
-  match mode:
-    case 1:
-      browse(State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,navigation},jobs,refresh_at,serial})
-    case _:
-      queue(clear_rows(State{db,dir,program,UI.set_reader(UI.set_query(ui,source),"Settings | explicit sources",settings_text(dir,selection_snapshot(selection))),
-        no_display(selection),Form{1,search,source,blame,files,navigation},jobs,refresh_at,serial}),Request{6,["sources"],"",0,"Registered sources"})
-
-def settings(state: State) -> State:
-  settings_capture(files_leave(state))
-
-
-def storage_capture(+state: State) -> State:
-  State{db,dir,program,ui,selection,Form{mode,search,+source,blame,+files,+navigation},jobs,deadline,serial} = state
-  queue(clear_rows(State{db,dir,program,UI.set_query(ui,source),no_display(selection),
-    Form{1,search,source,blame,files,navigation},jobs,deadline,serial}),Request{19,["storage"],"",0,"Storage inventory"})
-
-def storage(state: State) -> State:
-  storage_capture(files_leave(state))
-
-
-def storage_done(+state: State,result: Result<&2,&2,String,String>) -> State:
-  State{db,dir,program,ui,selection,form,jobs,deadline,serial} = state
-  match result:
-    case Fail{message}:
-      status(state,message)
-    case Done{text}:
-      State{db,dir,program,UI.set_status(UI.set_reader(ui,"Settings | storage inventory",text),
-        "Read-only storage inventory. Click Settings to return to search."),
-        no_display(selection),form,jobs,deadline,serial}
-
 def filter_help_capture(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation,+settings},+jobs,+refresh_at,+serial} = state
   invalidate(State{db,dir,program,UI.set_reader(UI.set_query(ui,search),"Search filters | literal terms",
     "Type words or a quoted phrase above.\n\nOptional filters:\nprovider:claude\nprovider:codex\nrepo:\"/absolute/path with spaces\"\nrole:user\nrole:assistant\nrole:tool\nafter:2026-10-01\n\nExample:\ncache role:assistant after:2026-10-01\n\nProvider tokens override the sidebar scope.\nDates are inclusive calendar dates.\nEmpty words with filters browse matching records.\nPunctuation is literal; FTS syntax is not executed.\n\nTyping applies filters. Click a result to read its exact accepted snapshot."),
-    no_display(selection),Form{0,search,source,blame,files,navigation},jobs,refresh_at,serial})
+    no_display(selection),Form{0,search,source,blame,files,navigation,settings},jobs,refresh_at,serial})
 
 def filter_help(state: State) -> State:
   filter_help_capture(files_leave(state))
 
 
 def blame_help_capture(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation,+settings},+jobs,+refresh_at,+serial} = state
   invalidate(State{db,dir,program,UI.set_reader(UI.set_query(ui,blame),"Blame | local repository evidence",
     "Enter literal fields separated by |:\n\n/absolute/repository|relative/file|first|count\n\nOr exact commit Why:\n/absolute/repository|commit:full40hex\n\nExample:\n/tmp/demo-repo|src/cache.txt|1|20\n\nClick Blame again or press Return to run.\nThe final field is a count, from 1 to 100.\nSpaces are allowed in paths. | is reserved.\n\nGit is read-only. No logged command is run.\nMissing or ambiguous evidence remains explicit.\nContent overlap does not prove authorship.\nFile evidence searches captured sources for this repository independently of transcript filters.\n\nClick Filter to return to search."),
-    no_display(selection),Form{2,search,source,blame,files,navigation},jobs,refresh_at,serial})
+    no_display(selection),Form{2,search,source,blame,files,navigation,settings},jobs,refresh_at,serial})
 
 def blame_help(state: State) -> State:
   blame_help_capture(files_leave(state))
@@ -1106,7 +1361,7 @@ def blame_result(+state: State,result: Result<&2,&2,String,List<&2,String>>) -> 
       blame_request(state,args)
 
 def blame_capture(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+form,+files,+navigation},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+form,+files,+navigation,+settings},+jobs,+refresh_at,+serial} = state
   match mode:
     case 2:
       blame_result(state,blame_fields(String.split(UI.query(ui),'|')))
@@ -1125,7 +1380,7 @@ def blame(+state: State) -> State:
 
 
 def scope_changed(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation,+settings},+jobs,+refresh_at,+serial} = state
   match mode:
     case 0:
       reload(state)
@@ -1167,16 +1422,24 @@ def run_write(+program: String,+dir: String,args: List<&2,String>) -> IO(Reply):
       Process.run(program,"--data-dir" <> dir <> linear_args(args),"",1048576,600000)
     return Reply{Client.completed(result)}
 
-def registered_result(program: String,dir: String,result: Result<&2,&2,String,Json.Json>) -> IO(Reply):
+def source_change_list(+ack: Json.Json,+result: Result<&2,&2,String,Json.Json>) -> Reply:
   match result:
-    case Fail{message}:
-      IO.pure(Reply,Reply{Fail{message}})
-    case Done{value}:
-      run_write(program,dir,["refresh-all"])
+    case Fail{+message}: Reply{Fail{"Source change was acknowledged, but the source list could not be confirmed: " ++ message}}
+    case Done{+sources}: Reply{Done{Json.JObject{[Json.JField{"kind",Json.JString{"source_change"}},Json.JField{"ack",ack},Json.JField{"sources",sources}]}}}
 
-def registered(+program: String,+dir: String,reply: Reply) -> IO(Reply):
-  Reply{value} = reply
-  registered_result(program,dir,value)
+def source_change_result(+program: String,+dir: String,+args: List<&2,String>,+reply: Reply) -> IO(Reply):
+  Reply{+value} = reply
+  match value:
+    case Fail{+message}: IO.pure(Reply,Reply{Fail{message}})
+    case Done{+ack}:
+      do IO<Reply>:
+        rows : Result<&2,&2,String,Json.Json> <- Client.call(program,dir,["sources"])
+        return source_change_list(ack,rows)
+
+def source_change(+program: String,+dir: String,+args: List<&2,String>) -> IO(Reply):
+  do IO<Reply>:
+    reply : Reply <- run_write(program,dir,args)
+    source_change_result(program,dir,args,reply)
 
 def run_write_text(+program: String,+dir: String,+path: String,text: String) -> IO(Reply):
   do IO<Reply>:
@@ -1189,9 +1452,13 @@ def write_job(+program: String,+dir: String,args: List<&2,String>) -> IO(Reply):
     case "export-displayed" <> path <> text <> []:
       run_write_text(program,dir,path,text)
     case "source-add" <> provider <> path <> []:
-      do IO<Reply>:
-        reply : Reply <- run_write(program,dir,["source-add",provider,path])
-        registered(program,dir,reply)
+      source_change(program,dir,["source-add",provider,path])
+    case "source-disable" <> provider <> path <> []:
+      source_change(program,dir,["source-disable",provider,path])
+    case "refresh-preferences" <> []:
+      read_job(program,dir,["refresh-preferences"])
+    case "refresh-preferences-set" <> enabled <> interval <> []:
+      read_job(program,dir,["refresh-preferences-set",enabled,interval])
     case other:
       run_write(program,dir,other)
 
@@ -1245,10 +1512,10 @@ def refresh_listing(state: State,mode: U32) -> State:
       state
 
 def refresh_normal(+state: State) -> IO(State):
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation,+settings},+jobs,+refresh_at,+serial} = state
   match mode:
     case 1:
-      import_checked(state,scope(ui),String.trim(UI.query(ui)),writer_of(state))
+      start_write(state,Request{8,["refresh-all"],"",0,"Refresh registered sources"},writer_of(state))
     case 3:
       IO.pure(State,files_tree_guard(state,False{},Files.pinned(Files.identity(files))))
     case _:
@@ -1270,7 +1537,7 @@ def rebuild_allowed(+state: State,+snap: String,allowed: Bool) -> IO(State):
       IO.pure(State,status(state,"Select a captured transcript, then open Settings to rebuild that snapshot's derived search rows."))
 
 def rebuild(+state: State) -> IO(State):
-  State{db,dir,program,ui,Selection{items,+snap,start,displayed,args,filters,+listing},Form{mode,search,source,blame,+files,+navigation},jobs,refresh_at,serial} = state
+  State{db,dir,program,ui,Selection{items,+snap,start,displayed,args,filters,+listing},Form{mode,search,source,blame,+files,+navigation,+settings},jobs,refresh_at,serial} = state
   rebuild_allowed(state,snap,U32.is_eq(mode,1) && Bool.not(String.is_empty(snap)))
 
 def copy_done(+state: State,result: Result<&1,&1,U32 & String,U32 & (String & String)>) -> State:
@@ -1328,7 +1595,7 @@ def export_begin(+state: State,+valid: Bool) -> IO(State):
         export_at(state,now)
 
 def export_capture(+state: State) -> IO(State):
-  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters,+listing},Form{+mode,+search,+source,+form,+files,+navigation},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters,+listing},Form{+mode,+search,+source,+form,+files,+navigation,+settings},+jobs,+refresh_at,+serial} = state
   export_begin(state,Bool.not(U32.is_eq(mode,1)) && ((displayed >= 3 && displayed <= 4 : U32) || file_kind(displayed) || U32.is_eq(displayed,14) || U32.is_eq(displayed,24)))
 
 def files_export_args(ui: UI.State,path: String) -> List<&2,String>:
@@ -1456,16 +1723,16 @@ def latest_done(+state: State,+request: Request,result: Result<&2,&2,String,Json
         Bool.not(Cmp.is_gt(P.decimal_compare(Json.get(value,"snapshot"),"9223372036854775807"))))
 
 def text_done(+state: State,+request: Request,result: Result<&2,&2,String,String>) -> State:
-  State{+db,+dir,+program,+ui,Selection{+items,+old,+oldstart,+displayed,+blame,+filters,+listing},Form{+mode,+search,+source,+form,+files,+navigation},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+old,+oldstart,+displayed,+blame,+filters,+listing},Form{+mode,+search,+source,+form,+files,+navigation,+settings},+jobs,+refresh_at,+serial} = state
   Request{+kind,+args,+snap,+start,+title} = request
   match result:
     case Fail{message}:
-      status(State{db,dir,program,ui,Selection{items,old,oldstart,displayed,blame,filters,listing},Form{mode,search,source,form,files,navigation},jobs,refresh_at,serial},message)
+      status(State{db,dir,program,ui,Selection{items,old,oldstart,displayed,blame,filters,listing},Form{mode,search,source,form,files,navigation,settings},jobs,refresh_at,serial},message)
     case Done{text}:
       State{db,dir,program,UI.set_status(UI.set_reader(Bool.pick(UI.State,file_kind(kind) || U32.is_eq(mode,0),ui,UI.set_query(ui,search)),title,text),"Captured evidence loaded. Scroll or drag to select; Cmd+C copies."),
         Selection{items,Bool.pick(String,file_kind(kind),old,snap),start,kind,
           Bool.pick(List<&2,String>,file_kind(kind),args,blame),
-          Bool.pick(Query.Filters,file_kind(kind) || U32.is_eq(kind,14),filters,request_filters(args)),listing},Form{Bool.pick(U32,file_kind(kind),2,0),search,source,form,files,navigation},jobs,refresh_at,serial}
+          Bool.pick(Query.Filters,file_kind(kind) || U32.is_eq(kind,14),filters,request_filters(args)),listing},Form{Bool.pick(U32,file_kind(kind),2,0),search,source,form,files,navigation,settings},jobs,refresh_at,serial}
 
 def related_target_result(+state: State,+request: Request,value: Navigation,valid: Bool,+result: Result<&2,&2,String,String>) -> State:
   match value valid result:
@@ -1572,7 +1839,7 @@ def tools_request_valid(request: Request) -> Bool:
   U32.is_eq(kind,24) && tools_request_args(args,snapshot,start)
 
 def tools_valid(state: State,+request: Request,+value: Json.Json) -> Bool:
-  State{db,dir,program,ui,Selection{items,snap,start,displayed,view_args,filters,listing},Form{mode,search,source,blame,files,+navigation},jobs,deadline,serial} = state
+  State{db,dir,program,ui,Selection{items,snap,start,displayed,view_args,filters,listing},Form{mode,search,source,blame,files,+navigation,+settings},jobs,deadline,serial} = state
   Request{kind,+args,+snapshot,first,title} = request
   U32.is_eq(mode,0) && tools_request_valid(request) && tools_text_matches(value,"kind","recorded_activity") &&
     tools_text_matches(value,"snapshot",snapshot) && tools_id(value,"snapshot") && tools_locator(value) && tools_id(value,"generation") &&
@@ -1627,7 +1894,7 @@ def read_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.J
     case 19:
       storage_done(state,Client.text_result(result))
     case 6:
-      source_rows(state,Client.rows_result(result))
+      source_read_done(state,request,result)
     case 20:
       files_done(state,request,result)
     case 21:
@@ -1720,19 +1987,21 @@ def write_mode(+state: State,mode: U32,+value: Json.Json) -> State:
     case 0:
       refresh_finished(status(state,"Refresh batch finished; accepted snapshots stay pinned."))
     case _:
-      status(state,"Capture batch finished. Current input retained; click Settings again to browse.")
+      status(state,"Capture batch finished. Settings retains its path and saved origin; Back restores the reader.")
 
 def write_capture_ok(+state: State,mode: U32,+value: Json.Json,error: String,ok: Bool) -> State:
   match ok:
     case False{}:
-      status(state,error)
+      settings_report(state,error)
     case True{}:
-      write_mode(state,mode,value)
+      write_mode(settings_report(state,"Capture batch completed: attempted " ++ Store.nonempty(Json.get(value,"attempted"),"one explicit file") ++
+        "; succeeded " ++ Store.nonempty(Json.get(value,"succeeded"),"one") ++ "; failed " ++ Store.nonempty(Json.get(value,"failed"),"0") ++
+        ". This bounded batch does not establish full-library health."),mode,value)
 
 def write_capture(state: State,mode: U32,+value: Json.Json,+error: String) -> State:
   write_capture_ok(state,mode,value,error,String.is_empty(error))
 
-def automatic_success(+state: State,mode: U32,+value: Json.Json) -> State:
+def automatic_success(+state: State,+mode: U32,+value: Json.Json) -> State:
   match mode:
     case 0:
       write_capture(state,mode,value,refresh_error(value))
@@ -1753,7 +2022,7 @@ def write_success(+state: State,+kind: U32,+title: String,+mode: U32,+value: Jso
       write_capture(state,mode,value,refresh_error(value))
 
 def write_failed(+state: State,+kind: U32,+message: String) -> State:
-  status(state,Bool.pick(String,U32.is_eq(kind,7) || U32.is_eq(kind,8) || U32.is_eq(kind,15),
+  settings_report(state,Bool.pick(String,U32.is_eq(kind,7) || U32.is_eq(kind,8) || U32.is_eq(kind,15),
     "Capture/refresh failed; earlier captures may have completed: " ++ message,message))
 
 def write_value(+state: State,+kind: U32,+title: String,+mode: U32,result: Result<&2,&2,String,Json.Json>) -> State:
@@ -1763,18 +2032,99 @@ def write_value(+state: State,+kind: U32,+title: String,+mode: U32,result: Resul
     case Done{value}:
       write_success(state,kind,title,mode,value)
 
+def preferences_paused(+state: State,+paused: Bool) -> State:
+  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+old},+deadline,+serial} = state
+  State{db,dir,program,ui,selection,form,Jobs{revision,wanted,reader,writer,paused},0n,serial}
+
+def preferences_parse(+result: Result<&2,&2,Refresh.Failure,Refresh.Preferences>) -> Result<&2,&2,String,Refresh.Preferences>:
+  match result:
+    case Done{+prefs}: Done{prefs}
+    case Fail{Refresh.Failure{+code,+message}}: Fail{message}
+
+def preferences_request(+args: List<&2,String>) -> Result<&2,&2,String,Refresh.Preferences>:
+  match args:
+    case "refresh-preferences-set" <> enabled <> interval <> []: preferences_parse(Refresh.parse(enabled,interval))
+    case _: Fail{"Preference request was not a closed full-pair update."}
+
+def preferences_saved_result(+model: Settings.Model,+ack: Refresh.Preferences,+requested: Result<&2,&2,String,Refresh.Preferences>) -> Settings.Model:
+  match requested:
+    case Fail{+message}: Settings.failed(model,message)
+    case Done{+value}: Settings.saved(model,value,ack)
+
+def preferences_saved(+model: Settings.Model,+args: List<&2,String>,+ack: Refresh.Preferences) -> Settings.Model:
+  preferences_saved_result(model,ack,preferences_request(args))
+
+def preferences_finish(+state: State,+model: Settings.Model) -> State:
+  status(settings_update(preferences_paused(state,Settings.paused(model)),model),
+    String.take(settings_pref_text(model) ++ settings_pending_text(Settings.pending(model)),300n))
+
+def preferences_apply(+state: State,+kind: U32,+args: List<&2,String>,+result: Result<&2,&2,String,Refresh.Preferences>) -> State:
+  match result:
+    case Fail{+message}:
+      settings_report(settings_update(state,Settings.failed(settings_model(state),message)),"Automatic refresh unavailable: " ++ message)
+    case Done{+prefs}:
+      +next = Bool.pick(Settings.Model,U32.is_eq(kind,27),Settings.loaded(settings_model(state),prefs),preferences_saved(settings_model(state),args,prefs))
+      preferences_finish(state,next)
+
+def preferences_done(+state: State,+kind: U32,+args: List<&2,String>,+result: Result<&2,&2,String,Json.Json>) -> State:
+  match result:
+    case Fail{+message}: preferences_apply(state,kind,args,Fail{message})
+    case Done{+value}: preferences_apply(state,kind,args,Settings.prefs_decode(value))
+
+def source_effect_value(+source: Maybe<&2,Settings.Source>,+enabled: Bool) -> Bool:
+  match source:
+    case None{}: False{}
+    case Some{Settings.Source{+provider,+path,+actual}}: Bool.not(Bool.xor(actual,enabled))
+
+def source_effect(+kind: U32,+args: List<&2,String>,+rows: List<&2,Settings.Source>) -> Bool:
+  match kind args:
+    case 29 _: True{}
+    case 30 "source-disable" <> provider <> path <> []: source_effect_value(Settings.find(rows,Settings.Source{provider,path,False{}}),False{})
+    case 31 "source-add" <> provider <> path <> []: source_effect_value(Settings.find(rows,Settings.Source{provider,path,True{}}),True{})
+    case _ _: False{}
+
+def source_confirmed(+state: State,+rows: List<&2,Settings.Source>,+valid: Bool) -> State:
+  match valid:
+    case True{}: source_rows(settings_report(state,"Registered folder change confirmed by a fresh source inventory. Retained captures are unchanged; Refresh imports a bounded enabled-source batch."),Done{rows})
+    case False{}: source_rows(settings_report(state,"Source command acknowledged, but the fresh inventory does not confirm the selected folder's requested state. No enabled-state success is claimed."),Done{rows})
+
+def source_change_rows(+state: State,+kind: U32,+args: List<&2,String>,+result: Result<&2,&2,String,List<&2,Settings.Source>>) -> State:
+  match result:
+    case Fail{+message}: settings_report(state,"Source command acknowledged, but the inventory is invalid: " ++ message)
+    case Done{+rows}: source_confirmed(state,rows,source_effect(kind,args,rows))
+
+def source_change_apply(+state: State,+kind: U32,+args: List<&2,String>,+value: Json.Json,+valid: Bool) -> State:
+  match valid:
+    case False{}: settings_report(state,"Source change response did not match its exact requested provider and path. Reload the source list before retrying.")
+    case True{}: source_change_rows(state,kind,args,Settings.sources_decode(Json.field(value,"sources")))
+
+def source_change_done(+state: State,+kind: U32,+args: List<&2,String>,+result: Result<&2,&2,String,Json.Json>) -> State:
+  match result:
+    case Fail{+message}: settings_report(state,message)
+    case Done{+value}:
+      source_change_apply(state,kind,args,value,String.eq(Json.get(value,"kind"),"source_change") && Settings.source_ack(args,Json.field(value,"ack")))
+
+def write_dispatch(state: State,kind: U32,args: List<&2,String>,title: String,mode: U32,result: Result<&2,&2,String,Json.Json>) -> State:
+  match kind:
+    case 27: preferences_done(state,kind,args,result)
+    case 28: preferences_done(state,kind,args,result)
+    case 29: source_change_done(source_barrier(state),kind,args,result)
+    case 30: source_change_done(source_barrier(state),kind,args,result)
+    case 31: source_change_done(source_barrier(state),kind,args,result)
+    case _: write_value(state,kind,title,mode,result)
+
 def write_done(+state: State,+request: Request,+reply: Reply) -> State:
-  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation,+settings},+jobs,+refresh_at,+serial} = state
   Request{+kind,+args,+snap,+start,+title} = request
   Reply{+value} = reply
-  write_value(State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,navigation},jobs,refresh_at,serial},kind,title,mode,value)
+  write_dispatch(State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,navigation,settings},jobs,refresh_at,serial},kind,args,title,mode,value)
 
 def poll_write_ready(+state: State,+request: Request,chan: Chan(Reply),result: Maybe<&1,Reply>) -> IO(State):
   match result:
     case None{}:
       do IO<State>:
         Chan.close(Reply,chan)
-        return status(clear_writer(state),"Local writer ended without a result. Accepted captures remain available.")
+        return write_done(clear_writer(state),request,Reply{Fail{"Local writer ended without a result. Accepted captures remain available."}})
     case Some{reply}:
       do IO<State>:
         Chan.close(Reply,chan)
@@ -1823,23 +2173,27 @@ def refresh_due(+deadline: Nat,+now: Nat) -> Bool:
 def refresh_unarmed(+deadline: Nat,+now: Nat) -> Bool:
   Nat.is_eq(deadline,0n) || Nat.is_gt(deadline,next_refresh(now))
 
-def auto_due(+state: State,+now: Nat,+unarmed: Bool,+due: Bool) -> IO(State):
+def automatic_due(+state: State,+next: Nat,+unarmed: Bool,+due: Bool) -> IO(State):
   match unarmed due:
-    case True{} _:
-      IO.pure(State,refresh_deadline(state,next_refresh(now)))
-    case False{} True{}:
-      start_write(refresh_deadline(state,0n),
-        Request{15,["refresh-all"],"",0,"Automatic registered-source refresh"},None{})
-    case _ _:
-      IO.pure(State,state)
+    case True{} _: IO.pure(State,refresh_deadline(state,next))
+    case False{} True{}: start_write(refresh_deadline(state,0n),Request{15,["refresh-all"],"",0,"Automatic registered-source batch"},None{})
+    case _ _: IO.pure(State,state)
+
+def automatic_ready(+state: State,+now: Nat,+next: Nat) -> IO(State):
+  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+deadline,+serial} = state
+  automatic_due(state,next,Nat.is_eq(deadline,0n) || Nat.is_gt(deadline,next),refresh_due(deadline,now))
+
+def automatic_deadline(+state: State,+now: Nat,+result: Result<&2,&2,String,Maybe<&2,Nat>>) -> IO(State):
+  match result:
+    case Fail{+message}: IO.pure(State,settings_report(refresh_deadline(settings_update(state,Settings.failed(settings_model(state),message)),0n),message))
+    case Done{None{}}: IO.pure(State,refresh_deadline(state,0n))
+    case Done{Some{+next}}: automatic_ready(state,now,next)
 
 def auto_active(+state: State,+now: Nat) -> IO(State):
-  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
-  match writer paused:
-    case None{} False{}:
-      auto_due(state,now,refresh_unarmed(refresh_at,now),refresh_due(refresh_at,now))
-    case _ _:
-      IO.pure(State,refresh_deadline(state,0n))
+  State{db,dir,program,ui,selection,form,Jobs{revision,wanted,reader,writer,paused},refresh_at,serial} = state
+  match writer:
+    case None{}: automatic_deadline(state,now,Settings.deadline(settings_model(state),now))
+    case _: IO.pure(State,refresh_deadline(state,0n))
 
 def auto_mode(+state: State,mode: U32,now: Nat) -> IO(State):
   match mode:
@@ -1849,7 +2203,7 @@ def auto_mode(+state: State,mode: U32,now: Nat) -> IO(State):
       IO.pure(State,refresh_deadline(state,0n))
 
 def auto_refresh_normal(+state: State,+now: Nat) -> IO(State):
-  State{db,dir,program,ui,selection,Form{mode,search,source,blame,+files,+navigation},jobs,refresh_at,serial} = state
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,+files,+navigation,+settings},jobs,refresh_at,serial} = state
   auto_mode(state,mode,now)
 
 def auto_refresh_mode(state: State,now: Nat,related: Bool) -> IO(State):
@@ -1859,6 +2213,23 @@ def auto_refresh_mode(state: State,now: Nat,related: Bool) -> IO(State):
 
 def auto_refresh(+state: State,now: Nat) -> IO(State):
   auto_refresh_mode(state,now,related_active(state))
+
+def preference_next(+model: Settings.Model) -> Maybe<&2,Request>:
+  Settings.Model{+phase,+prefs,+desired,+sources,+loaded,+selected,+offset,+last} = model
+  match phase desired:
+    case 0 _: Some{Request{27,["refresh-preferences"],"",0,"Load saved refresh preferences"}}
+    case 2 Some{Refresh.Preferences{+enabled,+interval}}:
+      Some{Request{28,["refresh-preferences-set",Refresh.enabled_text(enabled),U32.show(Refresh.seconds(interval))],"",0,"Save automatic refresh preference"}}
+    case _ _: None{}
+
+def preference_start(+state: State,+request: Maybe<&2,Request>,+busy: Maybe<&2,Pending>) -> IO(State):
+  match request busy:
+    case Some{Request{+kind,+args,+snap,+start,+title}} None{}:
+      start_write(Bool.pick(State,U32.is_eq(kind,27),settings_update(state,Settings.loading(settings_model(state))),state),Request{kind,args,snap,start,title},None{})
+    case _ _: IO.pure(State,state)
+
+def service_preferences(+state: State) -> IO(State):
+  preference_start(state,preference_next(settings_model(state)),writer_of(state))
 
 def service_start(+state: State) -> IO(State):
   State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
@@ -1870,7 +2241,8 @@ def service_start(+state: State) -> IO(State):
 def service_write(+state: State) -> IO(State):
   State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
   do IO<State>:
-    next : State <- poll_write(state,writer)
+    polled : State <- poll_write(state,writer)
+    next : State <- service_preferences(polled)
     service_start(next)
 
 def service(+state: State) -> IO(State):
@@ -1879,10 +2251,79 @@ def service(+state: State) -> IO(State):
     next : State <- poll_read(state,reader)
     service_write(next)
 
+def settings_effective(+model: Settings.Model) -> Refresh.Preferences:
+  Settings.Model{+phase,+prefs,+desired,+sources,+loaded,+selected,+offset,+last} = model
+  match desired:
+    case None{}: prefs
+    case Some{+value}: value
+
+def settings_desire(+state: State,+prefs: Refresh.Preferences,+ready: Bool) -> State:
+  match ready:
+    case False{}: settings_report(state,"Saved automatic preferences are unavailable. Open Settings and Reload; no defaults are silently applied.")
+    case True{}:
+      status(refresh_deadline(settings_update(state,Settings.desire(settings_model(state),prefs)),0n),
+        "Preference change queued. It applies only after durable acknowledgment; any active capture finishes safely.")
+
+def preferences_ready(+model: Settings.Model) -> Bool:
+  Settings.Model{+phase,+prefs,+desired,+sources,+loaded,+selected,+offset,+last} = model
+  U32.is_eq(phase,2)
+
+def toggle_pause_value(+state: State,+settingsValue: Refresh.Preferences) -> State:
+  Refresh.Preferences{+enabled,+interval} = settingsValue
+  settings_desire(state,Refresh.Preferences{Bool.not(enabled),interval},preferences_ready(settings_model(state)))
 def toggle_pause(+state: State) -> State:
-  State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
-  status(State{db,dir,program,ui,selection,form,Jobs{revision,wanted,reader,writer,Bool.not(paused)},0n,serial},
-    Bool.pick(String,paused,"Automatic refresh resumed.","Automatic refresh paused. In-flight work finishes safely; manual Refresh still works."))
+  toggle_pause_value(state,settings_effective(settings_model(state)))
+
+
+def settings_interval_result_value(+state: State,+interval: Maybe<&2,Refresh.Interval>,+settingsValue: Refresh.Preferences) -> State:
+  match interval:
+    case Some{+next}:
+      Refresh.Preferences{+enabled,+old} = settingsValue
+      settings_desire(state,Refresh.Preferences{enabled,next},preferences_ready(settings_model(state)))
+    case None{}: settings_report(state,"Choose one of the five explicit refresh intervals.")
+def settings_interval_result(+state: State,+interval: Maybe<&2,Refresh.Interval>) -> State:
+  settings_interval_result_value(state,interval,settings_effective(settings_model(state)))
+
+
+def settings_interval_change(+state: State,+seconds: U32) -> State:
+  settings_interval_result(state,Refresh.interval_from_text(U32.show(seconds)))
+
+def settings_reload_value(+state: State,+settingsValue: Settings.Model) -> State:
+  Settings.Model{+phase,+prefs,+desired,+sources,+loaded,+selected,+offset,+last} = settingsValue
+  queue(settings_update(state,Settings.Model{0,prefs,desired,sources,loaded,selected,offset,last}),
+    Request{6,["sources"],source_nonce(state),0,"Reload registered folders"})
+def settings_reload(+state: State) -> State:
+  settings_reload_value(state,settings_model(state))
+
+
+def settings_path_valid(+provider: String,+path: String) -> Bool:
+  Query.provider_valid(provider) && Bool.not(String.is_empty(provider)) &&
+    String.starts_with(path,"/") && Nat.is_le(String.length(path),4096n) && Bool.not(String.contains(path,SCon{Chr{0},""}))
+
+def settings_add_checked(+state: State,+provider: String,+path: String,+file: Bool,+valid: Bool) -> IO(State):
+  match valid:
+    case False{}: IO.pure(State,settings_report(state,"Choose Claude or Codex and paste an absolute literal path. Use Add folder or Import file explicitly."))
+    case True{}:
+      start_write(state,Bool.pick(Request,file,Request{7,["import",provider,path],"",0,"Import explicit file"},
+        Request{29,["source-add",provider,path],"",0,"Register explicit folder"}),writer_of(state))
+
+def settings_add(+state: State,+file: Bool) -> IO(State):
+  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+deadline,+serial} = state
+  settings_add_checked(state,UI.scope(ui),UI.query(ui),file,settings_path_valid(UI.scope(ui),UI.query(ui)))
+
+def settings_enable_selected(+state: State,+enable: Bool,+selected: Maybe<&2,Settings.Source>) -> IO(State):
+  match selected:
+    case None{}: IO.pure(State,settings_report(state,"Select a registered folder row before Enable or Disable. Editing the path does not select a source."))
+    case Some{Settings.Source{+provider,+path,+enabled}}:
+      start_write(state,Request{Bool.pick(U32,enable,31,30),[Bool.pick(String,enable,"source-add","source-disable"),provider,path],"",0,
+        Bool.pick(String,enable,"Enable selected folder","Disable selected folder")},writer_of(state))
+
+def settings_enable_value(+state: State,+enable: Bool,+settingsValue: Settings.Model) -> IO(State):
+  Settings.Model{+phase,+prefs,+desired,+sources,+loaded,+selected,+offset,+last} = settingsValue
+  settings_enable_selected(state,enable,selected)
+def settings_enable(+state: State,+enable: Bool) -> IO(State):
+  settings_enable_value(state,enable,settings_model(state))
+
 
 def files_enter_action(+state: State,index: U32,query: Bool) -> State:
   match query:
@@ -1901,10 +2342,10 @@ def open_selected(+state: State,index: U32,active: Bool) -> State:
 
 
 def enter(+state: State,+index: U32) -> IO(State):
-  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+args,+filters,+listing},Form{+mode,+search,+source,+blameform,+files,+navigation},+jobs,+refresh_at,+serial} = state
+  State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+args,+filters,+listing},Form{+mode,+search,+source,+blameform,+files,+navigation,+settings},+jobs,+refresh_at,+serial} = state
   match mode:
     case 1:
-      refresh(state)
+      IO.pure(State,settings_report(state,"Use Add folder or Import file for this literal path; Return does not guess which operation you intend."))
     case 2:
       IO.pure(State,blame(state))
     case 3:
@@ -2043,8 +2484,62 @@ def handle_navigation(+state: State,action: UI.Action,phase: U32) -> IO(Maybe<St
     case 3: handle_normal(state,action)
     case phase: handle_related(state,action,phase)
 
+def settings_scope(+state: State,+provider: String) -> State:
+  match provider:
+    case "claude": settings_render(settings_input(state))
+    case "codex": settings_render(settings_input(state))
+    case _: settings_report(state,"Choose the explicit Claude or Codex source provider.")
+
+def handle_settings(+state: State,+action: UI.Action) -> IO(Maybe<State>):
+  State{+db,+dir,+program,+ui,+selection,+form,+jobs,+deadline,+serial} = state
+  match action:
+    case UI.Settings{}: IO.pure(Maybe<State>,Some{settings_leave(state)})
+    case UI.Back{}: IO.pure(Maybe<State>,Some{settings_leave(state)})
+    case UI.Search{}: IO.pure(Maybe<State>,Some{form_text(state)})
+    case UI.Scope{+provider}: IO.pure(Maybe<State>,Some{settings_scope(state,provider)})
+    case UI.Open{+index}: IO.pure(Maybe<State>,Some{settings_pick(state,index)})
+    case UI.ListPrevious{}: IO.pure(Maybe<State>,Some{settings_page(state,False{})})
+    case UI.ListNext{}: IO.pure(Maybe<State>,Some{settings_page(state,True{})})
+    case UI.SettingsInterval{+seconds}: IO.pure(Maybe<State>,Some{settings_interval_change(state,seconds)})
+    case UI.SettingsReload{}: IO.pure(Maybe<State>,Some{settings_reload(state)})
+    case UI.SettingsAddFolder{}:
+      do IO<Maybe<State>>:
+        next : State <- settings_add(state,False{})
+        return Some{next}
+    case UI.SettingsImportFile{}:
+      do IO<Maybe<State>>:
+        next : State <- settings_add(state,True{})
+        return Some{next}
+    case UI.SettingsEnable{}:
+      do IO<Maybe<State>>:
+        next : State <- settings_enable(state,True{})
+        return Some{next}
+    case UI.SettingsDisable{}:
+      do IO<Maybe<State>>:
+        next : State <- settings_enable(state,False{})
+        return Some{next}
+    case UI.Files{}: handle_normal(settings_leave(state),action)
+    case UI.Filter{}: handle_normal(settings_leave(state),action)
+    case UI.Blame{}: handle_normal(settings_leave(state),action)
+    case UI.Why{}: IO.pure(Maybe<State>,Some{status(state,"Back restores History or Files before Why.")})
+    case UI.Tools{}: IO.pure(Maybe<State>,Some{status(state,"Back restores History before recorded Tools.")})
+    case UI.Usage{}: IO.pure(Maybe<State>,Some{status(state,"Back restores History before recorded Usage.")})
+    case UI.Related{}: IO.pure(Maybe<State>,Some{status(state,"Back restores History before Related captures.")})
+    case UI.Versions{}: IO.pure(Maybe<State>,Some{status(state,"Back restores History before saved versions.")})
+    case UI.OpenLatest{}: IO.pure(Maybe<State>,Some{status(state,"Back restores History before Open latest.")})
+    case UI.Previous{}: IO.pure(Maybe<State>,Some{state})
+    case UI.Next{}: IO.pure(Maybe<State>,Some{state})
+    case other: handle_normal(state,other)
+
+def handle_mode(+state: State,+action: UI.Action,+active: Bool) -> IO(Maybe<State>):
+  match action active:
+    case action True{}: handle_settings(state,action)
+    case UI.Settings{} False{}: IO.pure(Maybe<State>,Some{settings(state)})
+    case UI.Storage{} False{}: IO.pure(Maybe<State>,Some{storage(state)})
+    case other False{}: handle_navigation(state,other,navigation_phase(navigation(state)))
+
 def handle(+state: State,action: UI.Action) -> IO(Maybe<State>):
-  handle_navigation(state,action,navigation_phase(navigation(state)))
+  handle_mode(state,action,settings_active(state))
 
 def event(+state: State,result: UI.State & UI.Action) -> IO(Maybe<State>):
   (ui,action) = result
@@ -2073,7 +2568,7 @@ def view_result(+state: State,result: UI.State & Image) -> State & Image:
 
 def view_inner(+current: State) -> State & Image:
   State{+db,+dir,+program,+ui,+selection,+form,+jobs,+refresh_at,+serial} = current
-  view_result(current,UI.view(ui))
+  view_result(current,UI.view_automatic(ui,settings_automatic(settings_model(current))))
 
 def view(state: State) -> State & Image:
   view_inner(state)
@@ -2123,7 +2618,7 @@ def tick(es: List<Event>,state: State) -> IO(Maybe<State>):
       tick_input(e <> rest,state,True{})
 
 def initial(+db: U32,+dir: String,+program: String) -> State:
-  reload(State{db,dir,program,UI.init(),Selection{[],"",0,0,[],empty_filters(),empty_listing()},Form{0,"","","",Files.empty(),[]},
+  reload(State{db,dir,program,UI.init(),Selection{[],"",0,0,[],empty_filters(),empty_listing()},Form{0,"","","",Files.empty(),[],[]},
     Jobs{0,None{},None{},None{},False{}},0n,0})
 
 def run(+db: U32,+dir: String,+program: String) -> IO(Unit):
