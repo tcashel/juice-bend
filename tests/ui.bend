@@ -67,15 +67,27 @@ def button_paste(result: UI.State & UI.Action) -> Bool:
     case _:
       False{}
 
+def button_export(result: UI.State & UI.Action) -> String:
+  (state,action) = result
+  match action:
+    case UI.WholeExport{}: "full-jsonl"
+    case UI.ContainerExport{}: "archive"
+    case _: ""
+
 def buttons() -> IO(Unit):
   +reader = UI.select_all(UI.set_edit(UI.set_reader(UI.init(),"Unicode","é 漢字 🙂"),UI.Edit{2,0,0,False{}, 0}))
   +query = UI.select_all(UI.set_query(UI.init(),"replace me"))
+  +settings = UI.set_results(UI.select_all(UI.set_query(UI.init(),"café 中文 🙂")),UI.SettingsResults{0,0,"Resume",True{}})
   do IO<Unit>:
-    Unit <- require(String.eq(copied(UI.sidebar_action(reader,13)),"é 漢字 🙂"),"pointer Copy retains selected reader Unicode")
-    Unit <- require(button_paste(UI.sidebar_action(query,14)),"pointer Paste requests clipboard input")
-    Unit <- require(String.eq(UI.selection(changed(UI.sidebar_action(query,14))),"replace me"),"pointer Paste preserves query replacement selection")
-    Unit <- require(String.eq(UI.query(changed(UI.sidebar_action(query,15))),""),"pointer Clear empties query")
-    require(String.eq(UI.selection(changed(UI.sidebar_action(UI.set_query(UI.init(),"whole query"),16))),"whole query"),"pointer Select all uses focused text")
+    Unit <- require(String.eq(copied(UI.event(Mouse{16,696,0,True{}},reader)),"é 漢字 🙂"),"pointer Copy retains selected reader Unicode")
+    Unit <- require(String.eq(button_export(UI.event(Mouse{16,728,0,True{}},query)),"full-jsonl"),"normal sidebar pointer requests full JSONL export")
+    Unit <- require(String.eq(button_export(UI.event(Mouse{16,792,0,True{}},reader)),"archive") && String.eq(UI.selection(changed(UI.event(Mouse{16,792,0,True{}},reader))),"é 漢字 🙂"),"normal sidebar pointer requests archive export without changing reader selection")
+    Unit <- require(button_paste(UI.event(Mouse{1112,136,0,True{}},query)),"reader toolbar pointer Paste requests clipboard input")
+    Unit <- require(String.eq(UI.selection(changed(UI.event(Mouse{1112,136,0,True{}},query))),"replace me"),"reader toolbar pointer Paste preserves query replacement selection")
+    Unit <- require(String.eq(UI.query(changed(UI.event(Mouse{16,760,0,True{}},query))),""),"pointer Clear empties query")
+    Unit <- require(String.eq(UI.selection(changed(UI.event(Mouse{1304,136,0,True{}},UI.set_query(UI.init(),"whole query")))),"whole query"),"reader toolbar pointer Select all uses focused text")
+    Unit <- require(button_paste(UI.event(Mouse{1112,136,0,True{}},settings)) && String.eq(UI.selection(changed(UI.event(Mouse{1112,136,0,True{}},settings))),"café 中文 🙂"),"Settings pointer Paste retains exact Unicode replacement selection")
+    require(String.eq(UI.selection(changed(UI.event(Mouse{16,792,0,True{}},UI.set_edit(settings,UI.Edit{0,2,1,False{},0})))),"café 中文 🙂"),"Settings sidebar pointer Select all expands a partial Unicode selection")
 
 def long_drag() -> IO(Unit):
   +pressed = apply(Mouse{208,40,0,True{}},UI.set_query(UI.init(),repeat(20n,"0123456789")))

@@ -97,7 +97,7 @@ def next_root(+db: U32) -> IO(List<&2,List<&2,Sql.Cell>>):
 def candidate(+root: String,+path: String) -> Bool:
   String.starts_with(path,Bool.pick(String,String.eq(root,"/"),"/",root ++ "/")) &&
     Nat.is_le(String.length(path),4096n) &&
-    (String.ends_with(path,".jsonl") || String.ends_with(path,".json"))
+    (String.ends_with(path,".jsonl") || String.ends_with(path,".json") || String.ends_with(path,".jsonl.zst"))
 
 def paths_filter(paths: List<&2,String>,+root: String) -> List<&2,String>:
   match paths:
@@ -199,20 +199,36 @@ def import_output(provider: String,path: String,result: Result<&2,&2,String,Json
       Outcome{provider,path,Bool.not(String.is_empty(snapshot)),snapshot,
         Bool.pick(String,String.is_empty(snapshot),"Import worker returned no accepted snapshot","")}
 
-def import_exited(provider: String,path: String,code: U32,out: String) -> Outcome:
+# Only fixed archive error markers become actionable messages. Never reflect a
+# worker's free-form stderr, which may contain source text or local paths.
+def archive_error(+error: String) -> String:
+  Bool.pick(String,String.starts_with(error,"archive_limit:"),
+    "archive_limit: Archive exceeds a bounded import limit (1 MiB compressed, 4 MiB logical, 8 MiB window, 64 frames, 4096 blocks per frame); retained captures remain available",
+    Bool.pick(String,String.starts_with(error,"archive_dictionary:"),
+      "archive_dictionary: External Zstandard dictionaries are unsupported; retained captures remain available",
+      Bool.pick(String,String.starts_with(error,"archive_corrupt:"),
+        "archive_corrupt: Archive framing, checksum or retained-byte integrity failed; retained captures remain available",
+        Bool.pick(String,String.starts_with(error,"archive_changed:"),
+          "archive_changed: Source changed during capture; refresh again when it is stable; retained captures remain available",""))))
+
+def import_error(+path: String,+code: U32,error: String) -> String:
+  Store.nonempty(Bool.pick(String,String.ends_with(path,".jsonl.zst"),archive_error(String.trim(error)),""),
+    "Import worker exited " ++ U32.show(code) ++ "; retained captures remain available")
+
+def import_exited(provider: String,+path: String,+code: U32,out: String,error: String) -> Outcome:
   match code:
     case 0:
       import_output(provider,path,Json.parse(out))
     case _:
-      Outcome{provider,path,False{},"","Import worker exited " ++ U32.show(code) ++ "; retained captures remain available"}
+      Outcome{provider,path,False{},"",import_error(path,code,error)}
 
 def import_result(provider: String,path: String,
   result: Result<&1,&1,U32 & String,U32 & (String & String)>) -> Outcome:
   match result:
     case Fail{_}:
       Outcome{provider,path,False{},"","Import exceeded 300 seconds or output limit, or could not start"}
-    case Done{(code,(out,_))}:
-      import_exited(provider,path,code,out)
+    case Done{(code,(out,error))}:
+      import_exited(provider,path,code,out,error)
 
 # Recheck canonical identity before invoking the importer. A discovered symlink
 # or symlink directory introduced since enumeration is refused. Upstream lacks

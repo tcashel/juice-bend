@@ -10,11 +10,13 @@ is recorded in `acceptance.md`.
 | Native runtime | Actual macOS arm64 app launched and interacted with; browse/search/transcript, explicit capture, Blame/Why/export, Pause, Usage, rebuild and filters observed. See `native-validation.md` for build identities and remaining checks |
 | Capture scheduling and guest resources | The historical Bend trace measured callback progress; the final uninstrumented Tart build visibly accepted input and Pause during a successful 100,016-record capture. An intermediate candidate with the final GUI measured 1.55% of one core at settled idle. Final GUI physical footprint after capture/rebuild was 46.2M. Input-to-photon remains unmeasured. See `performance.md` and the separately identified receipts |
 | Compiler host | `scripts/bend version` executes Bend through mise-pinned Bun |
-| Application language / runtime | Application/UI/test/proof sources remain Bend 2, with one maintained native source `native/sqlite.c`. Fresh `otool -L` on app `668cf892…` shows SQLite, libSystem/libobjc and upstream macOS frameworks; no Lean dependency. Bun hosts the compiler; optional Lean checks BendTT proofs during development. Neither runs application behavior |
+| Application language / runtime | Application/UI/test/proof sources remain Bend 2, with one maintained native source `native/sqlite.c`. Fresh `otool -L` on app `d06447f6…` shows SQLite, libSystem/libobjc and upstream macOS frameworks; no Lean dependency. Bun hosts the compiler; optional Lean checks BendTT proofs during development. Neither runs application behavior |
 | Integrated native tests | The expanded suite completed 40 executables and 2,960 named checks, including 87 GUI-state checks, 226 append-batch checks and 27 publication crash cuts. All recorded inputs remained unchanged. See `receipts/test-parity-summary.txt`; the earlier 33-executable baseline receipt is preserved |
 | SQLite boundary / FTS5 | Native boundary suite covers typed/NUL/binary/exact-integer round trips, FTS5, rollback/reopen, stale handles, statement failure cleanup, BUSY, cancellation, registry exhaustion/reuse and timer responsiveness; current integrated counts belong in `acceptance.md` |
 | Exact file addressing | Pinned Base uses U32 file sizes/offsets; application must reject unsupported sizes explicitly |
 | Raw file input / maintenance | `scripts/test tests/maintenance.bend` passed 30 checks, including exact UTF-8/NUL/invalid bytes, stale source independence, immutable append snapshots, oversized boundaries, full verification, rollback on rebuild failure and atomic export destination protection |
+| Bounded archive capture | Adopted Bend 2 `.jsonl.zst` decoder and atomic capture retain exact compressed containers and decoded logical records. The staged decoder passed 485 assertions; capture, retained search/dual export and interruption gates have separate receipts. Final metadata, migration-race and maintenance gates passed 99, 92 and 60 checks with unchanged inputs. Broader earlier gates predate the final metadata/migration fixes; actual native archive import/search/copy/dual export/source-absent restart passed on app `d06447f6…`. See `receipts/archive-native.txt`; no new full-suite claim |
+| Full capture export controls | History now exposes Export full JSONL and Export archive separately from Export evidence. The combined production export/Brief/keyboard/readability gate emitted 251 PASS lines, including suite/fixture lines, with 49 unchanged inputs. The existing UI/polish gate passed another 162 PASS lines. Actual native full exports from a filtered late reader matched every retained byte before and after source removal; native plain-file archive export refused without creating a file |
 | Source identity | Native maintenance tests confirm relative, absolute and explicit symlink aliases resolve to one canonical source |
 | Explicit source refresh | Native sources suite passes 24 checks; real main CLI registration, discovery/import, disabling and refresh were also observed with synthetic folders |
 | Settings / Indexing controls | Candidate `2e3191d9…` passed native Claude/Codex Add folder without capture, selected canonical-row Enable/Disable, explicit Import file, manual batches while paused, and durable disabled/two-hour preferences after restart. Back preserved scoped record 40, exact reader/query/list/selection; seven clipboard and four pixel-region comparisons passed. The 388 focused GUI and 154 preference backend/CLI checks are separate from historical full-suite results. See `receipts/settings-gui-tests.txt` and the [native summary](../benchmarks/results/tart-settings-summary.json) |
@@ -54,6 +56,32 @@ excluded and canonical paths rechecked; upstream lacks an atomic no-follow
 file-open primitive, so hostile concurrent path replacement is not a claimed
 filesystem sandbox. A running refresh can finish its bounded batch after pause;
 pause prevents subsequent automatic refreshes.
+
+Explicit imports and registered-root discovery accept `.jsonl.zst` alongside
+plain JSONL. The initial archive profile is limited to 1 MiB compressed input,
+4 MiB total decoded output, an 8 MiB window, 64 frames including skippable frames,
+and 4,096 blocks per ordinary frame. The Bend decoder supports raw/RLE/ordinary
+compressed blocks, Huffman/FSE table reuse, LZ matches and checksum verification.
+It uses no external decoder process or native decoding bridge. Dictionaries,
+larger inputs and full archive parity remain unsupported; existing plain input
+limits are unchanged. Synthetic vectors and their generation metadata are in
+[`tests/zstd`](../tests/zstd/).
+
+Schema 3 distinguishes identity and Zstandard generations and atomically retains
+the compressed container, decoded records and accepted snapshot. Upgrades
+preserve existing plain identities; migration rechecks the version under its
+write lock, and earlier schema-2-only builds refuse to open an upgraded library.
+Raw record offsets, selected-record metadata and Brief commitments use
+`logical_source_bytes`, decoded for archives. Container export uses
+`compressed_container_bytes`. Both streams remain exportable after source loss;
+full `verify` checks the retained transformation. Storage inventory reports
+compressed bytes separately from logical raw bytes.
+
+Export evidence remains bounded to the displayed scope. Export full JSONL and
+Export archive pin the opened History snapshot and explicitly include records
+outside current filters. They write private, non-replacing files; plain captures
+cannot produce an archive export. Native archive capture, reader and full-export
+interaction remain pending, distinct from the passed state/transport gate.
 
 Settings exposes explicit provider/path input and persisted automatic refresh
 choices of 30 seconds, 2, 4, 8 or 24 hours. Changes take effect after durable

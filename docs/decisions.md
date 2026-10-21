@@ -1,5 +1,17 @@
 # Decisions
 
+- **2026-10-21 — Preserve archive containers and logical evidence separately.**
+  Bend decodes Zstandard; schema 3 atomically retains the exact container and
+  decoded JSONL with an immutable snapshot. Citations keep logical source-byte
+  offsets. Full JSONL and compressed-container exports have distinct labels and
+  remain available after source loss. The initial 1 MiB compressed / 4 MiB decoded
+  profile is explicit; larger archives remain a parity gap. Old schema-2 builds
+  are fenced at startup, not through connections they already opened.
+- **2026-10-21 — Put Brief facts before supporting detail.** Format v2 puts the
+  recorded request first, omits exactly empty fields, and moves full policy/scope
+  and citations after the facts. The full preview, including those details,
+  remains inside the existing byte bound and copy/export revalidation contract.
+
 - **2026-10-21 — Freeze and recheck continuation briefs.** The explicit repository,
   capture, range and filters bind an 8,192-byte preview of retained recorded facts.
   Eligibility, omissions and pattern-based withholding are disclosed. Copy and

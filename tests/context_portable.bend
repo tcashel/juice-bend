@@ -584,7 +584,7 @@ def compatibility_plain(+worker: String) -> IO(Unit):
     Maintenance.rebuild(db,old)
     current(db,old,"72","current rebuild of actual v1 historical snapshot")
     selected(db,old,31,"oldcapture-model","current historical upgrade preserves selected context")
-    scalar(db,"PRAGMA user_version",[],"2","portable context format retains schema2 compatibility")
+    scalar(db,"PRAGMA user_version",[],"3","portable context format retains its codec under schema3 archive fence")
     Check.check_integrity(db,"actual old and new context writers")
     IO.try(Unit,Sql.close(db))
 

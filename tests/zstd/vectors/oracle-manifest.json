@@ -1,0 +1,9 @@
+{
+  "purpose": "offline generation and independent synthetic fixture decoding only; never a runtime application dependency",
+  "sha256": "423ba3fda16b00fa3f01266d81037a7dc7763cd597daddbd0e03cd2830bffa63",
+  "version": "*** Zstandard CLI (64-bit) v1.5.6, by Yann Collet ***",
+  "host_os": "Darwin",
+  "host_machine": "arm64",
+  "encoder": "zstd",
+  "original_manifest_sha256": "06fa963c91d9edd3ffe5db9be65c4f03f8727d2c5106285a04cc35dc0ce37da3"
+}

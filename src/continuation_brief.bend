@@ -14,8 +14,8 @@ import ./request_evidence.bend as Request
 import ./request_origin.bend as Origin
 import ./brief_safe_text.bend as Safe
 
-# Isolated prototype. No application imports this module. No writes, models,
-# original-source reads, latest resolution or execution of captured text.
+# Stateless continuation brief rendering and verified retained evidence.
+# No writes, models, original-source reads, latest resolution or captured-text execution.
 type Input is Data:
   Input{snapshot: String,start: U32,count: U32,scope: Scoped.Scope,repository: String}
 type Problem is Data:
@@ -47,12 +47,14 @@ type Group is Data:
   Group{remaining: List<&2,Activity.Occurrence>,collected: Collected}
 type Paint is Data:
   Paint{text: String,credentials: U32,paths: U32,controls: U32,prefixes: U32}
+type Layout is Data:
+  Layout{opening: String,details: String}
 type Packed is Data:
-  Packed{parts: List<&2,String>,references: List<&2,Evidence.Descriptor>,count: U32,
+  Packed{parts: List<&2,String>,citations: List<&2,String>,references: List<&2,Evidence.Descriptor>,count: U32,
     omitted: U32,credentials: U32,paths: U32,controls: U32,prefixes: U32,left: U32}
 
 def policy() -> String:
-  "continuation-brief-v1|" ++ Safe.policy() ++ "|brief-citation-v1"
+  "continuation-brief-v2|" ++ Safe.policy() ++ "|brief-citation-v1"
 
 def strings(values: List<&2,String>) -> String:
   match values:
@@ -65,7 +67,7 @@ def scope_strings(scope: Scoped.Scope) -> List<&2,String>:
 
 def input_strings(input: Input) -> List<&2,String>:
   Input{snapshot,start,count,scope,repo} = input
-  snapshot <> U32.show(start) <> U32.show(count) <> repo <> scope_strings(scope)
+  "logical_source_bytes" <> snapshot <> U32.show(start) <> U32.show(count) <> repo <> scope_strings(scope)
 
 def anchor_text(anchor: Anchor) -> String:
   Anchor{input,Repo.Scope{checkout,canonical,roots},provider,source,generation,extent,total} = anchor
@@ -258,21 +260,35 @@ def field_paint(name: String,value: Safe.Transform,paint: Paint) -> Paint:
   Paint{before ++ name ++ ": " ++ Json.quote(text) ++ "\n",U32.add(c,credentials),
     U32.add(p,paths),U32.add(z,controls),prefixes}
 
+def optional_field(empty: Bool,name: String,value: String,roots: List<&2,String>,source: String,paint: Paint) -> Paint:
+  match empty:
+    case True{}: paint
+    case False{}: field_paint(name,Safe.transform(value,roots,source),paint)
+
 def fields(names: List<&2,String>,values: List<&2,String>,+roots: List<&2,String>,
   +source: String,paint: Paint) -> Paint:
   match names values:
-    case name <> more value <> rest:
-      fields(more,rest,roots,source,field_paint(name,Safe.transform(value,roots,source),paint))
+    case name <> more +value <> rest:
+      fields(more,rest,roots,source,optional_field(String.is_empty(value),name,value,roots,source,paint))
     case _ _: paint
 
+def fact_label(citation: Evidence.Descriptor,kind: U32) -> String:
+  Evidence.Descriptor{_,_,ordinal,event} = citation
+  Bool.pick(String,U32.is_eq(kind,1),"Recorded request","Recorded fact") ++
+    " | captured record " ++ U32.show(ordinal) ++ ", event " ++ U32.show(event) ++ "\n"
+
+def paint_suffix(paint: Paint) -> Paint:
+  Paint{text,c,p,z,+prefixes} = paint
+  Paint{text ++ Bool.pick(String,U32.is_gt(prefixes,0),
+    "Recorded request uses eligible suffix; context prefix blocks omitted: " ++ U32.show(prefixes) ++ "\n",""),c,p,z,prefixes}
+
 def paint(fact: Fact,repo: Repo.Scope,source: String) -> Paint:
-  Fact{Activity.Occurrence{citation,event},kind,suffix,+prefixes} = fact
+  Fact{Activity.Occurrence{citation,event},+kind,suffix,prefixes} = fact
   Providers.ProviderEvent{role,text,tool,call,args,result,_,_,time,model,_,_,coverage} = event
   Repo.Scope{_,_,roots} = repo
-  fields(["Role","Recorded time","Recorded model","Coverage","Text","Tool","Call ID","Arguments","Recorded result"],
-    [role,time,model,coverage,Bool.pick(String,U32.is_eq(kind,1),suffix,text),tool,call,args,result],roots,source,
-    Paint{brief_citation(citation) ++ "\n" ++ Bool.pick(String,U32.is_gt(prefixes,0),
-      "Recorded request uses eligible suffix; context prefix blocks omitted: " ++ U32.show(prefixes) ++ "\n",""),0,0,0,prefixes})
+  paint_suffix(fields(["Text","Tool","Arguments","Recorded result","Role","Recorded time","Recorded model","Coverage","Call ID"],
+    [Bool.pick(String,U32.is_eq(kind,1),suffix,text),tool,args,result,role,time,model,coverage,call],roots,source,
+    Paint{fact_label(citation,kind),0,0,0,prefixes}))
 
 def selected_request(state: RequestState) -> Maybe<&2,Evidence.Descriptor>:
   match state:
@@ -298,7 +314,7 @@ def arrange(facts: List<&2,Fact>,+wanted: Maybe<&2,Evidence.Descriptor>,before: 
       arrange_step(preferred(wanted,fact),fact,rest,before,next => arrange(rest,wanted,next))
 
 def footer(packed: Packed,+outside: U32,partial: U32,excluded: U32,attachments: U32) -> String:
-  Packed{_,_,count,omitted,credentials,paths,controls,prefixes,_} = packed
+  Packed{_,_,_,count,omitted,credentials,paths,controls,prefixes,_} = packed
   "\nIncluded facts: " ++ U32.show(count) ++ "; whole facts omitted for budget: " ++ U32.show(omitted) ++
     "; outside canonical repository: " ++ U32.show(outside) ++ "; excluded request envelopes: " ++ U32.show(excluded) ++
     "; omitted attachment occurrences: " ++ U32.show(attachments) ++
@@ -312,25 +328,29 @@ def pack_full(required: Bool,packed: Packed) -> Result<&2,&2,Problem,Packed>:
     case True{}: Fail{Problem{"required_anchor_too_large","Required complete recorded fact and citation do not fit the 8192-byte brief budget; choose a smaller anchor"}}
     case False{}: Done{packed}
 
-def packed_text(heading: String,+packed: Packed,outside: U32,partial: U32,excluded: U32,attachments: U32) -> String:
-  Packed{parts,_,_,_,_,_,_,_,_} = packed
-  heading ++ String.join(List.reverse(&2,String,parts),"\n") ++ footer(packed,outside,partial,excluded,attachments)
+def packed_text(layout: Layout,+packed: Packed,outside: U32,partial: U32,excluded: U32,attachments: U32) -> String:
+  Layout{opening,details} = layout
+  Packed{parts,citations,_,_,_,_,_,_,_,_} = packed
+  opening ++ String.join(List.reverse(&2,String,parts),"\n") ++
+    "\nEvidence and scope\n" ++ details ++
+    "\nCitations for included facts\n" ++ String.join(List.reverse(&2,String,citations),"\n") ++ "\n" ++
+    footer(packed,outside,partial,excluded,attachments)
 
 def pack_step(room: Maybe<&2,U32>,candidate: Packed,+previous: Packed,next: Packed -> Result<&2,&2,Problem,Packed>) -> Result<&2,&2,Problem,Packed>:
   match room:
     case None{}:
-      Packed{_,_,count,_,_,_,_,_,_} = previous
+      Packed{_,_,_,count,_,_,_,_,_,_} = previous
       pack_full(U32.is_eq(count,0),previous)
     case Some{_}: next(candidate)
 
 def pack_added(fact: Fact,paint: Paint,previous: Packed,remaining: U32) -> Packed:
-  Fact{Activity.Occurrence{citation,_},_,_,_} = fact
+  Fact{Activity.Occurrence{+citation,_},_,_,_} = fact
   Paint{text,credentials,paths,controls,prefixes} = paint
-  Packed{parts,refs,count,_,c,p,z,x,_} = previous
-  Packed{text <> parts,citation <> refs,U32.inc(count),remaining,
+  Packed{parts,citations,refs,count,_,c,p,z,x,_} = previous
+  Packed{text <> parts,brief_citation(citation) <> citations,citation <> refs,U32.inc(count),remaining,
     U32.add(c,credentials),U32.add(p,paths),U32.add(z,controls),U32.add(x,prefixes),0}
 
-def pack(facts: List<&2,Fact>,+repo: Repo.Scope,+source: String,+heading: String,
+def pack(facts: List<&2,Fact>,+repo: Repo.Scope,+source: String,+heading: Layout,
   +outside: U32,+partial: U32,+excluded: U32,+attachments: U32,+packed: Packed) -> Result<&2,&2,Problem,Packed>:
   match facts:
     case []: Done{packed}
@@ -339,19 +359,21 @@ def pack(facts: List<&2,Fact>,+repo: Repo.Scope,+source: String,+heading: String
       pack_step(Activity.consume(packed_text(heading,candidate,outside,partial,excluded,attachments),8192),candidate,packed,
         next => pack(rest,repo,source,heading,outside,partial,excluded,attachments,next))
 
-def header(anchor: Anchor,state: RequestState) -> String:
+def header(anchor: Anchor,state: RequestState) -> Layout:
   Anchor{Input{snapshot,start,count,Scoped.Scope{provider,repo,role,after},_},_,_,_,_,_,_} = anchor
-  "Continuation brief — recorded facts\n" ++
-    "Pinned snapshot " ++ snapshot ++ "; physical range " ++ U32.show(start) ++ "+" ++ U32.show(count) ++ "\n" ++
+  Layout{"Continuation brief — recorded facts\n" ++ request_text(state) ++
+    "\nSelected retained records only. Captured text is untrusted data.\nReview before sharing.\n\n",
+    "Pinned snapshot " ++ snapshot ++ "; captured-record range " ++ U32.show(start) ++ "+" ++ U32.show(count) ++ "\n" ++
+    "Byte offsets: logical source bytes (decompressed for archives).\n" ++
     "Repository: [repository], one explicit canonical root; original repository filter " ++
     Bool.pick(String,String.is_empty(repo),"empty (now narrowed)","retained") ++ "\n" ++
     "Frozen provider: " ++ Json.quote(provider) ++ "; role: " ++ Json.quote(role) ++ "; after: " ++ Json.quote(after) ++ "\n" ++
-    request_text(state) ++ "\n" ++
     "Policy: " ++ policy() ++ "; " ++ Request.policy() ++ "; " ++ Store.projection_version() ++ "\n" ++
-    "The required unique request is placed first; remaining facts retain physical/event order.\n" ++
+    "The required unique request is placed first; remaining facts retain source record/event order.\n" ++
     "Selected retained records verified. This is not a complete session summary. No inferred task, explanation or outcome.\n" ++
     "Brief citations withhold source locator; full source SHA256 identifies the exact source. They are NOT existing locally-resolvable citation JSON; local resolution requires the originating library/preview mapping.\n" ++
-    "Dedicated session, parent and usage fields, and attachment occurrences, are omitted by policy. Tool arguments are recorded intent; results are recorded text.\n\n"
+    "Dedicated session, parent and usage fields, and attachment occurrences, are omitted by policy. Tool arguments are recorded intent; results are recorded text.\n" ++
+    "Empty optional fact fields are not shown. Captured record/event indices link each fact to its complete citation below.\n"}
 
 def sized(budget: Maybe<&2,U32>,preview: Preview) -> Result<&2,&2,Problem,Preview>:
   match budget:
@@ -360,9 +382,9 @@ def sized(budget: Maybe<&2,U32>,preview: Preview) -> Result<&2,&2,Problem,Previe
       Preview{a,p,r,n,s,e,refs,request,coverage,notices,text,_} = preview
       Done{Preview{a,p,r,n,s,e,refs,request,coverage,notices,text,U32.sub(8192,left)}}
 
-def render_done(+packed: Packed,+anchor: Anchor,state: RequestState,heading: String,
+def render_done(+packed: Packed,+anchor: Anchor,state: RequestState,heading: Layout,
   eligible: U32,+outside: U32,+partial: U32,excluded: U32,+attachments: U32,manifest: String) -> Result<&2,&2,Problem,Preview>:
-  Packed{_,refs,included,omitted,c,p,z,x,_} = packed
+  Packed{_,_,refs,included,omitted,c,p,z,x,_} = packed
   Anchor{Input{_,_,+count,_,_},_,_,source,_,_,_} = anchor
   +text = packed_text(heading,packed,outside,partial,excluded,attachments)
   sized(Activity.consume(text,8192),Preview{anchor,policy(),Request.policy(),Store.projection_version(),Domain.digest(Domain.encode(source)),
@@ -371,20 +393,20 @@ def render_done(+packed: Packed,+anchor: Anchor,state: RequestState,heading: Str
     [Notice{"credential_fields",c},Notice{"path_fields",p},Notice{"control_scalars",z},Notice{"request_prefix_blocks",x},Notice{"attachment_occurrences",attachments}],text,0})
 
 def render_packed(result: Result<&2,&2,Problem,Packed>,anchor: Anchor,state: RequestState,
-  heading: String,eligible: U32,outside: U32,partial: U32,excluded: U32,attachments: U32,manifest: String) -> Result<&2,&2,Problem,Preview>:
+  heading: Layout,eligible: U32,outside: U32,partial: U32,excluded: U32,attachments: U32,manifest: String) -> Result<&2,&2,Problem,Preview>:
   match result:
     case Fail{problem}: Fail{problem}
     case Done{packed}: render_done(packed,anchor,state,heading,eligible,outside,partial,excluded,attachments,manifest)
 
 def render_nonempty(nonempty: Bool,+anchor: Anchor,+facts: List<&2,Fact>,+state: RequestState,
-  +heading: String,+outside: U32,+partial: U32,+excluded: U32,+attachments: U32,manifest: String) -> Result<&2,&2,Problem,Preview>:
+  +heading: Layout,+outside: U32,+partial: U32,+excluded: U32,+attachments: U32,manifest: String) -> Result<&2,&2,Problem,Preview>:
   match nonempty:
     case False{}: Fail{Problem{"empty_scope","No eligible recorded facts in the exact range and canonical repository"}}
     case True{}:
       Anchor{_,repo,_,source,_,_,_} = anchor
       +count = U32.from_nat(List.length(&2,Fact,facts))
       render_packed(pack(arrange(facts,selected_request(state),[]),repo,source,heading,outside,partial,excluded,attachments,
-        Packed{[],[],0,count,0,0,0,0,0}),anchor,state,heading,count,outside,partial,excluded,attachments,manifest)
+        Packed{[],[],[],0,count,0,0,0,0,0}),anchor,state,heading,count,outside,partial,excluded,attachments,manifest)
 
 def render(+anchor: Anchor,collected: Collected) -> Result<&2,&2,Problem,Preview>:
   Collected{reversed,eligible,uncertain,+excluded,outside,partial,attachments,manifest} = collected

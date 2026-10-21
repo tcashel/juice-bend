@@ -1,0 +1,38 @@
+{
+  "generator": "Exact compressed block payloads extracted from the original zstd v1.5.6 -3 synthetic frames; payload identity checked against the original complete frame bytes. No new encoder invocation.",
+  "frame_manifest": "tests/zstd/vectors/manifest.json",
+  "bend_module": "tests/zstd/block_vectors.bend",
+  "bend_module_sha256": "ed40bf92fad987e6edb158bfe8b4554d917671e0816c718dd0559848c17a3fd6",
+  "fixtures": [
+    {
+      "bend_function": "overlap",
+      "frame_fixture": "overlap-nocheck",
+      "payload_bytes": 12,
+      "payload_sha256": "71d3587dc7f6e5f321cf09a187a5d93a0101a237fe1f9f52b66f037d83613270",
+      "frame_payload_offset": 9,
+      "frame_sha256": "1c1498fc7b31034fe5b5bb3caef53215c1377404f4c3a33169132b7631c6dd17",
+      "plain_bytes": 2000,
+      "plain_sha256": "bfe6577ca4dcb96cfab228190d3257d916d7771157212066daa546601cebc4db"
+    },
+    {
+      "bend_function": "jsonl",
+      "frame_fixture": "jsonl-nocheck",
+      "payload_bytes": 876,
+      "payload_sha256": "7f0a02433dd2443c029796f518723bac2afe165495bca9f634221a7757ea2b7e",
+      "frame_payload_offset": 9,
+      "frame_sha256": "b5578a73d8e8dd292c8860a6e18bf741601f4d36f65f54d74a1868404b39515b",
+      "plain_bytes": 16104,
+      "plain_sha256": "bb1899c2327261d722694df5fa626f722ec31d714286a7b3fc4defb45682fde4"
+    },
+    {
+      "bend_function": "unicode",
+      "frame_fixture": "unicode-nocheck",
+      "payload_bytes": 31,
+      "payload_sha256": "94cd96b12845a624ee78873d2ddc17aa7285b267da66f53dacfd34a8a202d289",
+      "frame_payload_offset": 9,
+      "frame_sha256": "785652a91e69fd4b59012a152e9df3c5ba4a47b0a5171f44a129f650c9d1adbc",
+      "plain_bytes": 6900,
+      "plain_sha256": "76efb0a488425be14af33e1db625381556e01b70b7420454bd7af3b78a321e59"
+    }
+  ]
+}

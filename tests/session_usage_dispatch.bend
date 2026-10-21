@@ -89,6 +89,7 @@ def old_route(+self: String,snapshot: String) -> IO(Unit):
     +value : Json.Json <- good(self,["usage",snapshot,"0","1"])
     field(value,"kind","\"recorded_usage\"","old bounded Usage route remains available")
     field(value,"scope","\"selected_physical_range\"","old bounded route keeps its range scope")
+    field(value,"byte_space","\"logical_source_bytes\"","legacy range scope explicitly refers to logical source bytes")
     field(value,"requested_records","1","old bounded route preserves requested range")
     +help : Json.Json <- good(self,["help"])
     check(String.contains(Json.encode(Json.field(help,"commands")),"session-usage SNAPSHOT") &&

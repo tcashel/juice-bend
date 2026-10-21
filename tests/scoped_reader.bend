@@ -88,7 +88,7 @@ def suite(+self: String) -> IO(Unit):
     assert(allowed(page),"transcript preserves provider repository role and date scope")
     assert(String.contains(page,long_body()),
       "scoped transcript retains the complete payload beyond 4096 characters and its Unicode tail")
-    assert(String.contains(page,"Visible events in this physical range: 2"),
+    assert(String.contains(page,"Visible events in this captured range: 2"),
       "scoped count includes only visible events in selected physical range")
     +late : String <- Scoped.page(db,snapshot,4,3,scope(),False{})
     assert(String.contains(late,"visible-a-later") &&
@@ -105,7 +105,7 @@ def suite(+self: String) -> IO(Unit):
     +mismatch : String <- Scoped.page(db,snapshot,0,100,
       Scoped.Scope{"codex","/synthetic/a","",""},False{})
     assert(Bool.not(String.contains(mismatch,"visible-a")) &&
-      String.contains(mismatch,"Visible events in this physical range: 0"),
+      String.contains(mismatch,"Visible events in this captured range: 0"),
       "provider mismatch never exposes transcript events")
     Store.exec(db,"UPDATE events SET repository='/synthetic/a',role='user',timestamp='2026-10-09' WHERE snapshot=?",
       [Sql.Cell.Integer{snapshot}])
@@ -116,7 +116,7 @@ def suite(+self: String) -> IO(Unit):
     +exported : String <- read("scoped.md")
     assert(allowed(exported),"scoped export contains only the visible captured events")
     assert(String.eq(exported,"# Juice Bend scoped captured evidence\n\n" ++
-      "This is a bounded physical-record range, not a complete transcript export.\n\n" ++ page),
+      "This is a bounded captured-record range, not a complete transcript export. Byte offsets refer to logical source bytes (decompressed for archives).\n\n" ++ page),
       "scoped export preserves exact displayed page including full payload citations and scope disclosure")
     command(self,["export-why-scope",snapshot,"0","20","claude","/synthetic/a","user","2026-10-02","scoped-why.md"],
       True{},"scoped Why export uses the same visibility rules")

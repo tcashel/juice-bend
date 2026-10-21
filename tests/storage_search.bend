@@ -40,19 +40,27 @@ def staging(+db: U32) -> IO(Unit):
     Store.exec(db,"ROLLBACK",[])
 
 def legacy_fixture(+db: U32) -> IO(Unit):
-  Store.statements([
-    "BEGIN IMMEDIATE",
-    "DELETE FROM search",
-    "INSERT INTO search(body,arguments,result,tool,snapshot,ordinal,event) SELECT body,arguments,result,tool,snapshot,ordinal,event FROM events",
-    "CREATE TRIGGER event_search AFTER INSERT ON events BEGIN INSERT INTO search(body,arguments,result,tool,snapshot,ordinal,event) VALUES(new.body,new.arguments,new.result,new.tool,new.snapshot,new.ordinal,new.event); END",
-    "PRAGMA user_version=1",
-    "COMMIT"
-  ],db)
+  do IO<Unit>:
+    Store.exec(db,"BEGIN IMMEDIATE",[])
+    scalar(db,"SELECT EXISTS(SELECT 1 FROM archive_captures) OR EXISTS(SELECT 1 FROM archive_chunks) OR EXISTS(SELECT 1 FROM generations WHERE typeof(encoding)<>'text' OR encoding<>'identity')",[],"0",
+      "legacy fixture contains only identity generations and no archive evidence")
+    Store.statements([
+      "DROP TABLE archive_chunks",
+      "DROP TABLE archive_captures",
+      "ALTER TABLE generations DROP COLUMN encoding",
+      "DELETE FROM search",
+      "INSERT INTO search(body,arguments,result,tool,snapshot,ordinal,event) SELECT body,arguments,result,tool,snapshot,ordinal,event FROM events",
+      "CREATE TRIGGER event_search AFTER INSERT ON events BEGIN INSERT INTO search(body,arguments,result,tool,snapshot,ordinal,event) VALUES(new.body,new.arguments,new.result,new.tool,new.snapshot,new.ordinal,new.event); END",
+      "PRAGMA user_version=1",
+      "COMMIT"
+    ],db)
+    scalar(db,"SELECT (SELECT count(*) FROM sqlite_master WHERE name IN ('archive_chunks','archive_captures'))+(SELECT count(*) FROM pragma_table_info('generations') WHERE name='encoding')",[],"0",
+      "legacy fixture reconstructs old schema without touching captured identities or bytes")
 
 def main() -> IO(Unit):
   do IO<Unit>:
     +db : U32 <- Store.open(".build/storage-search.sqlite")
-    scalar(db,"PRAGMA user_version",[],"2","new libraries use FTS rowid schema v2")
+    scalar(db,"PRAGMA user_version",[],"3","new libraries retain FTS rowid layout under schema3 archive fence")
     Store.write_text("search-source.jsonl","w",line("old citrus evidence"))
     +old : String <- Store.import_file(db,"claude","search-source.jsonl")
     +old_text : String <- Store.page(db,old,0,100)
@@ -85,7 +93,12 @@ def main() -> IO(Unit):
     scalar(db,"SELECT count(*) FROM search",[],"4","legacy fixture contains historical duplicate FTS rows")
     IO.try(Unit,Sql.close(db))
     +migrated : U32 <- Store.open(".build/storage-search.sqlite")
-    scalar(migrated,"PRAGMA user_version",[],"2","legacy FTS migration advances schema atomically")
+    scalar(migrated,"PRAGMA user_version",[],"3","legacy FTS migration advances schema atomically")
+    scalar(migrated,"SELECT EXISTS(SELECT 1 FROM archive_captures) OR EXISTS(SELECT 1 FROM archive_chunks) OR EXISTS(SELECT 1 FROM generations WHERE typeof(encoding)<>'text' OR encoding<>'identity')",[],"0",
+      "legacy migration restores identity encoding with empty archive tables")
+    Maintenance.verify(migrated,old)
+    Maintenance.verify(migrated,appended)
+    Maintenance.verify(migrated,latest)
     scalar(migrated,"SELECT count(*) FROM search",[],"1","migration indexes only accepted current events")
     scalar(migrated,"SELECT count(*) FROM events",[],"4","migration preserves all historical event rows")
     scalar(migrated,"SELECT count(*) FROM sqlite_master WHERE type='trigger' AND name='event_search'",[],"0",

@@ -1,6 +1,9 @@
 import Base
 import ./brief_cli.bend as Brief
 import ./store.bend as Store
+import ./capture.bend as Capture
+import ./archive_meta.bend as ArchiveMeta
+import ./archive_maintenance.bend as ArchiveMaintenance
 import ./history_titles.bend as HistoryTitles
 import ./sql.bend as Sql
 import ./json.bend as Json
@@ -214,7 +217,7 @@ def import_source(db: U32, +provider: String, path: String) -> IO(Unit):
   do IO<Unit>:
     checked(Bool.or(String.eq(provider,"claude"),String.eq(provider,"codex")),
       "provider must be claude or codex")
-    snapshot : String <- Store.import_file(db,provider,path)
+    snapshot : String <- Capture.import_file(db,provider,path)
     IO.print("{\"accepted_snapshot\":" ++ Json.quote(snapshot) ++ "}")
 
 def search_rows(db: U32, query: String, provider: String, repository: String,
@@ -254,7 +257,7 @@ def read_page(+db: U32,+snapshot: String,start: String,count: String,+why: Bool)
     IO.print("{\"snapshot\":" ++ Json.quote(snapshot) ++
       ",\"start\":" ++ U32.show(from) ++ ",\"requested_records\":" ++ U32.show(size) ++
       ",\"maximum_records\":" ++ Bool.pick(String,why,"20","100") ++
-      ",\"verification\":\"selected_records_only\",\"complete_export\":false,\"kind\":" ++
+      ",\"verification\":\"selected_records_only\",\"byte_space\":\"logical_source_bytes\",\"complete_export\":false,\"kind\":" ++
       Json.quote(Bool.pick(String,why,"recorded_evidence","transcript_page")) ++
       ",\"rationale\":" ++ Bool.pick(String,why,
         "\"Captured statements only; no generated or inferred rationale.\"", "null") ++
@@ -282,7 +285,7 @@ def scoped_response(header: Maintenance.Header,+snapshot: String,+start: String,
   "{\"snapshot\":" ++ Json.quote(snapshot) ++ ",\"start\":" ++ U32.show(Store.number(start)) ++
     ",\"requested_records\":" ++ U32.show(Store.number(count)) ++ ",\"selected_records\":" ++ U32.show(selected) ++ ",\"kind\":" ++
     Json.quote(Bool.pick(String,why,"scoped_recorded_evidence","scoped_transcript_page")) ++
-    ",\"complete_export\":false,\"text\":" ++ Json.quote(text) ++ "}"
+    ",\"byte_space\":\"logical_source_bytes\",\"complete_export\":false,\"text\":" ++ Json.quote(text) ++ "}"
 
 def read_scoped(+db: U32,args: List<String>,+why: Bool) -> IO(Unit):
   match args:
@@ -303,10 +306,10 @@ def export_scoped(+db: U32,args: List<String>,+why: Bool) -> IO(Unit):
         +text : String <- scoped_content(db,snapshot,start,count,Scoped.Scope{provider,repo,role,after},why)
         checked(Bool.not(String.starts_with(text,"Why unavailable:")),text)
         Maintenance.write_text(db,path,"# Juice Bend scoped captured evidence\n\n" ++
-          "This is a bounded physical-record range, not a complete transcript export.\n\n" ++ text)
+          "This is a bounded captured-record range, not a complete transcript export. Byte offsets refer to logical source bytes (decompressed for archives).\n\n" ++ text)
         IO.print("{\"path\":" ++ Json.quote(path) ++ ",\"snapshot\":" ++ Json.quote(snapshot) ++
           ",\"kind\":" ++ Json.quote(Bool.pick(String,why,"scoped_recorded_evidence","scoped_transcript_page")) ++
-          ",\"complete_export\":false}")
+          ",\"byte_space\":\"logical_source_bytes\",\"complete_export\":false}")
     case _:
       failure(Unit,"usage: export-range-scope or export-why-scope SNAP START COUNT PROVIDER REPO ROLE AFTER PATH")
 
@@ -326,14 +329,14 @@ def export_range(+db: U32,+snapshot: String,start: String,count: String,+path: S
     +content : String <- page_content(db,snapshot,from,size,why)
     checked(Bool.not(String.starts_with(content,"Why unavailable:")),content)
     Maintenance.write_text(db,path,"# Juice Bend bounded captured evidence\n\n" ++
-      "Snapshot " ++ snapshot ++ ", starting at physical record " ++ U32.show(from) ++
+      "Snapshot " ++ snapshot ++ ", starting at captured record " ++ U32.show(from) ++
       ". Requested records: " ++ U32.show(size) ++ ". Maximum records: " ++
       Bool.pick(String,why,"20","100") ++
-      ". This is not a complete transcript export. Selected retained records " ++
+      ". Byte offsets refer to logical source bytes (decompressed for archives). This is not a complete transcript export. Selected retained records " ++
       "were verified; other ranges were not checked.\n\n" ++ content)
     IO.print("{\"path\":" ++ Json.quote(path) ++ ",\"snapshot\":" ++
       Json.quote(snapshot) ++ ",\"start\":" ++ U32.show(from) ++
-      ",\"maximum_records\":" ++ Bool.pick(String,why,"20","100") ++ ",\"complete_export\":false}")
+      ",\"maximum_records\":" ++ Bool.pick(String,why,"20","100") ++ ",\"byte_space\":\"logical_source_bytes\",\"complete_export\":false}")
 
 def export_page(db: U32,snapshot: String,path: String) -> IO(Unit):
   export_range(db,snapshot,"0","100",path,False{})
@@ -343,14 +346,33 @@ def export_all(+db: U32,+snapshot: String,+path: String) -> IO(Unit):
     checked(snapshot_valid(snapshot),"snapshot must be a positive canonical SQLite integer")
     Maintenance.export_raw(db,snapshot,path)
     IO.print("{\"path\":" ++ Json.quote(path) ++ ",\"snapshot\":" ++ Json.quote(snapshot) ++
-      ",\"format\":\"retained_raw_bytes\",\"complete_export\":true,\"verification\":\"complete_accepted_extent\"}")
+      ",\"format\":\"retained_raw_bytes\",\"byte_space\":\"logical_source_bytes\",\"complete_export\":true,\"verification\":\"complete_accepted_extent\"}")
+
+def export_container(+db: U32,+snapshot: String,+path: String) -> IO(Unit):
+  do IO<Unit>:
+    checked(snapshot_valid(snapshot),"snapshot must be a positive canonical SQLite integer")
+    ArchiveMaintenance.export_container(db,snapshot,path)
+    IO.print("{\"path\":" ++ Json.quote(path) ++ ",\"snapshot\":" ++ Json.quote(snapshot) ++
+      ",\"format\":\"retained_zstd_container\",\"byte_space\":\"compressed_container_bytes\",\"complete_export\":true,\"verification\":\"complete_owned_container\"}")
+
+def verify_origin(db: U32,snapshot: String,origin: Maybe<&2,ArchiveMeta.Origin>) -> IO(Unit):
+  match origin:
+    case None{}:
+      Maintenance.verify(db,snapshot)
+    case Some{_}:
+      ArchiveMaintenance.verify(db,snapshot)
+
+def verify_snapshot(+db: U32,+snapshot: String) -> IO(Unit):
+  do IO<Unit>:
+    origin : Maybe<&2,ArchiveMeta.Origin> <- ArchiveMeta.read(db,snapshot,True{})
+    verify_origin(db,snapshot,origin)
 
 def maintain_action(db: U32,snapshot: String,rebuild: Bool) -> IO(Unit):
   match rebuild:
     case True{}:
       Maintenance.rebuild(db,snapshot)
     case False{}:
-      Maintenance.verify(db,snapshot)
+      verify_snapshot(db,snapshot)
 
 def maintain(+db: U32,+snapshot: String,rebuild: Bool) -> IO(Unit):
   do IO<Unit>:
@@ -403,9 +425,11 @@ def usage_page(db: U32,+snapshot: String,start: String,count: String) -> IO(Unit
     checked(U32.is_gt(size,0) && U32.is_le(size,100),"count must be from 1 to 100")
     +text : String <- Usage.summary(db,snapshot,from,size)
     checked(Bool.not(String.starts_with(text,"Usage unavailable:")),text)
+    # selected_physical_range is the legacy ordinal-range protocol value; it
+    # does not identify offsets into an archive's compressed container.
     IO.print("{\"kind\":\"recorded_usage\",\"snapshot\":" ++ Json.quote(snapshot) ++
       ",\"start\":" ++ U32.show(from) ++ ",\"requested_records\":" ++ U32.show(size) ++
-      ",\"scope\":\"selected_physical_range\",\"text\":" ++ Json.quote(text) ++ "}")
+      ",\"scope\":\"selected_physical_range\",\"byte_space\":\"logical_source_bytes\",\"text\":" ++ Json.quote(text) ++ "}")
 
 def usage(db: U32,args: List<String>) -> IO(Unit):
   match args:
@@ -416,7 +440,7 @@ def usage(db: U32,args: List<String>) -> IO(Unit):
     case snapshot <> start <> count <> []:
       usage_page(db,snapshot,start,count)
     case _:
-      failure(Unit,"usage: usage SNAPSHOT [START [COUNT]]; maximum 100 physical records")
+      failure(Unit,"usage: usage SNAPSHOT [START [COUNT]]; maximum 100 captured records")
 
 def export_blame(+db: U32,repo: String,path: String,start: String,end: String,+output: String) -> IO(Unit):
   do IO<Unit>:
@@ -565,10 +589,11 @@ def help() -> IO(Unit):
     "\"export-why SNAPSHOT START COUNT PATH\",\"export-blame REPOSITORY FILE START END PATH\"," ++
     "\"export-range-scope SNAP START COUNT PROVIDER REPO ROLE AFTER PATH\"," ++
     "\"export-why-scope SNAP START COUNT PROVIDER REPO ROLE AFTER PATH\"," ++
-    "\"export-brief-text PATH\",\"export-displayed PATH\",\"export-all SNAPSHOT PATH\",\"verify SNAPSHOT\",\"rebuild SNAPSHOT\"]," ++
+    "\"export-brief-text PATH\",\"export-displayed PATH\",\"export-all SNAPSHOT PATH\",\"export-container SNAPSHOT PATH\",\"verify SNAPSHOT\",\"rebuild SNAPSHOT\"]," ++
     "\"limits\":{\"rows\":100,\"page_records\":100,\"why_records\":20,\"refresh_batch\":8,\"displayed_stdin_bytes\":1048576}," ++
     "\"refresh_all\":\"inspect failed and discovery.status in the report; a successful report can contain per-source failures\"," ++
-    "\"export_all\":\"stream all retained raw bytes in the accepted snapshot\"}")
+    "\"export_all\":\"stream all retained logical source bytes in the accepted snapshot (decompressed for archives)\"," ++
+    "\"export_container\":\"export the exact owned compressed container of an archive snapshot\"}")
 
 def command(db: U32,data_dir: String,cmd: String,args: List<String>) -> IO(Unit):
   match cmd:
@@ -730,6 +755,12 @@ def command(db: U32,data_dir: String,cmd: String,args: List<String>) -> IO(Unit)
           export_all(db,snapshot,path)
         case _:
           failure(Unit,"usage: export-all SNAPSHOT PATH (destination must not exist)")
+    case "export-container":
+      match args:
+        case snapshot <> path <> []:
+          export_container(db,snapshot,path)
+        case _:
+          failure(Unit,"usage: export-container SNAPSHOT PATH (archive snapshot; destination must not exist)")
     case "export-brief-text":
       match args:
         case path <> []: export_brief_text(db,path)

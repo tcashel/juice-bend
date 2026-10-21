@@ -1,11 +1,11 @@
 # Shared implementation contracts
 
-All application behavior is Bend. SQLite bridge executes supplied prepared SQL;
+All application behavior is Bend 2. SQLite bridge executes supplied prepared SQL;
 it contains no application SQL, parsing, indexing or provenance policy.
 
 Durable evidence key: provider + source locator + generation + accepted snapshot
-extent + physical record ordinal + event ordinal. Database integer identities
-cross FFI as canonical decimal strings. U32 is only for validated bounded page,
+and extent + captured source-record ordinal + event ordinal. Database integer
+identities cross FFI as canonical decimal strings. U32 is only for validated bounded page,
 chunk and file offsets; File.size rejects sources above UINT32_MAX.
 
 Source rows never merge based only on provider session ID or content. A verified
@@ -14,15 +14,100 @@ creates a new generation. Raw chunks and publication are transactional; normaliz
 events and FTS are projections, never authority. A selected snapshot never follows
 latest implicitly.
 
-The derivative event seal is `event-seal-v1`; schema version 2 and the
-provider parser remain unchanged. A full typed scan binds actual event
+## Archive ownership and byte spaces
+
+The canonical `.jsonl.zst` suffix selects the Bend archive importer. Plain
+captures use generation encoding `identity`; archives use `zstd-jsonl-v1`.
+Each accepted archive snapshot owns both `compressed_container_bytes` and
+`logical_source_bytes`. The latter are the exact decompressed bytes passed to
+the existing JSONL splitter and provider parser. Snapshot extents, record
+ordinals, offsets and citations refer to logical source bytes, never compressed
+offsets. Plain captures' logical source bytes equal their original bytes.
+Legacy JSON keys `physical_record` and `selected_physical_range` retain their
+protocol spelling only. The selected-record response and Brief commitment use
+`logical_source_bytes`; the Brief decoder rejects missing or different spaces.
+
+Schema version 3 adds generation encoding, `archive_captures` origin metadata
+and snapshot-owned `archive_chunks`. The atomic 2-to-3 migration leaves existing
+IDs and raw bytes unchanged and marks their generations `identity`. Both the
+legacy 0/1-to-2 search migration and the 2-to-3 archive migration re-read the
+typed schema version under `BEGIN IMMEDIATE`. A stale contender skips work
+already completed by another connection; it cannot downgrade schema 3 or repeat
+the encoding-column migration. Unknown versions fail. The tested pre-schema-3
+executable refuses to open a schema-3 library at startup; this does not protect a
+connection already opened by an older executable.
+
+`archive-origin-v1` commits to the provider, canonical locator, exact source,
+generation and snapshot IDs, encoding, logical extent, record count, checkpoint
+byte position and ordinal, compressed extent and chunk count, both stream
+SHA-256 values and the
+`archive-batch-v1` profile. Fields have explicit UTF-8 byte lengths. Chunk
+digests also bind snapshot, ordinal, offset and length. Typed reads reject
+missing or mismatched metadata, unsupported encodings and archive rows attached
+to identity captures. These commitments detect corruption relative to trusted
+metadata; they do not authenticate a database whose data and hashes were both
+replaced.
+
+The decoder supports Zstandard raw, RLE and ordinary compressed blocks,
+Huffman/FSE and repeat tables, LZ copies, content checksums, concatenated frames
+and skippable frames. External dictionaries are unsupported. The initial
+profile permits at most 1 MiB of compressed input, 4 MiB of logical output,
+an 8 MiB advertised window, 64 frames total and 4,096 blocks per ordinary frame.
+The container occupies at most 16 chunks of at most 64 KiB each. This bounded
+profile is not full archive parity. Before bridge transfer, the chunk query
+withholds BLOBs with invalid length type, length outside 1–65,536, wrong storage
+type or mismatched byte length. Bend rejects the resulting NULL and still
+validates types, octets, order, positions, digests and the complete extent.
+The 64 KiB admission bound covers the container BLOB crossing into Bend, not
+SQLite pager memory or all metadata; the bridge retains its 4 MiB transport cap.
+
+Capture stages both streams and publishes their metadata, parsed records,
+context, event seals and exact lexical projection in one transaction. New
+captures verify that decoding the retained container equals the logical raw
+bytes. A compressed-byte append retains its generation only with an exact
+logical prefix; changed prefixes, truncation or recompression create a new
+generation. Changed archives currently decode and parse the complete bounded
+logical stream. An unchanged container retains its accepted snapshot after
+retained/live-byte checks without another decode or parse. Capture reopens the
+canonical source and compares its size and bytes before publication; mutations
+after that final comparison are outside the observed interval.
+
+Transcript reads, search and rebuild use retained logical bytes after source
+removal. Full `verify SNAPSHOT` checks both retained streams and their exact
+decode relationship. Full exports need no original-source reads:
+
+| Command | Byte space | Successful verification label |
+| --- | --- | --- |
+| `export-all SNAPSHOT PATH` | `logical_source_bytes` | `complete_accepted_extent` |
+| `export-container SNAPSHOT PATH` | `compressed_container_bytes` | `complete_owned_container` |
+
+Container export rejects plain captures. Both exports protect the source
+locator and publish through a private sibling temporary file and an atomic
+no-clobber link. Container-export verification covers the owned container;
+it does not claim the full decode comparison performed by `verify`.
+
+The GUI exposes `Export evidence`, `Export full JSONL` and `Export archive`.
+The latter two require an opened History transcript, pin its exact snapshot
+and explicitly include all retained records outside the current filters.
+They write unique paths under the selected data directory through the existing
+serialized writer. Success requires an exact response matching the requested
+snapshot, destination, format, byte space, complete-export flag and verification
+label. Bounded evidence export retains its range/scope contract. Native archive
+import, scoped reading, both complete exports and source-absent restart passed
+on app `d06447f6…`; see `receipts/archive-native.txt`. This does not establish a
+new full merged-app suite or complete archive parity.
+
+## Derived projections and bounded readers
+
+The derivative event seal remains `event-seal-v1`; the archive migration to
+schema 3 does not change the provider parser. A full typed scan binds actual event
 rows, exact snapshot/source/generation identities, extent, checkpoint and counts.
 Its freshly verified complete-record prefix may be carried only through the
 same uninterrupted write transaction. Before reuse, copied maps/events must
 match in both directions, including SQLite storage types; the unfinished tail
 is parsed again. Main/temp triggers force full fresh sealing. Missing, damaged
 or older seals take verified raw replay; malformed new state fails/rolls back.
-Older writers safely treat the new version as unfamiliar and replay too.
+An unfamiliar seal version requires verified raw replay.
 IDs remain signed-64-bit decimal strings; bounded event counts are checked U32.
 
 New context checkpoints use `incoming-context-v2`: the parser, provider,
@@ -63,8 +148,10 @@ the prior reader until the newly requested snapshot passes its normal read.
 
 `storage` returns a structured inventory plus readable text. Its row/page
 counts share one SQLite read transaction; main/WAL/SHM file lengths are later
-non-atomic samples. Logical sizes and reusable pages overlap and cannot be
-summed into physical reclaimable storage. Inventory never changes selection,
+non-atomic samples. Archive snapshot counts, container chunks and
+`compressed_container_bytes` are separate from retained logical raw bytes.
+Logical sizes and reusable pages overlap and cannot be summed into physical
+reclaimable storage. Inventory never changes selection,
 purges raw data, checkpoints, or runs VACUUM.
 
 Provider interface: `Providers.parse(provider: String, raw: String)` returns
@@ -84,7 +171,7 @@ Text state uses committed Text events. Copy exports underlying Unicode, never
 glyph approximations. Renderers may show explicit missing-glyph boxes.
 
 Recorded activity uses the same retained raw/context validation and frozen
-scope. `activity-scope` accepts 1–100 physical records; the GUI requests 40.
+scope. `activity-scope` accepts 1–100 captured source records; the GUI requests 40.
 Its envelope carries provider, canonical source locator, generation, snapshot
 and extent as strings; bounded record counts and ordinals are JSON numbers.
 The reader owns one deferred read transaction and refuses an existing caller
@@ -108,7 +195,7 @@ Related captures own a deferred read transaction and reject an existing caller
 transaction. The anchor is an exact provider/source/generation/snapshot/extent
 reference. A fixed accepted-ID watermark chooses one accepted capture per
 candidate source across generations. A page scans at most 15 candidate sources,
-up to 16 verified physical records per source plus anchor: 256 records and
+up to 16 verified captured source records per source plus anchor: 256 records and
 2 MiB aggregate retained raw bytes. CLI output, including JSON escaping and
 newline, is bounded to 1 MiB. Partial/skipped/conflicting/unsupported coverage
 is explicit; a cursor advances through candidate sources rather than links.

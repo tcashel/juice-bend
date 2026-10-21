@@ -152,7 +152,8 @@ def shown(+value: String) -> String:
 
 def description(+anchor: Anchor) -> String:
   Anchor{+snapshot,+start,+count,Query.Filters{_,+provider,+repo,+role,+after}} = anchor
-  "Snapshot " ++ snapshot ++ " | physical records " ++ U32.show(start) ++ " + " ++ U32.show(count) ++
+  "Snapshot " ++ snapshot ++ " | captured records " ++ U32.show(start) ++ " + " ++ U32.show(count) ++
+    "\nByte offsets: logical source bytes (decompressed for archives)" ++
     "\nProvider: " ++ shown(provider) ++ " | Role: " ++ shown(role) ++ " | After: " ++ shown(after) ++
     "\nFrozen repository filter: " ++ shown(repo)
 
@@ -167,7 +168,8 @@ def metadata_base(+args: List<&2,String>) -> List<&2,String>:
     case +args: args
 
 def range_metadata(+value: Json.Json,+snap: String,+start: U32) -> Bool:
-  Shape.exact_object(value,["snapshot","start","requested_records","selected_records","kind","complete_export","text"]) &&
+  Shape.exact_object(value,["snapshot","start","requested_records","selected_records","kind","byte_space","complete_export","text"]) &&
+    Shape.text_is(Json.field(value,"byte_space"),"logical_source_bytes") &&
     Shape.boolean(Json.field(value,"complete_export")) && Bool.not(String.eq(Json.get(value,"complete_export"),"true")) &&
     Files.text_valid(Json.field(value,"text")) && Shape.text_is(Json.field(value,"kind"),"scoped_transcript_page") && Shape.text_is(Json.field(value,"snapshot"),snap) &&
     Shape.number_is(Json.field(value,"start"),U32.show(start)) && Shape.number_is(Json.field(value,"requested_records"),"40") &&

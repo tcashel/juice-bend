@@ -91,7 +91,36 @@ recorded facts and uncertainty, and rechecks the full preview before copying or
 exporting. Root edits retire it; Back restores the exact reader. App `78c396eb…`
 passed actual native keyboard/copy/export/retention checks. See
 `receipts/brief-native.txt`; this is not a generated summary or complete-session
-claim. Its technical preamble, empty fields and wrapping still need polish.
+claim. App `d06447f6…` moves the recorded request and tool evidence before the
+policy/citation footer and omits empty fields. Exact copy/export and Back passed
+again in Tart; wrapping and glyph coverage still need broader polish.
+
+Bounded `.jsonl.zst` capture is now adopted. Bend owns decompression, capture
+policy and both retained byte streams; no external decoder runtime is used.
+Ordinary compressed blocks, raw/RLE blocks, checksum verification, concatenated
+frames and skippable frames are supported. The initial profile caps compressed
+input at 1 MiB, total decoded output at 4 MiB, window size at 8 MiB, frame count
+at 64 and blocks per ordinary frame at 4,096. Dictionaries and larger archives
+remain unsupported; plain JSONL limits are unchanged. This is an initial
+archive slice, not complete reference archive parity.
+
+Schema 3 preserves existing plain-capture identities and binds each archive's
+owned compressed container to its immutable decoded snapshot. Transcript and
+citation offsets are logical source bytes, not compressed-file offsets. Exact
+logical and container exports work after source loss; full verification checks
+their transformation. History's separate full-JSONL and archive export controls
+include records outside current filters and keep the exact opened snapshot.
+The final focused metadata/migration/maintenance gates passed 99/92/60 checks;
+the combined production export/Brief/keyboard/readability gate emitted 251 PASS
+lines, including suite/fixture lines.
+Earlier decoder/capture/interruption receipts retain their own source identities.
+App `d06447f6…` passed actual native import, scoped search/copy, bounded and both
+full exports, request-first Brief, and restart after source removal. Plain-file
+archive-export and malformed-archive import refusals preserved accepted data.
+Nine clipboard comparisons and six exact private exports passed; see
+`receipts/archive-native.txt`. The fixed window footer needed the guest Dock
+temporarily hidden; that usability gap remains open. These are not a new full
+suite, proof or comparative performance result.
 
 Current priority: transcript/evidence readability, remaining validation gaps,
 richer provider/archive support, deterministic context
@@ -112,14 +141,14 @@ not established by the current bitmap reader.
 |---|---|---|---|
 | Separate owned history | `docs/adr/0037-preserve-search-and-provenance.md` | Raw capture authority; original logs and Juice storage remain read-only | Storage integration acceptance recorded in `acceptance.md` |
 | Immutable append snapshots | `docs/adr/0038-incremental-session-indexing.md` | Provider + canonical locator + generation + accepted extent + record/event identity; append preserves old snapshots | 49 native append-integrity checks include deleted/modified projections, changed SQLite cell types, damaged context checkpoints and verified full replay equivalence. Parser/context versions prevent silent checkpoint reuse |
-| Bounded transcript reads | `docs/adr/0040-indexed-owned-transcript-reads.md` | At most 100 selected physical records plus predecessor validation; repository scope uses a verified raw-bound context checkpoint | Selected ranges do not verify the whole archive. Missing legacy context may require prefix replay; corrupt checkpoints fail visibly. Complete raw export verifies the entire accepted extent |
+| Bounded transcript reads | `docs/adr/0040-indexed-owned-transcript-reads.md` | At most 100 selected captured records plus predecessor validation; offsets use logical source bytes, decoded for archives. Repository scope uses a verified raw-bound context checkpoint | Selected ranges do not verify the whole capture or compressed transformation. Missing legacy context may require prefix replay; corrupt checkpoints fail visibly. Complete logical export verifies the accepted logical extent; full archive verification checks both streams and their transformation |
 | Scoped history lists | Native History repository selection | Repository filters constrain source eligibility, displayed excerpt, repository label and opening record | `tests/store_query.bend` includes a mixed source whose selected repository starts after the first 40 records; empty in-scope text uses a neutral title instead of another repository's excerpt |
 | Claude normalization | `Juice/Packages/Sources/JuiceCore/Transcript/MessageExtraction.swift` | Ordered text, thinking, tool-use and tool-result events; complete arguments/results, call IDs and record-local model/usage facts | `tests/providers.bend`. Unknown blocks and attachments retain raw bytes with explicit coverage. Tool calls/results remain independent occurrences; no ambiguous global call-ID merge. `toolUseResult.agentId` remains raw-only |
 | Codex normalization | Same | Session/turn metadata, response messages, legacy and current function calls, outputs, readable agent relays, compaction and reasoning coverage | Known event mirrors emit no duplicate display turn. Custom tool support exceeds the pinned display extractor. Encrypted relay fields and unsupported shapes remain partial; encrypted reasoning is never represented as fully readable |
 | Model and chronology | Same | Codex model context carries through subsequent events; model-free turn context clears it. Claude missing model remains unknown. RFC3339 timestamps normalize to exact UTC through nanoseconds | Provider, timestamp, scoped-reader and append tests. Invalid dates, missing zones, unsupported leap seconds/precision and unspecified numeric timestamp units remain unknown; original bytes are unchanged |
 | Recorded usage | `Discovery/ClaudeCallUsage.swift`, `Discovery/CodexForkUsage.swift` under `JuiceCore` | Whole pinned capture: Claude exact call-key bucket maxima; Codex cumulative deltas, first ordinary total, repeated/reset/fork/reviewer distinctions; missing counts remain unknown | Native reader 105, Codex 68, adapter 85, dispatch 48 and GUI 88 checks. Real Tart summaries/export/Back passed. Limits and scan/bucket/attribution coverage are explicit; no billing/quota total. Repository/role/date filtered views refuse unfiltered Usage. Legacy bounded-page CLI remains separate |
 | Claude nested discovery | `JuiceCore/Discovery/ClaudeCodeDiscoverer.swift` | Explicit enabled roots recursively include parent histories and nested `subagents`; no default private-home scan or discovered symlink traversal | Native source tests cover enabled/disabled roots, canonical paths, nested files, missing sources and retry fairness. Discovery enumerates at most 2048 entries within 256 KiB / 2 seconds |
-| Codex active/archived discovery | `JuiceCore/Discovery/CodexDiscoverer.swift` | The same explicit-root walk covers active and archived plain JSONL paths; one root and at most four new plus four registered files per refresh | Maximum 32 configured roots. Oversized/failed enumeration retains the prior queue. `.jsonl.zst` decompression is unsupported. Extension selection does not imply support for arbitrary multiline `.json` documents |
+| Codex active/archived discovery | `JuiceCore/Discovery/CodexDiscoverer.swift` | The same explicit-root walk covers active/archived plain JSONL and exact `.jsonl.zst` paths; one root and at most four new plus four registered files per refresh | Maximum 32 configured roots. Oversized/failed enumeration retains the prior queue. Archives use the bounded profile above; dictionaries and larger archives remain unsupported. Extension selection does not imply support for arbitrary multiline `.json` documents. Native explicit import passed; automatic archive discovery retains backend-only evidence |
 | Source and refresh Settings | Native Settings / indexing controls | Explicit provider/path registration, separate file import, authoritative selected-root Enable/Disable; atomic durable enabled/interval pair; manual Refresh while paused | App `2e3191d9…` observed both providers, no implicit capture on registration, restart persistence, exact Back and append/search. Automatic deadlines are checked; no elapsed two-hour timer acceptance claim. Inventory is bounded to 32 roots |
 | Content threshold | `JuiceCore/Blame/ContentMatcher.swift` | Nonempty eligible sequence; exact singleton or at least two hits and 60% overlap | `tests/provenance.bend`; production calls `Domain.eligible_match` |
 | Repeated lines and whitespace | `JuiceCore/Blame/FileEdit.swift` | Preserve repeated hunk occurrences and leading indentation; trim trailing ASCII whitespace | Native tests pass; non-ASCII-only lines conservatively cannot establish content attribution |
@@ -131,7 +160,7 @@ not established by the current bitmap reader.
 | Related capture navigation | Reference parent/subagent links | Fixed accepted-ID watermark, exact snapshot references, bounded verified metadata, distinct recorded-parent/path association labels, preserved target filters and original reader | 163 backend/CLI checks. Native app `784d48c4…` passed two pages, scoped target/Tools, both Back levels, concurrent native capture, retained rereads after source removal and exact exports. Role/date scope applies to target readers, not metadata discovery. Self/direct two-way cycles only; incomplete or page-local evidence does not prove global absence/uniqueness |
 | Why | `Juice/Packages/Sources/JuiceXPC/WhyBuilder.swift` | Transcript, file/range and exact-commit entry points quote captured requests/tool intent with immutable descriptors; no generated rationale | Descriptor consumption verifies provider, locator, generation, snapshot, extent, record and event. File evidence inspects at most 64 generation snapshots, the first 16 actor records, newest 256 edit events and eight commits per selected range. Recorded commit-command SHA mapping and time-only probable attribution are not implemented |
 | Origin and repository eligibility | Same | Verified raw metadata excludes explicit non-user-work/excluded origins, synthetic markers and unsupported orphan actors. Explicit Git checkout/worktree roots map to a shared canonical repository | Recorded-request-v1 selects supported request suffixes after known context, skips relay/meta, and keeps malformed frames ineligible. Diagnostic-style Markdown requests remain held for review. Native cases and 423 checks passed; first 16 actor records and64 generations remain bounded. No normalization/rebuild change or full origin-classification claim |
-| Evidence exports | Preserve/search ADRs | Full retained raw export verifies all bytes; bounded transcript/Why exports retain selected scope and snapshot. GUI file evidence and Usage export the exact displayed text | Non-replacing atomic publication protects original locators and existing paths. Displayed-text exports explicitly say they are not reverified and do not rerun mutable Git attribution |
+| Evidence exports | Preserve/search ADRs | Full JSONL export verifies all retained logical bytes; archive export verifies the exact retained compressed container. Bounded transcript/Why exports retain selected scope and snapshot. GUI file evidence and Usage export the exact displayed text | Non-replacing private publication protects original locators and existing paths. New History full exports explicitly include records outside filters and remain pinned to the opened capture; native filtered-reader full exports and source-absent restart passed. Displayed-text exports explicitly say they are not reverified and do not rerun mutable Git attribution |
 | Native reading/search | Reference native History and transcript views | Native Bend UI; no Swift process, webview or inference dependency | Native interaction evidence recorded in `acceptance.md` |
 | Retained rebuild and capture responsiveness | Preserve/search ADRs | Atomic bounded SQL publication with immutable raw ownership; monotonic refresh and idle scheduling | Final Tart build captured 100,016 records, accepted visible input/Pause during capture, and rebuilt 125,020 search events after the source was moved away. Direct IME and input-to-display latency remain unverified |
 

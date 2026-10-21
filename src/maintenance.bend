@@ -5,6 +5,7 @@ import ./paths.bend as Paths
 import ./context_binding.bend as ContextBinding
 import ./context_store.bend as ContextStore
 import ./projection_seal.bend as Seal
+import ./archive_meta.bend as ArchiveMeta
 
 # These operations never consult the original source. Raw bytes, positions and
 # digests are checked in a single SQLite snapshot before any projection change.
@@ -25,8 +26,9 @@ def header_row(rows: List<&2,List<&2,Sql.Cell>>) -> IO(Header):
         return Header{Store.field(row,0n),Store.number(Store.field(row,1n)),
           Store.number(Store.field(row,2n)),Store.field(row,3n)}
 
-def header(db: U32,snapshot: String) -> IO(Header):
+def header(+db: U32,+snapshot: String) -> IO(Header):
   do IO<Header>:
+    origin : Maybe<&2,ArchiveMeta.Origin> <- ArchiveMeta.read(db,snapshot,True{})
     rows : List<&2,List<&2,Sql.Cell>> <- Store.q(db,
       "SELECT p.generation,p.extent,p.records,s.provider,(SELECT count(*) FROM records r WHERE r.snapshot=p.id) FROM snapshots p JOIN generations g ON g.id=p.generation JOIN sources s ON s.id=g.source WHERE p.id=? AND p.accepted=1",
       [Sql.Cell.Integer{snapshot}],1)

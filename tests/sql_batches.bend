@@ -91,6 +91,11 @@ def orphan_cleanup(+db: U32,+old: String,+latest: String,+other: String) -> IO(U
 def migrate(+db: U32,+old: String,+latest: String,+other: String) -> IO(U32):
   do IO<U32>:
     Store.exec(db,"BEGIN IMMEDIATE",[])
+    scalar(db,"SELECT EXISTS(SELECT 1 FROM archive_captures) OR EXISTS(SELECT 1 FROM archive_chunks) OR EXISTS(SELECT 1 FROM generations WHERE typeof(encoding)<>'text' OR encoding<>'identity')",[],"0",
+      "batched legacy fixture has no archive evidence or nonidentity generation")
+    Store.exec(db,"DROP TABLE archive_chunks",[])
+    Store.exec(db,"DROP TABLE archive_captures",[])
+    Store.exec(db,"ALTER TABLE generations DROP COLUMN encoding",[])
     Store.exec(db,"DELETE FROM search",[])
     Store.exec(db,"INSERT INTO search(rowid,body,arguments,result,tool,snapshot,ordinal,event) SELECT rowid,body,arguments,result,tool,snapshot,ordinal,event FROM events",[])
     Store.exec(db,"INSERT INTO search(rowid,body,arguments,result,tool,snapshot,ordinal,event) VALUES(-9223372036854775808,'legacynegative','','','',?,0,0)",
@@ -100,9 +105,16 @@ def migrate(+db: U32,+old: String,+latest: String,+other: String) -> IO(U32):
     Store.exec(db,"PRAGMA user_version=1",[])
     Store.exec(db,"COMMIT",[])
     scalar(db,"SELECT count(*) FROM search",[],"3473","legacy migration fixture contains both historical events and signed64 orphan keys")
+    scalar(db,"SELECT (SELECT count(*) FROM sqlite_master WHERE name IN ('archive_chunks','archive_captures'))+(SELECT count(*) FROM pragma_table_info('generations') WHERE name='encoding')",[],"0",
+      "batched fixture has actual old schema before reopen")
     IO.try(Unit,Sql.close(db))
     +reopened : U32 <- Store.open(".build/sql-batches.sqlite")
-    scalar(reopened,"PRAGMA user_version",[],"2","bounded legacy migration publishes schema version2")
+    scalar(reopened,"PRAGMA user_version",[],"3","bounded legacy migration publishes schema version3")
+    scalar(reopened,"SELECT EXISTS(SELECT 1 FROM archive_captures) OR EXISTS(SELECT 1 FROM archive_chunks) OR EXISTS(SELECT 1 FROM generations WHERE typeof(encoding)<>'text' OR encoding<>'identity')",[],"0",
+      "bounded legacy migration keeps identity generations and empty archive metadata")
+    Maintenance.verify(reopened,old)
+    Maintenance.verify(reopened,latest)
+    Maintenance.verify(reopened,other)
     scalar(reopened,"SELECT count(*) FROM search",[],"1851","bounded migration retains exactly both latest accepted projections")
     scalar(reopened,"SELECT count(*) FROM search WHERE rowid<0 OR rowid>4294967295",[],"0",
       "bounded migration clears INT64_MIN and greater-than-U32 orphan keys")

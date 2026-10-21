@@ -9,6 +9,8 @@ import ./timestamp.bend as Timestamp
 
 # Only retained, integrity-checked bytes create evidence. SQL events are
 # candidate locators; their text/arguments never become the quoted authority.
+# Extents and record ordinals describe logical source bytes and source record
+# order. Archives keep compressed-container offsets in their separate envelope.
 type Verified is Data:
   Verified{provider: String, source: String, generation: String, snapshot: String,
     extent: String, ordinal: String, events: List<&2, Providers.Record>}
@@ -355,6 +357,7 @@ def why_header(rows: List<&2, List<&2, Sql.Cell>>, db: U32, snapshot: String,
         return "Juice Bend · captured Why evidence\nRationale: only the recorded requests below; no inferred explanation." ++
           "\nCommit linkage: not_captured. Tool arguments are recorded intent; successful changes are not inferred." ++
           "\nCoverage: selected retained records verified; at most 20 records; each field excerpt bounded to 2048 characters." ++
+          "\nByte offsets: logical source bytes (decompressed for archives)." ++
           "\nOrigin eligibility and parent remapping are not assessed; unsupported records remain explicit.\n\n" ++ content
 
 def why(+db: U32, +snapshot: String, start: U32, count: U32) -> IO(String):

@@ -159,9 +159,10 @@ def rendered(output: Output,snapshot: String,start: U32,count: U32,
   +scope: Scope,+why: Bool) -> String:
   Output{_,visible,chunks} = output
   "Juice Bend · scoped captured " ++ Bool.pick(String,why,"Why evidence","transcript") ++
-    "\nSnapshot " ++ snapshot ++ " · physical start " ++ U32.show(start) ++
+    "\nSnapshot " ++ snapshot ++ " · captured record start " ++ U32.show(start) ++
     " · requested records " ++ U32.show(count) ++ "\n" ++ describe(scope) ++
-    "\nVisible events in this physical range: " ++ U32.show(visible) ++
+    "\nVisible events in this captured range: " ++ U32.show(visible) ++
+    "\nByte offsets: logical source bytes (decompressed for archives)." ++
     Bool.pick(String,needs_prefix(scope),
       "\nRepository scope uses raw-derived context bound to this immutable record. Selected records were verified; the complete snapshot was not reverified. Legacy context may require verified prefix replay.",
       "\nScope uses verified selected raw records. Earlier inherited model and parent metadata may be unavailable; other ranges were not checked.") ++

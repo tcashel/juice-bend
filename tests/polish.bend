@@ -51,6 +51,8 @@ def kind(action: UI.Action) -> U32:
     case UI.BriefCopy{}: 36
     case UI.BriefExport{}: 37
     case UI.CopyStatus{text}: 38
+    case UI.WholeExport{}: 39
+    case UI.ContainerExport{}: 40
 
 def clicked(result: UI.State & UI.Action,expected: U32,label: String) -> IO(Unit):
   (state,action) = result
@@ -90,9 +92,9 @@ def ordinary() -> IO(Unit):
     click(s,16,600,25,"Storage target")
     click(s,16,632,34,"Prepare brief target")
     click(s,16,696,4,"Copy target preserves selected query")
-    click(s,16,728,5,"Paste target")
+    click(s,16,728,39,"Full JSONL export target")
     click(s,16,760,1,"Clear target")
-    click(s,16,792,0,"Select all target")
+    click(s,16,792,40,"Compressed archive export target")
     click(s,16,832,11,"Back target")
     click(s,16,855,11,"Back final row does not collide with footer")
     click(s,16,856,0,"footer cannot trigger Back")
@@ -115,6 +117,7 @@ def ordinary() -> IO(Unit):
 
 def settings() -> IO(Unit):
   +s = UI.set_results(ready(),UI.SettingsResults{0,2,"Resume",True{}})
+  +partial = UI.set_edit(s,UI.Edit{0,2,1,False{},0})
   do IO<Unit>:
     click(s,16,136,19,"Settings Back")
     click(s,16,184,18,"Settings Automatic")
@@ -133,8 +136,10 @@ def settings() -> IO(Unit):
     click(s,16,728,87400,"Settings 24 hours")
     click(s,1016,136,4,"Settings Copy remains reachable")
     click(s,1112,136,5,"Settings Paste remains reachable")
+    require(String.eq(UI.selection(state(UI.event(Mouse{1112,136,0,True{}},partial))),"🙂"),"Settings pointer Paste preserves the exact partial Unicode replacement")
     click(s,16,760,1,"Settings Clear")
     click(s,16,792,0,"Settings Select all")
+    require(String.eq(UI.selection(state(UI.event(Mouse{16,792,0,True{}},partial))),"A🙂B"),"Settings sidebar Select all changes partial selection to the whole query")
     click(s,16,832,12,"Settings Rebuild target")
     click(s,360,88,20,"Settings Add toolbar")
     click(s,520,88,21,"Settings Import toolbar")
@@ -158,12 +163,17 @@ def text_tests() -> IO(Unit):
   +longquery = UI.set_query(UI.init(),repeat(200n,"x"))
   +pressed = state(UI.event(Mouse{208,40,0,True{}},longquery))
   +moved = state(UI.event(Move{288,40},pressed))
+  +partial_query = UI.set_edit(query,UI.Edit{0,2,1,False{},0})
+  +partial_reader = UI.set_edit(reader,UI.Edit{2,3,0,False{},0})
   do IO<Unit>:
     require(String.eq(UI.selection(drag),"🙂B"),"8px query drag preserves Unicode scalars")
     require(line(UI.line_at(wrapped,1),104,"🙂"),"104-column wrapping keeps exact offset")
     require(line(UI.line_at(wrapped,2),106,"Z"),"newline after wrapped emoji keeps exact offset")
     require(String.eq(UI.reader(selected),"é café 中文 🙂\nsecond"),"font does not alter canonical reader")
     require(String.eq(UI.selection(selected),UI.reader(reader)),"Select all retains combining CJK emoji")
+    require(String.eq(UI.selection(state(UI.event(Mouse{1112,136,0,True{}},partial_query))),"🙂"),"reader toolbar Paste preserves partial Unicode query selection")
+    require(String.eq(UI.selection(state(UI.event(Mouse{1304,136,0,True{}},partial_query))),"A🙂B"),"reader toolbar Select all expands the focused query selection")
+    require(String.eq(UI.selection(state(UI.event(Mouse{1304,136,0,True{}},partial_reader))),UI.reader(reader)),"reader toolbar Select all expands the focused reader selection")
     require(String.eq(UI.selection(at_second_selected),"eco"),"24px reader pointer selects second-line scalars")
     require(U32.is_eq(UI.query_offset(pressed),56) && U32.is_eq(UI.query_offset(moved),56),"query drag freezes viewport at new width")
     require(U32.is_eq(UI.length(UI.selection(moved)),10),"query drag uses eight-pixel advance")

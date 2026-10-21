@@ -899,7 +899,7 @@ def settings_body(+dir: String,+snapshot: String,+provider: String,+model: Setti
   Settings.Model{+phase,+prefs,+desired,+sources,+loaded,+selected,+offset,+last} = model
   "INDEXING / EXPLICIT SOURCES\n\n" ++ settings_rebuild_text(snapshot) ++ settings_pref_text(model) ++ settings_pending_text(desired) ++
   "Provider for new paths: " ++ provider ++ "\n\n" ++ settings_source_text(selected) ++
-  "\nChoose Claude or Codex; paste a literal absolute path above. Add folder registers it; Import file captures one JSONL file. " ++
+  "\nChoose Claude or Codex; paste a literal absolute path above. Add folder registers it; Import file captures one JSONL file or .jsonl.zst archive. " ++
   "Enable / Disable act only on the selected registered folder. Disabling keeps all captured evidence.\n\n" ++
   "Refresh checks a bounded batch of enabled sources and explicitly imported files. A batch result is not a full-library health check. " ++
   "No private folders are scanned by default.\n\n" ++
@@ -1618,6 +1618,12 @@ def write_job(+program: String,+dir: String,args: List<&2,String>) -> IO(Reply):
     case other:
       run_write(program,dir,other)
 
+def write_start_text(kind: U32) -> String:
+  match kind:
+    case 35: "Exporting the complete pinned capture as logical JSONL, including all records outside current filters. Browsing stays available."
+    case 36: "Exporting the complete pinned archive container, including all records outside current filters. Plain captures have no archive container."
+    case _: "Updating captures or exporting evidence. Browsing stays available."
+
 def start_write(+state: State,+request: Request,busy: Maybe<&2,Pending>) -> IO(State):
   State{+db,+dir,+program,+ui,+selection,+form,Jobs{+revision,+wanted,+reader,+writer,+paused},+refresh_at,+serial} = state
   Request{+kind,+args,+snap,+start,+title} = request
@@ -1628,7 +1634,7 @@ def start_write(+state: State,+request: Request,busy: Maybe<&2,Pending>) -> IO(S
     case None{}:
       do IO<State>:
         channel : Chan(Reply) <- IO.fork(Reply,write_job(program,dir,args))
-        return State{db,dir,program,UI.set_status(ui,"Updating captures or exporting evidence. Browsing stays available."),selection,form,
+        return State{db,dir,program,UI.set_status(ui,write_start_text(kind)),selection,form,
           Jobs{revision,wanted,reader,Some{Pending{revision,Request{kind,args,snap,start,title},channel}},paused},0n,serial}
 
 def import_path(state: State,provider: String,path: String,writer: Maybe<&2,Pending>,file: Bool) -> IO(State):
@@ -1753,6 +1759,37 @@ def export_begin(+state: State,+valid: Bool) -> IO(State):
 def export_capture(+state: State) -> IO(State):
   State{+db,+dir,+program,+ui,Selection{+items,+snap,+start,+displayed,+blame,+filters,+listing},Form{+mode,+search,+source,+form,+files,+navigation,+settings},+jobs,+refresh_at,+serial} = state
   export_begin(state,Bool.not(U32.is_eq(mode,1)) && ((displayed >= 3 && displayed <= 4 : U32) || file_kind(displayed) || U32.is_eq(displayed,14) || U32.is_eq(displayed,24)))
+
+# Full exports deliberately include the complete immutable capture, not the
+# visible range or filters. Only the currently opened transcript can authorize
+# this separate action; list refreshes never resolve a newer snapshot for it.
+def full_export_available(+state: State) -> Bool:
+  State{_,_,_,_,Selection{_,+snapshot,_,+kind,_,_,_},Form{+mode,_,_,_,_,_,_},_,_,_} = state
+  U32.is_eq(mode,0) && U32.is_eq(kind,3) && Related.id(Json.JString{snapshot}) &&
+    U32.is_eq(navigation_phase(navigation(state)),3) && Bool.not(settings_active(state)) && Bool.not(files_active(state))
+
+def full_export_request(state: State,now: Nat,+container: Bool) -> Request:
+  State{_,dir,_,_,Selection{_,+snapshot,_,_,_,_,_},_,_,_,serial} = state
+  +path = dir ++ "/capture-" ++ snapshot ++ "-" ++ Nat.show(now) ++ "-" ++ U32.show(serial) ++
+    Bool.pick(String,container,".jsonl.zst",".jsonl")
+  Request{Bool.pick(U32,container,36,35),
+    [Bool.pick(String,container,"export-container","export-all"),snapshot,path],snapshot,0,path}
+
+def full_export_at(+state: State,now: Nat,container: Bool) -> IO(State):
+  State{db,dir,program,ui,selection,form,+jobs,deadline,serial} = state
+  +request = full_export_request(state,now,container)
+  start_write(State{db,dir,program,ui,selection,form,jobs,deadline,U32.inc(serial)},request,writer_of(state))
+
+def full_export_ready(+state: State,container: Bool,ready: Bool) -> IO(State):
+  match ready:
+    case False{}: IO.pure(State,status(state,"Open a captured transcript in History before exporting its complete capture. Full exports include all retained records, including those outside current filters."))
+    case True{}:
+      do IO<State>:
+        now : Nat <- IO.now()
+        full_export_at(state,now,container)
+
+def full_export(+state: State,container: Bool) -> IO(State):
+  full_export_ready(state,container,full_export_available(state))
 
 def files_export_args(ui: UI.State,path: String) -> List<&2,String>:
   ["export-displayed",path,UI.reader(ui)]
@@ -1892,7 +1929,9 @@ def text_done(+state: State,+request: Request,result: Result<&2,&2,String,String
     case Fail{message}:
       status(State{db,dir,program,ui,Selection{items,old,oldstart,displayed,blame,filters,listing},Form{mode,search,source,form,files,navigation,settings},jobs,refresh_at,serial},message)
     case Done{text}:
-      State{db,dir,program,UI.set_status(UI.set_reader(Bool.pick(UI.State,file_kind(kind) || U32.is_eq(mode,0),ui,UI.set_query(ui,search)),title,text),"Captured evidence loaded. Scroll or drag to select; Cmd+C copies."),
+      State{db,dir,program,UI.set_status(UI.set_reader(Bool.pick(UI.State,file_kind(kind) || U32.is_eq(mode,0),ui,UI.set_query(ui,search)),title,text),Bool.pick(String,U32.is_eq(kind,3),
+        "Transcript loaded. Export evidence keeps this range; full JSONL/archive exports include ALL captured records outside current filters.",
+        "Captured evidence loaded. Scroll or drag to select; Cmd+C copies.")),
         Selection{items,Bool.pick(String,file_kind(kind),old,snap),start,kind,
           text_view_args(kind,args,blame,old,snap),
           Bool.pick(Query.Filters,file_kind(kind) || U32.is_eq(kind,14),filters,request_filters(args)),listing},Form{Bool.pick(U32,file_kind(kind),2,0),search,source,form,files,navigation,settings},jobs,refresh_at,serial}
@@ -1919,7 +1958,7 @@ def related_target_valid(+request: Request,+value: Navigation) -> Bool:
 def related_target_done(+state: State,+request: Request,result: Result<&2,&2,String,String>) -> State:
   related_target_result(state,request,navigation(state),related_target_valid(request,navigation(state)),result)
 
-# The activity worker returns immutable identity and physical-record cursors,
+# The activity worker returns immutable identity and captured-record cursors,
 # not search-hit counts. Keep this metadata in Selection's tagged view_args;
 # neither Files nor transcript exports interpret it as a file/range request.
 def tools_text_matches(+value: Json.Json,+key: String,expected: String) -> Bool:
@@ -2198,6 +2237,32 @@ def source_change_done(+state: State,+kind: U32,+args: List<&2,String>,+result: 
     case Done{+value}:
       source_change_apply(state,kind,args,value,String.eq(Json.get(value,"kind"),"source_change") && Settings.source_ack(args,Json.field(value,"ack")))
 
+def full_export_ack(+container: Bool,+snapshot: String,+path: String,+value: Json.Json) -> Bool:
+  Related.id(Json.JString{snapshot}) &&
+    Settings.exact_object(value,["path","snapshot","format","byte_space","complete_export","verification"]) &&
+    Settings.text_is(Json.field(value,"path"),path) && Settings.text_is(Json.field(value,"snapshot"),snapshot) &&
+    Settings.text_is(Json.field(value,"format"),Bool.pick(String,container,"retained_zstd_container","retained_raw_bytes")) &&
+    Settings.text_is(Json.field(value,"byte_space"),Bool.pick(String,container,"compressed_container_bytes","logical_source_bytes")) &&
+    Settings.bool_is(Json.field(value,"complete_export"),True{}) &&
+    Settings.text_is(Json.field(value,"verification"),Bool.pick(String,container,"complete_owned_container","complete_accepted_extent"))
+
+def full_export_response(kind: U32,args: List<&2,String>,value: Json.Json) -> Bool:
+  match kind args:
+    case 35 "export-all" <> snapshot <> path <> []: full_export_ack(False{},snapshot,path,value)
+    case 36 "export-container" <> snapshot <> path <> []: full_export_ack(True{},snapshot,path,value)
+    case _ _: False{}
+
+def full_export_confirmed(+state: State,+kind: U32,+value: Json.Json,valid: Bool) -> State:
+  match valid:
+    case False{}: status(state,"Full export response did not confirm the requested snapshot, destination and byte format. A file may exist; success is not confirmed.")
+    case True{}: status(state,"Exported complete " ++ Bool.pick(String,U32.is_eq(kind,36),"compressed archive","logical JSONL capture") ++
+      " for snapshot " ++ Json.get(value,"snapshot") ++ ", including ALL records outside current filters: " ++ Json.get(value,"path"))
+
+def full_export_done(+state: State,+kind: U32,+args: List<&2,String>,result: Result<&2,&2,String,Json.Json>) -> State:
+  match result:
+    case Fail{message}: status(state,"Complete capture export failed: " ++ message)
+    case Done{+value}: full_export_confirmed(state,kind,value,full_export_response(kind,args,value))
+
 def write_dispatch(state: State,kind: U32,args: List<&2,String>,title: String,mode: U32,result: Result<&2,&2,String,Json.Json>) -> State:
   match kind:
     case 27: preferences_done(state,kind,args,result)
@@ -2205,6 +2270,8 @@ def write_dispatch(state: State,kind: U32,args: List<&2,String>,title: String,mo
     case 29: source_change_done(source_barrier(state),kind,args,result)
     case 30: source_change_done(source_barrier(state),kind,args,result)
     case 31: source_change_done(source_barrier(state),kind,args,result)
+    case 35: full_export_done(state,kind,args,result)
+    case 36: full_export_done(state,kind,args,result)
     case _: write_value(state,kind,title,mode,result)
 
 def write_done(+state: State,+request: Request,+reply: Reply) -> State:
@@ -2484,7 +2551,7 @@ def brief_prefill(+files: Files.State) -> String:
 def brief_enter_ready(+state: State,+count: U32,+valid: Bool) -> State:
   State{db,dir,program,+ui,Selection{+items,+snap,+start,+displayed,+args,+filters,+listing},Form{mode,+search,source,blame,+files,+prior,settings},jobs,deadline,+serial} = state
   match valid:
-    case False{}: status(state,"Open a captured transcript with a nonempty verified physical range before preparing a brief. Reopen the reader if its range metadata is older.")
+    case False{}: status(state,"Open a captured transcript with a nonempty verified record range before preparing a brief. Reopen the reader if its range metadata is older.")
     case True{}:
       +selection = {Selection{items,snap,start,displayed,args,filters,listing} : Selection}
       +anchor = {Brief.Anchor{snap,start,count,filters} : Brief.Anchor}
@@ -2855,6 +2922,14 @@ def handle_normal(+state: State,action: UI.Action) -> IO(Maybe<State>):
     case UI.Export{}:
       do IO<Maybe<State>>:
         next : State <- export(state)
+        return Some{next}
+    case UI.WholeExport{}:
+      do IO<Maybe<State>>:
+        next : State <- full_export(state,False{})
+        return Some{next}
+    case UI.ContainerExport{}:
+      do IO<Maybe<State>>:
+        next : State <- full_export(state,True{})
         return Some{next}
     case _:
       IO.pure(Maybe<State>,Some{state})

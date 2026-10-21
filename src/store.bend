@@ -10,6 +10,7 @@ import ./json.bend as Json
 import ./projection_seal.bend as Seal
 import ./context_binding.bend as ContextBinding
 import ./context_store.bend as ContextStore
+import ./archive_meta.bend as ArchiveMeta
 
 type Context is Data:
   Context{repository: String, session: String, model: String, parent: String}
@@ -33,6 +34,7 @@ type ImportPhase is Data:
   LatestRepointed{}
   BeforeCommit{}
   Committed{}
+  ContainerStaged{}
 
 def phase_name(phase: ImportPhase) -> String:
   match phase:
@@ -54,6 +56,8 @@ def phase_name(phase: ImportPhase) -> String:
       "before_commit"
     case Committed{}:
       "committed"
+    case ContainerStaged{}:
+      "container_staged"
 
 type ImportObserver is Type:
   Unobserved{}
@@ -307,22 +311,50 @@ def index_sources_walk(fuel: Nat,+db: U32,cursor: String) -> IO(Unit):
           [Sql.Cell.Integer{cursor}],64)
         index_sources_batch(db,rows,key => index_sources_walk(rest,db,key))
 
-def migrate_search(+db: U32) -> IO(Unit):
+def migrate_search_legacy_locked(+db: U32) -> IO(Unit):
   do IO<Unit>:
-    exec(db,"BEGIN IMMEDIATE",[])
     exec(db,"DROP TRIGGER IF EXISTS event_search",[])
     clear_search_walk(4294967295n,db,None{},None{})
     index_sources_walk(4294967295n,db,"0")
     exec(db,"PRAGMA user_version=2",[])
     exec(db,"COMMIT",[])
 
+# schema() observes the version before this write lock. Another connection may
+# finish the legacy and archive migrations while this contender waits. Never
+# downgrade that winner or reconstruct FTS from a stale pre-lock observation.
+def migrate_search_locked(+db: U32,version: List<&2,List<&2,Sql.Cell>>) -> IO(Unit):
+  match version:
+    case [[Sql.Cell.Integer{"0"}]]:
+      migrate_search_legacy_locked(db)
+    case [[Sql.Cell.Integer{"1"}]]:
+      migrate_search_legacy_locked(db)
+    case [[Sql.Cell.Integer{"2"}]]:
+      exec(db,"COMMIT",[])
+    case [[Sql.Cell.Integer{"3"}]]:
+      exec(db,"COMMIT",[])
+    case _:
+      IO.die(Unit,1,"Unsupported Juice Bend library schema version under migration lock")
+
+def migrate_search(+db: U32) -> IO(Unit):
+  do IO<Unit>:
+    exec(db,"BEGIN IMMEDIATE",[])
+    current : List<&2,List<&2,Sql.Cell>> <- q(db,"PRAGMA user_version",[],1)
+    migrate_search_locked(db,current)
+
+def migrate_legacy(+db: U32) -> IO(Unit):
+  do IO<Unit>:
+    migrate_search(db)
+    ArchiveMeta.migrate(db)
+
 def schema_version(db: U32,version: String) -> IO(Unit):
   match version:
     case "0":
-      migrate_search(db)
+      migrate_legacy(db)
     case "1":
-      migrate_search(db)
+      migrate_legacy(db)
     case "2":
+      ArchiveMeta.migrate(db)
+    case "3":
       IO.pure(Unit,Unit{})
     case _:
       IO.die(Unit,1,"Unsupported Juice Bend library schema version")
@@ -622,13 +654,19 @@ def selected_nonempty(+db: U32,snapshot: String,generation: String,extent: U32,
 
 # A page reads at most 100 selected records and one predecessor. Verification
 # does not require scanning earlier pages or trusting mutable coverage flags.
-def selected_records(db: U32,snapshot: String,generation: String,extent: U32,
+def selected_records_inner(db: U32,snapshot: String,generation: String,extent: U32,
   records: U32,start: U32,count: U32) -> IO(List<&2,List<&2,Sql.Cell>>):
   match count:
     case 0:
       IO.pure(List<&2,List<&2,Sql.Cell>>,[])
     case _:
       selected_nonempty(db,snapshot,generation,extent,records,start,count)
+
+def selected_records(+db: U32,+snapshot: String,generation: String,extent: U32,
+  records: U32,start: U32,count: U32) -> IO(List<&2,List<&2,Sql.Cell>>):
+  do IO<List<&2,List<&2,Sql.Cell>>>:
+    origin : Maybe<&2,ArchiveMeta.Origin> <- ArchiveMeta.read(db,snapshot,True{})
+    selected_records_inner(db,snapshot,generation,extent,records,start,count)
 
 def selected_record(db: U32,snapshot: String,generation: String,extent: U32,
   +records: U32,+ordinal: U32) -> IO(List<&2,Sql.Cell>):
@@ -1068,12 +1106,9 @@ def projection_valid(db: U32,snapshot: String) -> IO(Bool):
     verified : Seal.Validation <- Seal.verify(db,snapshot,projection_version())
     return Seal.is_verified(verified)
 
-def finish_verified(+db: U32,+source: String,+snap: String,got: File & Bool,
-  observe: ImportObserver,seal: Seal.Validation,contexts: ContextStore.Plan) -> IO(String):
-  (file,stable) = got
+def publish(+db: U32,+source: String,+snap: String,observe: ImportObserver,
+  seal: Seal.Validation,contexts: ContextStore.Plan,gate: IO(Unit)) -> IO(String):
   do IO<String>:
-    File.close(file)
-    checked(stable,"Source changed during capture; transaction discarded")
     verified_observer : ImportObserver <- observe_phase(observe,Reverified{})
     Seal.write(db,snap,projection_version(),seal)
     sealed_observer : ImportObserver <- observe_phase(verified_observer,Sealed{})
@@ -1086,9 +1121,27 @@ def finish_verified(+db: U32,+source: String,+snap: String,got: File & Bool,
     index_search_snapshot(db,snap)
     commit_observer : ImportObserver <- observe_phase(latest_observer,BeforeCommit{})
     ContextStore.finish(db,snap,contexts)
+    gate
     exec(db,"COMMIT",[])
     finished_observer : ImportObserver <- observe_phase(commit_observer,Committed{})
     return snap
+
+def finish_verified(db: U32,source: String,snap: String,got: File & Bool,
+  observe: ImportObserver,seal: Seal.Validation,contexts: ContextStore.Plan) -> IO(String):
+  (file,stable) = got
+  do IO<String>:
+    File.close(file)
+    checked(stable,"Source changed during capture; transaction discarded")
+    publish(db,source,snap,observe,seal,contexts,IO.pure(Unit,Unit{}))
+
+def finalize_rows(state: ImportState) -> IO(ImportState):
+  ImportState{+db,file,provider,source,gen,+snap,+extent,+off,+ord,+checkpoint,+checkpoint_ord,ctx,observe,seal,contexts} = state
+  do IO<ImportState>:
+    checked(U32.is_eq(off,extent),"Capture extent mismatch")
+    exec(db,"UPDATE snapshots SET checkpoint=?,checkpoint_ordinal=?,records=? WHERE id=?",
+      [Sql.Cell.Integer{U32.show(checkpoint)},Sql.Cell.Integer{U32.show(checkpoint_ord)},
+       Sql.Cell.Integer{U32.show(ord)},Sql.Cell.Integer{snap}])
+    return ImportState{db,file,provider,source,gen,snap,extent,off,ord,checkpoint,checkpoint_ord,ctx,observe,seal,contexts}
 
 def finish(state: ImportState) -> IO(String):
   ImportState{+db,file,provider,+source,gen,+snap,+extent,off,ord,checkpoint,checkpoint_ord,ctx,observe,seal,contexts} = state
@@ -1507,6 +1560,8 @@ def import_sized(+db: U32,+provider: String,+path: String,
 def import_canonical(+db: U32,+provider: String,+path: String,
   observe: ImportObserver) -> IO(String):
   do IO<String>:
+    checked(Bool.not(String.ends_with(path,".jsonl.zst")),
+      "Compressed source requires the archive capture dispatcher")
     file : File <- IO.try(File,File.open(path,"r"))
     sized : File & Result<&1,&1,U32 & String,U32> <- File.size(file)
     import_sized(db,provider,path,sized,observe)
@@ -1516,7 +1571,7 @@ def import_observed(db: U32,+provider: String,path: String,
   do IO<String>:
     checked((String.eq(provider,"claude") || String.eq(provider,"codex")),
       "Provider must be claude or codex")
-    canonical : String <- Paths.resolve(path)
+    +canonical : String <- Paths.resolve(path)
     import_canonical(db,provider,canonical,observe)
 
 def import_file(db: U32,provider: String,path: String) -> IO(String):
@@ -1588,7 +1643,7 @@ def page_header(+db: U32,+snapshot: String,+start: U32,count: U32,
         content : String <- page_rows(records,field(h,3n))
         return "Juice Bend · captured evidence\nSnapshot " ++ snapshot ++
           " · generation " ++ field(h,0n) ++ " · " ++ field(h,1n) ++
-          " retained bytes\nProvider: " ++ field(h,3n) ++
+          " retained logical source bytes\nProvider: " ++ field(h,3n) ++
           "\nIntegrity: selected records verified; other ranges not checked.\n\n" ++ content
 
 def page(+db: U32,+snapshot: String,start: U32,count: U32) -> IO(String):

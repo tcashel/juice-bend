@@ -178,6 +178,24 @@ def arithmetic() -> IO(Unit):
     assert(String.eq(Counts.number(Json.JNumber{String.repeat("9",64n)}),String.repeat("9",64n)),"64-digit recorded counter stays exact")
     assert(String.eq(Session.own_session("/synthetic/A.jsonl"),"A") &&
       String.eq(Session.own_session("/synthetic/A/subagents/agent-child.jsonl"),"A"),"retained Claude locator association distinguishes parent directory from child alias")
+    assert(String.eq(Session.own_session("/synthetic/A.jsonl.zst"),"A") &&
+      String.eq(Session.own_session("/synthetic/café-中文-🙂.jsonl.zst"),"café-中文-🙂"),
+      "archive main-session lexical association strips exactly the ten-character suffix")
+    assert(String.eq(Session.own_session("/synthetic/A/subagents/agent-child.jsonl.zst"),"A"),
+      "archive subagent association preserves the recorded parent-directory rule")
+    assert(String.is_empty(Session.own_session("/synthetic/A.jsonl.zst.tmp")) &&
+      String.is_empty(Session.own_session("/synthetic/A.jsonl.zst.zst")) &&
+      String.is_empty(Session.own_session("/synthetic/A.json.zst")) &&
+      String.is_empty(Session.own_session("/synthetic/A.jsonl.zstd")),
+      "archive main-session suffix lookalikes and appended suffixes remain unassociated")
+    assert(String.is_empty(Session.own_session("/synthetic/A/subagents/agent-child.jsonl.zst.tmp")) &&
+      String.is_empty(Session.own_session("/synthetic/A/subagents/agent-child.jsonl.zstd")) &&
+      String.is_empty(Session.own_session("/synthetic/A/subagents/child.jsonl.zst")),
+      "archive subagent association requires an exact suffix and the existing agent prefix")
+    assert(String.is_empty(Session.own_session("/synthetic/.jsonl.zst")) &&
+      String.is_empty(Session.own_session("/synthetic/A.jsonl.ZST")) &&
+      String.is_empty(Session.own_session("/synthetic/A.jsonl.tmp")),
+      "empty archive identity case variants and plain extra suffixes remain unassociated")
     assert(Bool.not(Session.limits_valid(Session.Limits{0,1,1,1})) &&
       Bool.not(Session.limits_valid(Session.Limits{1,1,100001,1})) &&
       Bool.not(Session.limits_valid(Session.Limits{1,1,1,67108865})),"zero and excessive bounds are rejected explicitly")
@@ -369,8 +387,8 @@ def limits(+db: U32) -> IO(Unit):
     +whole_text : String <- report_text(whole)
     assert(String.starts_with(partial_text,"Juice Bend · retained-capture usage\n") &&
       String.starts_with(whole_text,"Juice Bend · retained-capture usage\n") &&
-      String.contains(partial_text,"Scan complete: false | processed physical records: 2") &&
-      String.contains(whole_text,"Scan complete: true | processed physical records: 5"),
+      String.contains(partial_text,"Scan complete: false | processed captured records: 2") &&
+      String.contains(whole_text,"Scan complete: true | processed captured records: 5"),
       "complete and limited reports share a neutral heading while the partial scan stays explicitly incomplete")
     +keys : Session.Report <- scan(db,snapshot,Session.Limits{1000000,1073741824,2,16777216})
     assert(Bool.not(complete(keys)) && U32.is_eq(processed(keys),2),"exact-key cap stops before accepting a new untracked call")

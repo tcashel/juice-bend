@@ -116,14 +116,14 @@ def facts_text(facts: R.Facts) -> String:
   "Capture: " ++ reference_json(reference) ++ "\nSession: " ++ identity_json(session) ++
     "\nRepository: " ++ identity_json(repository) ++ "\nParent metadata: " ++ parent_json(parent) ++
     "\nVerified prefix: " ++ U32.show(inspected) ++ " of " ++ U32.show(total) ++
-    " physical records; " ++ U32.show(bytes) ++ " retained bytes; prefix interpretation complete: " ++
+    " captured records; " ++ U32.show(bytes) ++ " retained logical source bytes; prefix interpretation complete: " ++
     boolean(complete) ++ "\nPrefix coverage: " ++ Json.quote(coverage) ++ "\n"
 
 def row_text(row: R.Row,index: U32) -> String:
   R.Row{target,direction,basis,witness,record,ambiguous} = row
   U32.show(index) ++ ". " ++ direction ++ " · " ++ basis ++
     Bool.pick(String,ambiguous," · ambiguity observed in this page","") ++ "\n" ++ facts_text(target) ++
-    "Relationship witness: " ++ reference_json(witness) ++ "\nPhysical record: " ++ record_json(record) ++
+    "Relationship witness: " ++ reference_json(witness) ++ "\nCaptured record: " ++ record_json(record) ++
     " (null means retained path association; no event ordinal is asserted)\n\n"
 
 def rows_text(rows: List<&2,R.Row>,+index: U32) -> String:
@@ -144,8 +144,8 @@ def render(page: R.Page,scope: Scoped.Scope) -> String:
     "\nRole/date filters are preserved for target readers; they do not filter relationship metadata." ++
     "\nFrozen reader scope: " ++ scope_json(scope) ++ "\nExact repository restriction: " ++ Json.quote(repository) ++
     "\nSource cursor: " ++ Json.quote(after) ++ " · next source: " ++ next_json(next) ++
-    "\nVerified physical records including anchor: " ++ U32.show(records) ++
-    " · retained raw bytes: " ++ U32.show(bytes) ++ "\nCoverage counts: " ++ coverage_json(coverage) ++
+    "\nVerified captured records including anchor: " ++ U32.show(records) ++
+    " · retained logical source bytes: " ++ U32.show(bytes) ++ "\nCoverage counts: " ++ coverage_json(coverage) ++
     "\n\n" ++ Bool.pick(String,List.is_empty(&2,R.Row,rows),
       "No related capture was established in this inspected page. Unexamined sources or records may contain further metadata.\n\n","") ++
     rows_text(rows,1) ++ "Anchor\n" ++ facts_text(anchor)

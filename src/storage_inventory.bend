@@ -22,7 +22,8 @@ type Rows is Data:
   Rows{sources: String,generations: String,accepted_snapshots: String,
     unaccepted_snapshots: String,raw_chunks: String,raw_bytes: String,
     record_links: String,projected_events: String,search_rows: String,
-    context_rows: String,projection_checks: String,settings: String}
+    context_rows: String,projection_checks: String,settings: String,
+    archive_snapshots: String,container_chunks: String,container_bytes: String}
 
 type Report is Data:
   Report{files: Files,pages: Pages,rows: Rows}
@@ -83,8 +84,9 @@ def rows_layout(row: List<&2,Sql.Cell>) -> IO(Rows):
     case [Sql.Cell.Integer{sources},Sql.Cell.Integer{generations},
       Sql.Cell.Integer{accepted},Sql.Cell.Integer{unaccepted},Sql.Cell.Integer{raw},
       Sql.Cell.Integer{bytes},Sql.Cell.Integer{records},Sql.Cell.Integer{events},
-      Sql.Cell.Integer{search},Sql.Cell.Integer{contexts},Sql.Cell.Integer{checks},Sql.Cell.Integer{settings}]:
-      IO.pure(Rows,Rows{sources,generations,accepted,unaccepted,raw,bytes,records,events,search,contexts,checks,settings})
+      Sql.Cell.Integer{search},Sql.Cell.Integer{contexts},Sql.Cell.Integer{checks},Sql.Cell.Integer{settings},
+      Sql.Cell.Integer{archives},Sql.Cell.Integer{containers},Sql.Cell.Integer{compressed}]:
+      IO.pure(Rows,Rows{sources,generations,accepted,unaccepted,raw,bytes,records,events,search,contexts,checks,settings,archives,containers,compressed})
     case _:
       IO.die(Rows,1,"Storage inventory unavailable: unexpected owned row-count shape")
 
@@ -100,7 +102,7 @@ def rows_result(rows: List<&2,List<&2,Sql.Cell>>) -> IO(Rows):
 def row_counts(db: U32) -> IO(Rows):
   do IO<Rows>:
     rows : List<&2,List<&2,Sql.Cell>> <- Store.q(db,
-      "SELECT (SELECT count(*) FROM main.sources),(SELECT count(*) FROM main.generations),(SELECT count(*) FROM main.snapshots WHERE accepted=1),(SELECT count(*) FROM main.snapshots WHERE accepted<>1),(SELECT count(*) FROM main.raw),(SELECT coalesce(sum(n),0) FROM main.raw),(SELECT count(*) FROM main.records),(SELECT count(*) FROM main.events),(SELECT count(*) FROM main.search),(SELECT count(*) FROM main.snapshot_context),(SELECT count(*) FROM main.projection_checks),(SELECT count(*) FROM main.settings)",[],1)
+      "SELECT (SELECT count(*) FROM main.sources),(SELECT count(*) FROM main.generations),(SELECT count(*) FROM main.snapshots WHERE accepted=1),(SELECT count(*) FROM main.snapshots WHERE accepted<>1),(SELECT count(*) FROM main.raw),(SELECT coalesce(sum(n),0) FROM main.raw),(SELECT count(*) FROM main.records),(SELECT count(*) FROM main.events),(SELECT count(*) FROM main.search),(SELECT count(*) FROM main.snapshot_context),(SELECT count(*) FROM main.projection_checks),(SELECT count(*) FROM main.settings),(SELECT count(*) FROM main.archive_captures),(SELECT count(*) FROM main.archive_chunks),(SELECT coalesce(sum(n),0) FROM main.archive_chunks)",[],1)
     rows_result(rows)
 
 def octal_digits(value: String) -> Bool:
@@ -226,13 +228,15 @@ def pages_json(value: Pages) -> String:
     ",\"reusable_bytes\":" ++ Json.quote(reusable) ++ "}"
 
 def rows_json(value: Rows) -> String:
-  Rows{sources,generations,accepted,unaccepted,raw,bytes,records,events,search,contexts,checks,settings} = value
+  Rows{sources,generations,accepted,unaccepted,raw,bytes,records,events,search,contexts,checks,settings,archives,containers,compressed} = value
   "{\"sources\":" ++ Json.quote(sources) ++ ",\"generations\":" ++ Json.quote(generations) ++
     ",\"accepted_snapshots\":" ++ Json.quote(accepted) ++ ",\"unaccepted_snapshots\":" ++ Json.quote(unaccepted) ++
     ",\"raw_chunks\":" ++ Json.quote(raw) ++ ",\"raw_bytes\":" ++ Json.quote(bytes) ++
     ",\"record_links\":" ++ Json.quote(records) ++ ",\"projected_events\":" ++ Json.quote(events) ++
     ",\"search_rows\":" ++ Json.quote(search) ++ ",\"context_rows\":" ++ Json.quote(contexts) ++
-    ",\"projection_checks\":" ++ Json.quote(checks) ++ ",\"settings\":" ++ Json.quote(settings) ++ "}"
+    ",\"projection_checks\":" ++ Json.quote(checks) ++ ",\"settings\":" ++ Json.quote(settings) ++
+    ",\"archive_snapshots\":" ++ Json.quote(archives) ++ ",\"container_chunks\":" ++ Json.quote(containers) ++
+    ",\"compressed_container_bytes\":" ++ Json.quote(compressed) ++ "}"
 
 def to_json(value: Report) -> String:
   Report{files,pages,rows} = value
@@ -279,10 +283,11 @@ def pages_summary(value: Pages) -> String:
     "Reusable inside SQLite: " ++ page_label(free) ++ " = " ++ reusable ++ " bytes\n"
 
 def rows_summary(value: Rows) -> String:
-  Rows{sources,generations,accepted,unaccepted,raw,bytes,records,events,search,contexts,checks,settings} = value
+  Rows{sources,generations,accepted,unaccepted,raw,bytes,records,events,search,contexts,checks,settings,archives,containers,compressed} = value
   "Owned capture and library metadata\nSources: " ++ sources ++ "\nGenerations: " ++ generations ++
     "\nAccepted saved versions: " ++ accepted ++ "\nUnaccepted captures: " ++ unaccepted ++
-    "\nRaw chunks: " ++ raw ++ " (" ++ bytes ++ " bytes, counted once per owned chunk)\n" ++
+    "\nLogical raw chunks: " ++ raw ++ " (" ++ bytes ++ " bytes, counted once per owned chunk)\n" ++
+    "Archive containers: " ++ archives ++ " (" ++ containers ++ " compressed chunks, " ++ compressed ++ " bytes)\n" ++
     "Record references: " ++ records ++ "\nSettings entries: " ++ settings ++
     "\n\nDerived data\nProjected events: " ++ events ++ "\nLexical index rows: " ++ search ++
     "\nContext rows: " ++ contexts ++ "\nProjection checks: " ++ checks ++ "\n"

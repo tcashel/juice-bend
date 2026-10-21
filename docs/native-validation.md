@@ -1,5 +1,36 @@
 # Native interaction observations
 
+## Native archives, full exports and readable Brief — 2026-10-21
+
+App `d06447f6…` passed actual Tart Settings import of an ordinary compressed
+archive, filtered late-record search/copy, bounded evidence export, full logical
+JSONL export and exact original-container export. After moving the synthetic
+source directory away and restarting, retained reads and both full exports
+still matched. Plain-file archive-export and truncated-archive import refusals
+left accepted history unchanged. Nine clipboard comparisons and six exact mode
+0600 exports passed. Brief now puts the request/tool evidence before its footer;
+whole/selected copy, export and Back passed on that same application.
+
+The standard executable and `Juice Bend Archive.app` contain this observed
+build: 79 unchanged application inputs and 88 verified upstream hashes. The
+combined production export/Brief/keyboard/readability gate passed 251 PASS lines
+including suite/fixture lines; existing UI/polish controls passed 162 PASS lines.
+Earlier isolated backend gates and final metadata/migration/maintenance checks
+retain their own build identities. This is not a new full-suite, proof or
+comparative performance run.
+
+The successful native workflow resumed after preserved automation failures.
+A visible Dock obscured the fixed window footer on the 1600×1000 guest; it was
+temporarily hidden and restored. This window-sizing gap remains open. All owned
+windows closed, Tart stopped and its lease was released. Archive admission is
+still capped at 1 MiB compressed / 4 MiB logical; unrestricted archive parity,
+hardware typing, full IME/shaping/accessibility and measured latency remain open.
+
+See [native receipt](receipts/archive-native.txt),
+[backend receipt](receipts/archive-backend.txt),
+[build inputs](receipts/archive-build-inputs.sha256) and
+[structured summary](../benchmarks/results/tart-archive-summary.json).
+
 ## Continuation brief and keyboard selection — 2026-10-21
 
 App `78c396eb…` prepares a bounded brief from the exact opened capture range,

@@ -240,7 +240,7 @@ def summary_text() -> IO(Unit):
   report : Inventory.Report = Inventory.Report{
     Inventory.Files{Inventory.Measured{"0"},Inventory.Unavailable{"missing_or_inaccessible"},Inventory.Measured{"4294967296"}},
     Inventory.Pages{"2","4096","1","8192","4096"},
-    Inventory.Rows{"2","3","4","1","10","2500","15","20","8","15","4","1"}}
+    Inventory.Rows{"2","3","4","1","10","2500","15","20","8","15","4","1","0","0","0"}}
   +text : String = Inventory.summary(report)
   do IO<Unit>:
     assert(String.contains(text,"Main database: 0 bytes"),"summary distinguishes an observed empty file from unavailable size")
@@ -249,7 +249,7 @@ def summary_text() -> IO(Unit):
     assert(String.contains(text,"Logical database: 2 pages x 4096 bytes = 8192 bytes") &&
       String.contains(text,"Reusable inside SQLite: 1 page = 4096 bytes"),"summary separates logical database bytes from reusable page bytes")
     assert(String.contains(text,"Accepted saved versions: 4") && String.contains(text,"Unaccepted captures: 1") &&
-      String.contains(text,"Raw chunks: 10 (2500 bytes, counted once per owned chunk)"),"summary distinguishes accepted history and unique owned raw chunks")
+      String.contains(text,"Logical raw chunks: 10 (2500 bytes, counted once per owned chunk)"),"summary distinguishes accepted history and unique owned logical raw chunks")
     assert(String.contains(text,"Projected events: 20") && String.contains(text,"Lexical index rows: 8") &&
       String.contains(text,"Context rows: 15") && String.contains(text,"Projection checks: 4"),"summary exposes derived counts separately from raw capture")
     assert(String.contains(text,"These views overlap: do not add SQLite logical bytes, raw bytes, and file lengths together.") &&

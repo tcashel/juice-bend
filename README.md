@@ -51,8 +51,17 @@ Without `--demo`, the default library is
 `~/Library/Application Support/JuiceBend/`. No provider history is scanned
 automatically. In Settings, choose Claude or Codex and enter a literal absolute
 path. **Add folder** registers a directory; **Import file** captures one JSONL
-file. Select a registered folder before using Enable or Disable. Disabling a
-folder preserves its captured history. Refresh processes bounded batches.
+file or `.jsonl.zst` archive. Select a registered folder before using Enable or
+Disable. Disabling a folder preserves its captured history. Refresh processes
+bounded batches.
+
+Archive capture uses a Bend 2 Zstandard decoder and preserves both the exact
+compressed container and decoded JSONL in the owned library. The initial
+profile accepts at most 1 MiB compressed, 4 MiB decoded, an 8 MiB window,
+64 frames and 4,096 blocks per ordinary frame. Raw, RLE and ordinary compressed
+blocks, checksums, concatenated frames and skippable frames are supported;
+external dictionaries are not. These archive limits leave plain JSONL limits
+unchanged and do not establish full archive parity.
 
 Pause/Resume and the 30-second, 2-hour, 4-hour, 8-hour or daily interval are saved
 in the owned library. The UI distinguishes pending changes from acknowledged
@@ -79,12 +88,30 @@ DATA=/tmp/juice-bend-explicit-library
 "$APP" --data-dir "$DATA" help
 ```
 
-Use snapshot IDs returned by your library. `export-all` preserves every raw
-byte in that accepted extent, including malformed input. Output destinations
-must not exist. `rebuild SNAPSHOT` verifies retained bytes before rebuilding
+Use snapshot IDs returned by your library. `export-all` preserves every logical
+source byte in that accepted extent, including malformed JSONL. For archives,
+these are the decoded bytes; citations also use decoded byte offsets.
+`export-container SNAPSHOT PATH` writes the exact retained `.jsonl.zst`
+container. Both exports work after the original source disappears. Output
+destinations must not exist and cannot replace the original source locator.
+`verify SNAPSHOT` checks both retained streams and their transformation for an
+archive. `rebuild SNAPSHOT` verifies retained bytes before rebuilding
 derived events/search; it never repairs raw bytes by changing their hashes.
 Refresh reports can contain per-source failures: inspect `failed` and discovery
 coverage even when the reporting command exits successfully.
+
+With a transcript open in History, **Export evidence** keeps the displayed
+range and scope. **Export full JSONL** and **Export archive** export the complete
+pinned capture, including records outside current filters; the latter requires
+an archive capture. The app writes private files in its data directory and
+shows the path in its status message. Actual Tart interaction passed import,
+filtered search, copy, both full exports and retained reads/exports after source
+removal and restart. See [archive validation](docs/receipts/archive-native.txt).
+
+Opening an existing Juice Bend library upgrades it to schema 3 while preserving
+plain captures and their identities. Earlier builds that support only schema 2
+refuse to open the upgraded library. This is separate from the original Juice
+database, which is never migrated or modified.
 
 Usage reads the whole pinned captured session from verified owned bytes, within
 explicit record/byte/key limits. It separates scan coverage from accounting
@@ -109,7 +136,7 @@ the current HEAD again. The `repo-open`, `repo-tree`, `repo-source`, `repo-blame
 and `repo-why` CLI commands expose the same bounded operations.
 
 Tools (or Command+T) opens recorded tool activity for the selected capture and
-filters. Prev/Next text pages 40 physical records; calls and results retain
+filters. Prev/Next text pages 40 captured records; calls and results retain
 their own citations. A missing counterpart may be outside this page, and a
 recorded result does not prove successful execution. Copy and Export retain
 the displayed text. `activity-scope SNAPSHOT START COUNT PROVIDER REPOSITORY
@@ -159,8 +186,10 @@ Implementation and native acceptance are still in progress. See
 [acceptance](docs/acceptance.md), [performance](docs/performance.md),
 [capabilities](docs/capabilities.md), and the exact
 [continuation checkpoint](docs/progress.md). Backend timing does not establish
-native responsiveness. The tested renderer uses a fixed practical window and
-ASCII glyph set; complete shaping, IME and accessibility parity are not claimed.
+native responsiveness. The tested renderer uses a fixed window and a limited
+204-glyph atlas. On the tested 1600×1000 guest, a visible Dock obscures the
+footer; window sizing remains open. Complete shaping, IME and accessibility
+parity are not claimed.
 
 All maintained application logic and UI are Bend 2. The sole maintained native
 adapter is the narrow SQLite bridge. The compiled app needs neither Bun nor the

@@ -135,7 +135,7 @@ def basic(+db: U32,+snapshot: String) -> IO(Unit):
     assert(String.contains(text,"visible argument") && String.contains(text,"visible result") &&
       Bool.not(String.contains(text,"excluded")),"repository and date scope excludes payloads before pairing and rendering")
     assert(String.contains(text,"Frozen scope: {\"provider\":\"claude\",\"repository\":\"/synthetic/a\",\"role\":\"\",\"after\":\"2026-10-02\"}") &&
-      String.contains(text,"Source: ") && String.contains(text,"Generation: ") && String.contains(text,"Captured extent bytes:"),"rendered evidence includes immutable identity and exact frozen scope")
+      String.contains(text,"Source: ") && String.contains(text,"Generation: ") && String.contains(text,"Captured logical source bytes:"),"rendered evidence includes immutable identity and exact frozen scope")
     assert(String.contains(text,"complete snapshot were not reverified"),"selected raw verification is not claimed as whole-snapshot verification")
     +citation : String = first_citation(page)
     assert(String.contains(citation,"\"record\":\"0\"") && String.contains(citation,"\"event\":\"1\""),"filtered activity retains original event ordinal after preceding ordinary text")
@@ -303,7 +303,7 @@ def readability(+db: U32) -> IO(Unit):
       precedes(text,"alpha result café 中文 🙂","Evidence details") &&
       precedes(text,"Evidence details","Captured identity and verification"),"compact snapshot range header leads complete occurrence bodies then citations then verification footer")
     assert(String.contains(text,first_citation(page)) && String.contains(text,"Source: ") && String.contains(text,"Generation: ") &&
-      String.contains(text,"Total physical records in snapshot: 43") && String.contains(text,"Requested records: 40") &&
+      String.contains(text,"Total captured records in snapshot: 43") && String.contains(text,"Requested records: 40") &&
       String.contains(text,"Actual selected records: 40") && String.contains(text,"Verified selected records: 40") &&
       String.contains(text,"Frozen scope: {\"provider\":\"\",\"repository\":\"\",\"role\":\"\",\"after\":\"\"}"),"payload-first canonical text retains full identity citation physical counts verification and exact scope")
     +last : Reader.Page <- read(db,snapshot,40,40,all())

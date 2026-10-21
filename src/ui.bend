@@ -41,6 +41,8 @@ type Action is Data:
   CopyStatus{text: String}
   Paste{}
   Export{}
+  WholeExport{}
+  ContainerExport{}
   Why{}
   Usage{}
   Tools{}
@@ -492,9 +494,9 @@ def sidebar_normal(+s: State,index: U32) -> State & Action:
     case 11: (s,Storage{})
     case 12: (s,Brief{})
     case 13: copy_action(s,String.is_empty(selection(s)))
-    case 14: paste_query(s)
+    case 14: (s,WholeExport{})
     case 15: (set_query(s,""),Search{})
-    case 16: (select_all(s),NoAction{})
+    case 16: (s,ContainerExport{})
     case 17: (s,Back{})
     case _: (s,NoAction{})
 
@@ -1014,9 +1016,9 @@ def side_label(settings: Bool,index: U32,files: Bool) -> String:
         case 11: "Storage"
         case 12: "Prepare brief"
         case 13: "Copy selection"
-        case 14: "Paste"
+        case 14: "Export full JSONL"
         case 15: "Clear search"
-        case 16: "Select all"
+        case 16: "Export archive"
         case _: "Back"
 
 def side_active(index: U32,scope: String) -> Bool:

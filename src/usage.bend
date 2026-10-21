@@ -325,7 +325,7 @@ def partial_count(rows: List<&2,Observation>) -> U32:
 
 def render(provider: String,+rows: List<&2,Observation>,first: Observation,
   +start: U32,count: U32,records: U32) -> String:
-  "Juice Bend · recorded usage evidence\nSelected physical records " ++ U32.show(start) ++
+  "Juice Bend · recorded usage evidence\nSelected captured records " ++ U32.show(start) ++
     " through " ++ U32.show(U32.add(start,count)) ++ " (exclusive), of " ++ U32.show(records) ++
     ". Maximum 100 records. This range is not a whole-session usage total.\n" ++
     "Unsupported/malformed selected records excluded: " ++ U32.show(partial_count(rows)) ++ "\n\n" ++

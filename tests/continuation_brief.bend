@@ -122,8 +122,9 @@ def pure(+wrapped: String) -> IO(B.Preview):
     +omitted : B.Preview <- need(B.Preview,B.render(anchor(),B.Collected{[fact(2,"third omitted whole",0),fact(1,String.repeat("😀",3000n),0),first],0,0,0,0,0,0,"m"}))
     assert(String.contains(body(omitted),"whole facts omitted for budget: 2") && Bool.not(String.contains(body(omitted),"third omitted whole")),"packing stops at first non-fitting fact and counts every remaining whole occurrence")
     assert(B.has_budget(Activity.consume(String.repeat("😀",2048n),8192)) && Bool.not(B.has_budget(Activity.consume(String.repeat("😀",2048n) ++ "x",8192))),"8192-byte Unicode boundary counts scalars by UTF8 width")
-    +base : B.Preview <- need(B.Preview,B.render(anchor(),B.Collected{[fact(0,"",0)],0,0,0,0,0,0,"m"}))
-    +fill : String = String.repeat("x",U32.to_nat(U32.sub(8192,bytes(base))))
+    # Use a nonempty seed so omitted empty-field labels do not alter payload overhead.
+    +base : B.Preview <- need(B.Preview,B.render(anchor(),B.Collected{[fact(0,"x",0)],0,0,0,0,0,0,"m"}))
+    +fill : String = "x" ++ String.repeat("x",U32.to_nat(U32.sub(8192,bytes(base))))
     +edge : B.Preview <- need(B.Preview,B.render(anchor(),B.Collected{[fact(0,fill,0)],0,0,0,0,0,0,"m"}))
     assert(U32.is_eq(bytes(edge),8192),"whole mandatory fact exactly8192 UTF8 bytes is accepted including final footer")
     assert(failed(B.Preview,B.render(anchor(),B.Collected{[fact(0,fill ++ "x",0)],0,0,0,0,0,0,"m"}),"required_anchor_too_large"),"whole mandatory fact at8193 bytes fails without budget reservation or truncation")

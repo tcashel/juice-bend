@@ -23,7 +23,7 @@ def number(value: Maybe<&2,U32>,label: String) -> IO(U32):
     case None{}:
       failure(U32,"invalid_number",label ++ " must be an integer from 0 to 4294967295")
 
-# A next cursor always names another physical record in the same snapshot.
+# A next cursor always names another captured record in the same snapshot.
 # Defensive bounds keep even a malformed Page from wrapping its U32 cursor.
 def next(+total: U32,+start: U32,+selected: U32) -> Maybe<&2,U32>:
   Bool.pick(Maybe<&2,U32>,U32.is_gt(selected,0) && U32.is_le(start,total) &&
@@ -56,7 +56,7 @@ def json(page: Reader.Page,text: String) -> String:
 def bounded(text: String,remaining: Maybe<&2,U32>) -> Result<&2,&2,String,String>:
   match remaining:
     case None{}:
-      Fail{"Escaped recorded activity exceeds the 1048576-byte worker bound; choose a smaller physical range. No payload was truncated"}
+      Fail{"Escaped recorded activity exceeds the 1048576-byte worker bound; choose a smaller record range. No payload was truncated"}
     case Some{_}:
       Done{text}
 

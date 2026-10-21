@@ -196,7 +196,7 @@ def effects() -> IO(Unit):
     require(String.eq(Brief.selected_text(Brief.Preview{token(),text(),Brief.bytes(text())},Brief.Whole{}),text()),"explicit Copy brief preserves the whole exact text")
 
 def metadata() -> IO(Unit):
-  +reply = Fixture.json("{\"snapshot\":\"7\",\"start\":40,\"requested_records\":40,\"selected_records\":5,\"kind\":\"scoped_transcript_page\",\"complete_export\":false,\"text\":\"reader\"}")
+  +reply = Fixture.json("{\"snapshot\":\"7\",\"start\":40,\"requested_records\":40,\"selected_records\":5,\"kind\":\"scoped_transcript_page\",\"byte_space\":\"logical_source_bytes\",\"complete_export\":false,\"text\":\"reader\"}")
   +metadata = Brief.range_args(reply,"7",40,["activity","7","source","3","9000","claude","45","0","5"])
   do IO<Unit>:
     require(Brief.range_metadata(reply,"7",40) && U32.is_eq(Brief.selected_count(metadata,"7",40),5),"actual physical tail count stays separate from requested40")

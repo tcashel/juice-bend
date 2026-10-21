@@ -145,13 +145,18 @@ def header(+db: U32,+snapshot: String) -> IO(Result<&2,&2,Failure,Capture>):
 
 # This is only an explicit lexical association retained with the capture. It
 # is not proof of who authored a call, and no original path is opened.
+def session_suffix(+leaf: String) -> Nat:
+  Bool.pick(Nat,String.ends_with(leaf,".jsonl.zst"),10n,
+    Bool.pick(Nat,String.ends_with(leaf,".jsonl"),6n,0n))
+
 def session_parts(parts: List<&2,String>) -> String:
   match parts:
     case +leaf <> "subagents" <> +session <> _:
-      Bool.pick(String,String.ends_with(leaf,".jsonl") && String.starts_with(leaf,"agent-") && Claude.identifier(session),session,"")
+      Bool.pick(String,Bool.not(Nat.is_eq(session_suffix(leaf),0n)) && String.starts_with(leaf,"agent-") && Claude.identifier(session),session,"")
     case +leaf <> _:
-      +stem = String.take(leaf,Nat.sub(String.length(leaf),6n))
-      Bool.pick(String,String.ends_with(leaf,".jsonl") && Claude.identifier(stem),stem,"")
+      +suffix = session_suffix(leaf)
+      +stem = String.take(leaf,Nat.sub(String.length(leaf),suffix))
+      Bool.pick(String,Bool.not(Nat.is_eq(suffix,0n)) && Claude.identifier(stem),stem,"")
     case _: ""
 
 def own_session(locator: String) -> String:
@@ -345,7 +350,7 @@ def row_allowed(valid: Bool,budget: Bool,+row: List<&2,Sql.Cell>,state: State,
   next: State -> Result<&2,&2,Failure,Batch>) -> Result<&2,&2,Failure,Batch>:
   match valid budget:
     case False{} _: Fail{fail("usage_raw_integrity","Retained raw type, checksum, identity, position or coverage is corrupt")}
-    case True{} False{}: Done{Stopped{state,"Verified raw byte or physical record limit reached"}}
+    case True{} False{}: Done{Stopped{state,"Verified logical byte or captured record limit reached"}}
     case True{} True{}: batch_next(consume_row(row,state),next)
 
 def batch(rows: List<&2,List<&2,Sql.Cell>>,state: State) -> Result<&2,&2,Failure,Batch>:
@@ -386,7 +391,7 @@ def step_position(eof: Bool,covered: Bool,limited: Bool,+db: U32,state: State,sn
   match eof covered limited:
     case True{} True{} _: finish(db,state,True{},"Complete pinned retained extent scanned")
     case True{} False{} _: abort(db,fail("usage_raw_integrity","Final verified byte extent does not cover the accepted capture"))
-    case False{} _ True{}: finish(db,state,False{},"Verified raw byte or physical record limit reached")
+    case False{} _ True{}: finish(db,state,False{},"Verified logical byte or captured record limit reached")
     case False{} _ False{}:
       do IO<Step>:
         rows : Result<&2,&2,Failure,List<&2,List<&2,Sql.Cell>>> <- raw_window(db,snapshot,ordinal,records)
@@ -454,8 +459,8 @@ def render(value: Report) -> Result<&2,&2,Failure,String>:
   Report{+capture,Limits{maxrecords,maxbytes,maxkeys,maxdescriptors},processed,bytes,complete,buckets,attributed,reason,
     Coverage{decoded,malformed,oversized,issues,items},summary} = value
   +text = "Juice Bend · retained-capture usage\n" ++ capture_text(capture) ++
-    "\nScan complete: " ++ boolean(complete) ++ " | processed physical records: " ++ U32.show(processed) ++
-    " | verified bytes: " ++ U32.show(bytes) ++ "\nRequired provider buckets complete: " ++ boolean(buckets) ++
+    "\nScan complete: " ++ boolean(complete) ++ " | processed captured records: " ++ U32.show(processed) ++
+    " | verified logical source bytes: " ++ U32.show(bytes) ++ "\nRequired provider buckets complete: " ++ boolean(buckets) ++
     " | source attribution complete: " ++ boolean(attributed) ++ "\n" ++ reason ++
     "\nDecoded records: " ++ U32.show(decoded) ++ " | malformed: " ++ U32.show(malformed) ++
     " | oversized fragments: " ++ U32.show(oversized) ++ " | other coverage observations: " ++ U32.show(issues) ++
@@ -464,6 +469,6 @@ def render(value: Report) -> Result<&2,&2,Failure,String>:
     summary_text(summary) ++ "\nUnknown buckets are not zero. Scan completion does not imply complete provider usage or source attribution. " ++
     "These are retained-record accounting facts, not a bill, quota, authorship proof, or a cross-library total. " ++
     "No source logs, accounts, network, prices, or models were consulted.\n" ++
-    "At most16 raw-record witnesses follow; full original bytes remain in the cited immutable capture.\n" ++
+    "At most16 raw-record witnesses follow; full retained logical source bytes remain in the cited immutable capture (decompressed for archives).\n" ++
     witness_text(List.reverse(&2,Witness,items),capture)
   rendered(Claude.fits_result(Claude.remaining(text,1048575)),text)

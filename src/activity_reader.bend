@@ -34,7 +34,7 @@ def include_bytes(context: Store.Context,count: U32,events: List<&2,Activity.Occ
   occurrence: Activity.Occurrence,left: Maybe<&2,U32>) -> Result<&2,&2,String,Gather>:
   match left:
     case None{}:
-      Fail{"Selected scoped activity exceeds 524288 UTF-8 bytes including citations; choose a smaller physical range. No payload was truncated"}
+      Fail{"Selected scoped activity exceeds 524288 UTF-8 bytes including citations; choose a smaller record range. No payload was truncated"}
     case Some{remaining}:
       Done{Gather{context,U32.inc(count),remaining,occurrence <> events}}
 
@@ -42,7 +42,7 @@ def include_count(context: Store.Context,count: U32,budget: U32,events: List<&2,
   +occurrence: Activity.Occurrence,available: Bool) -> Result<&2,&2,String,Gather>:
   match available:
     case False{}:
-      Fail{"Selected scoped activity exceeds 256 events; choose a smaller physical range. No occurrence was truncated"}
+      Fail{"Selected scoped activity exceeds 256 events; choose a smaller record range. No occurrence was truncated"}
     case True{}:
       include_bytes(context,count,events,occurrence,
         Activity.consume_fields(List.append(&2,String,Activity.descriptor_strings(Activity.citation(occurrence)),
@@ -164,7 +164,7 @@ def read_transaction(valid: Result<&2,&2,String,Unit>,+db: U32,+snapshot: String
 def read_valid(valid: Bool,+db: U32,snapshot: String,start: U32,count: U32,scope: Scoped.Scope) -> IO(Result<&2,&2,String,Page>):
   match valid:
     case False{}:
-      IO.pure(Result<&2,&2,String,Page>,Fail{"Activity read requires an immutable positive snapshot ID, valid frozen scope, and 1..100 physical records"})
+      IO.pure(Result<&2,&2,String,Page>,Fail{"Activity read requires an immutable positive snapshot ID, valid frozen scope, and 1..100 captured records"})
     case True{}:
       do IO<Result<&2,&2,String,Page>>:
         owned : Result<&2,&2,String,Unit> <- transaction(db)
@@ -188,8 +188,8 @@ def header(page: Page) -> String:
 def details(page: Page) -> String:
   Page{provider,source,generation,snapshot,extent,total,start,count,selected,+verified,scope,_} = page
   "Captured identity and verification\nProvider: " ++ Json.quote(provider) ++ "\nSource: " ++ Json.quote(source) ++
-    "\nGeneration: " ++ generation ++ "\nSnapshot: " ++ snapshot ++ "\nCaptured extent bytes: " ++ U32.show(extent) ++
-    "\nTotal physical records in snapshot: " ++ U32.show(total) ++ "\nPhysical start: " ++ U32.show(start) ++
+    "\nGeneration: " ++ generation ++ "\nSnapshot: " ++ snapshot ++ "\nCaptured logical source bytes: " ++ U32.show(extent) ++
+    " (decompressed for archives)\nTotal captured records in snapshot: " ++ U32.show(total) ++ "\nCaptured record start: " ++ U32.show(start) ++
     "\nRequested records: " ++ U32.show(count) ++ "\nActual selected records: " ++ U32.show(selected) ++
     "\nVerified selected records: " ++ U32.show(verified) ++ "\nFrozen scope: " ++ scope_text(scope) ++
     Bool.pick(String,U32.is_eq(verified,0),"\nNo selected records were read.",
