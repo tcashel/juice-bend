@@ -105,3 +105,11 @@
   state tests. No packaged official Bend skill was found in the searched repos.
   This is a bounded search, not exhaustive absence. Native compilation and
   actual interaction remain required; checker success alone is insufficient.
+- **2026-10-21 — Native typography and retained navigation.** Keep all rendering,
+  hit testing, text selection, wrapping and status inspection in Bend. A pinned
+  open font is packed offline into static grayscale glyph data; the app loads
+  neither a font engine nor a JavaScript runtime. Share one geometry contract
+  across drawing and input. Files saves one boxed UI bookmark, clearing transient
+  modifiers/drag without retaining an old image. Returning to an accepted History
+  reader preserves text selection and exact capture identity without a reread;
+  an explicit provider click still overrides the saved listing scope.

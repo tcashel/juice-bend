@@ -52,3 +52,11 @@ run = "./scripts/build src/main.bend build/juice-bend-vm"
 [tasks.vm-session]
 description = "Reserve and run the coordinated local Tart VM with explicit isolated shares"
 run = "./scripts/vm-session"
+
+[tasks.font-check]
+description = "Verify the checked-in Bend font against its pinned quantized atlas"
+run = "./scripts/font-pack --check src/font.bend"
+
+[tasks.font-pack]
+description = "Pack font data into a new build artifact without overwriting source"
+run = "./scripts/font-pack --output build/font.generated.bend"

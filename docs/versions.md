@@ -8,6 +8,7 @@ Observed locally on 2026-10-20:
 | Local Tart validation guest | macOS 27.0 (26A428), arm64; installed Tart 2.40.1; guest SQLite 3.54.0 |
 | mise | 2026.9.12; repository `mise.toml` |
 | Bun, compiler host only | 1.4.2, pinned through mise |
+| Native glyph atlas | JetBrains Mono 2.304, SIL OFL 1.1; source, license and 204-glyph data hashes in `assets/fonts/jetbrains-mono/manifest.json`; offline packing uses pinned Bun |
 | Bend | 2.0.37, upstream `60ca80aedeec9d8f0629b5f10dd19457d8ad67af` |
 | C compiler | Apple clang 21.0.0 (clang-2100.3.34.2) |
 | Native CPU flags | `-std=c11 -O3 -lpthread -lm -lsqlite3`; upstream window runtime adds `-x objective-c -fobjc-arc -fmodules` |

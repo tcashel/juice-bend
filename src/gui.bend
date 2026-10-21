@@ -239,6 +239,11 @@ def navigation_active(value: Navigation) -> Bool:
 def related_active(state: State) -> Bool:
   navigation_active(navigation(state))
 
+# A transient navigation hold is distinct from the saved refresh preference.
+# Usage is already held while its worker is pending, before its title changes.
+def capture_suspended(state: State) -> Bool:
+  related_active(state)
+
 def navigation_phase(value: Navigation) -> U32:
   match value:
     case NoNavigation{}: 3
@@ -561,13 +566,26 @@ def files_saved_valid(+kind: U32) -> Bool:
 def files_saved_view(+ui: UI.State,valid: Bool) -> Files.Saved:
   match valid:
     case True{}:
-      Files.Saved{UI.title(ui),UI.reader(ui),UI.scroll(ui)}
+      Files.Saved{[UI.bookmark(UI.restore(ui,UI.bookmark(ui)))]}
     case False{}:
-      Files.Saved{"History","Choose a captured session to read its owned evidence.",0}
+      Files.Saved{[]}
 
 def files_saved_for(state: State) -> Files.Saved:
   State{db,dir,program,ui,Selection{items,snap,start,kind,args,filters,listing},form,jobs,deadline,serial} = state
-  files_saved_view(ui,files_saved_valid(kind))
+  files_saved_view(ui,files_saved_valid(kind) && Bool.not(String.is_empty(snap)))
+
+# Restore the accepted reader verbatim. Do not call set_reader/set_query after
+# restoring: both reset character selection or focus. Empty origins use the
+# existing truthful History placeholder and exact pinned reread below.
+def files_restore_view(+ui: UI.State,saved: Files.Saved) -> UI.State:
+  match saved:
+    case Files.Saved{[view]}: UI.restore(ui,view)
+    case _: UI.set_position(UI.set_reader(ui,"History","Choose a captured session to read its owned evidence."),0,0)
+
+def files_saved_ready(saved: Files.Saved) -> Bool:
+  match saved:
+    case Files.Saved{[_]}: True{}
+    case _: False{}
 
 def files_return_missing(+state: State,+snap: String,+start: U32,+filters: Query.Filters,empty: Bool) -> State:
   match empty:
@@ -589,11 +607,12 @@ def files_leave(+state: State) -> State:
   match mode:
     case 3:
       Files.State{input,identity,directory,file_source,saved} = files
-      Files.Saved{title,text,scroll} = saved
-      restored = UI.set_position(UI.set_reader(UI.set_query(UI.set_files(ui,False{}),search),title,text),0,scroll)
-      rows = UI.set_results(UI.set_rows(restored,item_titles(items)),UI.Results{offset,U32.from_nat(List.length(&2,Item,items)),more,loaded})
-      files_return_ready(invalidate(State{db,dir,program,rows,Selection{items,snap,start,Bool.pick(U32,files_saved_valid(displayed),displayed,0),args,filters,Listing{kind,full,offset,more,loaded,anchor}},Form{0,search,source,blame,files,navigation,settings},jobs,deadline,serial}),
-        snap,start,filters,files_saved_valid(displayed))
+      +ready = files_saved_ready(saved) && files_saved_valid(displayed) && Bool.not(String.is_empty(snap))
+      fallback = UI.set_results(UI.set_rows(UI.set_query(UI.set_files(ui,False{}),search),item_titles(items)),
+        UI.Results{offset,U32.from_nat(List.length(&2,Item,items)),more,loaded})
+      restored = files_restore_view(fallback,Bool.pick(Files.Saved,ready,saved,Files.Saved{[]}))
+      files_return_ready(invalidate(State{db,dir,program,restored,Selection{items,snap,start,Bool.pick(U32,ready,displayed,0),args,filters,Listing{kind,full,offset,more,loaded,anchor}},Form{0,search,source,blame,files,navigation,settings},jobs,deadline,serial}),
+        snap,start,filters,ready)
     case _:
       state
 
@@ -1485,13 +1504,19 @@ def blame(+state: State) -> State:
   blame_mode(state,files_active(state))
 
 
+# A provider click is an explicit new listing scope, unlike History return.
+# Apply it after restoring the old bookmark so the bookmark cannot undo it.
+def files_scope_restore(+state: State,provider: String) -> State:
+  State{db,dir,program,ui,selection,form,jobs,deadline,serial} = state
+  browse(State{db,dir,program,UI.set_scope(ui,provider),selection,form,jobs,deadline,serial})
+
 def scope_changed(+state: State) -> State:
   State{+db,+dir,+program,+ui,+selection,Form{+mode,+search,+source,+blame,+files,+navigation,+settings},+jobs,+refresh_at,+serial} = state
   match mode:
     case 0:
       reload(state)
     case 3:
-      browse(state)
+      files_scope_restore(files_leave(state),UI.scope(ui))
     case _:
       status(state,"Provider scope selected. The current input form is unchanged.")
 
@@ -2744,7 +2769,7 @@ def view_result(+state: State,result: UI.State & Image) -> State & Image:
 
 def view_inner(+current: State) -> State & Image:
   State{+db,+dir,+program,+ui,+selection,+form,+jobs,+refresh_at,+serial} = current
-  view_result(current,UI.view_automatic(ui,settings_automatic(settings_model(current))))
+  view_result(current,UI.view_capture(ui,settings_automatic(settings_model(current)),capture_suspended(current)))
 
 def view(state: State) -> State & Image:
   view_inner(state)

@@ -2,6 +2,7 @@
 import Base
 import ./json.bend as Json
 import ./provenance.bend as P
+import ./ui.bend as UI
 
 type Node is Data:
   Node{path: String, kind: String}
@@ -15,14 +16,16 @@ type Directory is Data:
 type Source is Data:
   Source{path: String, first: U32, count: U32, next: U32, kind: U32}
 
+# A zero/one bookmark retains text selection without expanding every Gui State
+# continuation or keeping an old image. Invalid/multiple values are not ready.
 type Saved is Data:
-  Saved{title: String, text: String, scroll: U32}
+  Saved{views: List<&2,UI.Bookmark>}
 
 type State is Data:
   State{input: String, identity: Identity, directory: Directory, source: Source, saved: Saved}
 
 def empty() -> State:
-  State{"",Identity{"","",""},Directory{"",0,0,0,[]},Source{"",1,0,0,0},Saved{"History","Choose a captured session to read its owned evidence.",0}}
+  State{"",Identity{"","",""},Directory{"",0,0,0,[]},Source{"",1,0,0,0},Saved{[]}}
 
 def identity(state: State) -> Identity:
   State{input,identity,directory,source,saved} = state

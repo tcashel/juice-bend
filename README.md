@@ -34,6 +34,17 @@ Choose an unused bundle path: packaging refuses to overwrite a running or
 existing bundle. Direct GUI launch needs a desktop session. Restricted shell
 agents may lack display access even on a Mac.
 
+The fixed native window uses a bundled grayscale font atlas, grouped controls,
+word-wrapped result cards, and a selectable reader. Click the footer status to
+read or copy its full message; Escape closes it. Wheel and Page Up/Down scroll
+the reader. Usage and Related show when automatic capture is suspended until
+you return to History; the saved Pause/Resume preference remains separate.
+
+Font data is pinned to JetBrains Mono 2.304 under its included SIL OFL license.
+`mise run font-check` verifies the checked-in Bend atlas. The offline packer
+uses the existing pinned Bun; it adds no application runtime. See
+[`assets/fonts/jetbrains-mono/README.md`](assets/fonts/jetbrains-mono/README.md).
+
 ## Capture your selected sources
 
 Without `--demo`, the default library is

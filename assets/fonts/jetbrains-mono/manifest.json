@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "upstream_source": "https://github.com/JetBrains/JetBrainsMono/tree/v2.304",
+  "upstream_version": "2.304",
+  "license": "SIL Open Font License 1.1",
+  "font_sha256": "a0bf60ef0f83c5ed4d7a75d45838548b1f6873372dfac88f71804491898d138f",
+  "license_sha256": "30f0c136e3c88e422d0791acd97238870f9054a9729bc34cf2ff0d4ed8cac4ad",
+  "atlas_sha256": "a7f1cae89e4e3ef17843ef51612aaa2cbaf8bd15b2ffcf2fc5242905f369db0a",
+  "generated_bend_sha256": "3d7bde604584075b50c115c57b08ce0183489a8b5f4c675c79692279d7eb6726",
+  "glyph_count": 204,
+  "packer_runtime": "Bun 1.4.2 via repository mise.toml",
+  "atlas_provenance": {
+    "method": "Extracted exact packed rows from the existing prototype Bend atlas; not re-rasterized in this step.",
+    "source_bend_sha256": "c2df6420c0541a5e6e3ee21ef3f729415fa0a7029670be0f079a5f87f2d8723e",
+    "source_generator_sha256": "9470510748c1147e2453356b4843a6e1938e302b445cd4cdb3929b84314f2dc1",
+    "source_manifest_sha256": "369b08ced8a6347dae407afab058eb2f0c5ab6ccda0c91ca27c81a58efc4518c",
+    "recorded_raster_recipe": {
+      "python": "3.12.8",
+      "pillow": "11.1.0",
+      "freetype": "2.13.2",
+      "size": 13,
+      "layout": "BASIC",
+      "anchor": "ls",
+      "origin": [
+        0,
+        12
+      ],
+      "quantization": "(coverage8 + 8) // 17"
+    }
+  },
+  "preamble_sha256": "9bb573464abfc3aada3abf2f423205325a4a7014648c29999ae34271621084cf",
+  "integration_header": {
+    "license_relative_to_generated_font": "../assets/fonts/jetbrains-mono/OFL.txt",
+    "generator_relative_to_generated_font": "../scripts/font-pack",
+    "change_from_native_validated_atlas": "Header comment paths only; all Bend definitions and glyph rows are unchanged."
+  }
+}

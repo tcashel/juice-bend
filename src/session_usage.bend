@@ -8,7 +8,7 @@ import ./session_usage_counts.bend as Counts
 import ./session_usage_claude.bend as Claude
 import ./session_usage_codex.bend as Codex
 
-# Unintegrated whole-capture accounting. A successful begin transfers exclusive
+# Whole-capture accounting. A successful begin transfers exclusive
 # use of the supplied connection until step finishes or cancel returns. Run is
 # affine; callers must not issue unrelated statements through a copied token.
 # Only successful BEGIN establishes transaction ownership. Every ordinary

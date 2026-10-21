@@ -1,5 +1,24 @@
 # Native interaction observations
 
+## Native reading polish — 2026-10-21
+
+App `fabcd506…` now uses a licensed 204-glyph grayscale font, word-aware result
+rows, grouped controls, a full status inspector and a visible capture-suspension
+hint. The focused native gate passed 604 checks with 131 unchanged inputs.
+Actual Tart interaction on this final binary passed Files → Settings → History
+selection restoration, exact Why export, keyboard paging, fresh empty-library
+Unicode clipboard/Delete/replacement, and Back while a real 100,001-record
+Usage worker ran. Exact text and full-window pixels survived both navigation
+and late worker completion. All owned windows closed; the VM and lease stopped.
+
+The standard executable and `build/Juice Bend Polished.app` contain this observed
+binary (55 unchanged build inputs). Earlier identified polish candidates also
+passed pointer/Shift selection, wheel restoration, status inspection, source
+controls and all saved intervals. See [receipt](receipts/polish-native.txt) and
+[structured summary](../benchmarks/results/tart-polish-summary.json) for build
+identities and corrected automation assumptions. Full IME, shaping, accessibility,
+resize, input-to-photon latency and complete feature/UX parity remain open.
+
 ## Whole-session Usage — 2026-10-21
 
 Native app `91a147f0…` passed the synthetic Tart Usage workflow: exact Claude/Codex

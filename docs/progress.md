@@ -18,13 +18,20 @@ checkout's existing changes; its protected index predates published commits.
 
 ## Working executable and validated changes
 
-`build/juice-bend-usage-transition`, standard `build/juice-bend`, and
-`build/Juice Bend Usage.app` contain the exact observed native executable:
-SHA256 `91a147f069fd68c16d30a0ddb6e403bce522aa4c92aaec2088939fec6573fb1f`,
-13,038,408 bytes. All 54 app inputs and 88 upstream hashes stayed unchanged.
+`build/juice-bend-polish`, standard `build/juice-bend`, and
+`build/Juice Bend Polished.app` contain the exact observed native executable:
+SHA256 `fabcd5069359c929455412003623990927b2a2e371ade7352841b2a57844945e`,
+13,039,632 bytes. All 55 app inputs and 88 upstream hashes stayed unchanged.
 Isolated empty-library launcher status passed. Earlier named working apps remain.
 Use the named executable for repeatable validation; `mise run run -- --demo`
-builds the current source and creates a synthetic demo.
+builds current source and creates a synthetic demo.
+
+- Reading polish passed 604 focused native checks with 131 unchanged inputs.
+  Actual final-binary Tart observations passed Files → Settings → History exact
+  selection/pixel restoration, Why export, Page Down/Up, fresh empty-library
+  Unicode clipboard/Delete/replacement and Back during a real 100,001-record
+  Usage worker. Licensed grayscale font, word-aware rows, full status inspection
+  and effective capture-hold status are integrated. See `receipts/polish-native.txt`.
 
 - Whole-session Usage now scans verified retained raw bytes in its own bounded
   SQLite read transaction. Claude call mirrors, Codex cumulative/fork accounting,
@@ -34,7 +41,7 @@ builds the current source and creates a synthetic demo.
 - Actual Tart interaction passed exact Claude/Codex summaries, scope refusal,
   Back/Why/Tools transitions, two exact mode 0600 exports, manual append capture,
   a real 30-second automatic rewrite capture from History, and retained old/latest
-  reads after source paths were hidden. A100,001-record pending Usage worker
+  reads after source paths were hidden. A 100,001-record pending Usage worker
   could finish after Back without changing the restored text/selection/screenshot.
   The initial provider-transition failure was fixed and retested; strict capture
   identity guards remain. See `receipts/usage-ui-native.txt` and the sanitized
@@ -60,27 +67,33 @@ remain linked from `acceptance.md` and `native-validation.md`.
 
 ## Exact continuation
 
-1. Publish this validated Usage/context-batch slice from parent
-   `4a873712a57fd40128a54e4785fe34733d1ad99d`, tree
-   `4bf95b15d670a47dc1c8f73b8c182c281d81bc09`. Verify live PR head, use the ignored
-   `build/publication.git` store and explicit `build/usage-publication-*` allowlist,
-   and bind the staged tree to `receipts/usage-build-inputs.sha256` plus the
-   context-batched benchmark manifest. Record the new remote receipt; never merge.
-2. UI polish is isolated in `build/ux-polish-prototype`, owned by the
-   `ux_polish_audit` subagent. Its initial 81 geometry/Unicode interaction checks
-   pass. A licensed JetBrains Mono v2.304 static atlas, wider reader, 24 px line
-   pitch, grouped controls and full status visibility are under compilation and
-   review. It is **not adopted or native-validated yet**. Keep the observed 91a
-   executable working. The agent is investigating compile cost before handoff.
+1. Validated Usage/context batching is published at
+   `e354d4bd83946dc81084ddb5283b9940be893347`, tree
+   `03b8c3686334a2c9c3f520e1f459ea783fa96a09` (18 commits in draft PR #1).
+   Bare ref `published-usage-validation`, `build/usage-remote.json` and the
+   explicit `build/usage-publication-*` files retain the exact identity. Verify
+   live PR head before the next fast-forward; never merge. The source tree was
+   bound to the app and context-batched benchmark input manifests.
+2. Verified polish is prepared for publication through the explicit
+   `build/polish-publication-files.txt` allowlist and separate bare Git index.
+   `build/polish-publication.json` will record exact tree/commit identity; refresh
+   live PR head before fast-forwarding. Do not stage the protected checkout index
+   or publish ignored fixtures/traces. Standard and named polished apps are ready.
 3. Normal scoped transcripts still put citations before payload; an older parity
    sentence incorrectly generalized the payload-first Tools change. Corrected
    documentation distinguishes them. Consider that small presentation change
    with exact text/copy/export tests; no evidence may be omitted.
-4. Usage suspends automatic capture, and manual Refresh requires Back to History.
-   Actual History automatic capture passed. Make this visible in the polished UI;
-   changing scheduler semantics requires preserved-origin/worker tests. Back
-   retires the request but cannot cancel the upstream OS worker handle.
-5. Resume the outstanding parity rows after native typography acceptance:
+4. Usage suspends capture; the UI now shows Capture suspended / Back to History.
+   Back retires its request but cannot cancel the upstream OS worker handle.
+   Final native observation confirms late completion preserves the restored view.
+5. Next isolated provider slice is frozen in `build/request-origin-integration`:
+   206 native checks (61 integration, 110 classifier, 35 file-evidence) passed
+   with unchanged inputs. `adoption.patch` SHA256 `585e01d0…` adds read-time
+   recorded-request eligibility and honest bounded Why excerpts; no parser,
+   raw/projection identity or rebuild change. Review `result.json`, then adopt
+   after the polish publication, rerun production provenance/export gates and
+   observe native Why. It is not integrated or claimed as current behavior.
+6. Resume the outstanding parity rows after native typography acceptance:
    provider/archive coverage, deterministic context preparation, owned-storage
    actions and explicit opt-in account/connection surfaces. Do not invent billing
    facts or access real histories/accounts by default. Full IME/shaping,
@@ -96,3 +109,8 @@ Upstream research confirmed linked-list String operations and continuation
 arity limits in the actual pin. No separately packaged official Bend skill was
 found in the searched public repositories. See `decisions.md`; this is not an
 exhaustive claim about all repositories or a reason to move app logic out of Bend.
+
+Polish Tart run `build/tart/polish-jnqg_ft_` is complete. All owned windows
+closed, Dock autohide was restored to 0, runner62007 exited130, VM juice-tests
+stopped and the exact owned lease was released. Final native receipt files are
+under its ignored artifacts directory. No user input or approval is pending.

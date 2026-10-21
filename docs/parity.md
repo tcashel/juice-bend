@@ -55,8 +55,15 @@ appearing as zero. Native app `91a147f0…` passed retained old/latest summaries
 manual and automatic History capture, copy/export and pending-worker Back.
 See `receipts/session-usage-native.txt` and `receipts/usage-ui-native.txt`.
 
-Current priority: native typography/layout and clearer status, remaining
-validation gaps, then richer provider/archive support, deterministic context
+Native reading polish is now integrated: a licensed grayscale font, grouped
+controls, word-aware rows, full status inspection and an effective capture-hold
+hint. App `fabcd506…` passed actual Files/Settings/History selection restoration,
+keyboard paging, exact Why export, Unicode clipboard/Delete and pending-Usage
+Back; 604 focused checks passed. See `receipts/polish-native.txt`. CJK/emoji still
+use fallback boxes, and full shaping/IME/accessibility/resize remain open.
+
+Current priority: recorded-request eligibility in file/commit Why, remaining
+validation gaps, richer provider/archive support, deterministic context
 preparation, owned-storage actions and explicit opt-in connection/subscription
 surfaces. Further marginal append tuning is deferred. Functional parity also
 requires pleasant interaction and visual quality; exact SwiftUI layout matching

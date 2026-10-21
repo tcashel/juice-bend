@@ -454,6 +454,16 @@ def second_source_contract() -> IO(Unit):
     require(Bool.not(Gui.usage_view_identity(view_args(tools_origin()),Json.field(second_report(),"capture"))),
       "foreign captured metadata remains an identity mismatch rather than weakening the Usage guard")
 
+def capture_hint_contract() -> IO(Unit):
+  +pending = box(Gui.usage(origin()))
+  +shown = box(loaded(report()))
+  do IO<Unit>:
+    require(Bool.not(Gui.capture_suspended(origin())),"ordinary History has no navigation capture hold")
+    require(Gui.capture_suspended(unbox(pending)) && Bool.not(UI.whole_usage(ui(unbox(pending)))),"pending Usage shows capture hold before title changes")
+    require(Gui.capture_suspended(unbox(shown)),"accepted Usage retains the capture hold")
+    require(Bool.not(Gui.capture_suspended(Gui.usage_restore(unbox(shown)))),"Back clears the navigation capture hold")
+    require(String.eq(Gui.settings_automatic(Gui.settings_model(origin())),Gui.settings_automatic(Gui.settings_model(unbox(pending)))),"navigation hold leaves saved refresh preference label unchanged")
+
 def main() -> IO(Unit):
   do IO<Unit>:
     identities()
@@ -462,6 +472,7 @@ def main() -> IO(Unit):
     codex_contract()
     claude_completeness()
     navigation_contract()
+    capture_hint_contract()
     strict_controller()
     actions()
     nested_navigation()
