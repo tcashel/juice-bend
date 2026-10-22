@@ -10,6 +10,11 @@ if [ "$#" -eq 0 ]; then
 fi
 count=0
 for entry do
+  if [ "$explicit" -eq 0 ]; then
+    case "$entry" in
+      tests/png_fixtures.bend|tests/jpeg_fixtures.bend) continue ;;
+    esac
+  fi
   if [ ! -f "$entry" ]; then
     if [ "$explicit" -eq 1 ]; then
       printf 'Missing test entry point: %s\n' "$entry" >&2

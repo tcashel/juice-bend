@@ -3,6 +3,7 @@ import ./sql.bend as Sql
 import ./store.bend as Store
 import ./paths.bend as Paths
 import ./json.bend as Json
+import ./source_walk.bend as Walk
 
 # Only explicitly enabled roots are enumerated. find supplies directory entries;
 # filename filtering, queueing, source identity and refresh policy remain Bend.
@@ -14,11 +15,13 @@ type Discovery is Data:
 type Outcome is Data:
   Outcome{provider: String, path: String, ok: Bool, snapshot: String, error: String}
 
-def schema(db: U32) -> IO(Unit):
-  Store.statements([
+def schema(+db: U32) -> IO(Unit):
+  do IO<Unit>:
+    Store.statements([
     "CREATE TABLE IF NOT EXISTS source_roots(id INTEGER PRIMARY KEY,provider TEXT NOT NULL,canonical_root TEXT NOT NULL,enabled INTEGER NOT NULL CHECK(enabled IN (0,1)),UNIQUE(provider,canonical_root))",
     "CREATE TABLE IF NOT EXISTS source_root_files(root INTEGER NOT NULL REFERENCES source_roots(id),locator TEXT NOT NULL,available INTEGER NOT NULL DEFAULT 1,attempts INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(root,locator)) WITHOUT ROWID"
-  ],db)
+    ],db)
+    Walk.schema(db)
 
 def list(+db: U32) -> IO(List<&2,List<&2,Sql.Cell>>):
   do IO<List<&2,List<&2,Sql.Cell>>>:
@@ -55,16 +58,22 @@ def add(+db: U32,+provider: String,path: String) -> IO(Unit):
       "INSERT INTO source_roots(provider,canonical_root,enabled) VALUES(?,?,1) ON CONFLICT(provider,canonical_root) DO UPDATE SET enabled=1",
       [Sql.Cell.Text{provider},Sql.Cell.Text{canonical}])
 
+def deactivate(+db: U32,+provider: String,+path: String) -> IO(Unit):
+  do IO<Unit>:
+    Store.exec(db,"BEGIN IMMEDIATE",[])
+    Store.exec(db,"UPDATE source_roots SET enabled=0 WHERE provider=? AND canonical_root=?",
+      [Sql.Cell.Text{provider},Sql.Cell.Text{path}])
+    Walk.cancel(db,provider,path)
+    Store.exec(db,"COMMIT",[])
+
 def disable_path(db: U32,provider: String,path: String,found: Bool) -> IO(Unit):
   match found:
     case True{}:
-      Store.exec(db,"UPDATE source_roots SET enabled=0 WHERE provider=? AND canonical_root=?",
-        [Sql.Cell.Text{provider},Sql.Cell.Text{path}])
+      deactivate(db,provider,path)
     case False{}:
       do IO<Unit>:
         canonical : String <- Paths.resolve(path)
-        Store.exec(db,"UPDATE source_roots SET enabled=0 WHERE provider=? AND canonical_root=?",
-          [Sql.Cell.Text{provider},Sql.Cell.Text{canonical}])
+        deactivate(db,provider,canonical)
 
 # An exact persisted root can be disabled even after its directory disappears.
 def disable(+db: U32,+provider: String,+path: String) -> IO(Unit):
@@ -94,65 +103,12 @@ def next_root(+db: U32) -> IO(List<&2,List<&2,Sql.Cell>>):
       "SELECT id,provider,canonical_root FROM source_roots WHERE enabled=1 AND id>coalesce((SELECT CAST(value AS INTEGER) FROM settings WHERE key='source_root_cursor'),0) ORDER BY id LIMIT 1",[],1)
     next_root_wrap(db,rows)
 
-def candidate(+root: String,+path: String) -> Bool:
-  String.starts_with(path,Bool.pick(String,String.eq(root,"/"),"/",root ++ "/")) &&
-    Nat.is_le(String.length(path),4096n) &&
-    (String.ends_with(path,".jsonl") || String.ends_with(path,".json") || String.ends_with(path,".jsonl.zst"))
+def candidate(root: String,path: String) -> Bool:
+  Walk.candidate(root,path)
 
-def paths_filter(paths: List<&2,String>,+root: String) -> List<&2,String>:
-  match paths:
-    case []:
-      []
-    case +path <> rest:
-      List.filter.put(String,path,paths_filter(rest,root),candidate(root,path))
-
-def queue_paths(+db: U32,+root: String,paths: List<&2,String>) -> IO(Unit):
-  match paths:
-    case []:
-      IO.pure(Unit,Unit{})
-    case path <> rest:
-      do IO<Unit>:
-        Store.exec(db,
-          "INSERT INTO source_root_files(root,locator,available) VALUES(?,?,1) ON CONFLICT(root,locator) DO UPDATE SET available=1",
-          [Sql.Cell.Integer{root},Sql.Cell.Text{path}])
-        queue_paths(db,root,rest)
-
-def discovery_paths(+db: U32,+id: String,+root: String,+paths: List<&2,String>,valid: Bool) ->
-  IO(Discovery):
-  match valid:
-    case False{}:
-      IO.pure(Discovery,Discovery{"failed",root,0,"Discovery exceeds 2048 entries; choose a narrower root"})
-    case True{}:
-      +selected = paths_filter(paths,root)
-      do IO<Discovery>:
-        Store.exec(db,"BEGIN IMMEDIATE",[])
-        Store.exec(db,"UPDATE source_root_files SET available=0 WHERE root=?",[Sql.Cell.Integer{id}])
-        queue_paths(db,id,selected)
-        Store.exec(db,"DELETE FROM source_root_files WHERE root=? AND available=0",[Sql.Cell.Integer{id}])
-        Store.exec(db,"COMMIT",[])
-        return Discovery{"ok",root,U32.from_nat(List.length(&2,String,selected)),""}
-
-def discovery_output_checked(db: U32,id: String,+root: String,+out: String,valid: Bool) ->
-  IO(Discovery):
-  match valid:
-    case False{}:
-      IO.pure(Discovery,Discovery{"failed",root,0,"Directory enumeration failed; prior queue retained"})
-    case True{}:
-      +paths = String.split(out,'\0')
-      discovery_paths(db,id,root,paths,Nat.is_le(List.length(&2,String,paths),2049n))
-
-def discovery_output(db: U32,id: String,root: String,+out: String,code: U32) ->
-  IO(Discovery):
-  discovery_output_checked(db,id,root,out,
-    U32.is_eq(code,0) && (String.is_empty(out) || String.ends_with(out,"\0")))
-
-def discovery_result(db: U32,id: String,+root: String,
-  result: Result<&1,&1,U32 & String,U32 & (String & String)>) -> IO(Discovery):
-  match result:
-    case Fail{_}:
-      IO.pure(Discovery,Discovery{"failed",root,0,"Directory enumeration exceeded 256 KiB or 2 seconds, or could not start; choose a narrower root"})
-    case Done{(code,(out,_))}:
-      discovery_output(db,id,root,out,code)
+def discovered(root: String,progress: Walk.Progress) -> Discovery:
+  Walk.Progress{status,files,error} = progress
+  Discovery{status,root,files,error}
 
 def discover_row(+db: U32,rows: List<&2,List<&2,Sql.Cell>>) -> IO(Discovery):
   match rows:
@@ -163,9 +119,8 @@ def discover_row(+db: U32,rows: List<&2,List<&2,Sql.Cell>>) -> IO(Discovery):
       +root = Store.field(row,2n)
       do IO<Discovery>:
         setting(db,"source_root_cursor",id)
-        result : Result<&1,&1,U32 & String,U32 & (String & String)> <-
-          Process.run("/usr/bin/find",["-P",root,"-type","f","-print0"],"",262144,2000)
-        discovery_result(db,id,root,result)
+        progress : Walk.Progress <- Walk.discover(db,id,root)
+        return discovered(root,progress)
 
 def new_files(db: U32) -> IO(List<&2,List<&2,Sql.Cell>>):
   Store.q(db,

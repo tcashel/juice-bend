@@ -1,10 +1,13 @@
 import Base
+import ./gui_command_route.bend as CommandRoute
+import ./atif_command.bend as AtifCommand
 import ./ui.bend as UI
 import ./ui_geometry.bend as Geometry
 import ./store.bend as Store
 import ./sql.bend as Sql
 import ./client.bend as Client
 import ./json.bend as Json
+import ./source_status.bend as SourceStatus
 import ./query.bend as Query
 import ./domain.bend as Domain
 import ./provenance.bend as P
@@ -15,6 +18,11 @@ import ./gui_usage.bend as Usage
 import ./gui_brief.bend as Brief
 import ./gui_quota.bend as Quota
 import ./gui_attachments.bend as Attachments
+import ./gui_attachment_capture.bend as External
+import ./gui_attachment_folders.bend as Folders
+import ./attachment_capture_ack.bend as CaptureAck
+import ./attachment_asset_types.bend as AssetTypes
+import ./attachment_root_rules.bend as RootRules
 import ./paths.bend as Paths
 import ./quota_cli.bend as QuotaCli
 import ./refresh_preferences.bend as Refresh
@@ -59,7 +67,8 @@ type Navigation is Data:
   BriefNavigation{origin: Selection,origin_view: UI.Bookmark,origin_search: String,
     prior: List<&2,Navigation>,model: List<&2,Brief.Model>}
   QuotaNavigation{origin: List<&2,QuotaOrigin>,prior: List<&2,Navigation>,model: List<&2,Quota.Model>}
-  AttachmentNavigation{origin: List<&2,AttachmentOrigin>,prior: List<&2,Navigation>,model: List<&2,Attachments.Model>}
+  AttachmentNavigation{origin: List<&2,AttachmentOrigin>,prior: List<&2,Navigation>,model: List<&2,Attachments.Model>,external: List<&2,External.Model>,work: List<&2,Request>}
+  AttachmentFoldersNavigation{view: UI.Bookmark,prior: List<&2,Navigation>,model: List<&2,Folders.Model>}
   UsageNavigation{origin: Selection,origin_view: UI.Bookmark,origin_search: String,
     prior: List<&2,Navigation>,ready: Bool}
 
@@ -267,7 +276,8 @@ def navigation_phase(value: Navigation) -> U32:
     case UsageNavigation{_,_,_,_,_}: 4
     case BriefNavigation{_,_,_,_,_}: 5
     case QuotaNavigation{_,_,_}: 6
-    case AttachmentNavigation{_,_,_}: 7
+    case AttachmentNavigation{_,_,_,_,_}: 7
+    case AttachmentFoldersNavigation{_,_,_}: 8
 
 def related_filters(value: Navigation) -> Query.Filters:
   match value:
@@ -1135,22 +1145,78 @@ def quota_done(+state: State,request: Request,result: Result<&2,&2,String,Json.J
 # transcript metadata. Raw extraction intentionally does not reuse UI filters.
 def attachment_model(value: Navigation) -> Maybe<&2,Attachments.Model>:
   match value:
-    case AttachmentNavigation{_,_,[model]}: Some{model}
+    case AttachmentNavigation{_,_,[model],_,_}: Some{model}
     case _: None{}
 
 def attachment_set_value(state: State,model: Attachments.Model,value: Navigation) -> State:
   match value:
-    case AttachmentNavigation{origin,prior,_}: set_navigation(state,AttachmentNavigation{origin,prior,[model]})
+    case AttachmentNavigation{origin,prior,_,external,work}: set_navigation(state,AttachmentNavigation{origin,prior,[model],external,work})
     case _: state
 
 def attachment_set(+state: State,model: Attachments.Model) -> State:
   attachment_set_value(state,model,navigation(state))
 
+def attachment_external(value: Navigation) -> External.Model:
+  match value:
+    case AttachmentNavigation{_,_,_,[model],_}: model
+    case _: External.initial()
+
+def attachment_work(value: Navigation) -> List<&2,Request>:
+  match value:
+    case AttachmentNavigation{_,_,_,_,work}: work
+    case _: []
+
+def attachment_idle(value: Navigation) -> Bool:
+  Nat.is_eq(List.length(&2,Request,attachment_work(value)),0n)
+
+def attachment_external_set(state: State,model: External.Model,work: List<&2,Request>,value: Navigation) -> State:
+  match value:
+    case AttachmentNavigation{origin,prior,page,_,_}: set_navigation(state,AttachmentNavigation{origin,prior,page,[model],work})
+    case _: state
+
+def attachment_overlay(+state: State,model: External.Model,work: List<&2,Request>) -> State:
+  attachment_external_set(state,model,work,navigation(state))
+
+def attachment_page_ready(value: Maybe<&2,Attachments.Model>) -> Bool:
+  match value:
+    case Some{model}: U32.is_eq(Attachments.phase(model),2)
+    case None{}: False{}
+
+def attachment_ready(+state: State) -> Bool:
+  attachment_idle(navigation(state)) && attachment_page_ready(attachment_model(navigation(state)))
+
+def attachment_retained_value(value: External.Retained) -> Maybe<&2,AssetTypes.Receipt>:
+  match value:
+    case External.RetainedReady{receipt}: Some{receipt}
+    case _: None{}
+
+def attachment_retained(+state: State) -> Maybe<&2,AssetTypes.Receipt>:
+  attachment_retained_value(External.retained(attachment_external(navigation(state))))
+
+def attachment_local_detail(model: Attachments.Model,+external: External.Model,value: Maybe<&2,External.Target>) -> String:
+  match value:
+    case None{}: Attachments.text(model)
+    case Some{External.Target{capture,Attachments.OccurrenceKey{record,reference,path,offset,length,digest,_,_,_},kind,_}}:
+      Attachments.scope_text(Attachments.anchor(model)) ++ External.text(external) ++ "\n\nReference metadata\n" ++
+        Attachments.capture_text(capture) ++ "\nPhysical record " ++ U32.show(record) ++ " · reference " ++ U32.show(reference) ++
+        "\nLogical source bytes " ++ U32.show(offset) ++ " + " ++ U32.show(length) ++ "\nRaw record SHA256: " ++ digest ++
+        "\nStructural path: " ++ Attachments.shown(path) ++ "\nKind: " ++ Attachments.shown(kind)
+
+def attachment_detail(model: Attachments.Model,+external: External.Model,local: Bool) -> String:
+  match local:
+    case False{}: Attachments.text(model)
+    case True{}: attachment_local_detail(model,external,External.target(external))
+
 def attachment_render(+state: State,+model: Attachments.Model) -> State:
   State{db,dir,program,+ui,selection,form,jobs,deadline,serial} = state
+  +external = attachment_external(navigation(state))
+  +idle = attachment_idle(navigation(state))
+  +exportable = Attachments.exportable(model) || External.can_export(external)
   view = UI.set_results(UI.set_rows(UI.set_files(ui,False{}),Attachments.rows(model)),
-    UI.AttachmentResults{Attachments.phase(model),Attachments.exportable(model),Attachments.previous(model),Attachments.next(model)})
-  State{db,dir,program,UI.set_status(UI.set_position(UI.set_reader(view,"Attachment references",Attachments.text(model)),Attachments.selected_index(model),0),
+    UI.AttachmentCaptureResults{Bool.pick(U32,idle,Attachments.phase(model),3),exportable && idle,Attachments.previous(model) && idle,Attachments.next(model) && idle,
+      External.can_capture(external) && idle,exportable && idle})
+  State{db,dir,program,UI.set_status(UI.set_position(UI.set_reader(view,"Attachment references",
+    attachment_detail(model,external,Maybe.is_some(&2,External.Target,External.target(external)))),Attachments.selected_index(model),0),
     Attachments.scope() ++ ". Repository, role and time filters do not apply. Back restores your original reader."),selection,form,jobs,deadline,serial}
 
 def attachment_update(+state: State,+model: Attachments.Model) -> State:
@@ -1165,7 +1231,7 @@ def attachment_restore(+state: State,prior: List<&2,Navigation>,origin: List<&2,
 
 def attachment_back_value(state: State,value: Navigation) -> State:
   match value:
-    case AttachmentNavigation{origin,prior,_}: attachment_restore(state,prior,origin)
+    case AttachmentNavigation{origin,prior,_,_,_}: attachment_restore(state,prior,origin)
     case _: state
 
 def attachment_back(+state: State) -> State:
@@ -1206,7 +1272,7 @@ def attachment_enter_ready(valid: Bool,+state: State,+count: U32) -> State:
       +selection = {Selection{items,snap,start,displayed,args,filters,listing} : Selection}
       +model = Attachments.initial(Attachments.Anchor{snap,start,count})
       attachment_begin(invalidate(State{db,dir,program,UI.set_scope(UI.set_query(ui,"Snapshot " ++ snap ++ " | physical records " ++ U32.show(start) ++ " + " ++ U32.show(count)),"all"),no_display(selection),
-        Form{5,search,source,blame,files,[AttachmentNavigation{[AttachmentOrigin{selection,UI.bookmark(ui),mode,search}],prior,[model]}],settings},jobs,0n,serial}),model,count)
+        Form{5,search,source,blame,files,[AttachmentNavigation{[AttachmentOrigin{selection,UI.bookmark(ui),mode,search}],prior,[model],[External.initial()],[]}],settings},jobs,0n,serial}),model,count)
 
 def attachment_enter(+state: State) -> State:
   State{_,_,_,_,Selection{_,+snap,+start,kind,+args,_,_},Form{mode,_,_,_,_,_,_},Jobs{_,wanted,reader,_,_},_,_} = state
@@ -1214,9 +1280,191 @@ def attachment_enter(+state: State) -> State:
     Related.id(Json.JString{snap}) && attachment_range(args,snap,start) &&
     Bool.not(Maybe.is_some(&2,Request,wanted)) && Bool.not(Maybe.is_some(&2,Pending,reader)),state,Brief.selected_count(args,snap,start))
 
-def attachment_done_valid(state: State,+model: Attachments.Model,kind: U32,result: Result<&2,&2,String,Json.Json>,valid: Bool) -> State:
+def attachment_repaint_value(state: State,value: Maybe<&2,Attachments.Model>) -> State:
+  match value:
+    case Some{model}: attachment_render(state,model)
+    case None{}: state
+
+def attachment_repaint(+state: State) -> State:
+  attachment_repaint_value(state,attachment_model(navigation(state)))
+
+def attachment_request_same(left: Request,right: Request) -> Bool:
+  Request{a,b,c,d,e} = left
+  Request{f,g,h,i,j} = right
+  U32.is_eq(a,f) && Attachments.same_args(b,g) && String.eq(c,h) && U32.is_eq(d,i) && String.eq(e,j)
+
+def attachment_work_current(request: Request,work: List<&2,Request>) -> Bool:
+  match work:
+    case [expected]: attachment_request_same(request,expected)
+    case _: False{}
+
+def attachment_owned_done_valid(+state: State,result: Result<&2,&2,String,Json.Json>,valid: Bool) -> State:
+  match valid:
+    case False{}: state
+    case True{}: attachment_repaint(attachment_overlay(state,External.apply(attachment_external(navigation(state)),result),[]))
+
+def attachment_owned_done(+state: State,request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
+  attachment_owned_done_valid(state,result,attachment_work_current(request,attachment_work(navigation(state))))
+
+def attachment_inventory_result(+state: State,+model: Attachments.Model,result: Result<&2,&2,String,Json.Json>) -> State:
+  match result:
+    case Fail{_}: attachment_overlay(state,External.inventory(attachment_external(navigation(state)),Json.JNull{}),[])
+    case Done{+value}: attachment_overlay(state,External.inventory(attachment_external(navigation(state)),
+      Bool.pick(Json.Json,Attachments.page_valid(value,Attachments.anchor(model),Attachments.cursor(model)) &&
+        Attachments.prior_capture(Attachments.page(model),Json.field(value,"capture")),value,Json.JNull{})),[])
+
+def attachment_export_destination(args: List<&2,String>) -> String:
+  match args:
+    case "export-captured-attachment" <> _ <> _ <> _ <> _ <> path <> []: path
+    case _: ""
+
+def attachment_export_receipt(expected: Maybe<&2,AssetTypes.Receipt>,path: String,value: CaptureAck.Asset) -> Bool:
+  match expected value:
+    case Some{receipt} CaptureAck.Asset{state,actual,Some{destination}}:
+      String.eq(state,"exported") && String.eq(path,destination) && AssetTypes.same(receipt,actual)
+    case _ _: False{}
+
+def attachment_export_ack(+state: State,+path: String,result: Result<&2,&2,String,CaptureAck.Asset>) -> State:
+  match result:
+    case Fail{message}: status(state,"Retained export was not confirmed. A file may exist. " ++ message)
+    case Done{value}:
+      status(state,Bool.pick(String,attachment_export_receipt(attachment_retained(state),path,value),
+        "Saved retained attachment bytes to " ++ path,"Retained export did not confirm the original receipt and destination. A file may exist; success is not confirmed."))
+
+def attachment_owned_export_result(state: State,path: String,result: Result<&2,&2,String,Json.Json>) -> State:
+  match result:
+    case Fail{message}: status(state,"Retained export was not confirmed. A file may exist. " ++ message)
+    case Done{value}: attachment_export_ack(state,path,CaptureAck.asset(value))
+
+def attachment_owned_export_valid(+state: State,args: List<&2,String>,result: Result<&2,&2,String,Json.Json>,valid: Bool) -> State:
+  match valid:
+    case False{}: state
+    case True{}: attachment_owned_export_result(attachment_repaint(attachment_overlay(state,attachment_external(navigation(state)),[])),attachment_export_destination(args),result)
+
+def attachment_owned_export_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
+  Request{_,args,_,_,_} = request
+  attachment_owned_export_valid(state,args,result,attachment_work_current(request,attachment_work(navigation(state))))
+
+def attachment_folder_model(value: Navigation) -> Maybe<&2,Folders.Model>:
+  match value:
+    case AttachmentFoldersNavigation{_,_,[model]}: Some{model}
+    case _: None{}
+
+def attachment_folder_set(state: State,model: Folders.Model,value: Navigation) -> State:
+  match value:
+    case AttachmentFoldersNavigation{view,prior,_}: set_navigation(state,AttachmentFoldersNavigation{view,prior,[model]})
+    case _: state
+
+def attachment_folder_render(+state: State,+model: Folders.Model) -> State:
+  State{db,dir,program,ui,selection,form,jobs,deadline,serial} = state
+  +view = UI.set_results(UI.set_rows(UI.set_files(ui,False{}),Folders.titles(Folders.rows(model))),
+    UI.AttachmentFoldersResults{Folders.phase(model),Folders.can_choose(model),Folders.can_enable(model),Folders.can_disable(model),Folders.previous(model),Folders.next(model)})
+  State{db,dir,program,UI.set_status(UI.set_position(UI.set_reader(view,"Capture folders",Folders.text(model)),Folders.selected_index(model),0),
+    "Enter one explicit absolute folder path. Add folder does not scan it. Use folder authorizes only the selected attachment capture."),selection,form,jobs,deadline,serial}
+
+def attachment_folder_update(+state: State,+model: Folders.Model) -> State:
+  attachment_folder_render(attachment_folder_set(state,model,navigation(state)),model)
+
+def attachment_folder_request(+model: Folders.Model,kind: U32) -> Request:
+  Request{kind,Folders.request(model),U32.show(Folders.nonce(model)),0,"Explicit attachment folders"}
+
+def attachment_folder_load_valid(+state: State,+model: Folders.Model,valid: Bool) -> State:
+  State{_,_,_,_,_,_,_,_,serial} = state
+  match valid:
+    case False{}: status(state,"Wait for the current folder or capture operation to finish before reloading policy.")
+    case True{}:
+      +next = Folders.load(model,U32.add(serial,1))
+      attachment_folder_update(queue(quota_advance(state),attachment_folder_request(next,42)),next)
+
+def attachment_folder_load(+state: State,model: Folders.Model) -> State:
+  State{_,_,_,_,_,_,Jobs{_,_,_,writer,_},_,serial} = state
+  attachment_folder_load_valid(state,model,U32.is_lt(serial,4294967295) && Bool.not(Maybe.is_some(&2,Pending,writer)))
+
+def attachment_folder_kind(args: List<&2,String>) -> U32:
+  match args:
+    case "attachment-roots" <> _: 42
+    case "attachment-root-add" <> _: 45
+    case "attachment-root-enable" <> _: 46
+    case "attachment-root-disable" <> _: 47
+    case _: 0
+
+def attachment_folder_current(+request: Request,+model: Folders.Model,phase: U32) -> Bool:
+  Request{+kind,_,_,_,_} = request
+  U32.is_eq(kind,attachment_folder_kind(Folders.request(model))) &&
+    attachment_request_same(request,attachment_folder_request(model,kind)) && U32.is_eq(Folders.phase(model),phase)
+
+def attachment_folder_read_valid(state: State,+model: Folders.Model,result: Result<&2,&2,String,Json.Json>,valid: Bool) -> State:
+  match valid:
+    case False{}: state
+    case True{}: attachment_folder_update(state,Folders.response(model,result))
+
+def attachment_folder_read_value(state: State,request: Request,result: Result<&2,&2,String,Json.Json>,value: Maybe<&2,Folders.Model>) -> State:
+  match value:
+    case None{}: state
+    case Some{+model}: attachment_folder_read_valid(state,model,result,attachment_folder_current(request,model,1))
+
+def attachment_folder_read_done(+state: State,request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
+  attachment_folder_read_value(state,request,result,attachment_folder_model(navigation(state)))
+
+def attachment_root_operation(kind: U32) -> String:
+  match kind:
+    case 45: "add"
+    case 46: "enable"
+    case _: "disable"
+
+def attachment_root_revision(next: Maybe<&2,String>,actual: String) -> Bool:
+  match next:
+    case Some{value}: String.eq(value,actual)
+    case None{}: False{}
+
+def attachment_root_changed(+kind: U32,expected: Maybe<&2,AssetTypes.RootEvidence>,actual: AssetTypes.RootEvidence) -> Bool:
+  match expected:
+    case None{}: False{}
+    case Some{AssetTypes.RootEvidence{id,path,revision,_}}:
+      AssetTypes.RootEvidence{aid,apath,arevision,enabled} = actual
+      String.eq(id,aid) && String.eq(path,apath) && attachment_root_revision(RootRules.increment(revision),arevision) &&
+        Bool.pick(Bool,enabled,U32.is_eq(kind,46),U32.is_eq(kind,47))
+
+def attachment_root_ack_valid(+kind: U32,model: Folders.Model,+actual: AssetTypes.RootEvidence) -> Bool:
+  match kind:
+    case 45:
+      AssetTypes.RootEvidence{_,_,_,enabled} = actual
+      enabled
+    case _: attachment_root_changed(kind,Folders.selected(model),actual)
+
+def attachment_folder_mutation_confirmed(state: State,+model: Folders.Model,valid: Bool) -> State:
+  match valid:
+    case True{}: attachment_folder_load(state,Folders.fail(model,""))
+    case False{}: attachment_folder_update(state,Folders.fail(model,"Folder acknowledgement did not match the requested identity and revision. Reload before choosing a folder."))
+
+def attachment_folder_mutation_ack(+state: State,+model: Folders.Model,kind: U32,result: Result<&2,&2,String,AssetTypes.RootEvidence>) -> State:
+  match result:
+    case Fail{message}: attachment_folder_update(state,Folders.fail(model,"Folder change was not confirmed. Reload before choosing a folder. " ++ message))
+    case Done{actual}:
+      attachment_folder_mutation_confirmed(state,model,attachment_root_ack_valid(kind,model,actual))
+
+def attachment_folder_mutation_result(state: State,+model: Folders.Model,+kind: U32,result: Result<&2,&2,String,Json.Json>) -> State:
+  match result:
+    case Fail{message}: attachment_folder_update(state,Folders.fail(model,"Folder change was not confirmed. Reload before choosing a folder. " ++ message))
+    case Done{value}: attachment_folder_mutation_ack(state,model,kind,CaptureAck.root_ack(value,attachment_root_operation(kind)))
+
+def attachment_folder_mutation_valid(state: State,model: Folders.Model,kind: U32,result: Result<&2,&2,String,Json.Json>,valid: Bool) -> State:
+  match valid:
+    case False{}: state
+    case True{}: attachment_folder_mutation_result(state,model,kind,result)
+
+def attachment_folder_mutation_value(state: State,+request: Request,result: Result<&2,&2,String,Json.Json>,value: Maybe<&2,Folders.Model>) -> State:
+  Request{kind,_,_,_,_} = request
+  match value:
+    case None{}: state
+    case Some{+model}: attachment_folder_mutation_valid(state,model,kind,result,attachment_folder_current(request,model,3))
+
+def attachment_folder_mutation_done(+state: State,request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
+  attachment_folder_mutation_value(state,request,result,attachment_folder_model(navigation(state)))
+
+def attachment_done_valid(state: State,+model: Attachments.Model,kind: U32,+result: Result<&2,&2,String,Json.Json>,valid: Bool) -> State:
   match kind valid:
-    case 39 True{}: attachment_update(state,Attachments.apply(model,result))
+    case 39 True{}: attachment_update(attachment_inventory_result(state,model,result),Attachments.apply(model,result))
     case 40 True{}: attachment_update(state,Attachments.exported(model,result))
     case _ _: state
 
@@ -1819,38 +2067,46 @@ def quota_worker(program: String,root: String,args: List<&2,String>) -> IO(Reply
       Process.run(program,"--data-dir" <> root <> "quota" <> linear_args(args),"",131072,30000)
     return Reply{Quota.completed(value)}
 
-def read_job(+program: String,+dir: String,args: List<&2,String>) -> IO(Reply):
-  match args:
-    case "quota-view" <> root <> token <> minimum <> rest: quota_worker(program,root,rest)
-    case "brief-prepare" <> body <> []:
-      brief_read_job(program,dir,"brief-prepare",body)
-    case "brief-check" <> body <> []:
-      brief_read_job(program,dir,"brief-check",body)
-    case "latest-view" <> snapshot <> provider <> repo <> role <> after <> []:
+def attachment_worker(program: String,dir: String,args: List<&2,String>) -> IO(Reply):
+  do IO<Reply>:
+    result : Result<&1,&1,U32 & String,U32 & (String & String)> <-
+      Process.run(program,"--data-dir" <> dir <> linear_args(args),"",262144,600000)
+    return Reply{CaptureAck.completed(result)}
+
+def read_job_command(kind: U32,+program: String,+dir: String,+command: String,+args: List<&2,String>) -> IO(Reply):
+  match kind args:
+    case 0 root <> token <> minimum <> rest: quota_worker(program,root,rest)
+    case 1 body <> []:
+      brief_read_job(program,dir,command,body)
+    case 2 snapshot <> provider <> repo <> role <> after <> []:
       do IO<Reply>:
         result : Result<&2,&2,String,Json.Json> <- Client.call(program,dir,["latest",snapshot])
         return Reply{result}
-    case "attachments" <> rest:
-      read_scoped(program,dir,"attachments" <> rest)
-    case "session-scope" <> rest:
-      read_scoped(program,dir,"session-scope" <> rest)
-    case "why-scope" <> rest:
-      read_scoped(program,dir,"why-scope" <> rest)
-    case "activity-scope" <> rest:
-      read_scoped(program,dir,"activity-scope" <> rest)
-    case "relations-scope" <> rest:
-      read_scoped(program,dir,"relations-scope" <> rest)
-    case "relations-page" <> rest:
-      read_scoped(program,dir,"relations-page" <> rest)
-    case other:
+    case 3 _: attachment_worker(program,dir,command <> args)
+    case 4 _: read_scoped(program,dir,command <> args)
+    case _ _:
       do IO<Reply>:
-        result : Result<&2,&2,String,Json.Json> <- Client.call(program,dir,linear_args(other))
+        result : Result<&2,&2,String,Json.Json> <- Client.call(program,dir,linear_args(command <> args))
         return Reply{result}
+
+def read_job(+program: String,+dir: String,args: List<&2,String>) -> IO(Reply):
+  match args:
+    case []:
+      do IO<Reply>:
+        result : Result<&2,&2,String,Json.Json> <- Client.call(program,dir,[])
+        return Reply{result}
+    case +command <> rest: read_job_command(CommandRoute.read_kind(command),program,dir,command,rest)
 
 def run_write(+program: String,+dir: String,args: List<&2,String>) -> IO(Reply):
   do IO<Reply>:
     result : Result<&1,&1,U32 & String,U32 & (String & String)> <-
       Process.run(program,"--data-dir" <> dir <> linear_args(args),"",1048576,600000)
+    return Reply{Client.completed(result)}
+
+def run_atif(program: String,dir: String,args: List<&2,String>) -> IO(Reply):
+  do IO<Reply>:
+    result : Result<&1,&1,U32 & String,U32 & (String & String)> <-
+      Process.run(program,"--data-dir" <> dir <> linear_args(args),"",65536,600000)
     return Reply{Client.completed(result)}
 
 def source_change_list(+ack: Json.Json,+result: Result<&2,&2,String,Json.Json>) -> Reply:
@@ -1878,27 +2134,31 @@ def run_write_text(+program: String,+dir: String,+command: String,+path: String,
       Process.run(program,["--data-dir",dir,command,path],text,1048576,10000)
     return Reply{Client.completed(result)}
 
+def write_job_command(kind: U32,+program: String,+dir: String,+command: String,+args: List<&2,String>) -> IO(Reply):
+  match kind args:
+    case 0 snapshot <> path <> []: run_atif(program,dir,command <> args)
+    case 1 root <> token <> minimum <> rest: quota_worker(program,root,rest)
+    case 2 path <> text <> []: run_write_text(program,dir,command,path,text)
+    case 3 provider <> path <> []: source_change(program,dir,command <> args)
+    case 4 Nil{}: read_job(program,dir,[command])
+    case 5 enabled <> interval <> []: read_job(program,dir,command <> args)
+    case 6 _: attachment_worker(program,dir,command <> args)
+    case _ _: run_write(program,dir,command <> args)
+
 def write_job(+program: String,+dir: String,args: List<&2,String>) -> IO(Reply):
   match args:
-    case "quota-view" <> root <> token <> minimum <> rest: quota_worker(program,root,rest)
-    case "export-displayed" <> path <> text <> []:
-      run_write_text(program,dir,"export-displayed",path,text)
-    case "export-brief-text" <> path <> text <> []:
-      run_write_text(program,dir,"export-brief-text",path,text)
-    case "source-add" <> provider <> path <> []:
-      source_change(program,dir,["source-add",provider,path])
-    case "source-disable" <> provider <> path <> []:
-      source_change(program,dir,["source-disable",provider,path])
-    case "refresh-preferences" <> []:
-      read_job(program,dir,["refresh-preferences"])
-    case "refresh-preferences-set" <> enabled <> interval <> []:
-      read_job(program,dir,["refresh-preferences-set",enabled,interval])
-    case other:
-      run_write(program,dir,other)
+    case []: run_write(program,dir,[])
+    case +command <> rest: write_job_command(CommandRoute.write_kind(command),program,dir,command,rest)
 
 def write_start_text(kind: U32) -> String:
   match kind:
+    case 41: "Exporting the complete pinned capture as text-only ATIF 1.8, including all records outside current filters. Browsing stays available."
     case 35: "Exporting the complete pinned capture as logical JSONL, including all records outside current filters. Browsing stays available."
+    case 44: "Capturing the exact selected local reference within its explicitly chosen folder."
+    case 45: "Registering the explicit capture folder without scanning it."
+    case 46: "Enabling the selected capture folder."
+    case 47: "Disabling new reads from the selected capture folder. Retained assets remain available."
+    case 48: "Exporting verified retained attachment bytes to a private new file."
     case 40: "Exporting the selected retained inline bytes from the exact captured occurrence to a private new file."
     case 38: "Changing only the explicit local quota connection. Refresh will confirm any uncertain result."
     case 36: "Exporting the complete pinned archive container, including all records outside current filters. Plain captures have no archive container."
@@ -2088,6 +2348,28 @@ def full_export_ready(+state: State,container: Bool,ready: Bool) -> IO(State):
 
 def full_export(+state: State,container: Bool) -> IO(State):
   full_export_ready(state,container,full_export_available(state))
+
+def atif_export_request(state: State,now: Nat) -> Request:
+  State{_,dir,_,_,Selection{_,+snapshot,_,_,_,_,_},_,_,_,serial} = state
+  +path = dir ++ "/capture-" ++ snapshot ++ "-" ++ Nat.show(now) ++ "-" ++ U32.show(serial) ++ ".atif.json"
+  Request{41,["export-atif",snapshot,path],snapshot,0,path}
+
+def atif_export_at(+state: State,now: Nat) -> IO(State):
+  State{db,dir,program,ui,selection,form,+jobs,deadline,serial} = state
+  +request = atif_export_request(state,now)
+  start_write(State{db,dir,program,ui,selection,form,jobs,deadline,U32.inc(serial)},request,writer_of(state))
+
+def atif_export_ready(+state: State,ready: Bool) -> IO(State):
+  match ready:
+    case False{}: IO.pure(State,status(state,"Open a captured transcript in History before exporting ATIF. The text-only structured export includes the complete retained capture, including ALL records outside current filters."))
+    case True{}:
+      do IO<State>:
+        now : Nat <- IO.now()
+        atif_export_at(state,now)
+
+def atif_export(+state: State) -> IO(State):
+  State{_,_,_,_,_,_,_,_,+serial} = state
+  atif_export_ready(state,full_export_available(state) && U32.is_lt(serial,4294967295))
 
 def files_export_args(ui: UI.State,path: String) -> List<&2,String>:
   ["export-displayed",path,UI.reader(ui)]
@@ -2427,7 +2709,7 @@ def write_capture_ok(+state: State,mode: U32,+value: Json.Json,error: String,ok:
     case True{}:
       write_mode(settings_report(state,"Capture batch completed: attempted " ++ Store.nonempty(Json.get(value,"attempted"),"one explicit file") ++
         "; succeeded " ++ Store.nonempty(Json.get(value,"succeeded"),"one") ++ "; failed " ++ Store.nonempty(Json.get(value,"failed"),"0") ++
-        ". This bounded batch does not establish full-library health."),mode,value)
+        ". This bounded batch does not establish full-library health." ++ SourceStatus.summary(value)),mode,value)
 
 def write_capture(state: State,mode: U32,+value: Json.Json,+error: String) -> State:
   write_capture_ok(state,mode,value,error,String.is_empty(error))
@@ -2561,6 +2843,36 @@ def full_export_done(+state: State,+kind: U32,+args: List<&2,String>,result: Res
     case Fail{message}: status(state,"Complete capture export failed: " ++ message)
     case Done{+value}: full_export_confirmed(state,kind,value,full_export_response(kind,args,value))
 
+def atif_export_ack(+snapshot: String,+requested: String,+value: Json.Json) -> Bool:
+  AtifCommand.identity(snapshot) && AtifCommand.path(requested) &&
+    Settings.exact_object(value,["kind","schema_version","snapshot","requested_path","path","records","events","steps","bytes","complete_export","scope","content","verification"]) &&
+    Settings.text_is(Json.field(value,"kind"),"atif_export") &&
+    Settings.text_is(Json.field(value,"schema_version"),"ATIF-v1.8") &&
+    Settings.text_is(Json.field(value,"snapshot"),snapshot) &&
+    Settings.text_is(Json.field(value,"requested_path"),requested) &&
+    Settings.text_is(Json.field(value,"path"),Json.get(value,"path")) &&
+    AtifCommand.path(Json.get(value,"path")) && String.starts_with(Json.get(value,"path"),"/") &&
+    AtifCommand.received_counts(value) && Settings.bool_is(Json.field(value,"complete_export"),True{}) &&
+    Settings.text_is(Json.field(value,"scope"),"complete_retained_snapshot") &&
+    Settings.text_is(Json.field(value,"content"),"text_only") &&
+    Settings.text_is(Json.field(value,"verification"),"complete_accepted_extent")
+
+def atif_export_response(args: List<&2,String>,value: Json.Json) -> Bool:
+  match args:
+    case "export-atif" <> snapshot <> path <> []: atif_export_ack(snapshot,path,value)
+    case _: False{}
+
+def atif_export_confirmed(+state: State,+value: Json.Json,valid: Bool) -> State:
+  match valid:
+    case False{}: status(state,"ATIF response did not confirm the exact requested snapshot, destination and complete retained scope. A file may exist; success is not confirmed.")
+    case True{}: status(state,"Exported complete text-only ATIF 1.8 for snapshot " ++ Json.get(value,"snapshot") ++
+      ", including ALL records outside current filters: " ++ Json.get(value,"path"))
+
+def atif_export_done(+state: State,+args: List<&2,String>,result: Result<&2,&2,String,Json.Json>) -> State:
+  match result:
+    case Fail{message}: status(state,"Complete ATIF export failed: " ++ message)
+    case Done{+value}: atif_export_confirmed(state,value,atif_export_response(args,value))
+
 def write_dispatch(state: State,kind: U32,args: List<&2,String>,title: String,mode: U32,result: Result<&2,&2,String,Json.Json>) -> State:
   match kind:
     case 27: preferences_done(state,kind,args,result)
@@ -2568,6 +2880,7 @@ def write_dispatch(state: State,kind: U32,args: List<&2,String>,title: String,mo
     case 29: source_change_done(source_barrier(state),kind,args,result)
     case 30: source_change_done(source_barrier(state),kind,args,result)
     case 31: source_change_done(source_barrier(state),kind,args,result)
+    case 41: atif_export_done(state,args,result)
     case 35: full_export_done(state,kind,args,result)
     case 36: full_export_done(state,kind,args,result)
     case _: write_value(state,kind,title,mode,result)
@@ -2576,6 +2889,11 @@ def write_done_kind(state: State,request: Request,kind: U32,args: List<&2,String
   match kind:
     case 38: quota_done(state,request,result)
     case 40: attachment_done(state,request,result)
+    case 44: attachment_owned_done(state,request,result)
+    case 45: attachment_folder_mutation_done(state,request,result)
+    case 46: attachment_folder_mutation_done(state,request,result)
+    case 47: attachment_folder_mutation_done(state,request,result)
+    case 48: attachment_owned_export_done(state,request,result)
     case _: write_dispatch(state,kind,args,title,mode,result)
 
 def write_done(+state: State,+request: Request,+reply: Reply) -> State:
@@ -3089,6 +3407,8 @@ def read_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.J
       quota_done(state,request,result)
     case 39:
       attachment_done(state,request,result)
+    case 42: attachment_folder_read_done(state,request,result)
+    case 43: attachment_owned_done(state,request,result)
     case 32:
       brief_done(state,request,result)
     case 33:
@@ -3158,25 +3478,39 @@ def copy_action(+state: State,text: String) -> IO(Maybe<State>):
     result : Result<&1,&1,U32 & String,U32 & (String & String)> <- UI.clipboard_copy(text)
     return Some{copy_done(state,result)}
 
+def attachment_owned_inspect_target(+state: State,+external: External.Model,value: Maybe<&2,External.Target>) -> State:
+  State{_,_,_,_,_,_,_,_,+serial} = state
+  match value:
+    case None{}: attachment_repaint(attachment_overlay(state,external,[]))
+    case Some{target}:
+      +next = External.begin(external,U32.add(serial,1),False{})
+      +request = {Request{43,External.inspect_args(target),U32.show(U32.add(serial,1)),0,"Retained attachment"} : Request}
+      attachment_repaint(queue(attachment_overlay(quota_advance(state),next,[request]),request))
+
+def attachment_owned_select(+state: State,+model: Attachments.Model) -> State:
+  +external = External.select(attachment_external(navigation(state)),model)
+  attachment_owned_inspect_target(attachment_set(state,model),external,External.target(external))
+
 def attachment_pick_allowed(state: State,model: Attachments.Model,index: U32,valid: Bool) -> State:
   match valid:
-    case True{}: attachment_update(state,Attachments.choose(model,index))
+    case True{}: attachment_owned_select(state,Attachments.choose(model,index))
     case False{}: attachment_render(state,model)
 
-def attachment_pick(state: State,index: U32,value: Maybe<&2,Attachments.Model>) -> State:
+def attachment_pick(+state: State,index: U32,value: Maybe<&2,Attachments.Model>) -> State:
+  State{_,_,_,_,_,_,_,_,serial} = state
   match value:
     case None{}: state
-    case Some{+model}: attachment_pick_allowed(state,model,index,U32.is_eq(Attachments.phase(model),2))
+    case Some{+model}: attachment_pick_allowed(state,model,index,U32.is_eq(Attachments.phase(model),2) && attachment_idle(navigation(state)) && U32.is_lt(serial,4294967295))
 
 def attachment_page_allowed(state: State,+model: Attachments.Model,forward: Bool,valid: Bool) -> State:
   match valid:
     case True{}: attachment_read(state,model,Attachments.next_cursor(model,forward))
     case False{}: state
 
-def attachment_page(state: State,+forward: Bool,value: Maybe<&2,Attachments.Model>) -> State:
+def attachment_page(+state: State,+forward: Bool,value: Maybe<&2,Attachments.Model>) -> State:
   match value:
     case None{}: state
-    case Some{+model}: attachment_page_allowed(state,model,forward,Bool.pick(Bool,forward,Attachments.next(model),Attachments.previous(model)))
+    case Some{+model}: attachment_page_allowed(state,model,forward,Bool.pick(Bool,forward,Attachments.next(model),Attachments.previous(model)) && attachment_idle(navigation(state)))
 
 def attachment_name(anchor: Attachments.Anchor,key: Attachments.OccurrenceKey,serial: U32,now: Nat) -> String:
   Attachments.Anchor{snapshot,_,_} = anchor
@@ -3210,12 +3544,225 @@ def attachment_export_allowed(state: State,+model: Attachments.Model,valid: Bool
 
 def attachment_can_export(+state: State,+model: Attachments.Model) -> Bool:
   State{_,_,_,_,_,_,_,_,serial} = state
-  U32.is_lt(serial,4294967295) && Bool.not(Maybe.is_some(&2,Pending,writer_of(state))) && Attachments.exportable(model)
+  U32.is_lt(serial,4294967295) && Bool.not(Maybe.is_some(&2,Pending,writer_of(state))) && attachment_idle(navigation(state)) && Attachments.exportable(model)
 
 def attachment_export(+state: State,value: Maybe<&2,Attachments.Model>) -> IO(State):
   match value:
     case None{}: IO.pure(State,state)
     case Some{+model}: attachment_export_allowed(state,model,attachment_can_export(state,model))
+
+def attachment_capture_start(+state: State,+external: External.Model,value: Maybe<&2,External.Target>,root: Maybe<&2,AssetTypes.RootEvidence>) -> IO(State):
+  State{_,_,_,_,_,_,_,_,+serial} = state
+  match value root:
+    case Some{target} Some{chosen}:
+      +request = {Request{44,External.capture_args(target,chosen),U32.show(U32.add(serial,1)),0,"Capture local attachment"} : Request}
+      start_write(attachment_repaint(attachment_overlay(quota_advance(state),External.begin(external,U32.add(serial,1),True{}),[request])),request,None{})
+    case _ _: IO.pure(State,state)
+
+def attachment_capture_allowed(+state: State,+external: External.Model,valid: Bool) -> IO(State):
+  match valid:
+    case False{}: IO.pure(State,status(state,"Select an uncaptured local reference and an enabled capture folder, then wait for any current writer to finish."))
+    case True{}: attachment_capture_start(state,external,External.target(external),External.chosen(external))
+
+def attachment_capture(+state: State) -> IO(State):
+  State{_,_,_,_,_,_,_,_,serial} = state
+  +external = attachment_external(navigation(state))
+  attachment_capture_allowed(state,external,U32.is_lt(serial,4294967295) && attachment_ready(state) && External.can_capture(external) &&
+    Bool.not(Maybe.is_some(&2,Pending,writer_of(state))))
+
+def attachment_owned_export_start(+state: State,+external: External.Model,target: External.Target,path: String) -> IO(State):
+  State{_,_,_,_,_,_,_,_,serial} = state
+  +request = {Request{48,List.append(&2,String,"export-captured-attachment" <> External.args(target),[path]),U32.show(U32.add(serial,1)),0,"Export retained attachment"} : Request}
+  start_write(attachment_repaint(attachment_overlay(quota_advance(state),external,[request])),request,None{})
+
+def attachment_owned_export_at(+state: State,+external: External.Model,+target: External.Target,now: Nat) -> IO(State):
+  State{_,dir,_,_,_,_,_,_,serial} = state
+  External.Target{capture,key,_,_} = target
+  do IO<State>:
+    path : String <- Paths.destination(dir ++ "/" ++ attachment_name(Attachments.Anchor{Json.get(capture,"snapshot"),0,0},key,serial,now))
+    attachment_owned_export_start(state,external,target,path)
+
+def attachment_owned_export_target(state: State,external: External.Model,value: Maybe<&2,External.Target>) -> IO(State):
+  match value:
+    case None{}: IO.pure(State,state)
+    case Some{target}:
+      do IO<State>:
+        now : Nat <- IO.now()
+        attachment_owned_export_at(state,external,target,now)
+
+def attachment_owned_export_allowed(state: State,+external: External.Model,valid: Bool) -> IO(State):
+  match valid:
+    case False{}: IO.pure(State,status(state,"Retained bytes must be confirmed before export. Wait for the current capture or export to finish."))
+    case True{}: attachment_owned_export_target(state,external,External.target(external))
+
+def attachment_export_choice(+state: State,model: Maybe<&2,Attachments.Model>,retained: Bool) -> IO(State):
+  State{_,_,_,_,_,_,_,_,serial} = state
+  match retained:
+    case False{}: attachment_export(state,model)
+    case True{}: attachment_owned_export_allowed(state,attachment_external(navigation(state)),U32.is_lt(serial,4294967295) &&
+      attachment_ready(state) && Bool.not(Maybe.is_some(&2,Pending,writer_of(state))))
+
+def attachment_export_any(+state: State) -> IO(State):
+  attachment_export_choice(state,attachment_model(navigation(state)),External.can_export(attachment_external(navigation(state))))
+
+def attachment_folder_enter_valid(+state: State,valid: Bool) -> State:
+  State{db,dir,program,+ui,selection,Form{mode,search,source,blame,files,+prior,settings},jobs,deadline,serial} = state
+  match valid:
+    case False{}: status(state,"Wait for the current attachment or capture operation to finish before choosing a folder.")
+    case True{}:
+      +model = Folders.initial()
+      attachment_folder_load(invalidate(State{db,dir,program,UI.set_edit(UI.set_query(ui,""),UI.Edit{0,0,0,False{},0}),selection,
+        Form{mode,search,source,blame,files,[AttachmentFoldersNavigation{UI.bookmark(ui),prior,[model]}],settings},jobs,deadline,serial}),model)
+
+def attachment_folder_enter(+state: State) -> State:
+  attachment_folder_enter_valid(state,attachment_ready(state) && Bool.not(Maybe.is_some(&2,Pending,writer_of(state))))
+
+def attachment_folder_restore_value(+state: State,value: Navigation) -> State:
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,_,settings},jobs,deadline,serial} = state
+  match value:
+    case AttachmentFoldersNavigation{view,prior,_}:
+      invalidate(State{db,dir,program,UI.restore(ui,view),selection,Form{mode,search,source,blame,files,prior,settings},jobs,deadline,serial})
+    case _: state
+
+def attachment_folder_back(+state: State) -> State:
+  attachment_folder_restore_value(state,navigation(state))
+
+def attachment_folder_choose_root(+state: State,root: Maybe<&2,AssetTypes.RootEvidence>) -> State:
+  match root:
+    case None{}: state
+    case Some{value}:
+      +next = attachment_folder_back(state)
+      attachment_repaint(attachment_overlay(next,External.choose(attachment_external(navigation(next)),value),[]))
+
+def attachment_folder_choose_allowed(state: State,+model: Folders.Model,valid: Bool) -> State:
+  match valid:
+    case False{}: status(state,"Select an enabled folder from a completed policy refresh.")
+    case True{}: attachment_folder_choose_root(state,Folders.selected(model))
+
+def attachment_folder_choose(state: State,value: Maybe<&2,Folders.Model>) -> State:
+  match value:
+    case None{}: state
+    case Some{+model}: attachment_folder_choose_allowed(state,model,Folders.can_choose(model))
+
+def attachment_folder_pick(state: State,index: U32,value: Maybe<&2,Folders.Model>) -> State:
+  match value:
+    case None{}: state
+    case Some{model}: attachment_folder_update(state,Folders.select(model,index))
+
+def attachment_folder_page_allowed(state: State,model: Folders.Model,forward: Bool,valid: Bool) -> State:
+  match valid:
+    case False{}: state
+    case True{}: attachment_folder_load(state,Folders.advance(model,forward))
+
+def attachment_folder_page(state: State,+forward: Bool,value: Maybe<&2,Folders.Model>) -> State:
+  match value:
+    case None{}: state
+    case Some{+model}: attachment_folder_page_allowed(state,model,forward,Bool.pick(Bool,forward,Folders.next(model),Folders.previous(model)))
+
+def attachment_folder_reload(state: State,value: Maybe<&2,Folders.Model>) -> State:
+  match value:
+    case None{}: state
+    case Some{model}: attachment_folder_load(state,model)
+
+def attachment_root_clear(model: External.Model) -> External.Model:
+  External.Model{inventory,target,_,retained,nonce,message} = model
+  External.Model{inventory,target,None{},retained,nonce,message}
+
+def attachment_folder_clear_prior(value: List<&2,Navigation>) -> List<&2,Navigation>:
+  match value:
+    case [AttachmentNavigation{origin,prior,model,[external],work}]:
+      [AttachmentNavigation{origin,prior,model,[attachment_root_clear(external)],work}]
+    case other: other
+
+def attachment_changed_bookmark(state: State) -> UI.Bookmark:
+  State{_,_,_,ui,_,_,_,_,_} = state
+  UI.bookmark(ui)
+
+def attachment_folder_changed_view(+state: State,view: UI.Bookmark,prior: List<&2,Navigation>) -> UI.Bookmark:
+  State{_,_,_,ui,_,_,_,_,_} = state
+  match prior:
+    case [value]: attachment_changed_bookmark(attachment_repaint(set_navigation(replace_ui(state,UI.restore(ui,view)),value)))
+    case _: view
+
+def attachment_folder_clear_value(+state: State,value: Navigation) -> State:
+  match value:
+    case AttachmentFoldersNavigation{view,+prior,model}:
+      set_navigation(state,AttachmentFoldersNavigation{attachment_folder_changed_view(state,view,attachment_folder_clear_prior(prior)),attachment_folder_clear_prior(prior),model})
+    case _: state
+
+def attachment_folder_clear(+state: State) -> State:
+  attachment_folder_clear_value(state,navigation(state))
+
+def attachment_folder_write_start(+state: State,model: Folders.Model,kind: U32,args: List<&2,String>) -> IO(State):
+  State{_,_,_,_,_,_,_,_,serial} = state
+  +next = Folders.writing(model,U32.add(serial,1),args)
+  start_write(attachment_folder_update(quota_advance(attachment_folder_clear(state)),next),attachment_folder_request(next,kind),None{})
+
+def attachment_folder_write_allowed(state: State,model: Folders.Model,kind: U32,args: List<&2,String>,valid: Bool) -> IO(State):
+  match valid:
+    case False{}: IO.pure(State,status(state,"Choose an applicable folder or enter an absolute path, and wait for the current capture or export to finish."))
+    case True{}: attachment_folder_write_start(state,model,kind,args)
+
+def attachment_folder_change_args(kind: U32,value: Maybe<&2,AssetTypes.RootEvidence>) -> List<&2,String>:
+  match value:
+    case None{}: []
+    case Some{AssetTypes.RootEvidence{id,_,_,_}}:
+      [Bool.pick(String,U32.is_eq(kind,46),"attachment-root-enable","attachment-root-disable"),id]
+
+def attachment_folder_mutate_kind(+state: State,+model: Folders.Model,+kind: U32,+allowed: Bool) -> IO(State):
+  State{_,_,_,+ui,_,_,_,_,_} = state
+  match kind:
+    case 45: attachment_folder_write_allowed(state,model,kind,["attachment-root-add",UI.query(ui)],allowed && RootRules.path(UI.query(ui)))
+    case 46: attachment_folder_write_allowed(state,model,kind,attachment_folder_change_args(kind,Folders.selected(model)),allowed && Folders.can_enable(model))
+    case _: attachment_folder_write_allowed(state,model,kind,attachment_folder_change_args(kind,Folders.selected(model)),allowed && Folders.can_disable(model))
+
+def attachment_folder_mutate_value(+state: State,kind: U32,value: Maybe<&2,Folders.Model>) -> IO(State):
+  State{_,_,_,_,_,_,_,_,serial} = state
+  match value:
+    case None{}: IO.pure(State,state)
+    case Some{+model}: attachment_folder_mutate_kind(state,model,kind,U32.is_eq(Folders.phase(model),2) && U32.is_lt(serial,4294967295) &&
+      Bool.not(Maybe.is_some(&2,Pending,writer_of(state))))
+
+def attachment_folder_mutate(+state: State,kind: U32) -> IO(State):
+  attachment_folder_mutate_value(state,kind,attachment_folder_model(navigation(state)))
+
+def attachment_folder_paste(+state: State,result: Result<&1,&1,U32 & String,U32 & (String & String)>) -> State:
+  State{_,_,_,ui,_,_,_,_,_} = state
+  match result:
+    case Done{(0,(text,_))}: replace_ui(state,UI.insert(ui,text))
+    case _: status(state,"Clipboard unavailable or paste failed.")
+
+def handle_attachment_folders(+state: State,action: UI.Action) -> IO(Maybe<State>):
+  match action:
+    case UI.Quit{}: IO.pure(Maybe<State>,None{})
+    case UI.Back{}: IO.pure(Maybe<State>,Some{attachment_folder_back(state)})
+    case UI.Open{index}: IO.pure(Maybe<State>,Some{attachment_folder_pick(state,index,attachment_folder_model(navigation(state)))})
+    case UI.AttachmentFolderUse{}: IO.pure(Maybe<State>,Some{attachment_folder_choose(state,attachment_folder_model(navigation(state)))})
+    case UI.Refresh{}: IO.pure(Maybe<State>,Some{attachment_folder_reload(state,attachment_folder_model(navigation(state)))})
+    case UI.ListPrevious{}: IO.pure(Maybe<State>,Some{attachment_folder_page(state,False{},attachment_folder_model(navigation(state)))})
+    case UI.Previous{}: IO.pure(Maybe<State>,Some{attachment_folder_page(state,False{},attachment_folder_model(navigation(state)))})
+    case UI.ListNext{}: IO.pure(Maybe<State>,Some{attachment_folder_page(state,True{},attachment_folder_model(navigation(state)))})
+    case UI.Next{}: IO.pure(Maybe<State>,Some{attachment_folder_page(state,True{},attachment_folder_model(navigation(state)))})
+    case UI.Copy{text}: copy_action(state,text)
+    case UI.CopyStatus{text}: copy_action(state,text)
+    case UI.Paste{}:
+      do IO<Maybe<State>>:
+        result : Result<&1,&1,U32 & String,U32 & (String & String)> <- UI.clipboard_paste()
+        return Some{attachment_folder_paste(state,result)}
+    case UI.AttachmentFolderAdd{}:
+      do IO<Maybe<State>>:
+        next : State <- attachment_folder_mutate(state,45)
+        return Some{next}
+    case UI.AttachmentFolderEnable{}:
+      do IO<Maybe<State>>:
+        next : State <- attachment_folder_mutate(state,46)
+        return Some{next}
+    case UI.AttachmentFolderDisable{}:
+      do IO<Maybe<State>>:
+        next : State <- attachment_folder_mutate(state,47)
+        return Some{next}
+    case UI.NoAction{}: IO.pure(Maybe<State>,Some{state})
+    case _: IO.pure(Maybe<State>,Some{status(state,"Only explicit attachment-folder policy is changed here. Back restores the selected attachment.")})
 
 def handle_attachments(+state: State,action: UI.Action) -> IO(Maybe<State>):
   match action:
@@ -3228,13 +3775,18 @@ def handle_attachments(+state: State,action: UI.Action) -> IO(Maybe<State>):
     case UI.Next{}: IO.pure(Maybe<State>,Some{attachment_page(state,True{},attachment_model(navigation(state)))})
     case UI.Copy{text}: copy_action(state,text)
     case UI.CopyStatus{text}: copy_action(state,text)
+    case UI.AttachmentFolders{}: IO.pure(Maybe<State>,Some{attachment_folder_enter(state)})
+    case UI.AttachmentCapture{}:
+      do IO<Maybe<State>>:
+        next : State <- attachment_capture(state)
+        return Some{next}
     case UI.AttachmentExport{}:
       do IO<Maybe<State>>:
-        next : State <- attachment_export(state,attachment_model(navigation(state)))
+        next : State <- attachment_export_any(state)
         return Some{next}
     case UI.Export{}:
       do IO<Maybe<State>>:
-        next : State <- attachment_export(state,attachment_model(navigation(state)))
+        next : State <- attachment_export_any(state)
         return Some{next}
     case UI.NoAction{}: IO.pure(Maybe<State>,Some{state})
     case _: IO.pure(Maybe<State>,Some{status(state,"This view lists all attachment references in these captured records. Back restores the exact filtered reader.")})
@@ -3400,6 +3952,10 @@ def handle_normal(+state: State,action: UI.Action) -> IO(Maybe<State>):
     case UI.WholeExport{}:
       do IO<Maybe<State>>:
         next : State <- full_export(state,False{})
+        return Some{next}
+    case UI.AtifExport{}:
+      do IO<Maybe<State>>:
+        next : State <- atif_export(state)
         return Some{next}
     case UI.ContainerExport{}:
       do IO<Maybe<State>>:
@@ -3616,6 +4172,7 @@ def handle_mode_phase(+state: State,+action: UI.Action,active: Bool,phase: U32) 
     case 5: handle_brief(state,action)
     case 6: handle_quota(state,action)
     case 7: handle_attachments(state,action)
+    case 8: handle_attachment_folders(state,action)
     case _: handle_mode_inner(state,action,active)
 
 def handle_mode(+state: State,+action: UI.Action,active: Bool) -> IO(Maybe<State>):

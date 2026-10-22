@@ -1,5 +1,6 @@
 import Base
 import ./attachment_cli.bend as AttachmentCli
+import ./atif_cli.bend as AtifCli
 import ./brief_cli.bend as Brief
 import ./store.bend as Store
 import ./capture.bend as Capture
@@ -587,11 +588,13 @@ def help() -> IO(Unit):
     "\"usage SNAPSHOT [START [COUNT]]\",\"session-usage SNAPSHOT\"," ++
     "\"brief-prepare (versioned stdin)\",\"brief-check (versioned stdin)\"," ++
     "\"attachments SNAPSHOT START COUNT\",\"export-inline SNAPSHOT RECORD REF JSONPATH DEST\"," ++
+    "\"attachment-roots AFTER_ID COUNT\",\"attachment-root-add ABS_ROOT\",\"attachment-root-enable ID\",\"attachment-root-disable ID\"," ++
+    "\"capture-attachment SNAPSHOT RECORD REF JSONPATH ROOT_ID ROOT_REVISION\",\"captured-attachment SNAPSHOT RECORD REF JSONPATH\",\"export-captured-attachment SNAPSHOT RECORD REF JSONPATH DEST\"," ++
     "\"citation JSON\",\"export SNAPSHOT PATH\",\"export-range SNAPSHOT START COUNT PATH\"," ++
     "\"export-why SNAPSHOT START COUNT PATH\",\"export-blame REPOSITORY FILE START END PATH\"," ++
     "\"export-range-scope SNAP START COUNT PROVIDER REPO ROLE AFTER PATH\"," ++
     "\"export-why-scope SNAP START COUNT PROVIDER REPO ROLE AFTER PATH\"," ++
-    "\"export-brief-text PATH\",\"export-displayed PATH\",\"export-all SNAPSHOT PATH\",\"export-container SNAPSHOT PATH\",\"verify SNAPSHOT\",\"rebuild SNAPSHOT\"]," ++
+    "\"export-brief-text PATH\",\"export-displayed PATH\",\"export-all SNAPSHOT PATH\",\"export-container SNAPSHOT PATH\",\"export-atif SNAPSHOT DEST\",\"verify SNAPSHOT\",\"rebuild SNAPSHOT\"]," ++
     "\"limits\":{\"rows\":100,\"page_records\":100,\"why_records\":20,\"refresh_batch\":8,\"displayed_stdin_bytes\":1048576}," ++
     "\"refresh_all\":\"inspect failed and discovery.status in the report; a successful report can contain per-source failures\"," ++
     "\"export_all\":\"stream all retained logical source bytes in the accepted snapshot (decompressed for archives)\"," ++
@@ -759,6 +762,7 @@ def command(db: U32,data_dir: String,cmd: String,args: List<String>) -> IO(Unit)
           export_all(db,snapshot,path)
         case _:
           failure(Unit,"usage: export-all SNAPSHOT PATH (destination must not exist)")
+    case "export-atif": AtifCli.run(db,args)
     case "export-container":
       match args:
         case snapshot <> path <> []:

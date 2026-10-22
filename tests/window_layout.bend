@@ -29,7 +29,7 @@ def painting() -> IO(Unit):
   do IO<Unit>:
     require(U32.is_eq(G.width(),1200) && U32.is_eq(G.height(),664),"compact native content requests 1200 by 664")
     require(U32.is_eq(G.cell(),8) && U32.is_eq(G.line_pitch(),24) && U32.is_eq(G.control_height(),32),"compact layout retains text advance line spacing and control target height")
-    require(glyph(canvas,16,536,69,UI.rail()) && glyph(canvas,16,568,69,UI.rail()) && glyph(canvas,16,600,66,UI.rail()),"production painter shows both complete exports and Back above the footer")
+    require(glyph(canvas,16,536,69,UI.rail()) && glyph(canvas,16,568,65,UI.panel()) && glyph(canvas,104,568,65,UI.panel()) && glyph(canvas,16,600,66,UI.rail()),"production painter shows JSONL ATIF Archive and Back above the footer")
     require(glyph(settings,16,600,82,UI.rail()) && glyph(settings,16,568,82,UI.rail()),"Settings paints Rebuild and daily Refresh above footer")
     require(glyph(brief,16,312,83,UI.rail()) && Tiles.tile.empty(Tiles.tile.at(8n,brief,2,43),UI.rail()),"Brief paints Select all and leaves later navigation blank")
     require(glyph(canvas,536,600,114,UI.paper()) && Tiles.tile.empty(Tiles.tile.at(8n,canvas,67,77),UI.paper()),"nineteenth reader line paints completely with eight pixels clear before footer")

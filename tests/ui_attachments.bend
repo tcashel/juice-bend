@@ -27,6 +27,8 @@ def kind(value: UI.Action) -> U32:
     case UI.Storage{}: 11
     case UI.BriefPrepare{}: 12
     case UI.SettingsAddFolder{}: 13
+    case UI.AttachmentFolders{}: 14
+    case UI.AttachmentPreview{}: 15
     case _: 99
 
 def action(result: UI.State & UI.Action) -> U32:
@@ -86,7 +88,7 @@ def controls() -> IO(Unit):
     click(ready(),16,208,2,"attachment Export bytes includes its first target pixel")
     click(ready(),167,239,2,"attachment Export bytes includes its final painted target pixel")
     click(ready(),16,240,6,"next sidebar row copies details instead of exporting")
-    click(ready(),16,280,0,"unused attachment sidebar rows are inert")
+    click(ready(),16,280,14,"attachment sidebar exposes explicit capture folder policy")
     click(ready(),16,472,0,"attachment sidebar cannot reach hidden History Storage")
     click(ready(),16,600,0,"attachment sidebar cannot dispatch old bottom-row Back")
     click(ready(),16,88,3,"attachment header Back shares sidebar behavior")
@@ -94,8 +96,8 @@ def controls() -> IO(Unit):
     click(ready(),287,111,2,"attachment header Export includes bottom-right pixel")
     click(ready(),288,88,0,"gap after attachment header Export is inert")
     click(ready(),312,88,6,"attachment header Copy details is reachable")
-    click(ready(),432,88,0,"attachment unused header slot cannot dispatch Why")
-    click(ready(),552,88,0,"attachment unused header slot cannot export transcript")
+    click(ready(),432,88,15,"attachment header Open image uses preview action")
+    click(ready(),552,88,14,"attachment header Folders cannot dispatch a transcript export")
     click(ready(),864,88,4,"attachment header Previous uses raw-record page action")
     click(ready(),1040,88,5,"attachment header Next uses raw-record page action")
     click(ready(),200,600,4,"attachment list Previous shares exact page availability")
@@ -188,7 +190,7 @@ def painting() -> IO(Unit):
     require(glyph(normal,816,128,67,UI.accent(),UI.paper()) && glyph(normal,1104,128,83,UI.accent(),UI.paper()),"long reader title leaves Copy and Select all unobscured")
     require(glyph(canvas,912,128,80,UI.muted(),UI.paper()) && glyph(canvas,1008,128,67,UI.muted(),UI.paper()),"read-only scope Paste and Clear are visibly muted")
     require(glyph(canvas,208,32,83,UI.muted(),UI.paper()),"attachment scope paints instructions without an editable caret")
-    require(Tiles.tile.empty(Tiles.tile.at(8n,canvas,2,35),UI.rail()),"unused attachment sidebar rows contain no misleading old controls")
+    require(Tiles.tile.empty(Tiles.tile.at(8n,canvas,2,47),UI.rail()),"unused attachment sidebar rows below new controls contain no hidden old controls")
     require(U32.is_eq(G.width(),1200) && U32.is_eq(G.height(),664),"attachment mode preserves accepted compact native dimensions")
 
 def other_modes() -> IO(Unit):

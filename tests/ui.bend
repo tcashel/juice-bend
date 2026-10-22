@@ -73,6 +73,7 @@ def button_export(result: UI.State & UI.Action) -> String:
   match action:
     case UI.WholeExport{}: "full-jsonl"
     case UI.ContainerExport{}: "archive"
+    case UI.AtifExport{}: "atif"
     case _: ""
 
 def buttons() -> IO(Unit):
@@ -82,7 +83,7 @@ def buttons() -> IO(Unit):
   do IO<Unit>:
     Unit <- require(String.eq(copied(UI.event(Mouse{824,136,0,True{}},reader)),"é 漢字 🙂"),"pointer Copy retains selected reader Unicode")
     Unit <- require(String.eq(button_export(UI.event(Mouse{16,536,0,True{}},query)),"full-jsonl"),"normal sidebar pointer requests full JSONL export")
-    Unit <- require(String.eq(button_export(UI.event(Mouse{16,568,0,True{}},reader)),"archive") && String.eq(UI.selection(changed(UI.event(Mouse{16,568,0,True{}},reader))),"é 漢字 🙂"),"normal sidebar pointer requests archive export without changing reader selection")
+    Unit <- require(String.eq(button_export(UI.event(Mouse{120,568,0,True{}},reader)),"archive") && String.eq(UI.selection(changed(UI.event(Mouse{120,568,0,True{}},reader))),"é 漢字 🙂"),"normal sidebar pointer requests archive export without changing reader selection")
     Unit <- require(button_paste(UI.event(Mouse{920,136,0,True{}},query)),"reader toolbar pointer Paste requests clipboard input")
     Unit <- require(String.eq(UI.selection(changed(UI.event(Mouse{920,136,0,True{}},query))),"replace me"),"reader toolbar pointer Paste preserves query replacement selection")
     Unit <- require(String.eq(UI.query(changed(UI.event(Mouse{1016,136,0,True{}},query))),""),"pointer Clear empties query")

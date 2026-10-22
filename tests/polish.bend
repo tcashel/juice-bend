@@ -61,6 +61,14 @@ def kind(action: UI.Action) -> U32:
     case UI.QuotaCopySetup{}: 46
     case UI.Attachments{}: 47
     case UI.AttachmentExport{}: 48
+    case UI.AtifExport{}: 49
+    case UI.AttachmentPreview{}: 50
+    case UI.AttachmentFolders{}: 51
+    case UI.AttachmentCapture{}: 52
+    case UI.AttachmentFolderAdd{}: 53
+    case UI.AttachmentFolderEnable{}: 54
+    case UI.AttachmentFolderDisable{}: 55
+    case UI.AttachmentFolderUse{}: 56
 
 def clicked(result: UI.State & UI.Action,expected: U32,label: String) -> IO(Unit):
   (state,action) = result
@@ -102,7 +110,8 @@ def ordinary() -> IO(Unit):
     click(s,824,136,4,"Copy toolbar preserves selected query")
     click(s,16,536,39,"Full JSONL export target")
     click(s,1016,136,1,"Clear toolbar target")
-    click(s,16,568,40,"Compressed archive export target")
+    click(s,16,568,49,"ATIF export target")
+    click(s,120,568,40,"Compressed archive export target")
     click(s,16,600,11,"Back target")
     click(s,16,623,11,"Back final row does not collide with footer")
     click(s,16,624,0,"first footer pixel cannot trigger Back")

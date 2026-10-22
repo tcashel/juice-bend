@@ -17,6 +17,8 @@ type Results is Data:
   SettingsResults{offset: U32,total: U32,automatic: String,ready: Bool}
   BriefResults{phase: U32}
   AttachmentResults{phase: U32,exportable: Bool,previous: Bool,next: Bool}
+  AttachmentCaptureResults{phase: U32,exportable: Bool,previous: Bool,next: Bool,capturable: Bool,previewable: Bool}
+  AttachmentFoldersResults{phase: U32,choose: Bool,enable: Bool,disable: Bool,previous: Bool,next: Bool}
   QuotaResults{phase: U32,loaded: Bool,enabled: Bool,view: U32,offset: U32,count: U32,more: Bool}
 
 type Edit is Data:
@@ -45,12 +47,20 @@ type Action is Data:
   Export{}
   WholeExport{}
   ContainerExport{}
+  AtifExport{}
   Why{}
   Usage{}
   Tools{}
   Related{}
   Attachments{}
   AttachmentExport{}
+  AttachmentPreview{}
+  AttachmentFolders{}
+  AttachmentCapture{}
+  AttachmentFolderAdd{}
+  AttachmentFolderEnable{}
+  AttachmentFolderDisable{}
+  AttachmentFolderUse{}
   Back{}
   Rebuild{}
   Brief{}
@@ -177,12 +187,19 @@ def is_attachments(s: State) -> Bool:
   State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
   match results:
     case AttachmentResults{_,_,_,_}: True{}
+    case AttachmentCaptureResults{_,_,_,_,_,_}: True{}
+    case _: False{}
+
+def is_attachment_folders(s: State) -> Bool:
+  State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
+  match results:
+    case AttachmentFoldersResults{_,_,_,_,_,_}: True{}
     case _: False{}
 
 # Presentation context only. The coordinator still admits an actual capture
 # independently before creating an attachment request.
 def attachment_entry_visible(+s: State) -> Bool:
-  Bool.not(is_settings(s) || is_quota(s) || is_brief(s) || is_attachments(s) || is_files(s))
+  Bool.not(is_settings(s) || is_quota(s) || is_brief(s) || is_attachments(s) || is_attachment_folders(s) || is_files(s))
 
 def reader_title_columns(+s: State) -> U32:
   Bool.pick(U32,attachment_entry_visible(s),G.reader_title_columns(),
@@ -199,9 +216,30 @@ def attachment_control(index: U32,phase: U32,exportable: Bool,previous: Bool,nex
     case 4: True{}
     case _: False{}
 
+def external_attachment_control(index: U32,+phase: U32,exportable: Bool,previous: Bool,next: Bool,capturable: Bool,previewable: Bool) -> Bool:
+  match index:
+    case 5: U32.is_eq(phase,2)
+    case 6: U32.is_eq(phase,2) && capturable
+    case 7: U32.is_eq(phase,2) && previewable
+    case index: attachment_control(index,phase,exportable,previous,next)
+
+def folder_control(index: U32,+phase: U32,choose: Bool,enable: Bool,disable: Bool,previous: Bool,next: Bool) -> Bool:
+  match index:
+    case 0: True{}
+    case 1: U32.is_eq(phase,2) && choose
+    case 2: U32.is_eq(phase,2)
+    case 3: U32.is_eq(phase,2) && enable
+    case 4: U32.is_eq(phase,2) && disable
+    case 5: U32.is_ne(phase,3)
+    case 6: U32.is_eq(phase,2) && previous
+    case 7: U32.is_eq(phase,2) && next
+    case _: False{}
+
 def attachment_available(results: Results,index: U32) -> Bool:
   match results:
-    case AttachmentResults{phase,exportable,previous,next}: attachment_control(index,phase,exportable,previous,next)
+    case AttachmentResults{phase,+exportable,previous,next}: external_attachment_control(index,phase,exportable,previous,next,False{},exportable)
+    case AttachmentCaptureResults{phase,exportable,previous,next,capturable,previewable}: external_attachment_control(index,phase,exportable,previous,next,capturable,previewable)
+    case AttachmentFoldersResults{phase,choose,enable,disable,previous,next}: folder_control(index,phase,choose,enable,disable,previous,next)
     case _: False{}
 
 def quota_ready(phase: U32,loaded: Bool) -> Bool:
@@ -279,6 +317,8 @@ def ordinary_result_label(+offset: U32,+count: U32,more: Bool,ready: Bool) -> St
 
 def result_label(results: Results) -> String:
   match results:
+    case AttachmentCaptureResults{phase,_,_,_,_,_}: Bool.pick(String,U32.is_eq(phase,2),"Select a reference to inspect saved bytes","Checking attachment evidence")
+    case AttachmentFoldersResults{phase,_,_,_,_,_}: Bool.pick(String,U32.is_eq(phase,2),"Explicit capture folder policy","Updating folder policy")
     case AttachmentResults{phase,_,_,_}:
       match phase:
         case 1: "Loading captured references"
@@ -299,6 +339,8 @@ def result_label(results: Results) -> String:
 def result_available(results: Results,forward: Bool) -> Bool:
   match results:
     case AttachmentResults{phase,_,previous,next}: U32.is_eq(phase,2) && Bool.pick(Bool,forward,next,previous)
+    case AttachmentCaptureResults{phase,_,previous,next,_,_}: U32.is_eq(phase,2) && Bool.pick(Bool,forward,next,previous)
+    case AttachmentFoldersResults{phase,_,_,_,previous,next}: U32.is_eq(phase,2) && Bool.pick(Bool,forward,next,previous)
     case QuotaResults{phase,loaded,enabled,view,+offset,count,more}:
       quota_ready(phase,loaded) && U32.is_eq(view,1) &&
         Bool.pick(Bool,forward,more && U32.is_le(offset,32728),U32.is_gt(offset,0))
@@ -505,7 +547,28 @@ def attachment_action_ready(available: Bool,+s: State,index: U32) -> State & Act
         case 2: (s,ListNext{})
         case 3: (s,AttachmentExport{})
         case 4: (s,Copy{reader(s)})
+        case 5: (s,AttachmentFolders{})
+        case 6: (s,AttachmentCapture{})
+        case 7: (s,AttachmentPreview{})
         case _: (s,NoAction{})
+
+def folder_action_ready(available: Bool,+s: State,index: U32) -> State & Action:
+  match available:
+    case False{}: (s,NoAction{})
+    case True{}:
+      match index:
+        case 0: (s,Back{})
+        case 1: (s,AttachmentFolderUse{})
+        case 2: (s,AttachmentFolderAdd{})
+        case 3: (s,AttachmentFolderEnable{})
+        case 4: (s,AttachmentFolderDisable{})
+        case 5: (s,Refresh{})
+        case 6: (s,ListPrevious{})
+        case 7: (s,ListNext{})
+        case _: (s,NoAction{})
+def folder_action(+s: State,+index: U32) -> State & Action:
+  State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
+  folder_action_ready(attachment_available(results,index),s,index)
 
 def attachment_action(+s: State,+index: U32) -> State & Action:
   State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
@@ -713,8 +776,36 @@ def sidebar_attachment(+s: State,row: U32,attachments: Bool) -> State & Action:
     case True{}: attachment_action(s,row)
     case False{}: sidebar_quota(s,row,is_quota(s))
 
+def sidebar_folders(+s: State,row: U32,folders: Bool) -> State & Action:
+  match folders:
+    case True{}: folder_action(s,row)
+    case False{}: sidebar_attachment(s,row,is_attachments(s))
+def atif_left() -> U32: 8
+def atif_right() -> U32: 88
+def archive_left() -> U32: 96
+def archive_right() -> U32: 168
+
+def split_export_pick(s: State,atif: Bool,archive: Bool) -> State & Action:
+  match atif archive:
+    case True{} _: (s,AtifExport{})
+    case False{} True{}: (s,ContainerExport{})
+    case False{} False{}: (s,NoAction{})
+
+def split_export_click(s: State,+x: U32) -> State & Action:
+  split_export_pick(s,(x >= atif_left() && x < atif_right() : U32),
+    (x >= archive_left() && x < archive_right() : U32))
+
 def sidebar_action(+s: State,row: U32) -> State & Action:
-  sidebar_attachment(s,row,is_attachments(s))
+  sidebar_folders(s,row,is_attachment_folders(s))
+
+def sidebar_click_ready(s: State,x: U32,row: U32,split: Bool) -> State & Action:
+  match split:
+    case True{}: split_export_click(s,x)
+    case False{}: sidebar_action(s,row)
+
+def sidebar_click(+s: State,x: U32,+row: U32) -> State & Action:
+  sidebar_click_ready(s,x,row,U32.is_eq(row,16) &&
+    Bool.not(is_settings(s) || is_brief(s) || is_quota(s) || is_attachments(s) || is_attachment_folders(s)))
 
 def list_row_click(+s: State,+index: U32,valid: Bool) -> State & Action:
   match valid:
@@ -780,7 +871,7 @@ def mouse_attachment_entry(+s: State,+x: U32,+y: U32,inside: Bool) -> State & Ac
 
 def mouse_body(+s: State,+x: U32,+y: U32,+col: U32,+row: U32,+sidebar: Bool,+list: Bool) -> State & Action:
   match sidebar list:
-    case True{} _: sidebar_action(s,G.sidebar_action_index(G.side_index(y),is_settings(s),is_brief(s)))
+    case True{} _: sidebar_click(s,x,G.sidebar_action_index(G.side_index(y),is_settings(s),is_brief(s)))
     case False{} True{}: list_click(s,col,row)
     case False{} False{}: mouse_attachment_entry(s,x,y,G.attachment_entry_contains(x,y))
 
@@ -855,14 +946,28 @@ def attachment_top_index(index: U32) -> U32:
     case 0: 0
     case 1: 3
     case 2: 4
+    case 3: 7
+    case 4: 5
     case 5: 1
     case 6: 2
     case _: 99
 
-def top_attachment(+s: State,group: U32,attachments: Bool) -> State & Action:
+def folder_top_index(index: U32) -> U32:
+  match index:
+    case 5: 6
+    case 6: 7
+    case index: index
+def top_attachment_inner(+s: State,group: U32,attachments: Bool) -> State & Action:
   match attachments:
     case True{}: attachment_action(s,attachment_top_index(group))
     case False{}: top_quota(s,group,is_quota(s))
+
+def top_folders(+s: State,group: U32,attachments: Bool,folders: Bool) -> State & Action:
+  match folders:
+    case True{}: folder_action(s,folder_top_index(group))
+    case False{}: top_attachment_inner(s,group,attachments)
+def top_attachment(+s: State,group: U32,attachments: Bool) -> State & Action:
+  top_folders(s,group,attachments,is_attachment_folders(s))
 
 def top_action(+s: State,group: U32) -> State & Action:
   top_attachment(s,group,is_attachments(s))
@@ -1193,6 +1298,8 @@ def draw_rows(+fuel: Nat,+c: Canvas,rows: List<&2,String>,+at: U32,+selected: U3
 def list_heading(results: Results,files: Bool) -> String:
   match results:
     case AttachmentResults{_,_,_,_}: "Captured attachments"
+    case AttachmentCaptureResults{_,_,_,_,_,_}: "Captured attachments"
+    case AttachmentFoldersResults{_,_,_,_,_,_}: "Capture folders"
     case QuotaResults{_,_,_,_,_,_,_}: "Local observations"
     case RelatedResults{page,count,more,previous}: "Related captures"
     case SettingsResults{offset,total,automatic,ready}: "Registered folders"
@@ -1266,6 +1373,17 @@ def brief_side_label(+index: U32) -> String:
     case 6: "Select all"
     case _: ""
 
+def export_split(c: Canvas,+y: U32) -> Canvas:
+  left = box(c,atif_left(),y,U32.sub(atif_right(),atif_left()),32,panel())
+  named = text(left,"ATIF 1.8",U32.add(atif_left(),8),U32.add(y,8),8,accent(),panel())
+  right = box(named,archive_left(),y,U32.sub(archive_right(),archive_left()),32,panel())
+  text(right,"Archive",U32.add(archive_left(),8),U32.add(y,8),7,accent(),panel())
+
+def side_row(c: Canvas,+y: U32,label: String,+bg: U32,split: Bool) -> Canvas:
+  match split:
+    case True{}: export_split(c,y)
+    case False{}: text(box(c,8,y,160,32,bg),label,16,U32.add(y,8),18,ink(),bg)
+
 def draw_side(fuel: Nat,c: Canvas,+index: U32,+files: Bool,+settings: Bool,+scope: String,+brief: Bool) -> Canvas:
   match fuel:
     case 0n: c
@@ -1273,8 +1391,8 @@ def draw_side(fuel: Nat,c: Canvas,+index: U32,+files: Bool,+settings: Bool,+scop
       +y = G.sidebar_y(index)
       +logical = G.sidebar_action_index(index,settings,brief)
       +bg = Bool.pick(U32,Bool.not(brief) && side_active(logical,scope) && (Bool.not(settings) || U32.is_ne(logical,1)),selected_bg(),rail())
-      base = box(c,8,y,160,32,bg)
-      label = text(base,Bool.pick(String,brief,brief_side_label(logical),side_label(settings,logical,files)),16,U32.add(y,8),18,ink(),bg)
+      label = side_row(c,y,Bool.pick(String,brief,brief_side_label(logical),side_label(settings,logical,files)),bg,
+        U32.is_eq(logical,16) && Bool.not(settings || brief))
       draw_side(n,label,U32.add(index,1),files,settings,scope,brief)
 
 def whole_usage(s: State) -> Bool:
@@ -1383,7 +1501,30 @@ def attachment_side_label(index: U32) -> String:
     case 2: "Next records"
     case 3: "Export bytes"
     case 4: "Copy details"
+    case 5: "Folders"
+    case 6: "Capture file"
+    case 7: "Open image"
     case _: ""
+
+def folder_side_label(index: U32) -> String:
+  match index:
+    case 0: "Back to attachment"
+    case 1: "Use folder"
+    case 2: "Add folder"
+    case 3: "Enable folder"
+    case 4: "Disable folder"
+    case 5: "Reload folders"
+    case 6: "Previous folders"
+    case 7: "Next folders"
+    case _: ""
+def folder_results(results: Results) -> Bool:
+  match results:
+    case AttachmentFoldersResults{_,_,_,_,_,_}: True{}
+    case _: False{}
+def attachment_label(results: Results,+index: U32) -> String:
+  Bool.pick(String,folder_results(results),folder_side_label(index),attachment_side_label(index))
+def attachment_top_result_index(results: Results,+index: U32) -> U32:
+  Bool.pick(U32,folder_results(results),folder_top_index(index),attachment_top_index(index))
 
 def attachment_side_color(results: Results,index: U32) -> U32:
   Bool.pick(U32,attachment_available(results,index),ink(),muted())
@@ -1391,8 +1532,8 @@ def attachment_side_color(results: Results,index: U32) -> U32:
 def attachment_top_label(index: U32) -> String:
   attachment_side_label(attachment_top_index(index))
 
-def attachment_top_color(results: Results,index: U32) -> U32:
-  Bool.pick(U32,attachment_available(results,attachment_top_index(index)),accent(),muted())
+def attachment_top_color(+results: Results,index: U32) -> U32:
+  Bool.pick(U32,attachment_available(results,attachment_top_result_index(results,index)),accent(),muted())
 
 def draw_attachment_side(fuel: Nat,c: Canvas,+index: U32,+results: Results) -> Canvas:
   match fuel:
@@ -1400,7 +1541,7 @@ def draw_attachment_side(fuel: Nat,c: Canvas,+index: U32,+results: Results) -> C
     case 1n+n:
       +y = G.sidebar_y(index)
       base = box(c,8,y,160,32,rail())
-      label = text(base,attachment_side_label(index),16,U32.add(y,8),18,attachment_side_color(results,index),rail())
+      label = text(base,attachment_label(results,index),16,U32.add(y,8),18,attachment_side_color(results,index),rail())
       draw_attachment_side(n,label,U32.add(index,1),results)
 
 def draw_attachment_top(fuel: Nat,c: Canvas,+index: U32,+results: Results) -> Canvas:
@@ -1410,12 +1551,12 @@ def draw_attachment_top(fuel: Nat,c: Canvas,+index: U32,+results: Results) -> Ca
       +x = G.top_x(index)
       +w = G.top_width(index)
       base = box(c,x,80,w,32,panel())
-      label = text(base,attachment_top_label(index),U32.add(x,8),88,U32.sub(U32.div(w,8),2),attachment_top_color(results,index),panel())
+      label = text(base,attachment_label(results,attachment_top_result_index(results,index)),U32.add(x,8),88,U32.sub(U32.div(w,8),2),attachment_top_color(results,index),panel())
       draw_attachment_top(n,label,U32.add(index,1),results)
 
 def draw_attachment_side_context(attachments: Bool,quota: Bool,c: Canvas,results: Results,files: Bool,settings: Bool,scope: String,brief: Bool) -> Canvas:
   match attachments:
-    case True{}: draw_attachment_side(5n,c,0,results)
+    case True{}: draw_attachment_side(8n,c,0,results)
     case False{}: draw_side_context(quota,c,results,files,settings,scope,brief)
 
 def draw_attachment_top_context(attachments: Bool,quota: Bool,c: Canvas,results: Results,files: Bool,settings: Bool,whole: Bool,automatic: String,brief: Bool) -> Canvas:
@@ -1429,9 +1570,12 @@ def draw_attachment_entry(c: Canvas,visible: Bool) -> Canvas:
     case True{}:
       text(c,"Attachments",U32.add(G.attachment_entry_x(),8),U32.add(G.text_actions_y(),8),G.attachment_entry_columns(),accent(),paper())
 
-def query_label(+s: State) -> String:
+def query_label_normal(+s: State) -> String:
   Bool.pick(String,is_attachments(s),"Captured record scope",Bool.pick(String,is_quota(s),"Selected Juice Bend data directory",Bool.pick(String,is_brief(s),"Repository folder for this brief",
     Bool.pick(String,is_settings(s),"Source file or folder path",Bool.pick(String,is_files(s),"Repository folder path","Search captured history")))))
+
+def query_label(+s: State) -> String:
+  Bool.pick(String,is_attachment_folders(s),"Explicit attachment capture folder path",query_label_normal(s))
 
 def draw_status(modal: Bool,+s: State,c: Canvas) -> Canvas:
   match modal:
@@ -1476,9 +1620,9 @@ def draw_canvas_capture(+s: State,automatic: String,suspended: Bool) -> Canvas:
   input_label = text(tagline,query_label(s),192,8,60,muted(),rail())
   query_bg = box(input_label,G.query_left(),24,U32.sub(G.query_right(),G.query_left()),40,paper())
   query = draw_scope_field(is_attachments(s),query_bg,s,q,focus,caret,anchor)
-  top = draw_attachment_top_context(is_attachments(s),is_quota(s),query,results,files,is_settings(s),whole_usage(s),automatic_label(results,automatic),is_brief(s))
+  top = draw_attachment_top_context(is_attachments(s) || is_attachment_folders(s),is_quota(s),query,results,files,is_settings(s),whole_usage(s),automatic_label(results,automatic),is_brief(s))
   capture = draw_capture_context(is_quota(s),top,suspended)
-  navigation = draw_attachment_side_context(is_attachments(s),is_quota(s),capture,results,files,is_settings(s),scope,is_brief(s))
+  navigation = draw_attachment_side_context(is_attachments(s) || is_attachment_folders(s),is_quota(s),capture,results,files,is_settings(s),scope,is_brief(s))
   heading = text(navigation,list_heading(results,files),192,128,38,ink(),panel())
   range = text(heading,result_label(results),192,152,38,muted(),panel())
   prev = text(range,"Previous",192,G.list_pager_y(),16,Bool.pick(U32,result_available(results,False{}),accent(),muted()),panel())
