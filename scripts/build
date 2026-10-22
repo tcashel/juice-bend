@@ -15,19 +15,22 @@ fi
 case "$output" in
   *.bend|*.c) printf 'Output must be a native executable path.\n' >&2; exit 2 ;;
 esac
-if [ "$(uname -s)" != Darwin ]; then
-  printf 'This build wrapper targets native macOS; this host is %s.\n' "$(uname -s)" >&2
+if [ "$(uname -s)" != Darwin ] || [ "$(uname -m)" != arm64 ]; then
+  printf 'This build wrapper targets native macOS arm64; this host is %s %s.\n' "$(uname -s)" "$(uname -m)" >&2
   exit 1
 fi
-mkdir -p "$(dirname -- "$output")" build/.module-cache
+compiler=$(./scripts/setup-llvm --path)
+sdk=$(/usr/bin/xcrun --sdk macosx --show-sdk-path)
+deployment=${MACOSX_DEPLOYMENT_TARGET:-26.0}
+mkdir -p "$(dirname -- "$output")" build/.module-cache/llvm
 ./scripts/bend "$entry" -o "$output.c"
-# Match the pinned compiler's CPU flags. Window/audio runtime code contains
-# framework imports and must be compiled as Objective-C; it is upstream code.
+# The pinned Bend CLI documents C emission. Compile that unchanged output with
+# the verified LLVM backend at the -O1 level checked by the same-C build.
+# Framework imports belong to the upstream native window/audio runtime.
+set -- -isysroot "$sdk" "-mmacosx-version-min=$deployment"
 if grep -q '^#import ' "$output.c"; then
-  clang -x objective-c -fobjc-arc -fmodules \
-    "-fmodules-cache-path=$ROOT/build/.module-cache" \
-    -std=c11 -O3 "$output.c" -lpthread -lm -lsqlite3 -o "$output"
-else
-  clang -std=c11 -O3 "$output.c" -lpthread -lm -lsqlite3 -o "$output"
+  set -- "$@" -x objective-c -fobjc-arc -fmodules \
+    "-fmodules-cache-path=$ROOT/build/.module-cache/llvm"
 fi
+"$compiler" "$@" -std=c11 -O1 "$output.c" -lpthread -lm -lsqlite3 -o "$output"
 printf 'Built %s\n' "$output" >&2

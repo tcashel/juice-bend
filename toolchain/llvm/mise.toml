@@ -1,0 +1,13 @@
+min_version = "2026.9.12"
+
+# Invoked only by scripts/setup-llvm with repository-local mise storage.
+# The archive has one top-level LLVM-23.1.4-macOS-ARM64 directory.
+[tools."github:llvm/llvm-project"]
+version = "23.1.4"
+os = ["macos/arm64"]
+version_prefix = "llvmorg-"
+asset_pattern = "LLVM-23.1.4-macOS-ARM64.tar.xz"
+checksum = "sha256:5d3179db39adeca5b17a34d82708fe976bc60e055b05fe557878fb3fb64d39ef"
+size = "1570051292"
+strip_components = 1
+bin_path = "bin"

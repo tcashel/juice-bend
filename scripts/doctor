@@ -7,7 +7,7 @@ printf 'Juice Bend host: %s %s\n' "$(uname -s)" "$(uname -m)"
 if [ "$(uname -s)" = Darwin ]; then
   sw_vers
 fi
-for tool in mise clang shasum; do
+for tool in mise xcrun shasum; do
   if command -v "$tool" >/dev/null 2>&1; then
     printf '%s: ' "$tool"
     "$tool" --version | head -n 1
@@ -16,6 +16,14 @@ for tool in mise clang shasum; do
     failed=1
   fi
 done
+if [ "$(uname -s)" = Darwin ] && [ "$(uname -m)" = arm64 ]; then
+  ./scripts/setup-llvm --check || failed=1
+  printf 'Native SDK: '
+  /usr/bin/xcrun --sdk macosx --show-sdk-path || failed=1
+  printf 'Native deployment target: %s; pinned LLVM optimization: -O1\n' "${MACOSX_DEPLOYMENT_TARGET:-26.0}"
+else
+  printf 'UNAVAILABLE: native app compiler requires macOS arm64.\n'
+fi
 if [ -f .tools/bend/SOURCE_REVISION ]; then
   printf 'Bend source: %s\n' "$(cat .tools/bend/SOURCE_REVISION)"
   if shasum -a 256 -c toolchain/bend.sha256 >/dev/null; then

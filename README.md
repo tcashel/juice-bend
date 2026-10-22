@@ -6,17 +6,25 @@ An experimental, standalone native reproduction of Juice's core history and prov
 
 Requires an Apple Silicon Mac, Xcode command-line tools, and
 [mise](https://mise.jdx.dev/). The compiler host is Bun 1.4.2, pinned in
-`mise.toml`. Bend 2.0.37 is pinned by revision and source hashes. SQLite must
-provide FTS5; `doctor` and the bridge tests check it.
+`mise.toml`. Bend 2.0.37 is pinned by revision and source hashes. The native
+compiler is official LLVM 23.1.4, pinned by asset, SHA-256 and size in
+`toolchain/llvm/mise.toml`. SQLite must provide FTS5; `doctor` and the bridge
+tests check it.
 
 ```sh
 mise trust
 mise install
 mise run setup
+mise run setup-llvm
 mise run doctor
 mise run build
 mise run run -- --demo
 ```
+
+LLVM setup downloads 1.57 GB and requires about 12 GB free for extraction.
+It installs only in this repository's ignored tool directories; build selects
+that verified compiler explicitly without changing global PATH or the system
+compiler. Ordinary build never downloads LLVM or falls back to Apple clang.
 
 The demo uses a new private temporary directory and entirely synthetic history.
 Search for `preservation`, open a result, scroll its transcript, and use Why or
