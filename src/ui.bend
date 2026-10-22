@@ -16,6 +16,7 @@ type Results is Data:
   RelatedResults{page: U32, count: U32, has_more: Bool, has_previous: Bool}
   SettingsResults{offset: U32,total: U32,automatic: String,ready: Bool}
   BriefResults{phase: U32}
+  AttachmentResults{phase: U32,exportable: Bool,previous: Bool,next: Bool}
   QuotaResults{phase: U32,loaded: Bool,enabled: Bool,view: U32,offset: U32,count: U32,more: Bool}
 
 type Edit is Data:
@@ -48,6 +49,8 @@ type Action is Data:
   Usage{}
   Tools{}
   Related{}
+  Attachments{}
+  AttachmentExport{}
   Back{}
   Rebuild{}
   Brief{}
@@ -99,18 +102,31 @@ def span(+s: String, +a: U32, +b: U32) -> String:
   String.take(String.drop(s, U32.to_nat(U32.min(a, b))),
     U32.to_nat(minus(U32.max(a, b), U32.min(a, b))))
 
-def lines.go(+s: String,+at: U32,+start: U32,+col: U32,+acc: String,done: List<&2,Line>,full: Bool) -> List<&2,Line>:
+# Soft breaks retain their whitespace in the preceding line. Every displayed
+# piece is an exact source slice, so pointer offsets and copy stay canonical.
+def wrap_space(c: Char) -> Bool:
+  Chr{+code} = c
+  U32.is_eq(code,32) || U32.is_eq(code,9)
+
+def lines.go(+s: String,+at: U32,+start: U32,+col: U32,+acc: String,done: List<&2,Line>,full: Bool,+word: U32) -> List<&2,Line>:
   match s full:
     case SNil{} _: List.reverse(&2,Line,Line{start,String.reverse(acc)} <> done)
     case SCon{Chr{10},tail} _:
-      lines.go(tail,U32.add(at,1),U32.add(at,1),0,"",Line{start,String.reverse(acc)} <> done,False{})
-    case SCon{c,tail} True{}:
-      lines.go(tail,U32.add(at,1),at,1,SCon{c,""},Line{start,String.reverse(acc)} <> done,False{})
-    case SCon{c,tail} False{}:
-      lines.go(tail,U32.add(at,1),start,U32.add(col,1),SCon{c,acc},done,U32.is_eq(U32.add(col,1),G.reader_columns()))
+      lines.go(tail,U32.add(at,1),U32.add(at,1),0,"",Line{start,String.reverse(acc)} <> done,False{},0)
+    case SCon{+c,tail} True{}:
+      +cut = Bool.pick(U32,wrap_space(c) || U32.is_eq(word,0),col,word)
+      +text = String.reverse(acc)
+      +next_col = U32.add(U32.sub(col,cut),1)
+      lines.go(tail,U32.add(at,1),U32.add(start,cut),next_col,
+        SCon{c,String.reverse(String.drop(text,U32.to_nat(cut)))},
+        Line{start,String.take(text,U32.to_nat(cut))} <> done,
+        U32.is_eq(next_col,G.reader_columns()),Bool.pick(U32,wrap_space(c),next_col,0))
+    case SCon{+c,tail} False{}:
+      lines.go(tail,U32.add(at,1),start,U32.add(col,1),SCon{c,acc},done,
+        U32.is_eq(U32.add(col,1),G.reader_columns()),Bool.pick(U32,wrap_space(c),U32.add(col,1),word))
 
 def wrap(+s: String) -> List<&2, Line>:
-  lines.go(s, 0, 0, 0, "", [],False{})
+  lines.go(s, 0, 0, 0, "", [],False{},0)
 
 def init() -> State:
   State{Content{"", [], "Choose a captured session to read its owned evidence.",
@@ -155,6 +171,37 @@ def is_quota(s: State) -> Bool:
   State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
   match results:
     case QuotaResults{_,_,_,_,_,_,_}: True{}
+    case _: False{}
+
+def is_attachments(s: State) -> Bool:
+  State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
+  match results:
+    case AttachmentResults{_,_,_,_}: True{}
+    case _: False{}
+
+# Presentation context only. The coordinator still admits an actual capture
+# independently before creating an attachment request.
+def attachment_entry_visible(+s: State) -> Bool:
+  Bool.not(is_settings(s) || is_quota(s) || is_brief(s) || is_attachments(s) || is_files(s))
+
+def reader_title_columns(+s: State) -> U32:
+  Bool.pick(U32,attachment_entry_visible(s),G.reader_title_columns(),
+    U32.sub(U32.div(U32.sub(G.text_actions_x(),G.reader_x()),G.cell()),1))
+
+# These gates are shared by drawing and hit testing. Export eligibility comes
+# from the verified selection model; presentation alone never reads a source.
+def attachment_control(index: U32,phase: U32,exportable: Bool,previous: Bool,next: Bool) -> Bool:
+  match index:
+    case 0: True{}
+    case 1: U32.is_eq(phase,2) && previous
+    case 2: U32.is_eq(phase,2) && next
+    case 3: U32.is_eq(phase,2) && exportable
+    case 4: True{}
+    case _: False{}
+
+def attachment_available(results: Results,index: U32) -> Bool:
+  match results:
+    case AttachmentResults{phase,exportable,previous,next}: attachment_control(index,phase,exportable,previous,next)
     case _: False{}
 
 def quota_ready(phase: U32,loaded: Bool) -> Bool:
@@ -232,6 +279,12 @@ def ordinary_result_label(+offset: U32,+count: U32,more: Bool,ready: Bool) -> St
 
 def result_label(results: Results) -> String:
   match results:
+    case AttachmentResults{phase,_,_,_}:
+      match phase:
+        case 1: "Loading captured references"
+        case 2: "See record coverage in details"
+        case 3: "Exporting selected inline bytes"
+        case _: "Choose a captured record range"
     case QuotaResults{+phase,loaded,enabled,+view,offset,count,more}:
       Bool.pick(String,U32.is_eq(phase,1),"Loading local observations",Bool.pick(String,quota_ready(phase,loaded),
         Bool.pick(String,U32.is_eq(view,1),ordinary_result_label(offset,count,more,True{}),
@@ -245,6 +298,7 @@ def result_label(results: Results) -> String:
 
 def result_available(results: Results,forward: Bool) -> Bool:
   match results:
+    case AttachmentResults{phase,_,previous,next}: U32.is_eq(phase,2) && Bool.pick(Bool,forward,next,previous)
     case QuotaResults{phase,loaded,enabled,view,+offset,count,more}:
       quota_ready(phase,loaded) && U32.is_eq(view,1) &&
         Bool.pick(Bool,forward,more && U32.is_le(offset,32728),U32.is_gt(offset,0))
@@ -441,7 +495,32 @@ def wheel_in(+s: State, down: Bool, list: Bool) -> State & Action:
 def wheel(s: State,+x: U32,down: Bool) -> State & Action:
   wheel_in(s,down,(x >= G.sidebar_end() && x < G.list_end() : U32))
 
-def key_down(+s: State, +code: U32, +command: Bool) -> State & Action:
+def attachment_action_ready(available: Bool,+s: State,index: U32) -> State & Action:
+  match available:
+    case False{}: (s,NoAction{})
+    case True{}:
+      match index:
+        case 0: (s,Back{})
+        case 1: (s,ListPrevious{})
+        case 2: (s,ListNext{})
+        case 3: (s,AttachmentExport{})
+        case 4: (s,Copy{reader(s)})
+        case _: (s,NoAction{})
+
+def attachment_action(+s: State,+index: U32) -> State & Action:
+  State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
+  attachment_action_ready(attachment_available(results,index),s,index)
+
+def attachment_copy_selection(+s: State) -> State & Action:
+  copy_action(s,Bool.not(U32.is_eq(focus(s),2)) || String.is_empty(selection(s)))
+
+def attachment_select_all(s: State) -> State:
+  select_all(set_edit(s,Edit{2,0,0,False{},0}))
+
+def attachment_tab(+s: State) -> State & Action:
+  (set_edit(s,Edit{Bool.pick(U32,U32.is_eq(focus(s),1),2,1),0,0,False{},0}),NoAction{})
+
+def key_down_editable(+s: State, +code: U32, +command: Bool) -> State & Action:
   match code command:
     case 113 True{}:
       (s, Quit{})
@@ -491,6 +570,28 @@ def key_down(+s: State, +code: U32, +command: Bool) -> State & Action:
       (set_edit(s, Edit{0, 0, 0, False{}, 0}), NoAction{})
     case _ _:
       (s, NoAction{})
+
+def attachment_key(+s: State,+code: U32,+command: Bool) -> State & Action:
+  match code command:
+    case 101 True{}: attachment_action(s,3)
+    case 97 True{}: (attachment_select_all(s),NoAction{})
+    case 99 True{}: attachment_copy_selection(s)
+    case 113 True{}: (s,Quit{})
+    case 91 True{}: (s,Back{})
+    case _ True{}: (s,NoAction{})
+    case 13 False{}: (s,NoAction{})
+    case 127 False{}: (s,NoAction{})
+    case 8 False{}: (s,NoAction{})
+    case 9 False{}: attachment_tab(s)
+    case _ False{}: key_down_editable(s,code,False{})
+
+def key_down_mode(s: State,code: U32,command: Bool,attachments: Bool) -> State & Action:
+  match attachments:
+    case True{}: attachment_key(s,code,command)
+    case False{}: key_down_editable(s,code,command)
+
+def key_down(+s: State,code: U32,command: Bool) -> State & Action:
+  key_down_mode(s,code,command,is_attachments(s))
 
 def key(+s: State, +code: U32, +down: Bool) -> State & Action:
   State{content, Input{selected, scroll, edit, +command, +shift}, image, dirty} = s
@@ -607,8 +708,13 @@ def sidebar_quota(+s: State,row: U32,quota: Bool) -> State & Action:
     case True{}: quota_action(s,row)
     case False{}: sidebar_context(s,row,is_brief(s))
 
+def sidebar_attachment(+s: State,row: U32,attachments: Bool) -> State & Action:
+  match attachments:
+    case True{}: attachment_action(s,row)
+    case False{}: sidebar_quota(s,row,is_quota(s))
+
 def sidebar_action(+s: State,row: U32) -> State & Action:
-  sidebar_quota(s,row,is_quota(s))
+  sidebar_attachment(s,row,is_attachments(s))
 
 def list_row_click(+s: State,+index: U32,valid: Bool) -> State & Action:
   match valid:
@@ -635,13 +741,25 @@ def list_click(+s: State,+col: U32,+row: U32) -> State & Action:
   +y = U32.mul(row,G.cell())
   list_click.zone(s,x,y,rows,files,U32.is_ge(y,G.list_pager_y()))
 
-def text_action(+s: State,index: U32) -> State & Action:
+def text_action_editable(+s: State,index: U32) -> State & Action:
   match index:
     case 0: copy_action(s,String.is_empty(selection(s)))
     case 1: paste_query(s)
     case 2: (set_query(s,""),Search{})
     case 3: (select_all(s),NoAction{})
     case _: (s,NoAction{})
+
+def text_action_attachment(attachments: Bool,+s: State,index: U32) -> State & Action:
+  match attachments:
+    case False{}: text_action_editable(s,index)
+    case True{}:
+      match index:
+        case 0: attachment_copy_selection(s)
+        case 3: (attachment_select_all(s),NoAction{})
+        case _: (s,NoAction{})
+
+def text_action(+s: State,index: U32) -> State & Action:
+  text_action_attachment(is_attachments(s),s,index)
 
 def mouse_reader(+s: State,+x: U32,+y: U32,inside: Bool) -> State & Action:
   match inside:
@@ -655,11 +773,16 @@ def mouse_text(+s: State,+x: U32,+y: U32,actions: Bool) -> State & Action:
     case True{}: text_action(s,U32.div(U32.sub(x,G.text_actions_x()),G.text_action_width()))
     case False{}: mouse_reader(s,x,y,G.rect(x,y,G.list_end(),G.reader_y(),G.width(),G.footer_y()))
 
+def mouse_attachment_entry(+s: State,+x: U32,+y: U32,inside: Bool) -> State & Action:
+  match inside:
+    case True{}: (s,Bool.pick(Action,attachment_entry_visible(s),Attachments{},NoAction{}))
+    case False{}: mouse_text(s,x,y,G.rect(x,y,G.text_actions_x(),G.text_actions_y(),G.text_action_x(4),U32.add(G.text_actions_y(),G.control_height())))
+
 def mouse_body(+s: State,+x: U32,+y: U32,+col: U32,+row: U32,+sidebar: Bool,+list: Bool) -> State & Action:
   match sidebar list:
     case True{} _: sidebar_action(s,G.sidebar_action_index(G.side_index(y),is_settings(s),is_brief(s)))
     case False{} True{}: list_click(s,col,row)
-    case False{} False{}: mouse_text(s,x,y,G.rect(x,y,G.text_actions_x(),G.text_actions_y(),G.text_action_x(4),U32.add(G.text_actions_y(),G.control_height())))
+    case False{} False{}: mouse_attachment_entry(s,x,y,G.attachment_entry_contains(x,y))
 
 def top_normal(+s: State, +group: U32) -> State & Action:
   match group:
@@ -727,12 +850,34 @@ def top_quota(+s: State,group: U32,quota: Bool) -> State & Action:
     case True{}: quota_top_action(s,group)
     case False{}: top_context(s,group,is_brief(s))
 
-def top_action(+s: State,group: U32) -> State & Action:
-  top_quota(s,group,is_quota(s))
+def attachment_top_index(index: U32) -> U32:
+  match index:
+    case 0: 0
+    case 1: 3
+    case 2: 4
+    case 5: 1
+    case 6: 2
+    case _: 99
 
-def query_click(+s: State, col: U32) -> State & Action:
+def top_attachment(+s: State,group: U32,attachments: Bool) -> State & Action:
+  match attachments:
+    case True{}: attachment_action(s,attachment_top_index(group))
+    case False{}: top_quota(s,group,is_quota(s))
+
+def top_action(+s: State,group: U32) -> State & Action:
+  top_attachment(s,group,is_attachments(s))
+
+def query_click_editable(+s: State, col: U32) -> State & Action:
   +pos = query_at(s, col)
   (set_edit(s, Edit{0, pos, pos, True{}, query_offset(s)}), NoAction{})
+
+def query_click_mode(s: State,col: U32,attachments: Bool) -> State & Action:
+  match attachments:
+    case True{}: (s,NoAction{})
+    case False{}: query_click_editable(s,col)
+
+def query_click(+s: State,col: U32) -> State & Action:
+  query_click_mode(s,col,is_attachments(s))
 
 def mouse_top.action(+s: State,x: U32,inside: Bool) -> State & Action:
   match inside:
@@ -845,7 +990,7 @@ def text_focused(+s: State, +text: String, +query_focus: Bool) -> State & Action
 
 def text_event(+s: State, +text: String) -> State & Action:
   State{content, Input{selected, scroll, Edit{focus, caret, anchor, drag, viewport}, command, shift}, image, dirty} = s
-  text_focused(s, text, U32.is_eq(focus, 0))
+  text_focused(s, text, U32.is_eq(focus, 0) && Bool.not(is_attachments(s)))
 
 def wheel_vertical(s: State, x: U32, dy: F32, zero: Bool) -> State & Action:
   match zero:
@@ -1047,6 +1192,7 @@ def draw_rows(+fuel: Nat,+c: Canvas,rows: List<&2,String>,+at: U32,+selected: U3
 
 def list_heading(results: Results,files: Bool) -> String:
   match results:
+    case AttachmentResults{_,_,_,_}: "Captured attachments"
     case QuotaResults{_,_,_,_,_,_,_}: "Local observations"
     case RelatedResults{page,count,more,previous}: "Related captures"
     case SettingsResults{offset,total,automatic,ready}: "Registered folders"
@@ -1230,9 +1376,62 @@ def draw_top_context(quota: Bool,c: Canvas,results: Results,files: Bool,settings
     case True{}: draw_quota_top(7n,c,0,results)
     case False{}: draw_top(7n,c,0,files,settings,whole,automatic,brief)
 
+def attachment_side_label(index: U32) -> String:
+  match index:
+    case 0: "Back to reader"
+    case 1: "Previous records"
+    case 2: "Next records"
+    case 3: "Export bytes"
+    case 4: "Copy details"
+    case _: ""
+
+def attachment_side_color(results: Results,index: U32) -> U32:
+  Bool.pick(U32,attachment_available(results,index),ink(),muted())
+
+def attachment_top_label(index: U32) -> String:
+  attachment_side_label(attachment_top_index(index))
+
+def attachment_top_color(results: Results,index: U32) -> U32:
+  Bool.pick(U32,attachment_available(results,attachment_top_index(index)),accent(),muted())
+
+def draw_attachment_side(fuel: Nat,c: Canvas,+index: U32,+results: Results) -> Canvas:
+  match fuel:
+    case 0n: c
+    case 1n+n:
+      +y = G.sidebar_y(index)
+      base = box(c,8,y,160,32,rail())
+      label = text(base,attachment_side_label(index),16,U32.add(y,8),18,attachment_side_color(results,index),rail())
+      draw_attachment_side(n,label,U32.add(index,1),results)
+
+def draw_attachment_top(fuel: Nat,c: Canvas,+index: U32,+results: Results) -> Canvas:
+  match fuel:
+    case 0n: c
+    case 1n+n:
+      +x = G.top_x(index)
+      +w = G.top_width(index)
+      base = box(c,x,80,w,32,panel())
+      label = text(base,attachment_top_label(index),U32.add(x,8),88,U32.sub(U32.div(w,8),2),attachment_top_color(results,index),panel())
+      draw_attachment_top(n,label,U32.add(index,1),results)
+
+def draw_attachment_side_context(attachments: Bool,quota: Bool,c: Canvas,results: Results,files: Bool,settings: Bool,scope: String,brief: Bool) -> Canvas:
+  match attachments:
+    case True{}: draw_attachment_side(5n,c,0,results)
+    case False{}: draw_side_context(quota,c,results,files,settings,scope,brief)
+
+def draw_attachment_top_context(attachments: Bool,quota: Bool,c: Canvas,results: Results,files: Bool,settings: Bool,whole: Bool,automatic: String,brief: Bool) -> Canvas:
+  match attachments:
+    case True{}: draw_attachment_top(7n,c,0,results)
+    case False{}: draw_top_context(quota,c,results,files,settings,whole,automatic,brief)
+
+def draw_attachment_entry(c: Canvas,visible: Bool) -> Canvas:
+  match visible:
+    case False{}: c
+    case True{}:
+      text(c,"Attachments",U32.add(G.attachment_entry_x(),8),U32.add(G.text_actions_y(),8),G.attachment_entry_columns(),accent(),paper())
+
 def query_label(+s: State) -> String:
-  Bool.pick(String,is_quota(s),"Selected Juice Bend data directory",Bool.pick(String,is_brief(s),"Repository folder for this brief",
-    Bool.pick(String,is_settings(s),"Source file or folder path",Bool.pick(String,is_files(s),"Repository folder path","Search captured history"))))
+  Bool.pick(String,is_attachments(s),"Captured record scope",Bool.pick(String,is_quota(s),"Selected Juice Bend data directory",Bool.pick(String,is_brief(s),"Repository folder for this brief",
+    Bool.pick(String,is_settings(s),"Source file or folder path",Bool.pick(String,is_files(s),"Repository folder path","Search captured history")))))
 
 def draw_status(modal: Bool,+s: State,c: Canvas) -> Canvas:
   match modal:
@@ -1259,6 +1458,13 @@ def draw_capture_context(quota: Bool,c: Canvas,+suspended: Bool) -> Canvas:
       first = text(c,capture_hint(suspended),G.capture_hint_x(),80,G.capture_hint_columns(),muted(),rail())
       text(first,"Local quota only",G.capture_hint_x(),96,G.capture_hint_columns(),muted(),rail())
 
+def draw_scope_field(attachments: Bool,c: Canvas,s: State,q: String,+focus: U32,+caret: U32,+anchor: U32) -> Canvas:
+  match attachments:
+    case True{}: text(c,"Select a reference below; exact capture and coverage appear in details",G.query_x(),G.query_y(),G.query_columns(),muted(),paper())
+    case False{}:
+      +offset = query_offset(s)
+      draw_line(U32.to_nat(G.query_columns()),c,String.append(String.drop(q,U32.to_nat(offset))," "),U32.div(G.query_x(),G.cell()),U32.div(G.query_y(),G.cell()),offset,Bool.pick(U32,U32.is_eq(focus,0),U32.min(caret,anchor),0),Bool.pick(U32,U32.is_eq(focus,0),Bool.pick(U32,U32.is_eq(caret,anchor),U32.add(caret,1),U32.max(caret,anchor)),0))
+
 def draw_canvas_capture(+s: State,automatic: String,suspended: Bool) -> Canvas:
   State{Content{+q,rows,reader,lines,title,status,+scope,+results,+files},Input{+selected,scroll,Edit{+focus,+caret,+anchor,drag,viewport},command,shift},image,dirty} = s
   base = box(Flat{paper()},0,0,G.width(),G.header_height(),rail())
@@ -1269,18 +1475,19 @@ def draw_canvas_capture(+s: State,automatic: String,suspended: Bool) -> Canvas:
   tagline = text(brand,"Your captured work",16,48,18,muted(),rail())
   input_label = text(tagline,query_label(s),192,8,60,muted(),rail())
   query_bg = box(input_label,G.query_left(),24,U32.sub(G.query_right(),G.query_left()),40,paper())
-  query = draw_line(U32.to_nat(G.query_columns()),query_bg,String.append(String.drop(q,U32.to_nat(query_offset(s)))," "),U32.div(G.query_x(),G.cell()),U32.div(G.query_y(),G.cell()),query_offset(s),Bool.pick(U32,U32.is_eq(focus,0),U32.min(caret,anchor),0),Bool.pick(U32,U32.is_eq(focus,0),Bool.pick(U32,U32.is_eq(caret,anchor),U32.add(caret,1),U32.max(caret,anchor)),0))
-  top = draw_top_context(is_quota(s),query,results,files,is_settings(s),whole_usage(s),automatic_label(results,automatic),is_brief(s))
+  query = draw_scope_field(is_attachments(s),query_bg,s,q,focus,caret,anchor)
+  top = draw_attachment_top_context(is_attachments(s),is_quota(s),query,results,files,is_settings(s),whole_usage(s),automatic_label(results,automatic),is_brief(s))
   capture = draw_capture_context(is_quota(s),top,suspended)
-  navigation = draw_side_context(is_quota(s),capture,results,files,is_settings(s),scope,is_brief(s))
+  navigation = draw_attachment_side_context(is_attachments(s),is_quota(s),capture,results,files,is_settings(s),scope,is_brief(s))
   heading = text(navigation,list_heading(results,files),192,128,38,ink(),panel())
   range = text(heading,result_label(results),192,152,38,muted(),panel())
   prev = text(range,"Previous",192,G.list_pager_y(),16,Bool.pick(U32,result_available(results,False{}),accent(),muted()),panel())
   next = text(prev,"Next",360,G.list_pager_y(),16,Bool.pick(U32,result_available(results,True{}),accent(),muted()),panel())
-  title = text(next,title,G.reader_x(),128,G.reader_title_columns(),accent(),paper())
-  copy = text(title,"Copy",U32.add(G.text_action_x(0),8),U32.add(G.text_actions_y(),8),10,accent(),paper())
-  paste = text(copy,"Paste",U32.add(G.text_action_x(1),8),U32.add(G.text_actions_y(),8),10,accent(),paper())
-  clear = text(paste,"Clear",U32.add(G.text_action_x(2),8),U32.add(G.text_actions_y(),8),10,accent(),paper())
+  title = text(next,title,G.reader_x(),128,reader_title_columns(s),accent(),paper())
+  entry = draw_attachment_entry(title,attachment_entry_visible(s))
+  copy = text(entry,"Copy",U32.add(G.text_action_x(0),8),U32.add(G.text_actions_y(),8),10,accent(),paper())
+  paste = text(copy,"Paste",U32.add(G.text_action_x(1),8),U32.add(G.text_actions_y(),8),10,Bool.pick(U32,is_attachments(s),muted(),accent()),paper())
+  clear = text(paste,"Clear",U32.add(G.text_action_x(2),8),U32.add(G.text_actions_y(),8),10,Bool.pick(U32,is_attachments(s),muted(),accent()),paper())
   all = text(clear,"Select all",U32.add(G.text_action_x(3),8),U32.add(G.text_actions_y(),8),11,accent(),paper())
   +offset = minus(selected,U32.sub(G.list_rows(),1))
   items = draw_rows(U32.to_nat(G.list_rows()),all,List.drop(&2,String,rows,U32.to_nat(offset)),0,minus(selected,offset))

@@ -13,7 +13,7 @@ def reader_columns() -> U32: 80
 def reader_rows() -> U32: 19
 def line_pitch() -> U32: 24
 def reader_page_step() -> U32: U32.sub(reader_rows(),2)
-def reader_title_columns() -> U32: 32
+def reader_title_columns() -> U32: 18
 def query_x() -> U32: 208
 def query_y() -> U32: 32
 def query_left() -> U32: 192
@@ -32,6 +32,9 @@ def footer_columns() -> U32: U32.sub(U32.div(width(),cell()),2)
 def footer_hint_x() -> U32: U32.sub(width(),208)
 def footer_second_columns() -> U32: U32.sub(U32.div(footer_hint_x(),cell()),2)
 
+def attachment_entry_x() -> U32: 696
+def attachment_entry_right() -> U32: 800
+def attachment_entry_columns() -> U32: 11
 def text_actions_x() -> U32: 808
 def text_action_width() -> U32: 96
 def text_actions_y() -> U32: 120
@@ -48,6 +51,9 @@ def capture_hint_columns() -> U32: 19
 
 def rect(+x: U32,+y: U32,left: U32,top: U32,right: U32,bottom: U32) -> Bool:
   (x >= left && x < right && y >= top && y < bottom : U32)
+
+def attachment_entry_contains(x: U32,y: U32) -> Bool:
+  rect(x,y,attachment_entry_x(),text_actions_y(),attachment_entry_right(),U32.add(text_actions_y(),control_height()))
 
 def sidebar_y(index: U32) -> U32:
   U32.add(112,U32.mul(index,control_height()))

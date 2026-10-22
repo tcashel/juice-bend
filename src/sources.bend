@@ -203,7 +203,7 @@ def import_output(provider: String,path: String,result: Result<&2,&2,String,Json
 # worker's free-form stderr, which may contain source text or local paths.
 def archive_error(+error: String) -> String:
   Bool.pick(String,String.starts_with(error,"archive_limit:"),
-    "archive_limit: Archive exceeds a bounded import limit (1 MiB compressed, 4 MiB logical, 8 MiB window, 64 frames, 4096 blocks per frame); retained captures remain available",
+    "archive_limit: Archive exceeds a bounded import limit (64 MiB compressed, 256 MiB logical, 8 MiB window, 64 frames, 4096 blocks per frame); retained captures remain available",
     Bool.pick(String,String.starts_with(error,"archive_dictionary:"),
       "archive_dictionary: External Zstandard dictionaries are unsupported; retained captures remain available",
       Bool.pick(String,String.starts_with(error,"archive_corrupt:"),

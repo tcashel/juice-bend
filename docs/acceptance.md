@@ -1,5 +1,15 @@
 # Acceptance evidence
 
+## Adopted reader and attachment source — 2026-10-21
+
+The adopted source adds readable transcripts, inline attachment inventory/export,
+streaming archive admission and a confined file worker. Focused backend gates and
+earlier combined-app GUI journeys passed. The newest executable still has an
+intermittent pointer-selection failure before toolbar Copy, so the previous
+working executable remains the default. See the [scoped receipt](receipts/reader-attachments-native.txt)
+for exact builds, passed checks, failed attempts and limits. This is not complete
+native acceptance or full parity.
+
 ## Connections native validation — 2026-10-21
 
 Current app `0d4839d9…` adds explicit local Claude quota collection under

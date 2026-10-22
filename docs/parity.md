@@ -119,11 +119,12 @@ again in Tart; wrapping and glyph coverage still need broader polish.
 Bounded `.jsonl.zst` capture is now adopted. Bend owns decompression, capture
 policy and both retained byte streams; no external decoder runtime is used.
 Ordinary compressed blocks, raw/RLE blocks, checksum verification, concatenated
-frames and skippable frames are supported. The initial profile caps compressed
-input at 1 MiB, total decoded output at 4 MiB, window size at 8 MiB, frame count
+frames and skippable frames are supported. The streaming profile caps compressed
+input at 64 MiB, total decoded output at 256 MiB, window size at 8 MiB, frame count
 at 64 and blocks per ordinary frame at 4,096. Dictionaries and larger archives
-remain unsupported; plain JSONL limits are unchanged. This is an initial
-archive slice, not complete reference archive parity.
+remain unsupported; plain JSONL limits are unchanged. Legacy batch-profile
+captures remain readable with their original commitments. Complete reference
+archive parity, including discovery aliases and very large archives, remains open.
 
 Schema 3 preserves existing plain-capture identities and binds each archive's
 owned compressed container to its immutable decoded snapshot. Transcript and
@@ -139,8 +140,9 @@ App `d06447f6…` passed actual native import, scoped search/copy, bounded and b
 full exports, request-first Brief, and restart after source removal. Plain-file
 archive-export and malformed-archive import refusals preserved accepted data.
 Nine clipboard comparisons and six exact private exports passed; see
-`receipts/archive-native.txt`. The fixed window footer needed the guest Dock
-temporarily hidden; that usability gap remains open. These are not a new full
+`receipts/archive-native.txt`. That older executable needed the guest Dock
+temporarily hidden; subsequent compact/reader runs keep the Dock visible.
+These are not a new full
 suite, proof or comparative performance result.
 
 Current priority: transcript/evidence readability, remaining validation gaps,
@@ -187,8 +189,10 @@ not established by the current bitmap reader.
 
 Migration from the original Juice database, semantic/model features, signed
 releases and retired inference-based advice remain excluded. The expanded
-parity goal includes explicit opt-in connection/subscription behavior; those
-surfaces are still unimplemented and must not read private accounts by default.
+parity goal includes explicit opt-in connection/subscription behavior. The
+published app has passive Claude statusline collection with explicit setup and
+disconnect; installed-provider quota clients and read-only agent Connect/MCP
+remain incomplete. None may read private accounts by default.
 
 Backend evidence: `tests/provenance.bend` passes 36 assertions;
 `tests/evidence.bend` passes 38 assertions and four isolated fixture commands.

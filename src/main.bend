@@ -6,6 +6,8 @@ import ./cli.bend as Cli
 import ./demo.bend as Demo
 import ./quota_entry.bend as Quota
 import ./quota_route.bend as Route
+import ./attachment_worker_protocol.bend as AttachmentProtocol
+import ./attachment_worker.bend as AttachmentWorker
 
 def mkdir_result(result: Result<&1,&1,U32 & String,U32 & (String & String)>) -> IO(Unit):
   match result:
@@ -58,12 +60,18 @@ def routed(program: String,route: Route.Route) -> IO(Unit):
 def options(program: String,args: List<String>) -> IO(Unit):
   routed(program,Route.classify(Quota.copied_args(args)))
 
+def attachment_entry(program: String,route: AttachmentProtocol.Route) -> IO(Unit):
+  match route:
+    case AttachmentProtocol.Worker{request}: AttachmentWorker.run(request)
+    case AttachmentProtocol.Rejected{}: IO.die(Unit,64,"attachment_worker_arguments")
+    case AttachmentProtocol.Ordinary{args}: options(program,Route.linear(args))
+
 def argv(args: List<String>) -> IO(Unit):
   match args:
     case []:
       IO.die(Unit,2,"Missing executable identity")
-    case program <> rest:
-      options(program,rest)
+    case +program <> rest:
+      attachment_entry(program,AttachmentProtocol.classify(program,Quota.copied_args(rest)))
 
 def main() -> IO(Unit):
   do IO<Unit>:

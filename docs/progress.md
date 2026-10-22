@@ -6,125 +6,102 @@ Functional and pleasant native UX parity with SwiftUI Juice, excluding embedding
 and models, remains **in progress**. No user answer or approval is pending.
 Application/UI/parser/policy stay Bend 2; the narrow SQLite bridge is 454 lines.
 Lean is an optional development proof checker, never an app dependency.
-Mise pins Bun 1.4.2 and Bend 2.0.37 at
-`60ca80aedeec9d8f0629b5f10dd19457d8ad67af`.
-Original Juice and provider data remain read-only. All evidence is synthetic.
-Update only `codex/juice-bend-implementation` and draft PR #1; never merge.
-Preserve the protected checkout index and local edits. Publication uses explicit
-paths and a separate index under `build/publication.git`.
+Mise pins Bun 1.4.2 and Bend 2.0.37 revision
+`60ca80aedeec9d8f0629b5f10dd19457d8ad67af`. All evidence is synthetic; original
+Juice/provider data remain read-only. Update only the implementation branch and
+draft PR #1; never merge. Preserve the protected checkout index and local edits.
+Publication uses explicit paths and a separate index in `build/publication.git`.
 
-## Current working app
+## Current executable and adopted source
 
-`build/juice-bend`, `build/juice-bend-connections` and
-`build/Juice Bend Connections.app` contain the observed executable
+The default `build/juice-bend`, `build/juice-bend-connections` and
+`build/Juice Bend Connections.app` retain observed executable
 `0d4839d98088aff7c3c5a5581908ded7e877e5987e17ecafd592e03ce6d75988`.
-Physical-Mac build: 19,275,464 bytes, 712.306 seconds, 81 first-party main-closure
-files and 93 runtime/build pins. Build duration is diagnostic, not a product
-performance benchmark. Compact (`e780c37b…`) and archive (`d06447f6…`) executables
-and bundles remain preserved. `mise run run -- --demo` opens an isolated demo.
+Its native capture/search/reader, Connections and Back workflows passed with
+synthetic fixtures. Earlier compact/archive binaries and bundles are preserved.
+`mise run run -- --demo` opens an isolated demo.
 
-Connections native acceptance passed in Tart at 1280×800 with the Dock shown:
-Settings → Connections, explicit Enable, reviewed setup copy, known-zero and
-partial observations, unknown/invalid feed handling, sampled history, Disconnect,
-retired callbacks and root-edit refusals. Back restored exact Settings/reader
-pixels and original transcript selection. Eighteen clipboard comparisons, four
-inert-copy checks and 75 window-containment observations passed. Capture counts
-stayed unchanged; full verification and an exact 8,313-byte private export passed.
-This is passive local Claude statusline collection, not account authentication.
+The source tree now includes 63 reviewed changes: readable transcript formatting,
+word wrapping, inline-attachment inventory/export, Connections presentation,
+streaming archives and the confined attachment worker. Adoption manifest:
+`build/reader-attachments-adoption/manifest.json` SHA `0774294e…`.
+All root preimages were checked/backed up; the checkout index is unchanged.
+The manual worker test is the exact successful v4 test, replacing a stale socket
+expectation without changing application behavior.
 
-Nine focused Linux gates passed 387 assertions; six Mac gates passed 334, including
-30 transport checks against this executable with HOME absent. Scopes overlap.
-The Mac WAL fixture now uses a checkpointed standalone copy rather than assuming
-Linux sidecar cleanup; 115 assertions passed with production unchanged.
-No new full-suite/proof/performance claim follows from these focused gates.
+This source builds executable
+`fcbbbfbde90ad072c26fb20ab044522487a6ee4bbe9890f72300765a18518701`
+at `build/next-parity-integration/mac/296cfc88-2887-4325-83d0-d5e2459b54f6/main`.
+It is **not promoted as the default** while intermittent selection is unresolved.
+All 103 combined main/reader build inputs and 93 pins still match the adopted
+source. `docs/receipts/reader-attachments-native.txt` records passed and failed
+scopes; its companion input manifest binds the build. Earlier GUI passes used
+`fccb5209…`; do not present them as complete acceptance of the newest executable.
 
-Receipts: `docs/receipts/connections-native.txt`,
-`docs/receipts/connections-build-inputs.sha256`,
-`benchmarks/results/tart-connections-summary.json`,
-`build/quota-ui-integration/validation-current.json` and
-`build/connections-promotion.json`. Actual GUI results:
-`build/quota-native-v2-plan/artifacts`, nonce
-`97d942a4-7419-4841-9cc7-ad5c6c85a432`. Guest 52085 ended 0; runner 77756 ended
-130 after stopping only its owned Tart process. Display restored, Dock unchanged,
-VM stopped and lease absent. Driver v1 was prepared but not run; v2 fixes bounded
-fresh window observation after process exit. No root VM session remains live.
+## Exact continuation
 
-Earlier compact evidence remains scoped to that preserved executable:
-import/search/transcript, Page Down/Up, wheel, Close/Escape, Unicode toolbar copy,
-Brief, restart/source-loss reads and exports passed; see `compact-native.txt`.
+PR #1 was last checked open/draft/unmerged at
+`3a0230da39b8e0bf68d870b0a5f53979032cf53b`. Publication of the adopted source and
+qualified receipts is being prepared; no new remote commit is claimed yet.
 
-## Publication and exact continuation
+1. **Reader release bug:** first full-GUI run changed a correct selection when
+   moving to Copy. Second run passed both cross-wrap copies and exact Back pixels,
+   then hit a wrong test expectation for copying an unprepared Brief. Third run
+   corrected that expectation but reproduced changed selection in Connections.
+   `build/reader-polish-native-v3-plan/v3-observed-result.json` SHA `e3ddb932…`
+   preserves the latest failure; app cleanup/display restoration passed and VM
+   stopped. A small native probe cleared drag on all nine mouse-up edges, which
+   does not rule out full-GUI event/state loss.
+2. **Active diagnostic:** `build/reader-full-gui-diagnostic/payload`, nonce
+   `d93d6bc7-0488-40be-b4a0-ffe8bf65560f`, wrapper 51615, guest 13753.
+   Exact readiness was verified and `run-all.sh` is running. The Bend-only instrumented
+   GUI records native event → UI → handle → service states. Binary `a73524eb…`
+   is diagnostic -O0; neither timings nor a passing run establish optimized
+   acceptance. Agent `reader_release_diagnostic` owns trace analysis.
+3. **Attachment capture passed:** full-app worker v4 passed all ten stages and
+   120 finite races. Actual production Capture.run composition then passed 16
+   native assertions: binary/empty/Unicode paths, missing refusal, original
+   receipt and exact export after root disable/source loss. Report:
+   `build/attachment-capture-native-run/native-result.json` SHA `60ecdf15…`.
+   Guest45035/wrapper80946 ended0; VM stopped. Asset storage has220 Mac checks;
+   capture coordinator has81 Mac checks. These modules remain isolated.
+4. **Parallel integration:** `attachment_native_receipt` owns external capture
+   CLI/folder-policy UI; `archive_adoption_review` owns ATIF CLI/UI (kind41);
+   `remaining_parity_audit` owns PNG preview and affine app wrapper. Shared seams
+   are coordinated, but no combined executable or UI acceptance exists yet.
+   ATIF core passed69 Linux checks and six actual exports passed the pinned
+   official v1.8 schema. PNG core passed96 Linux checks; preview passed79.
+5. **Physical-Mac PNG/preview gate passed:** session97576 ended0, run
+   `build/attachment-image-preview-integration/mac-root/984b4865-5a5b-4c0b-bccc-9ce70f44e2c3`.
+   Four Bend suites passed175 assertions with empty runtime stderr; the
+   standalone visual entry built successfully. All22 files/93pins are unchanged.
+   Receipt SHA `7e4eb5a0…`; binary `057e3757…`. Actual visual interaction remains
+   pending. Agent `archive_decoder` is preparing its Tart payload. Mac slot free.
 
-Connections was adopted through the exact 25-path manifest in
-`build/quota-ui-integration/adoption-manifest.json`; preimages are preserved in
-`build/connections-adoption`. Its publication base is verified compact commit
-`1bca130303db30ca34a89dad43df2d53875e9943`, tree
-`2a8d3d922e5921eefbe3ebc4c6d256df2bcbe611`. Publish only the named implementation
-and documentation/receipt paths; verify all main-closure hashes in the resulting
-tree before an expected-SHA fast-forward. Publication receipts use
-`build/connections-publication.json` and `build/connections-remote.json`.
-Refresh PR #1's actual head before continuing; never stage all dirty/untracked paths.
-
-The following work is isolated and **not adopted into the working app**:
-
-1. Attachment extraction/inventory/inline export: frozen under
-   `build/attachments-integration`, `build/attachment-inventory-integration` and
-   `build/attachment-inline-integration`. Extractor: 75 Linux assertions.
-   Inventory: 38 Mac assertions plus two fixture receipts. Inline: 88 Mac
-   assertions plus a source-removal receipt; exact binary/empty output,
-   no-clobber and fresh-process retained export passed. UI/CLI integration
-   tests against frozen Connections, using mode 5 and workers 39/40.
-   First frontend failures are preserved and being repaired. Exact prior
-   reader/filter/selection restoration and actual native interaction remain gates.
-2. External attachment capture: minimal sandbox attempt 12 started the Bend
-   reader and passed binary/empty reads plus denial of its own executable.
-   The sole new allowance reads the `/` directory vnode for dyld bootstrap;
-   it grants no descendant regular-file bytes. Results:
-   `build/attachment-reporting-native/summary.json` and
-   `artifacts/attempt12-receipts`. Failed attempts 10/11 are preserved.
-   This is not full-app capture acceptance. Next isolate the early worker route,
-   bounded protocol and filesystem race tests before SQLite asset integration.
-   Blocking file-open/type rejection and process timeout limits need actual
-   native validation. No native bridge expansion.
-3. Archive streaming: `build/archive-streaming-integration`. Linux component
-   checks passed: decoder 46, metadata 99, profile 27; capture 40 and
-   legacy/export-corruption 16. Gate `1fcbaa96` passed a >4 MiB logical fixture
-   (76 printed PASS lines) and 43 refusal cases (1,928 printed PASS lines,
-   including repeated table checks). Its frozen old SQLite bridge is explicitly
-   recorded; refresh it before current-tree Mac claims. Actual old-executable
-   compatibility, Mac interruption, 100k mixed archives and resource measurements
-   remain pending. Actual 256 MiB expansion is unrun. Production still caps
-   archives at 1 MiB compressed/4 MiB logical.
-4. Transcript presentation: `build/transcript-polish-integration/HANDOFF.md`.
-   Conversation first, complete citations/metadata appendix, one canonical text
-   for display/selection/copy/export; Why unchanged. Pure formatter 19 Linux
-   checks and captured Store/scoped gate 13 passed. Zero-event record intervals
-   are retained. Adopt only its seven named files/hunks after integration checks;
-   actual Mac/UI inspection remains required.
-5. Connections presentation: `build/quota-presentation-integration`. Three files
-   change summary/history/setup presentation and tests. UTC formatting, exact
-   percentage precision, evidence retention and canonical copy are checked.
-   The final Linux gate passed 57 presentation and 70 model checks, with all 107
-   inputs unchanged. Exact three-file handoff is ready. No production or native
-   UI claim.
-
-Attachment integration currently owns the physical-Mac compiler slot; archive
-validation follows its explicit release. Agents coordinate isolated compiler
-runs. Root owns app promotion and Tart UI acceptance. Preserve the current
-executable until successor workflows pass.
+Next collect the native diagnostic and Mac gate, fix selection from evidence,
+publish the coherent adopted slice with its explicit limitation, then assemble
+capture/ATIF/image UI seams into one new main build and validate actual use.
+Stop only verified owned Tart children; preserve all failed attempts.
 
 ## Remaining goal and measured limits
 
-Wider provider/attachment/archive coverage, active-to-archive presentation aliases,
-and pleasant visual/interaction quality remain incomplete. Connections history
-currently renders a newline as a fallback box and uses technical timestamps/prose.
-CJK/emoji/combining glyphs, shaping/IME/accessibility, general resize and measured
-input-to-photon latency remain open/upstream-limited.
+Full parity is incomplete. `build/parity-gap-audit/GAPS.md` records18 concrete
+journeys against read-only Juice commit `829ff9b5…`, without private source copies.
+Remaining work includes large-root discovery/archive aliases, provider-specific
+presentation, external attachments/images, ATIF, installed-provider quota clients,
+per-window history, read-only agent Connect/MCP, library Usage/pricing,
+multi-source Briefs, recorded commit-result attribution, deliberate excluded-content
+removal and comfortable formatted reading. Missing features are not excluded.
 
-Historical broad evidence: 40 executables/2,960 checks; twelve production laws
-checked by BendTT and Lean 4.34; Linux portable 300 checks. Later changes have
-focused gates and are not covered by that old full-suite count.
-Physical-Mac 100k: import 36.194s, unchanged 3.910s, append 16 records 23.816s;
-search/late/scoped late p95 = 42/7/17ms. Marginal tuning is deferred per owner
-priority. No Swift timing comparison; future comparisons must use the same
-host and equivalent work.
+CJK/emoji/combining glyphs, shaping/IME/accessibility, resizing and measured
+input-to-photon latency remain open/upstream-limited. Basic copy/scroll success
+does not establish these behaviors. Warm, usable native UX remains part of the goal.
+
+Historical broad evidence:40 executables/2,960 checks and12 production laws
+checked by BendTT/Lean. Later focused checks do not replace a fresh complete suite.
+Physical-Mac100k: import36.194s, unchanged3.910s, append16 records23.816s;
+search/late/scoped-late p95=42/7/17ms. Marginal tuning is deferred per owner.
+Separate quiet streaming-archive100k:26,936,113 logical /7,654,948 compressed
+bytes captured in139.055s; retained verification/read/search/dual exports after
+source removal took44.475s combined. Different workloads; no Swift comparison.
+Future comparisons must run equivalent work on the same host.

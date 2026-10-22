@@ -6,12 +6,13 @@ import ./domain.bend as Domain
 import ./providers.bend as Providers
 import ./maintenance.bend as Maintenance
 import ./evidence.bend as Evidence
+import ./transcript_format.bend as Transcript
 
 type Scope is Data:
   Scope{provider: String, repository: String, role: String, after: String}
 
 type Output is Data:
-  Output{context: Store.Context, visible: U32, chunks: List<&2,String>}
+  Output{context: Store.Context, visible: U32, chunks: List<&2,String>, details: List<&2,String>}
 
 def valid(scope: Scope) -> Bool:
   Scope{+provider,+repo,+role,+after} = scope
@@ -36,28 +37,39 @@ def permits(scope: Scope,provider: String,event: Providers.Record) -> Bool:
     (String.is_empty(after) || (Query.date_valid(String.take(stamp,10n)) &&
       String.is_ge(stamp,after)))
 
+def reference(record: Evidence.Verified,index: U32) -> String:
+  Evidence.Verified{_,_,_,_,_,ordinal,_} = record
+  Transcript.reference(ordinal,index)
+
 def event_text(why: Bool,record: Evidence.Verified,index: U32,event: Providers.Record) -> String:
   match why:
     case True{}:
       Evidence.why_event(record,index,event)
     case False{}:
-      Store.display_event(event) ++ "Citation: " ++ Evidence.citation(record,index) ++ "\n\n"
+      Transcript.body(reference(record,index),event)
 
-def include(allowed: Bool,output: Output,record: Evidence.Verified,index: U32,
-  event: Providers.Record,why: Bool) -> Output:
+def event_details(why: Bool,+record: Evidence.Verified,+index: U32,event: Providers.Record) -> String:
+  match why:
+    case True{}: ""
+    case False{}:
+      Transcript.details(reference(record,index),event,"Citation: " ++ Evidence.citation(record,index))
+
+def include(allowed: Bool,output: Output,+record: Evidence.Verified,+index: U32,
+  +event: Providers.Record,+why: Bool) -> Output:
   match allowed:
     case False{}:
       output
     case True{}:
-      Output{context,visible,chunks} = output
-      Output{context,U32.add(visible,1),event_text(why,record,index,event) <> chunks}
+      Output{context,visible,chunks,details} = output
+      Output{context,U32.add(visible,1),event_text(why,record,index,event) <> chunks,
+        event_details(why,record,index,event) <> details}
 
 def normalized(pair: Store.Context & Providers.Record,provider: String,scope: Scope,
   record: Evidence.Verified,index: U32,selected: Bool,why: Bool,visible: U32,
-  chunks: List<&2,String>,next: Output -> Output) -> Output:
+  chunks: List<&2,String>,details: List<&2,String>,next: Output -> Output) -> Output:
   (context,+event) = pair
   next(include(selected && permits(scope,provider,event),
-    Output{context,visible,chunks},record,index,event,why))
+    Output{context,visible,chunks,details},record,index,event,why))
 
 def filter_events(events: List<&2,Providers.Record>,+provider: String,+scope: Scope,
   +record: Evidence.Verified,+index: U32,+selected: Bool,+why: Bool,output: Output) -> Output:
@@ -65,9 +77,9 @@ def filter_events(events: List<&2,Providers.Record>,+provider: String,+scope: Sc
     case []:
       output
     case event <> rest:
-      Output{context,visible,chunks} = output
+      Output{context,visible,chunks,details} = output
       normalized(Store.contextualize(provider,context,event),provider,scope,record,
-        index,selected,why,visible,chunks,
+        index,selected,why,visible,chunks,details,
         next => filter_events(rest,provider,scope,record,U32.add(index,1),selected,why,next))
 
 def walk(fuel: Nat,+db: U32,+snapshot: String,+header: Maintenance.Header,
@@ -118,17 +130,17 @@ def missing_context(replay: Bool,db: U32,snapshot: String,header: Maintenance.He
   match replay:
     case True{}:
       walk(U32.to_nat(stop),db,snapshot,header,source,scope,start,0,0,False{},why,
-        Output{Store.Context{"","","",""},0,[]})
+        Output{Store.Context{"","","",""},0,[],[]})
     case False{}:
       selected_walk(U32.to_nat(size),db,snapshot,scope,start,why,
-        Output{Store.Context{"","","",""},0,[]})
+        Output{Store.Context{"","","",""},0,[],[]})
 
 def repository_cache(cached: Maybe<&2,Store.Context>,db: U32,snapshot: String,
   header: Maintenance.Header,source: String,scope: Scope,start: U32,size: U32,
   stop: U32,why: Bool,replay: Bool) -> IO(Output):
   match cached:
     case Some{context}:
-      selected_walk(U32.to_nat(size),db,snapshot,scope,start,why,Output{context,0,[]})
+      selected_walk(U32.to_nat(size),db,snapshot,scope,start,why,Output{context,0,[],[]})
     case None{}:
       missing_context(replay,db,snapshot,header,source,scope,start,size,stop,why)
 
@@ -136,7 +148,7 @@ def repository_page(enabled: Bool,+db: U32,+snapshot: String,+header: Maintenanc
   source: String,scope: Scope,+start: U32,size: U32,stop: U32,why: Bool,replay: Bool) -> IO(Output):
   match enabled:
     case False{}:
-      IO.pure(Output,Output{Store.Context{"","","",""},0,[]})
+      IO.pure(Output,Output{Store.Context{"","","",""},0,[],[]})
     case True{}:
       Maintenance.Header{generation,extent,records,_} = header
       do IO<Output>:
@@ -155,9 +167,9 @@ def describe(scope: Scope) -> String:
     " · role: " ++ Store.nonempty(role,"all") ++
     " · after: " ++ Store.nonempty(after,"all")
 
-def rendered(output: Output,snapshot: String,start: U32,count: U32,
+def legacy_rendered(output: Output,snapshot: String,start: U32,count: U32,
   +scope: Scope,+why: Bool) -> String:
-  Output{_,visible,chunks} = output
+  Output{_,visible,chunks,_} = output
   "Juice Bend · scoped captured " ++ Bool.pick(String,why,"Why evidence","transcript") ++
     "\nSnapshot " ++ snapshot ++ " · captured record start " ++ U32.show(start) ++
     " · requested records " ++ U32.show(count) ++ "\n" ++ describe(scope) ++
@@ -168,6 +180,26 @@ def rendered(output: Output,snapshot: String,start: U32,count: U32,
       "\nScope uses verified selected raw records. Earlier inherited model and parent metadata may be unavailable; other ranges were not checked.") ++
     Bool.pick(String,why,"\nRationale: captured statements only; no generated or inferred explanation.","") ++
     "\n\n" ++ String.join(List.reverse(&2,String,chunks),"")
+
+def transcript_rendered(output: Output,+snapshot: String,start: U32,count: U32,+scope: Scope) -> String:
+  Output{_,+visible,chunks,details} = output
+  Transcript.render(Transcript.Page{visible,String.join(List.reverse(&2,String,chunks),""),
+    String.join(List.reverse(&2,String,details),"")},snapshot,
+    "Juice Bend · scoped captured transcript\nSnapshot " ++ snapshot ++
+    " · captured record start " ++ U32.show(start) ++ " · requested records " ++ U32.show(count) ++
+    "\n" ++ describe(scope) ++ "\nVisible events in this captured range: " ++ U32.show(visible) ++
+    "\nByte offsets: logical source bytes (decompressed for archives)." ++
+    Bool.pick(String,needs_prefix(scope),
+      "\nRepository scope uses raw-derived context bound to this immutable record. Selected records were verified; the complete snapshot was not reverified. Legacy context may require verified prefix replay.",
+      "\nScope uses verified selected raw records. Earlier inherited model and parent metadata may be unavailable; other ranges were not checked."))
+
+def render_mode(why: Bool,output: Output,snapshot: String,start: U32,count: U32,scope: Scope) -> String:
+  match why:
+    case True{}: legacy_rendered(output,snapshot,start,count,scope,True{})
+    case False{}: transcript_rendered(output,snapshot,start,count,scope)
+
+def rendered(output: Output,snapshot: String,start: U32,count: U32,scope: Scope,why: Bool) -> String:
+  render_mode(why,output,snapshot,start,count,scope)
 
 def provider_allowed(scope: Scope,provider: String) -> Bool:
   Scope{wanted_provider,_,_,_} = scope

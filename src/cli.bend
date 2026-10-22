@@ -1,4 +1,5 @@
 import Base
+import ./attachment_cli.bend as AttachmentCli
 import ./brief_cli.bend as Brief
 import ./store.bend as Store
 import ./capture.bend as Capture
@@ -585,6 +586,7 @@ def help() -> IO(Unit):
     "\"repo-why REPO COMMIT PATH FIRST COUNT\"," ++
     "\"usage SNAPSHOT [START [COUNT]]\",\"session-usage SNAPSHOT\"," ++
     "\"brief-prepare (versioned stdin)\",\"brief-check (versioned stdin)\"," ++
+    "\"attachments SNAPSHOT START COUNT\",\"export-inline SNAPSHOT RECORD REF JSONPATH DEST\"," ++
     "\"citation JSON\",\"export SNAPSHOT PATH\",\"export-range SNAPSHOT START COUNT PATH\"," ++
     "\"export-why SNAPSHOT START COUNT PATH\",\"export-blame REPOSITORY FILE START END PATH\"," ++
     "\"export-range-scope SNAP START COUNT PROVIDER REPO ROLE AFTER PATH\"," ++
@@ -597,6 +599,8 @@ def help() -> IO(Unit):
 
 def command(db: U32,data_dir: String,cmd: String,args: List<String>) -> IO(Unit):
   match cmd:
+    case "attachments": AttachmentCli.run(db,"attachments",args)
+    case "export-inline": AttachmentCli.run(db,"export-inline",args)
     case "brief-prepare":
       match args:
         case []: Brief.run(db,"brief-prepare")

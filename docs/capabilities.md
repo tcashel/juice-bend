@@ -1,5 +1,13 @@
 # Capabilities
 
+The current source adds readable transcript formatting, canonical-offset word
+wrapping, retained inline attachment inventory/export and streaming archives.
+The confined attachment worker has passed native boundary checks; explicit
+external capture UI, image viewing and ATIF export remain in isolated integration.
+The newest executable has an unresolved intermittent selection/Copy result and
+is not promoted over the preserved working app. See
+[the scoped receipt](receipts/reader-attachments-native.txt).
+
 ## Connections native validation — 2026-10-21
 
 Current app `0d4839d9…` adds explicit local Claude quota collection under
@@ -79,8 +87,8 @@ filesystem sandbox. A running refresh can finish its bounded batch after pause;
 pause prevents subsequent automatic refreshes.
 
 Explicit imports and registered-root discovery accept `.jsonl.zst` alongside
-plain JSONL. The initial archive profile is limited to 1 MiB compressed input,
-4 MiB total decoded output, an 8 MiB window, 64 frames including skippable frames,
+plain JSONL. The streaming archive profile is limited to 64 MiB compressed input,
+256 MiB total decoded output, an 8 MiB window, 64 frames including skippable frames,
 and 4,096 blocks per ordinary frame. The Bend decoder supports raw/RLE/ordinary
 compressed blocks, Huffman/FSE table reuse, LZ matches and checksum verification.
 It uses no external decoder process or native decoding bridge. Dictionaries,
@@ -102,7 +110,9 @@ Export evidence remains bounded to the displayed scope. Export full JSONL and
 Export archive pin the opened History snapshot and explicitly include records
 outside current filters. They write private, non-replacing files; plain captures
 cannot produce an archive export. Native archive capture, reader and full-export
-interaction remain pending, distinct from the passed state/transport gate.
+interaction passed on the preserved archive executable; later focused reader,
+attachment and streaming gates have separate source identities. See
+`receipts/archive-native.txt` and `receipts/reader-attachments-native.txt`.
 
 Settings exposes explicit provider/path input and persisted automatic refresh
 choices of 30 seconds, 2, 4, 8 or 24 hours. Changes take effect after durable

@@ -4,6 +4,7 @@ import ../src/store.bend as Store
 import ../src/sql.bend as Sql
 import ../src/maintenance.bend as Maintenance
 import ../src/archive_maintenance.bend as Retained
+import ../src/archive_profile.bend as Profile
 import ./archive_maintenance.bend as Fixture
 import ./archive_publication.bend as Publication
 import ./zstd/frame_vectors.bend as Vectors
@@ -25,9 +26,11 @@ def without_last(bytes: List<&2,U32>) -> List<&2,U32>:
     case _ <> []: []
     case byte <> tail: byte <> without_last(tail)
 
-# Unknown content size,8MiB window. Thirty-two nonfinal RLE blocks each produce
-# 131072 bytes; the final one-byte block attempts byte4194305. No large source
-# fixture or declared-size shortcut is involved in this output-limit test.
+# Unknown content size, 128 KiB window. 2048 nonfinal RLE blocks each produce
+# 131072 bytes; the final one-byte block attempts byte 268435457. The physical
+# fixture is only 8202 bytes, but this deliberately decodes/hashes 256 MiB before
+# refusal. Schedule the named max-output mode separately when useful; the
+# default full suite retains this case. No declared-size shortcut is used.
 def rle_blocks(fuel: Nat,tail: List<&2,U32>) -> List<&2,U32>:
   match fuel:
     case 0n: tail
@@ -35,7 +38,7 @@ def rle_blocks(fuel: Nat,tail: List<&2,U32>) -> List<&2,U32>:
       2 <> 0 <> 16 <> 65 <> rle_blocks(rest,tail)
 
 def expansion() -> List<&2,U32>:
-  List.append(&2,U32,[40,181,47,253,0,88],rle_blocks(32n,[11,0,0,65]))
+  List.append(&2,U32,[40,181,47,253,0,56],rle_blocks(2048n,[11,0,0,65]))
 
 def bytes_for(mode: String) -> List<&2,U32>:
   match mode:
@@ -46,8 +49,10 @@ def bytes_for(mode: String) -> List<&2,U32>:
     case "window": [40,181,47,253,0,112,1,0,0]
     # Descriptor1 selects a one-byte nonzero dictionary ID after the window.
     case "dictionary": [40,181,47,253,1,56,1,1,0,0]
-    # Single segment,4-byte FCS4194305, followed by an empty final raw block.
-    case "logical_declared": [40,181,47,253,160,1,0,64,0,1,0,0]
+    # Separate 128 KiB window and 4-byte FCS 268435457 isolate the output cap.
+    case "logical_declared": [40,181,47,253,128,56,1,0,0,16,1,0,0]
+    # Single-segment FCS 8388609 independently preserves that window guard.
+    case "single_window": [40,181,47,253,160,1,0,128,0,1,0,0]
     case "logical_expansion": expansion()
     case _: []
 
@@ -63,7 +68,7 @@ def repeat_writes(fuel: Nat,file: File,+chunk: List<&2,U32>) -> IO(File):
 def oversized_file(path: String) -> IO(Unit):
   do IO<Unit>:
     file : File <- IO.try(File,File.open(path,"w"))
-    filled : File <- repeat_writes(16n,file,List.replicate(U32,65536n,0))
+    filled : File <- repeat_writes(1024n,file,List.replicate(U32,65536n,0))
     extra : File & Result<&1,&1,U32 & String,Unit> <- File.write_bytes(filled,[0])
     Store.write_closed(extra)
 
@@ -83,13 +88,14 @@ def observed_phase(mode: String) -> String:
 def expected_error(mode: String) -> String:
   match mode:
     case "checksum": "archive_corrupt: Zstandard content checksum mismatch"
-    case "truncated": "archive_corrupt: truncated byte field"
+    case "truncated": "archive_corrupt: truncated or oversized decoder request"
     case "trailing": "archive_corrupt: unrecognized Zstandard frame magic"
     case "window": "archive_limit: Zstandard window exceeds"
     case "dictionary": "archive_dictionary: dictionary-required Zstandard frame is unsupported"
-    case "logical_declared": "archive_limit: single-segment frame exceeds output or window limit"
+    case "logical_declared": "archive_limit: frame content exceeds output limit"
+    case "single_window": "archive_limit: single-segment frame exceeds output or window limit"
     case "logical_expansion": "archive_limit: decoded byte exceeds output/window bound"
-    case "physical": "archive_limit: compressed source exceeds 1 MiB"
+    case "physical": "archive_limit: compressed source exceeds stream profile"
     case "source_changed": "archive_changed: compressed bytes changed during capture"
     case "container_metadata": "Archive chunk types, bytes or digest are corrupt"
     case "logical_metadata": "integrity"
@@ -185,6 +191,13 @@ def check_marker(+mode: String,+prefix: String,required: Bool) -> IO(Unit):
         Publication.assert(String.eq(actual,prefix ++ "|" ++ mode ++ "|" ++ observed_phase(mode)),
           mode ++ " exact owned mutation boundary was reached")
 
+def timeout(mode: String) -> U32:
+  match mode:
+    # This is a bounded expensive admission test, not a performance target.
+    # A timeout still fails; only the expected importer refusal passes.
+    case "logical_expansion": 900000
+    case _: 30000
+
 def run_case(+self: String,+directory: String,+mode: String) -> IO(Unit):
   +prefix = directory ++ "/" ++ mode
   do IO<Unit>:
@@ -194,9 +207,12 @@ def run_case(+self: String,+directory: String,+mode: String) -> IO(Unit):
     prepare_source(mode,prefix ++ ".jsonl.zst")
     Store.write_text(prefix ++ ".marker","w","")
     IO.try(Unit,Sql.close(db))
+    started : Nat <- IO.now()
     result : Result<&1,&1,U32 & String,U32 & (String & String)> <-
-      Process.run(self,["child",mode,prefix],"",8192,30000)
+      Process.run(self,["child",mode,prefix],"",8192,timeout(mode))
     failed(result,expected_error(mode),mode)
+    finished : Nat <- IO.now()
+    IO.print("TIMING archive-refusal-" ++ mode ++ " " ++ Nat.show(Nat.sub(finished,started)) ++ " ms")
     check_marker(mode,prefix,observed(mode))
     +reopened : U32 <- Store.open(prefix ++ ".sqlite")
     Publication.unchanged_tables(Publication.tables(),reopened,mode)
@@ -212,10 +228,13 @@ def run_case(+self: String,+directory: String,+mode: String) -> IO(Unit):
     Publication.assert(String.eq(recovered,again),mode ++ " recovered retry is idempotent")
     IO.try(Unit,Sql.close(reopened))
 
-def cases() -> List<&2,String>:
+def standard_cases() -> List<&2,String>:
   ["checksum","truncated","trailing","window","dictionary","logical_declared",
-    "logical_expansion","physical","source_changed","container_metadata","logical_metadata",
+    "single_window","physical","source_changed","container_metadata","logical_metadata",
     "origin_metadata","plain_guard"]
+
+def cases() -> List<&2,String>:
+  List.append(&2,String,standard_cases(),["logical_expansion"])
 
 def run_cases(modes: List<&2,String>,+self: String,+directory: String) -> IO(Unit):
   match modes:
@@ -445,24 +464,49 @@ def run_final_states(states: List<&2,String>,+self: String,+directory: String) -
         run_final_faults(final_faults(),self,directory,state)
         run_final_states(rest,self,directory)
 
-def suite(+self: String) -> IO(Unit):
+def scheduled(+self: String,+directory: String,mode: String) -> IO(Unit):
+  match mode:
+    case "standard":
+      do IO<Unit>:
+        IO.print("SCHEDULE standard: 43 cases; max-output is separate and is NOT validated by this run")
+        run_cases(standard_cases(),self,directory)
+        run_final_states(["initial","append","unchanged"],self,directory)
+        IO.print("Archive failure standard suite passed: 43 cases; max-output remains a separate required gate")
+    case "max-output":
+      do IO<Unit>:
+        IO.print("SCHEDULE max-output: decode/hash 256 MiB then refuse byte 268435457; 900000 ms child bound")
+        run_case(self,directory,"logical_expansion")
+        IO.print("Archive failure max-output case passed: actual streaming expansion cap and atomic rollback")
+    case "all":
+      do IO<Unit>:
+        run_cases(cases(),self,directory)
+        run_final_states(["initial","append","unchanged"],self,directory)
+        IO.print("Archive failure suite passed: 44 owned importer rejection and atomic rollback cases")
+    case _: IO.die(Unit,2,"Unknown archive failure schedule")
+
+def suite(+self: String,mode: String) -> IO(Unit):
   do IO<Unit>:
+    Publication.assert(U32.is_eq(Profile.input(Profile.streaming()),67108864) &&
+      U32.is_eq(Profile.output(Profile.streaming()),268435456),
+      "failure fixtures target the pinned 64 MiB compressed and 256 MiB logical stream profile")
+    Publication.assert(U32.is_eq(U32.from_nat(List.length(&2,U32,expansion())),8202),
+      "unknown-size output-limit fixture is exactly 8202 physical bytes and 2049 bounded RLE blocks")
     first : U32 <- IO.try(U32,IO.random_u32())
     second : U32 <- IO.try(U32,IO.random_u32())
     +directory : String = ".build/archive-failures-" ++ U32.show(first) ++ "-" ++ U32.show(second)
     made : U32 & (String & String) <- IO.try(U32 & (String & String),
       Process.run("/bin/mkdir",["-m","700",directory],"",4096,2000))
     Fixture.process_ok(made,"create unique private synthetic failure directory")
-    run_cases(cases(),self,directory)
-    run_final_states(["initial","append","unchanged"],self,directory)
-    IO.print("Archive failure suite passed: 43 owned importer rejection and atomic rollback cases")
+    scheduled(self,directory,mode)
 
 def dispatch(args: List<String>) -> IO(Unit):
   match args:
-    case self <> []: suite(self)
+    case self <> []: suite(self,"all")
+    case self <> "standard" <> []: suite(self,"standard")
+    case self <> "max-output" <> []: suite(self,"max-output")
     case _ <> "child" <> mode <> prefix <> []: child(mode,prefix)
     case _ <> "final-child" <> state <> fault <> prefix <> []: final_child(state,fault,prefix)
-    case _: IO.die(Unit,2,"Archive failures expects no arguments or its owned child arguments")
+    case _: IO.die(Unit,2,"Archive failures expects no arguments, standard, max-output, or its owned child arguments")
 
 def main() -> IO(Unit):
   do IO<Unit>:

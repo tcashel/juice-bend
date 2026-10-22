@@ -144,10 +144,14 @@ def accepted(value: Result<&2,&2,Brief.Problem,BriefCli.Command>) -> Bool:
     case Done{_}: True{}
     case Fail{_}: False{}
 
+def heading_text(layout: Brief.Layout) -> String:
+  Brief.Layout{opening,details} = layout
+  opening ++ details
+
 def labels() -> IO(Unit):
   +gui = {GuiBrief.Anchor{snapshot(),40,5,Query.Filters{"","codex","","",""}} : GuiBrief.Anchor}
-  +heading = Brief.header(anchor(),Brief.Missing{0})
-  +reader = Scoped.rendered(Scoped.Output{Store.Context{"","","",""},0,[]},snapshot(),40,40,Scoped.Scope{"codex","","",""},False{})
+  +heading = heading_text(Brief.header(anchor(),Brief.Missing{0}))
+  +reader = Scoped.rendered(Scoped.Output{Store.Context{"","","",""},0,[],[]},snapshot(),40,40,Scoped.Scope{"codex","","",""},False{})
   +wire = GuiBrief.body(GuiBrief.Model{gui,"/synthetic/repository",0,1,None{},GuiBrief.Whole{}})
   +citation = Evidence.citation(Evidence.Verified{"codex","/synthetic/history.jsonl.zst","9007199254740993",snapshot(),"9000","40",[]},2)
   do IO<Unit>:

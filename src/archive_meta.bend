@@ -1,6 +1,7 @@
 import Base
 import ./sql.bend as Sql
 import ./domain.bend as Domain
+import ./archive_profile.bend as Profile
 
 # The compressed container is snapshot-owned evidence distinct from logical
 # JSONL raw rows. This module never reads a source file or decodes Zstandard.
@@ -152,14 +153,17 @@ def hash_fields(fields: List<&2,String>,hash: Domain.HashContext) -> Domain.Hash
     case field <> rest:
       hash_fields(rest,Domain.hash_bytes(framed(field),hash))
 
-def origin_digest(h: Header,m: Metadata) -> String:
+def origin_digest_for(+policy: Profile.Profile,h: Header,m: Metadata) -> String:
   Header{snapshot,source,generation,provider,locator,extent,records,checkpoint,ordinal,_,codec} = h
   Metadata{compressed,chunks,compressed_sha,logical_sha} = m
   Domain.hash_finish(hash_fields([format(),snapshot,source,generation,provider,locator,
     codec,U32.show(extent),U32.show(records),U32.show(checkpoint),U32.show(ordinal),
-    U32.show(compressed),U32.show(chunks),compressed_sha,logical_sha,profile(),
-    U32.show(input_limit()),U32.show(output_limit()),"8388608","64","4096",
-    U32.show(chunk_count_limit())],initial_hash()))
+    U32.show(compressed),U32.show(chunks),compressed_sha,logical_sha,Profile.name(policy),
+    U32.show(Profile.input(policy)),U32.show(Profile.output(policy)),"8388608","64","4096",
+    U32.show(Profile.chunks(policy))],initial_hash()))
+
+def origin_digest(h: Header,m: Metadata) -> String:
+  origin_digest_for(Profile.batch(),h,m)
 
 def chunk_digest(snapshot: String,ordinal: U32,offset: U32,length: U32,bytes: List<&2,U32>) -> String:
   Domain.hash_finish(Domain.hash_bytes(bytes,hash_fields(["archive-chunk-v1",snapshot,
@@ -228,15 +232,18 @@ def header(+db: U32,+snapshot: String,accepted: Bool) -> IO(Header):
       [Sql.Cell.Integer{snapshot}],1)
     header_rows(rows,snapshot,accepted)
 
-def metadata_valid(h: Header,m: Metadata) -> Bool:
+def metadata_valid_for(+policy: Profile.Profile,h: Header,m: Metadata) -> Bool:
   Header{_,_,_,_,_,+logical,+records,_,_,_,_} = h
   Metadata{+extent,+chunks,compressed_sha,logical_sha} = m
-  U32.is_gt(extent,0) && U32.is_le(extent,input_limit()) &&
-    U32.is_gt(chunks,0) && U32.is_le(chunks,extent) && U32.is_le(chunks,chunk_count_limit()) &&
-    U32.is_le(logical,output_limit()) && U32.is_le(records,logical) &&
+  U32.is_gt(extent,0) && U32.is_le(extent,Profile.input(policy)) &&
+    U32.is_gt(chunks,0) && U32.is_le(chunks,extent) && U32.is_le(chunks,Profile.chunks(policy)) &&
+    U32.is_le(logical,Profile.output(policy)) && U32.is_le(records,logical) &&
     (U32.is_ne(logical,0) || U32.is_eq(records,0)) &&
     (U32.is_ne(records,0) || U32.is_eq(logical,0)) &&
     digest_valid(compressed_sha) && digest_valid(logical_sha)
+
+def metadata_valid(h: Header,m: Metadata) -> Bool:
+  metadata_valid_for(Profile.batch(),h,m)
 
 def metadata_result(m: Metadata,valid: Bool) -> Maybe<&2,Metadata>:
   match valid:
@@ -245,18 +252,23 @@ def metadata_result(m: Metadata,valid: Bool) -> Maybe<&2,Metadata>:
     case False{}:
       None{}
 
-def metadata_numbers(+h: Header,+snapshot: String,version: String,limits: String,
+def metadata_profile(+h: Header,+snapshot: String,version: String,policy: Maybe<&2,Profile.Profile>,
   extent: Maybe<&2,U32>,chunks: Maybe<&2,U32>,compressed_sha: String,logical_sha: String,
   +commitment: String) -> Maybe<&2,Metadata>:
   Header{actual,_,_,_,_,_,_,_,_,_,codec} = h
-  match extent chunks:
-    case Some{e} Some{c}:
+  match policy extent chunks:
+    case Some{+limits} Some{e} Some{c}:
       +m = {Metadata{e,c,compressed_sha,logical_sha} : Metadata}
       metadata_result(m,identity(snapshot) && String.eq(actual,snapshot) &&
-        String.eq(codec,encoding()) && String.eq(version,format()) && String.eq(limits,profile()) &&
-        metadata_valid(h,m) && digest_valid(commitment) && String.eq(commitment,origin_digest(h,m)))
-    case _ _:
-      None{}
+        String.eq(codec,encoding()) && String.eq(version,format()) &&
+        metadata_valid_for(limits,h,m) && digest_valid(commitment) &&
+        String.eq(commitment,origin_digest_for(limits,h,m)))
+    case _ _ _: None{}
+
+def metadata_numbers(h: Header,snapshot: String,version: String,limits: String,
+  extent: Maybe<&2,U32>,chunks: Maybe<&2,U32>,compressed_sha: String,logical_sha: String,
+  commitment: String) -> Maybe<&2,Metadata>:
+  metadata_profile(h,snapshot,version,Profile.read(limits),extent,chunks,compressed_sha,logical_sha,commitment)
 
 def decode_metadata(h: Header,cells: List<&2,Sql.Cell>) -> Maybe<&2,Metadata>:
   match cells:
@@ -372,17 +384,21 @@ def chunk_result(chunk: Chunk,valid: Bool) -> Maybe<&2,Chunk>:
     case False{}:
       None{}
 
-def chunk_numbers(+snapshot: String,+actual: String,ordinal: Maybe<&2,U32>,offset: Maybe<&2,U32>,
+def chunk_numbers_for(+policy: Profile.Profile,+snapshot: String,+actual: String,ordinal: Maybe<&2,U32>,offset: Maybe<&2,U32>,
   length: Maybe<&2,U32>,+digest: String,+bytes: List<&2,U32>) -> Maybe<&2,Chunk>:
   match ordinal offset length:
     case Some{+o} Some{+p} Some{+n}:
       chunk_result(Chunk{o,p,n,bytes},identity(actual) && String.eq(snapshot,actual) &&
-        U32.is_gt(n,0) && U32.is_le(n,chunk_limit()) && U32.is_le(p,input_limit()) &&
-        U32.is_le(n,U32.sub(input_limit(),p)) &&
+        U32.is_gt(n,0) && U32.is_le(n,chunk_limit()) && U32.is_le(p,Profile.input(policy)) &&
+        U32.is_le(n,U32.sub(Profile.input(policy),p)) &&
         Nat.is_eq(List.length(&2,U32,bytes),U32.to_nat(n)) && octets(bytes) &&
         digest_valid(digest) && String.eq(digest,chunk_digest(snapshot,o,p,n,bytes)))
     case _ _ _:
       None{}
+
+def chunk_numbers(snapshot: String,actual: String,ordinal: Maybe<&2,U32>,offset: Maybe<&2,U32>,
+  length: Maybe<&2,U32>,digest: String,bytes: List<&2,U32>) -> Maybe<&2,Chunk>:
+  chunk_numbers_for(Profile.batch(),snapshot,actual,ordinal,offset,length,digest,bytes)
 
 def decode_chunk(snapshot: String,row: List<&2,Sql.Cell>) -> Maybe<&2,Chunk>:
   match row:
@@ -496,3 +512,167 @@ def container(+db: U32,snapshot: String,accepted: Bool) -> IO(List<&2,List<&2,U3
   do IO<List<&2,List<&2,U32>>>:
     result : Maybe<&2,Origin> <- read(db,snapshot,accepted)
     container_origin(db,result)
+
+# Streaming readers carry one chunk and incremental commitment state only.
+# They also serve publication and export, so no accepted stream profile needs
+# the legacy all-chunks convenience API above.
+type Reader is Data:
+  Reader{snapshot: String,policy: Profile.Profile,extent: U32,chunks: U32,
+    digest: String,ordinal: U32,offset: U32,hash: Domain.HashContext}
+
+type Read is Data:
+  Read{reader: Reader,bytes: Maybe<&2,List<&2,U32>>}
+
+type Open is Data:
+  Open{origin: Origin,reader: Reader}
+
+def required_profile(value: Maybe<&2,Profile.Profile>) -> IO(Profile.Profile):
+  match value:
+    case None{}: IO.die(Profile.Profile,1,"Archive profile is unknown; capture refused")
+    case Some{policy}: IO.pure(Profile.Profile,policy)
+
+def profile_row(rows: List<&2,List<&2,Sql.Cell>>) -> IO(Profile.Profile):
+  match rows:
+    case [[Sql.Cell.Text{name}]]: required_profile(Profile.read(name))
+    case _: IO.die(Profile.Profile,1,"Archive profile is missing, ambiguous or has invalid SQLite type")
+
+def read_profile(db: U32,snapshot: String) -> IO(Profile.Profile):
+  do IO<Profile.Profile>:
+    rows : List<&2,List<&2,Sql.Cell>> <- q(db,"SELECT profile FROM archive_captures WHERE snapshot=?",
+      [Sql.Cell.Integer{snapshot}],1)
+    profile_row(rows)
+
+def count_for(policy: Profile.Profile,value: Maybe<&2,U32>) -> IO(U32):
+  match value:
+    case None{}: IO.die(U32,1,"Archive chunk count is not canonical bounded decimal")
+    case Some{+count}:
+      do IO<U32>:
+        checked(U32.is_gt(count,0) && U32.is_le(count,Profile.chunks(policy)),"Archive chunk count exceeds profile")
+        return count
+
+def count_rows_for(policy: Profile.Profile,rows: List<&2,List<&2,Sql.Cell>>) -> IO(U32):
+  match rows:
+    case [[Sql.Cell.Integer{value}]]: count_for(policy,Domain.parse_u32(value))
+    case _: IO.die(U32,1,"Archive chunk count has invalid SQLite type")
+
+def chunk_count_for(db: U32,snapshot: String,policy: Profile.Profile) -> IO(U32):
+  do IO<U32>:
+    rows : List<&2,List<&2,Sql.Cell>> <- q(db,"SELECT count(*) FROM archive_chunks WHERE snapshot=?",
+      [Sql.Cell.Integer{snapshot}],1)
+    count_rows_for(policy,rows)
+
+def reader(+db: U32,+snapshot: String,+policy: Profile.Profile,+extent: U32,+chunks: U32,+digest: String) -> IO(Reader):
+  do IO<Reader>:
+    actual : U32 <- chunk_count_for(db,snapshot,policy)
+    checked(identity(snapshot) && U32.is_gt(extent,0) && U32.is_le(extent,Profile.input(policy)) &&
+      U32.is_eq(actual,chunks) && U32.is_le(chunks,extent) && digest_valid(digest),
+      "Archive count, extent or SHA256 is invalid")
+    return Reader{snapshot,policy,extent,chunks,digest,0,0,initial_hash()}
+
+def open_origin(+db: U32,value: Maybe<&2,Origin>) -> IO(Open):
+  match value:
+    case None{}: IO.die(Open,1,"Selected snapshot is not a compressed archive")
+    case Some{+origin}:
+      Origin{+snapshot,_,_,_,_,_,_,extent,chunks,sha,_} = origin
+      do IO<Open>:
+        policy : Profile.Profile <- read_profile(db,snapshot)
+        stream : Reader <- reader(db,snapshot,policy,extent,chunks,sha)
+        return Open{origin,stream}
+
+def open_reader(+db: U32,snapshot: String,accepted: Bool) -> IO(Open):
+  do IO<Open>:
+    value : Maybe<&2,Origin> <- read(db,snapshot,accepted)
+    open_origin(db,value)
+
+def decode_chunk_for(policy: Profile.Profile,snapshot: String,row: List<&2,Sql.Cell>) -> Maybe<&2,Chunk>:
+  match row:
+    case [Sql.Cell.Integer{actual},Sql.Cell.Integer{ordinal},Sql.Cell.Integer{offset},
+      Sql.Cell.Integer{length},Sql.Cell.Text{digest},Sql.Cell.Blob{bytes}]:
+      chunk_numbers_for(policy,snapshot,actual,Domain.parse_u32(ordinal),Domain.parse_u32(offset),
+        Domain.parse_u32(length),digest,bytes)
+    case _: None{}
+
+def chunk_row_for(policy: Profile.Profile,rows: List<&2,List<&2,Sql.Cell>>,snapshot: String,ordinal: U32,offset: U32) -> IO(Chunk):
+  match rows:
+    case [row]: required_chunk(decode_chunk_for(policy,snapshot,row),ordinal,offset)
+    case _: IO.die(Chunk,1,"Archive chunk is missing or ambiguous")
+
+def reader_chunk(stream: Reader,chunk: Chunk) -> IO(Read):
+  Reader{snapshot,policy,+extent,chunks,digest,_,_,hash} = stream
+  Chunk{ordinal,+offset,+length,+bytes} = chunk
+  do IO<Read>:
+    checked(U32.is_le(offset,extent) && U32.is_le(length,U32.sub(extent,offset)),
+      "Archive chunks exceed the sealed compressed extent")
+    return Read{Reader{snapshot,policy,extent,chunks,digest,U32.inc(ordinal),U32.add(offset,length),
+      Domain.hash_bytes(bytes,hash)},Some{bytes}}
+
+def reader_step(finished: Bool,+db: U32,+stream: Reader) -> IO(Read):
+  match finished:
+    case True{}:
+      Reader{snapshot,policy,+extent,chunks,+digest,ordinal,+offset,+hash} = stream
+      do IO<Read>:
+        checked(U32.is_eq(offset,extent) && String.eq(Domain.hash_finish(hash),digest),
+          "Archive whole-container extent or SHA256 does not match its origin")
+        return Read{Reader{snapshot,policy,extent,chunks,digest,ordinal,offset,hash},None{}}
+    case False{}:
+      Reader{+snapshot,+policy,_,+chunks,_,+ordinal,+offset,_} = stream
+      do IO<Read>:
+        checked(U32.is_lt(ordinal,chunks),"Archive reader exceeded its declared chunk count")
+        rows : List<&2,List<&2,Sql.Cell>> <- chunk_rows(db,snapshot,ordinal)
+        chunk : Chunk <- chunk_row_for(policy,rows,snapshot,ordinal,offset)
+        reader_chunk(stream,chunk)
+
+def next(db: U32,+stream: Reader) -> IO(Read):
+  Reader{_,_,_,chunks,_,ordinal,_,_} = stream
+  reader_step(U32.is_eq(ordinal,chunks),db,stream)
+
+def drain_step(result: Read,next: Reader -> IO(Unit)) -> IO(Unit):
+  Read{stream,bytes} = result
+  match bytes:
+    case None{}: IO.pure(Unit,Unit{})
+    case Some{_}: next(stream)
+
+def drain(fuel: Nat,+db: U32,stream: Reader) -> IO(Unit):
+  match fuel:
+    case 0n: IO.die(Unit,1,"Archive validation exhausted bounded chunk count")
+    case 1n+rest:
+      do IO<Unit>:
+        result : Read <- next(db,stream)
+        drain_step(result,s => drain(rest,db,s))
+
+def validate_reader(db: U32,+stream: Reader) -> IO(Unit):
+  Reader{_,_,_,chunks,_,_,_,_} = stream
+  drain(U32.to_nat(U32.inc(chunks)),db,stream)
+
+def staging_for(policy: Profile.Profile,h: Header) -> Bool:
+  Header{_,_,_,_,_,extent,_,_,_,accepted,codec} = h
+  Bool.not(accepted) && String.eq(codec,encoding()) && U32.is_le(extent,Profile.output(policy))
+
+def stage_one(+db: U32,+snapshot: String,+policy: Profile.Profile,+ordinal: U32,+offset: U32,+bytes: List<&2,U32>) -> IO(Unit):
+  +size = List.length(&2,U32,bytes)
+  +length = U32.from_nat(size)
+  do IO<Unit>:
+    h : Header <- header(db,snapshot,False{})
+    checked(staging_for(policy,h),"Container staging requires an unaccepted archive snapshot")
+    checked(Nat.is_gt(size,0n) && Nat.is_le(size,U32.to_nat(chunk_limit())) &&
+      U32.is_lt(ordinal,Profile.chunks(policy)) && U32.is_le(offset,Profile.input(policy)) &&
+      U32.is_gt(length,0) && U32.is_le(length,chunk_limit()) &&
+      U32.is_le(length,U32.sub(Profile.input(policy),offset)) && octets(bytes),
+      "Compressed chunk exceeds archive profile or contains non-octets")
+    exec(db,"INSERT INTO archive_chunks(snapshot,ordinal,offset,n,digest,bytes) VALUES(?,?,?,?,?,?)",
+      [Sql.Cell.Integer{snapshot},Sql.Cell.Integer{U32.show(ordinal)},Sql.Cell.Integer{U32.show(offset)},
+       Sql.Cell.Integer{U32.show(length)},Sql.Cell.Text{chunk_digest(snapshot,ordinal,offset,length,bytes)},Sql.Cell.Blob{bytes}])
+
+def seal_for(+db: U32,+snapshot: String,+policy: Profile.Profile,+compressed_extent: U32,+compressed_sha: String,+logical_sha: String) -> IO(Unit):
+  do IO<Unit>:
+    +h : Header <- header(db,snapshot,False{})
+    checked(staging_for(policy,h),"Archive origin sealing requires an unaccepted archive snapshot")
+    +count : U32 <- chunk_count_for(db,snapshot,policy)
+    +m : Metadata = Metadata{compressed_extent,count,compressed_sha,logical_sha}
+    checked(metadata_valid_for(policy,h,m),"Archive origin quantities or hashes exceed profile")
+    stream : Reader <- reader(db,snapshot,policy,compressed_extent,count,compressed_sha)
+    validate_reader(db,stream)
+    exec(db,"INSERT INTO archive_captures(snapshot,version,profile,compressed_extent,chunks,compressed_sha,logical_sha,commitment) VALUES(?,?,?,?,?,?,?,?)",
+      [Sql.Cell.Integer{snapshot},Sql.Cell.Text{format()},Sql.Cell.Text{Profile.name(policy)},
+       Sql.Cell.Integer{U32.show(compressed_extent)},Sql.Cell.Integer{U32.show(count)},
+       Sql.Cell.Text{compressed_sha},Sql.Cell.Text{logical_sha},Sql.Cell.Text{origin_digest_for(policy,h,m)}])

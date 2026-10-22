@@ -1,5 +1,15 @@
 # Native interaction observations
 
+## Reader, inline attachments and worker — 2026-10-21
+
+Read the [scoped receipt](receipts/reader-attachments-native.txt) before treating
+the newly adopted source as accepted. Earlier combined-app transcript, inline
+attachment and Connections journeys passed. The newest optimized executable
+reproduced changed selection when moving to Copy; diagnostic tracing is active.
+Its confined file worker passed actual native boundary and finite race checks.
+The previous working executable remains the default. No IME, accessibility,
+general resizing or comparative timing claim follows from these results.
+
 ## Connections native validation — 2026-10-21
 
 Current app `0d4839d9…` adds explicit local Claude quota collection under

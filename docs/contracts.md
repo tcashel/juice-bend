@@ -41,7 +41,7 @@ connection already opened by an older executable.
 generation and snapshot IDs, encoding, logical extent, record count, checkpoint
 byte position and ordinal, compressed extent and chunk count, both stream
 SHA-256 values and the
-`archive-batch-v1` profile. Fields have explicit UTF-8 byte lengths. Chunk
+recorded profile (`archive-batch-v1` or `archive-stream-v2`). Fields have explicit UTF-8 byte lengths. Chunk
 digests also bind snapshot, ordinal, offset and length. Typed reads reject
 missing or mismatched metadata, unsupported encodings and archive rows attached
 to identity captures. These commitments detect corruption relative to trusted
@@ -50,11 +50,14 @@ replaced.
 
 The decoder supports Zstandard raw, RLE and ordinary compressed blocks,
 Huffman/FSE and repeat tables, LZ copies, content checksums, concatenated frames
-and skippable frames. External dictionaries are unsupported. The initial
-profile permits at most 1 MiB of compressed input, 4 MiB of logical output,
+and skippable frames. External dictionaries are unsupported. New captures use
+`archive-stream-v2`: at most 64 MiB of compressed input, 256 MiB of logical output,
 an 8 MiB advertised window, 64 frames total and 4,096 blocks per ordinary frame.
-The container occupies at most 16 chunks of at most 64 KiB each. This bounded
-profile is not full archive parity. Before bridge transfer, the chunk query
+The container occupies at most 1,024 chunks of at most 64 KiB each. Legacy
+`archive-batch-v1` retains its original 1 MiB / 4 MiB / 16-chunk limits and
+commitments. Streaming decoding retains bounded input/output windows rather
+than the entire decoded history. These admission caps are not a memory or
+performance guarantee. Before bridge transfer, the chunk query
 withholds BLOBs with invalid length type, length outside 1–65,536, wrong storage
 type or mismatched byte length. Bend rejects the resulting NULL and still
 validates types, octets, order, positions, digests and the complete extent.

@@ -138,7 +138,10 @@ def writer_identity() -> IO(Unit):
     require(Q.can_disconnect(current(writer_identity_enabled())),"writer acknowledgement binds exact token root and enabled outcome")
     require(String.eq(F.observation(writer_identity_late()),F.observation(writer_identity_back())),"writer finishing after Back cannot replace restored view")
     require(Bool.not(Q.acknowledged(current(writer_identity_oldroot()))),"old-root writer cannot acknowledge an edited data root")
-    require(U32.is_eq(Q.phase(current(writer_identity_failed())),3) && String.contains(UI.reader(F.ui(writer_identity_failed())),"LOCAL STATE UNAVAILABLE"),"failed writer explicitly labels last acknowledgement in reader")
+    require(U32.is_eq(Q.phase(current(writer_identity_failed())),3) &&
+      String.contains(UI.reader(F.ui(writer_identity_failed())),"Local state unavailable | Choose Refresh") &&
+      String.contains(UI.reader(F.ui(writer_identity_failed())),"A change may have committed."),
+      "failed writer explicitly labels uncertain state and last acknowledgement in reader")
     require(Bool.not(String.contains(UI.reader(F.ui(writer_identity_failed())),"private diagnostics")),"raw child diagnostic never enters canonical quota reader")
 
 def visible_rows(state: G.State) -> String:

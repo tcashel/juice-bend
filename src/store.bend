@@ -11,6 +11,7 @@ import ./projection_seal.bend as Seal
 import ./context_binding.bend as ContextBinding
 import ./context_store.bend as ContextStore
 import ./archive_meta.bend as ArchiveMeta
+import ./transcript_format.bend as Transcript
 
 type Context is Data:
   Context{repository: String, session: String, model: String, parent: String}
@@ -1613,22 +1614,22 @@ def display_events(events: List<&2,Providers.Record>) -> String:
     case event <> rest:
       display_event(event) ++ "\n" ++ display_events(rest)
 
-def page_rows(rows: List<&2,List<&2,Sql.Cell>>, +provider: String) -> IO(String):
+def page_rows(rows: List<&2,List<&2,Sql.Cell>>, +provider: String) -> IO(Transcript.Page):
   match rows:
     case []:
-      IO.pure(String,"")
+      IO.pure(Transcript.Page,Transcript.Page{0,"",""})
     case row <> rest:
       +r = row
       +offset = number(field(r,2n))
       +len = number(field(r,3n))
-      do IO<String>:
-        tail : String <- page_rows(rest,provider)
-        return "Record " ++ field(r,1n) ++ " · bytes " ++ U32.show(offset) ++
-          ".." ++ U32.show((offset + len : U32)) ++ "\n" ++
-          display_events(piece_events(U32.is_ne(number(field(r,6n)),0),
-            provider,blob(cell(r,5n)))) ++ tail
+      do IO<Transcript.Page>:
+        tail : Transcript.Page <- page_rows(rest,provider)
+        return Transcript.join(Transcript.record(
+          piece_events(U32.is_ne(number(field(r,6n)),0),provider,blob(cell(r,5n))),field(r,1n),
+          "Record " ++ field(r,1n) ++ " · bytes " ++ U32.show(offset) ++
+            ".." ++ U32.show((offset + len : U32))),tail)
 
-def page_header(+db: U32,+snapshot: String,+start: U32,count: U32,
+def page_header(+db: U32,+snapshot: String,+start: U32,+count: U32,
   rows: List<&2,List<&2,Sql.Cell>>) -> IO(String):
   match rows:
     case []:
@@ -1640,11 +1641,16 @@ def page_header(+db: U32,+snapshot: String,+start: U32,count: U32,
         checked((numeric(field(h,1n)) && numeric(field(h,2n))),"Snapshot numeric metadata is corrupt")
         records : List<&2,List<&2,Sql.Cell>> <- selected_records(db,snapshot,field(h,0n),
           number(field(h,1n)),number(field(h,2n)),start,n)
-        content : String <- page_rows(records,field(h,3n))
-        return "Juice Bend · captured evidence\nSnapshot " ++ snapshot ++
+        content : Transcript.Page <- page_rows(records,field(h,3n))
+        return Transcript.render(content,snapshot,"Juice Bend · captured evidence\nSnapshot " ++ snapshot ++
           " · generation " ++ field(h,0n) ++ " · " ++ field(h,1n) ++
           " retained logical source bytes\nProvider: " ++ field(h,3n) ++
-          "\nIntegrity: selected records verified; other ranges not checked.\n\n" ++ content
+          "\ncaptured record start " ++ U32.show(start) ++ " · requested records " ++ U32.show(count) ++
+          "\nByte offsets: logical source bytes (decompressed for archives)." ++
+          "\nIntegrity: selected records verified; other ranges not checked." ++
+          "\nThese references identify this snapshot, generation and captured record byte ranges." ++
+          "\nSource locator and full machine citations are not included by this unfiltered reader." ++
+          "\nEarlier inherited model and parent metadata may be unavailable.")
 
 def page(+db: U32,+snapshot: String,start: U32,count: U32) -> IO(String):
   do IO<String>:

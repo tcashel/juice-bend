@@ -5,6 +5,7 @@ import ./gui_settings.bend as Shape
 import ./claude_quota.bend as Q
 import ./quota_store.bend as S
 import ./quota_cli.bend as C
+import ./query.bend as Query
 
 type Operation is Data:
   Status{}
@@ -404,16 +405,70 @@ def completed(value: Result<&1,&1,U32 & String,U32 & (String & String)>) -> Resu
     case Fail{_}: invalid(J.Json)
     case Done{(code,(out,err))}: transport_exit(code,out,err)
 
+# Exact presentation only. Unix seconds use 86400-second UTC days, with no
+# timezone/environment/relative-age lookup. Protocol bounds remain unchanged.
+def utc_year_start(+year: U32) -> U32:
+  +prior = U32.sub(year,1)
+  U32.sub(U32.add(U32.add(U32.mul(prior,365),U32.div(prior,4)),U32.div(prior,400)),U32.div(prior,100))
+
+def utc_year(fuel: Nat,+days: U32,+low: U32,+high: U32) -> U32:
+  match fuel:
+    case 0n: low
+    case 1n+rest:
+      +middle = U32.div(U32.add(U32.add(low,high),1),2)
+      +after = U32.is_le(utc_year_start(middle),days)
+      utc_year(rest,days,Bool.pick(U32,after,middle,low),Bool.pick(U32,after,high,U32.sub(middle,1)))
+
+def utc_month(fuel: Nat,+year: U32,+month: U32,+days: U32) -> U32 & U32:
+  match fuel:
+    case 0n: (month,U32.inc(days))
+    case 1n+rest:
+      +length = Query.month_days(month,year)
+      +advance = U32.is_ge(days,length) && U32.is_lt(month,12)
+      utc_month(rest,year,U32.add(month,Bool.to_u32(advance)),U32.sub(days,Bool.pick(U32,advance,length,0)))
+
+def utc_two(value: U32) -> String:
+  +text = U32.show(value)
+  String.repeat("0",Nat.sub(2n,String.length(text))) ++ text
+
+def utc_date(value: U32 & U32,year: U32,+clock: U32) -> String:
+  (month,day) = value
+  U32.show(year) ++ "-" ++ utc_two(month) ++ "-" ++ utc_two(day) ++ " " ++
+    utc_two(U32.div(clock,3600)) ++ ":" ++ utc_two(U32.div(U32.mod(clock,3600),60)) ++ ":" ++
+    utc_two(U32.mod(clock,60)) ++ " UTC"
+
+def utc_checked(+value: Nat,valid: Bool) -> String:
+  match valid:
+    case False{}: "outside supported UTC range"
+    case True{}:
+      +days = U32.add(U32.from_nat(Nat.div(value,86400n)),719162)
+      +year = utc_year(14n,days,1970,9999)
+      utc_date(utc_month(12n,year,1,U32.sub(days,utc_year_start(year))),year,U32.from_nat(Nat.mod(value,86400n)))
+
+def utc(+value: Nat) -> String:
+  utc_checked(value,Nat.is_le(value,time_max()))
+
+# At most six supplied decimal places. Strip only redundant trailing zeroes;
+# 0, the smallest millionth and 100 remain exact, without floating point.
+def fraction_trim(fuel: Nat,+text: String) -> String:
+  match fuel:
+    case 0n: text
+    case 1n+rest:
+      fraction_trim(rest,Bool.pick(String,String.ends_with(text,"0"),String.take(text,Nat.sub(String.length(text),1n)),text))
+
+def percent_parts(whole: U32,+fraction: String) -> String:
+  U32.show(whole) ++ Bool.pick(String,String.is_empty(fraction),"","." ++ fraction) ++ "% used"
+
 def percentage(value: Maybe<&2,U32>) -> String:
   match value:
     case None{}: "unknown"
-    case Some{+n}: U32.show(U32.div(n,1000000)) ++ "." ++
-      String.drop(U32.show(U32.add(1000000,U32.mod(n,1000000))),1n) ++ "% used"
+    case Some{+n}: percent_parts(U32.div(n,1000000),
+      fraction_trim(6n,String.drop(U32.show(U32.add(1000000,U32.mod(n,1000000))),1n)))
 
 def reset_text(value: Maybe<&2,Nat>) -> String:
   match value:
     case None{}: "unknown"
-    case Some{n}: Nat.show(n) ++ " Unix seconds (provider field)"
+    case Some{n}: utc(n)
 
 def window_text(value: Maybe<&2,Q.QuotaWindow>,name: String) -> String:
   match value:
@@ -423,11 +478,32 @@ def window_text(value: Maybe<&2,Q.QuotaWindow>,name: String) -> String:
 
 def observation_text(value: S.Sample) -> String:
   S.Sample{seq,epoch,receipt,Q.Observation{five,seven}} = value
-  window_text(five,"Five-hour window") ++ "\n" ++ window_text(seven,"Seven-day window") ++
-  "\nLocal receipt: " ++ Nat.show(receipt) ++ " Unix seconds\n" ++
-  "Receipt order: " ++ Nat.show(seq) ++ " | connection epoch: " ++ Nat.show(epoch) ++ "\n" ++
-  "This is a local receipt, not provider freshness. Device clock changes can reverse receipt times. " ++
-  "Account, plan and billing identity were not queried.\n"
+  window_text(five,"Five-hour") ++ "\n" ++ window_text(seven,"Seven-day") ++
+    "\nReceived locally: " ++ utc(receipt) ++ "\n" ++
+    "Local receipt time does not establish provider freshness.\n"
+
+def raw_used(value: Maybe<&2,U32>) -> String:
+  match value:
+    case None{}: "unknown"
+    case Some{n}: U32.show(n)
+
+def raw_reset(value: Maybe<&2,Nat>) -> String:
+  match value:
+    case None{}: "unknown"
+    case Some{n}: Nat.show(n)
+
+def window_details(value: Maybe<&2,Q.QuotaWindow>,+name: String) -> String:
+  match value:
+    case None{}: name ++ " supplied: no\n"
+    case Some{Q.QuotaWindow{used,reset}}:
+      name ++ " supplied: yes\n" ++ name ++ " used millionths: " ++ raw_used(used) ++ "\n" ++
+        name ++ " reset Unix seconds: " ++ raw_reset(reset) ++ "\n"
+
+def observation_details(value: S.Sample) -> String:
+  S.Sample{seq,epoch,receipt,Q.Observation{five,seven}} = value
+  "Parser policy: " ++ S.policy() ++ "\nReceipt sequence: " ++ Nat.show(seq) ++
+    "\nObservation epoch: " ++ Nat.show(epoch) ++ "\nReceived Unix seconds: " ++ Nat.show(receipt) ++ "\n" ++
+    window_details(five,"Five-hour") ++ window_details(seven,"Seven-day")
 
 def sample_at(values: List<&2,S.Sample>,index: Nat) -> Maybe<&2,S.Sample>:
   match values index:
@@ -437,58 +513,85 @@ def sample_at(values: List<&2,S.Sample>,index: Nat) -> Maybe<&2,S.Sample>:
 
 def sample_text(value: Maybe<&2,S.Sample>) -> String:
   match value:
-    case None{}: "No usable quota fields have been received for this connection epoch. Unknown is different from zero.\n"
+    case None{}: "Five-hour: not received\nSeven-day: not received\nUnknown is different from 0%.\n"
     case Some{sample}: observation_text(sample)
 
 def history_text(value: Maybe<&2,S.Sample>) -> String:
   match value:
-    case None{}: "No retained samples on this offset page. This does not establish whether another page or epoch contains observations.\n"
+    case None{}: "No samples on this page. Other pages or connection epochs may contain observations.\n"
     case Some{sample}: observation_text(sample)
 
-def summary_state(ack: Maybe<&2,S.State>,current: Maybe<&2,S.Sample>) -> String:
+def sample_details(value: Maybe<&2,S.Sample>) -> String:
+  match value:
+    case None{}: "No usable observation in this view.\n"
+    case Some{sample}: observation_details(sample)
+
+def connection_details(ack: Maybe<&2,S.State>) -> String:
   match ack:
-    case None{}: "Local connection state is not acknowledged. Refresh to inspect this selected directory.\n"
+    case None{}: "Local connection state is not acknowledged.\n"
+    case Some{S.State{epoch,enabled}}:
+      "Local collection: " ++ Bool.pick(String,enabled,"on","off") ++ "\nConnection epoch: " ++ Nat.show(epoch) ++ "\n"
+
+def policy_details() -> String:
+  "\nReset dates are provider-supplied fields. Receipt dates use this device's clock; clock changes can reverse them.\n" ++
+    "Sequence orders accepted local receipts, not provider events.\n" ++
+    "History survives disconnect. It keeps the latest sample per epoch and five-minute slot. " ++
+    "Older receipts are trimmed when a usable observation arrives; the hard cap is 32,768 samples. " ++
+    "New observations can shift offset pages.\n\n" ++
+    "Quota is separate from captured-session usage and API-equivalent estimates. Account, plan and billed spend are not identified.\n" ++
+    "Collection is explicit local opt-in. Enable creates a dedicated private quota store in the selected Juice Bend data directory.\n" ++
+    "No provider command, configuration change, credential read, network request or inference occurs here.\n"
+
+def summary_state(ack: Maybe<&2,S.State>,+current: Maybe<&2,S.Sample>) -> String:
+  match ack:
+    case None{}: "State unknown\nChoose Refresh to read this selected directory.\n"
     case Some{S.State{epoch,+enabled}}:
-      Bool.pick(String,enabled,"Collection enabled locally","Collection off") ++ " | epoch " ++ Nat.show(epoch) ++ "\n\n" ++
-      Bool.pick(String,enabled,"Latest observation in this epoch:\n","Retained observation from this epoch (collection is off):\n") ++ sample_text(current)
+      Bool.pick(String,enabled,
+        Bool.pick(String,Maybe.is_some(&2,S.Sample,current),"On | Latest local observation\n","On | Waiting for quota observations\nReview Manual setup to provide a status-line feed.\n"),
+        Bool.pick(String,Maybe.is_some(&2,S.Sample,current),"Off | Saved observation\n","Off\nChoose Enable, then review Manual setup.\n")) ++ "\n" ++ sample_text(current)
 
 def setup_text(value: C.result_type()) -> String:
   match value:
     case Fail{_}: "Refresh an enabled connection before reviewing manual setup."
-    case Done{fragment}: "MANUAL SETUP / CLAUDE CODE\n\n" ++
-      "Review this fragment before manually merging its statusLine entry into your chosen Claude Code settings. " ++
-      "It replaces that status-line command, including any existing keyboard shortcut hints shown there. " ++
-      "Juice Bend does not edit provider settings or read credentials.\n\n" ++ fragment ++
-      "\n\nCopy setup copies only the exact fragment. Copying does not install it, authenticate an account, or prove a feed was received. " ++
-      "The first usable quota feed will appear after Claude Code runs this manually installed status line. " ++
-      "Remove it separately when disconnecting. No provider command is run by Juice Bend."
+    case Done{fragment}: "Manual setup | Claude Code\n\n" ++
+      "Review, then merge statusLine into your chosen Claude Code settings.\n" ++
+      "This replaces the current status line, including keyboard shortcut hints.\n" ++
+      "Copy setup copies only this fragment; nothing is installed automatically.\n\n" ++ fragment ++
+      "\n\nDetails | Manual setup\n" ++
+      "Copying does not authenticate an account or prove a feed was received. A usable quota feed appears only after Claude Code runs the manually installed status line.\n" ++
+      "Disconnect stops local collection. Remove the provider setup separately.\n" ++
+      "Juice Bend does not edit provider settings, read credentials or run provider commands."
 
 def phase_text(phase: U32) -> String:
   match phase:
-    case 1: "REQUEST PENDING. The state and observations below were last acknowledged before this request.\n\n"
-    case 3: "LOCAL STATE UNAVAILABLE. A change may have committed. The state and observations below are only the last acknowledgement; Refresh to confirm.\n\n"
+    case 1: "REQUEST PENDING\nShowing the last acknowledged state while this request finishes.\n\n"
+    case 3: "Local state unavailable | Choose Refresh\nA change may have committed. Values below are the last acknowledgement.\n\n"
+    case _: ""
+
+def phase_details(phase: U32) -> String:
+  match phase:
+    case 1: "Request pending; current state is not yet confirmed.\n"
+    case 3: "A change may have committed. Refresh to confirm before relying on the last acknowledged state.\n"
     case _: ""
 
 def body_view(+model: Model,program: String,view: U32) -> String:
-  Model{root,phase,ack,current,history,offset,more,_,selected,pending,notice} = model
+  Model{root,+phase,+ack,+current,+history,offset,more,_,+selected,pending,notice} = model
   match view:
     case 2: setup_text(setup(model,program))
-    case 1: "SAMPLED LOCAL HISTORY\n\n" ++ history_text(sample_at(history,U32.to_nat(selected))) ++
-      "\nHistory survives disconnect. Sequence orders accepted local receipts; it does not establish provider chronology. " ++
-      "History retains the latest accepted sample per epoch and five-minute slot. Older receipts are trimmed when a new usable observation arrives, with a hard cap of 32,768 samples. " ++
-      "New samples can shift these offset pages.\n"
-    case _: "CONNECTIONS / CLAUDE CODE\n\n" ++ summary_state(ack,current) ++
-      "\nExplicit local opt-in only. Enable creates a dedicated private quota store in the selected Juice Bend data directory. " ++
-      "Then review Manual setup. No provider command, configuration change, credential read, network request or inference occurs here.\n\n" ++
-      "Quota observations are separate from captured conversation usage and API-equivalent estimates. " ++
-      "They do not identify an account, subscription or billed spend.\n"
+    case 1: "Saved quota observation\n\n" ++ history_text(sample_at(history,U32.to_nat(selected))) ++
+      "\nDetails | Recorded fields\n" ++ phase_details(phase) ++ connection_details(ack) ++
+      sample_details(sample_at(history,U32.to_nat(selected))) ++ policy_details()
+    case _: "Claude Code quota\n\n" ++ summary_state(ack,current) ++
+      "\nDetails | Recorded fields\n" ++ phase_details(phase) ++ connection_details(ack) ++ sample_details(current) ++ policy_details()
 
 def body(+model: Model,program: String) -> String:
   phase_text(phase(model)) ++ body_view(model,program,view(model))
 
+# The result-card painter accepts one string and chooses its own two-line wrap.
+# An embedded newline is a glyph, not a line separator. Keep row identity/order.
 def sample_title(value: S.Sample) -> String:
   S.Sample{seq,epoch,receipt,_} = value
-  "Receipt " ++ Nat.show(seq) ++ " | epoch " ++ Nat.show(epoch) ++ "\nLocal " ++ Nat.show(receipt)
+  utc(receipt) ++ " | #" ++ Nat.show(seq)
 
 def titles(values: List<&2,S.Sample>) -> List<&2,String>:
   match values:

@@ -68,11 +68,18 @@ bounded batches.
 
 Archive capture uses a Bend 2 Zstandard decoder and preserves both the exact
 compressed container and decoded JSONL in the owned library. The initial
-profile accepts at most 1 MiB compressed, 4 MiB decoded, an 8 MiB window,
+streaming profile accepts at most 64 MiB compressed, 256 MiB decoded, an 8 MiB window,
 64 frames and 4,096 blocks per ordinary frame. Raw, RLE and ordinary compressed
 blocks, checksums, concatenated frames and skippable frames are supported;
 external dictionaries are not. These archive limits leave plain JSONL limits
 unchanged and do not establish full archive parity.
+
+Transcript pages show readable event text and citations, with word wrapping that
+preserves the original copied text. **Attachments** opens the retained occurrence
+inventory for the selected page. Supported inline base64 bytes can be exported to
+a new private file; local and remote references retain explicit coverage and are
+not fetched. External file capture and image viewing are still being integrated.
+Back restores the opened transcript and its selection.
 
 Pause/Resume and the 30-second, 2-hour, 4-hour, 8-hour or daily interval are saved
 in the owned library. The UI distinguishes pending changes from acknowledged

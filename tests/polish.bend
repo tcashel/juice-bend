@@ -59,6 +59,8 @@ def kind(action: UI.Action) -> U32:
     case UI.QuotaHistory{}: 44
     case UI.QuotaSetup{}: 45
     case UI.QuotaCopySetup{}: 46
+    case UI.Attachments{}: 47
+    case UI.AttachmentExport{}: 48
 
 def clicked(result: UI.State & UI.Action,expected: U32,label: String) -> IO(Unit):
   (state,action) = result

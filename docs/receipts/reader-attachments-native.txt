@@ -1,0 +1,72 @@
+Reader, inline attachments and streaming archive integration
+Host: physical macOS arm64; native interactions: isolated macOS arm64 Tart VM.
+All fixtures are synthetic. Original Juice, provider histories and databases
+were not inputs. No full-parity, full-suite or comparative timing claim.
+
+Integrated executable (built, not promoted as the default):
+fcbbbfbde90ad072c26fb20ab044522487a6ee4bbe9890f72300765a18518701
+20,970,056 bytes; main plus reader-test closure: 103 files, 93 build/runtime pins.
+Generated C: 21b8e11669c0492029d5d2d0311d8ea874acfac8c894fb6a23764062643bc7a5
+Input list: reader-attachments-build-inputs.sha256.
+SQLite bridge unchanged: 454 lines,
+44b2aa269f808191b57b9951fc5ad3dbfd5290bdd7c2cbba50a27f40dd7575be.
+Source adoption: 63 explicit paths, protected checkout index unchanged.
+The manual worker test uses the exact successful v4 source 3c86e6f3… instead
+of the stale socket-policy expectation. This changes no application behavior.
+
+Focused native backend evidence:
+- Integrated reader: 356 printed PASS lines on Linux and macOS.
+- Streaming archive publication/boundary/profile: 1,449 / 21 / 27 PASS lines
+  on macOS, including 30 controlled interruption cases across initial capture,
+  append and rewrite. All exits zero; 41 frozen inputs and 93 pins unchanged.
+- Earlier combined source: UI449 / GUI133 / scoped-reader30 /
+  transcript-storage13 / worker-protocol28. These focused scopes overlap.
+- Saved attachment status separator: final focused model check passed.
+Tests do not establish the advertised maximum archive size as a performance
+target. New archive admission is 64 MiB compressed / 256 MiB logical; retained
+legacy batch-profile captures keep their original commitments and limits.
+
+Observed earlier combined GUI executable:
+fccb5209e1a7412038a7ee43d66c14591f7c3316356fe5d493ced56dbf5160d2
+- Connections presentation: 18 content comparisons, four inert-copy checks,
+  exact Back restoration and unchanged capture/export checks.
+- Transcript: 17 exact clipboard comparisons, pointer selection, page/wheel,
+  filters, source loss/restart, two exact private exports and Back restoration.
+- Inline attachments: 53 inventory/coverage rows, 16 disabled states, four
+  exact binary/empty exports, five unchanged inventories, two transcripts,
+  retained verification, source loss/restart and exact Back pixels.
+Root inspected representative screenshots. Guest/cleanup/display exits zero.
+An attachment driver reused intermediate inventory filenames; final files are
+exact, but immediate post-refusal inventories were not separately preserved.
+
+New integrated executable: reader acceptance remains open.
+- Attempt1 selected the intended cross-wrap text, then moving to toolbar Copy
+  changed selection and copied preceding text. Later checks did not run.
+- Attempt2 passed both cross-wrap Copy checks, scrolling/paging, and exact
+  Settings/reader Back screenshots. It then failed because the driver tried
+  to copy an unprepared Brief; the application correctly required a preview.
+- Attempt3 corrected that driver expectation. Transcript cross-wrap passed,
+  but Connections selection changed before toolbar Copy. Later checks did not
+  run. The incorrect clipboard matches a drag continuing toward the toolbar.
+All three failed runs preserved screenshots/clipboard outputs and completed
+owned-app cleanup/display restoration. No passing retry erases a prior failure.
+A small native release probe passed 25 pure checks and three real gestures,
+logging 38 events/nine mouse-up edges clearing drag. Full-GUI diagnostic tracing
+is in progress; its -O0/logging timing cannot prove optimized-app acceptance.
+
+Exact full-application attachment worker gate (new integrated executable):
+nonce f6fe159c-2613-4b50-a698-e4207a6687da
+Harness 145659897a95e26b19471da84999a8afa9ada7cf9743e24ab5521e64f6d232ca.
+Ten stages passed with zero exits and empty stderr: startup without HOME,
+binary/empty payloads, missing/nonregular/outside-root refusals, 1MiB exact
+payload and oversized refusal, Process output caps/timeout/owned-child cleanup,
+and 120 finite path-race observations.20 window/default-data observations
+passed. Actual socket open-error and closed Parent mapping have separate exact
+checks. VM stopped and lease released. This is finite/sample evidence, not
+exhaustive filesystem or interleaving proof.
+
+Further attachment storage/PNG/ATIF modules are still isolated and not part of
+this source adoption. Their tests must not be read as integrated UI acceptance.
+The default working executable remains 0d4839d9… with its preserved bundle.
+IME, accessibility, shaping, general resizing, Markdown rendering, additional
+image formats and broad function/visual parity remain incomplete.
