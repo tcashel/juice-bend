@@ -45,16 +45,24 @@ def head(fuel: Nat,text: String,acc: String,+used: U32) -> HeadStep:
       head_char(U32.is_le(cp,1114111) && (U32.is_lt(cp,55296) || U32.is_gt(cp,57343)) &&
         U32.is_le(used,header_limit()) && U32.is_le(size,U32.sub(header_limit(),used)),cp,rest,acc,U32.add(used,size),r => a => u => head(left,r,a,u))
 
-def word_digit(valid: Bool,rest: String,value: U32,next: String -> U32 -> Result<&2,&2,String,PixelWord>) -> Result<&2,&2,String,PixelWord>:
+def checked_digit(valid: Bool,cp: U32,value: U32) -> Result<&2,&2,String,U32>:
   match valid:
     case False{}: Fail{"image_pixel_invalid_hex"}
-    case True{}: next(rest,value)
+    case True{}: Done{U32.or(U32.shln(value,4n),Hex.nibble(cp))}
+
+def hex_digit(+cp: U32,value: U32) -> Result<&2,&2,String,U32>:
+  checked_digit(Hex.lower_hex(cp),cp,value)
+
+def word_digit(digit: Result<&2,&2,String,U32>,rest: String,next: String -> U32 -> Result<&2,&2,String,PixelWord>) -> Result<&2,&2,String,PixelWord>:
+  match digit:
+    case Fail{message}: Fail{message}
+    case Done{value}: next(rest,value)
 
 def word(fuel: Nat,text: String,value: U32) -> Result<&2,&2,String,PixelWord>:
   match fuel text:
     case 0n rest: Done{PixelWord{rest,value}}
     case 1n+left SCon{Chr{+cp},rest}:
-      word_digit(Hex.lower_hex(cp),rest,U32.or(U32.shln(value,4n),Hex.nibble(cp)),r => v => word(left,r,v))
+      word_digit(hex_digit(cp,value),rest,r => v => word(left,r,v))
     case _ _: Fail{"image_pixel_length_mismatch"}
 
 # A binary-counter stack builds only equal-height Array nodes. There is no

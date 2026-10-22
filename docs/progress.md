@@ -1,120 +1,99 @@
 # Implementation checkpoint
 
-## Goal and boundaries
+The 201-input source overlay and executable are adopted; PR #1 is draft and unmerged.
 
-Functional and pleasant native UX parity with SwiftUI Juice, excluding embeddings
-and models, remains in progress. No user answer or approval is pending. All
-application logic, UI, parsing, policy, tests and benchmarks remain Bend 2.
-SQLite's narrow bridge is the maintained native-code exception. Lean is an
-optional development proof checker. Original Juice and histories are read-only;
-validation uses synthetic isolated data.
+## Goal and working app
 
-Continue the implementation branch and draft PR #1; no merge has occurred.
-Preserve the dirty checkout and index. Publication uses explicit paths and a
-separate index in `build/publication.git`, never blanket staging or reset.
-Mise pins Bun 1.4.2, Bend 2.0.37 at `60ca80aedeec9d8f0629b5f10dd19457d8ad67af`
-and local LLVM 23.1.4. LLVM compiles unchanged generated C at -O1.
+Functional and pleasant native UX parity with Swift Juice, excluding embeddings
+and models, remains active. No user response is pending. App logic, UI, policy,
+tests and benchmarks are Bend 2; SQLite has the narrow native bridge. Lean is an
+optional proof checker. Mise pins Bend 2.0.37, Bun 1.4.2 and LLVM 23.1.4.
+Original Juice and private histories stay read-only; validation is synthetic.
 
-## Current executable and evidence
+`mise run demo` opens accepted executable `943eee7e…` with fresh synthetic data.
+Its 201 application inputs match the tested native executable.
+Preserve the dirty root HEAD/index. Publish only explicit paths through the
+separate `build/publication.git` index. Do not merge automatically.
 
-The exact 37-path Usage/prose delta is adopted. All 189 application inputs match
-native executable `8d42430177b7ca2614c8eda393076bfe5ed5bbc5d2a3382ec6f119068675569c`.
-The default `build/juice-bend`, `build/juice-bend-reader` and new
-`build/Juice Bend Usage and Prose.app` contain that executable. `mise run demo`
-opens the tested default with fresh synthetic data. Prior Reader Cards, UI
-Foundation and Workspace bundles remain preserved, as do previous default binaries
-in `build/library-usage-prose-root-adoption/executables-before`.
+## Adopted 201-input app
 
-Message cards now use proportional, word-wrapped prose and warmer colors; code
-and evidence retain monospace presentation. Shared cached text geometry controls
-painting and selection. Library Usage provides all-time recorded totals,
-explicit unknown coverage, provider filtering and retained-capture drill-down.
-This is a functional textual report; the Swift-style chart dashboard remains open.
-Reusable pure Bend Canvas, Label, Region and TextLine components are documented
-in `src/bend_ui/README.md`. No separate package or first-party license is released.
+Executable `943eee7e…` adds recorded Child-result navigation, aligned
+toolbar drawing/hit areas, private-file image transport and equivalent boxed
+glyph data. The diagnostic GC512 frontend and LLVM native build passed.
+The full app has not yet been rebuilt with the maintained minimal GC preload.
+That adapter passed exact generated-C equality through the pinned CLI/font gate;
+include its three tooling paths because unchanged full-app compilation exceeds
+the 16 GiB guard. The adapter affects compiler development tooling only.
 
-- Full Mac build passed in 944.524s. All 189 source inputs, 96 pins and tools
-  remained exact; owned processes exited. Build artifacts:
-  `build/library-usage-ui-integration/mac-build-v2/8d6628bd-3cf0-4a68-a04a-95e0338d9f0b`.
-- Combined focused Linux tests passed 156 assertions (47 controller, 20 actions,
-  89 prose) plus two separate image writes. Earlier focused gates have their own
-  source bindings and overlapping counts; they are not added into this total.
-- Exact 8d424301 native Tart run passed prepare, interactions, source-loss restart,
-  Library Usage, normal Close, cleanup and display restoration. It checked 32
-  exact clipboard results, three summary contents, four forward/reverse prose
-  drags, 24 native key pairs and three canonical private exports. Root reviewed
-  11 actual window/display images. Ready Close was observed within 401ms for
-  the parent and 561ms for the window; these are observation upper bounds.
-- The original three snapshots survived a different-process restart. A fourth
-  known-usage fixture was imported after that restart and its source removed;
-  no second restart is claimed for the fourth snapshot. Missing combining/CJK/
-  emoji glyphs remain visible boxes while original copied bytes stay exact.
-- Guest/cleanup exited 0. The exact owned wrapper exited 143 after shutdown;
-  VM stopped, lease released and 332 final artifacts were collected. Plan:
-  `build/library-usage-native-addendum-v1`; run `run-01`, nonce
-  `5202c832-44ce-42ab-8987-429fd8cf3430`.
+- Reader/Usage passed 38 exact clipboard checks, three canonical exports, three
+  inert-gap checks, four prose drags, 24 native key pairs and source-loss restart.
+  Root reviewed 17 images. The fourth Usage capture was imported after restart;
+  no second restart for it is claimed.
+- Child navigation passed recorded result → retained candidate → transcript,
+  expanded tools, canonical export and three Back actions restoring the original
+  partial selection. Root reviewed five images. Reader ready Close upper bounds
+  were 487ms parent/359ms window; this does not cover pending-worker Close.
+- Retained-image features passed approved-folder capture, disable/source loss,
+  different-process restart, four views ×1,085 exact pixel samples, the original
+  6,555-byte export and selection restoration. Root reviewed seven images.
+  The full profile failed because its harness had no normal-Close operation;
+  it stopped before the click. Retained-profile Close remains unrun.
+- JPEG/PNG observer v2 failed after 323 scans over 10s missed the tiny PNG worker;
+  its preview was visible. JPEG Fit/actual pixels and original 9,277-byte export
+  passed again. Guest 2/cleanup 0/wrapper 143; VM stopped and lease released.
+  Preserve this failure and earlier harness failures. No complete inline-PNG
+  profile pass is claimed. Existing retained-PNG checks cover decoding/transport;
+  no further observer iteration gates 201 adoption. The next combined candidate
+  will validate inline-PNG pixels/export/Back and report the observation gap.
+  Final failure receipt is `build/gc512-native-png-observer-v2/jpeg-png/run-01/failure-result.json`
+  (fca873e1); root reviewed four images. PNG pixels/Back/export and Close are unrun.
+- The adjusted Child chrome gate passed all three assertions on Mac (`7b6bdfe6…`),
+  with empty compiler/runtime diagnostics and exact inputs/pins. Export remains
+  (552,96). The original environment-preflight failure (`f7844bbd…`) is preserved.
 
-Public evidence: `docs/receipts/library-usage-prose-build-tests.json` (43ab5a43…)
-and `library-usage-prose-native.json` (bdba3b02…). Adoption receipt
-`build/library-usage-prose-root-adoption/receipt.json` (9715ab82…) and executable
-promotion receipt (f21eb9c9…) bind the root result. Exact inventory is
-`build/library-usage-ui-integration/mac-candidate-v2/ADOPTION-INVENTORY-v2.json`
-(6665f0a9…). Protected index remains
-`309b1cdb9f1c2ba41c8f82ca21354d45d42f6ef2b3b01b8f9bb560b380a17b71`.
+Public drafts and exact inventory: `build/native201-publication-terminal`.
+The immutable baseline is `build/native201-publication-bundle-v3` (seal 811a09b2).
+The 47 adoption paths and 52 publication paths are unchanged. Preserve 100755
+for `scripts/test` and `scripts/bend`. All three defaults now contain `943eee7e…`;
+old sources/binaries are preserved in `build/native201-root-adoption/previous/`.
+Adoption receipt: `build/native201-root-adoption/receipt.json` (cf5f83bb).
 
-Earlier reader, UI foundation, History/JPEG, external attachment/ATIF and Why
-native results remain separately scoped in `docs/acceptance.md` and their
-receipts. Historical broad evidence is 40 executables/2960 checks and 12
-production laws checked with BendTT/Lean. Current focused checks are not a fresh
-full-suite or proof pass. Earlier compiler/harness/display failures are retained.
+## Separate work, not part of this candidate
 
-## Remaining defects and validation
+Cancellation App12 passed on Linux: active Close 5, retired Close 5 and Escape 2.
+Receipt `build/attachment-cancel-native-continuation/9c4bcb26-7d59-48ae-bf93-72da7334ca92/collected/results/receipt.json`
+(`c1f0d8ae…`) binds actual app events and exact cleanup replies. Native-window
+pending Close is still unrun; synchronous hashing and other workers are outside
+that narrow guarantee. Earlier production and Base Close failures stay recorded.
 
-- Inherited toolbar overlap: `tests/polish.bend` passed 35 assertions then failed
-  “capture hint gap is inert” at (744,88). The broad fourth action rectangle
-  overlaps the painted capture hint. Keep the assertion; repair painting and hit
-  geometry together. The current native journey does not cover this coordinate.
-- Pending Close remains defective: earlier production window 39.984s, Base-only
-  forked-child reproducer 9.660s despite prompt App.run return. Both five-second
-  checks failed. All processes eventually exited. Ready Close is separate.
-- The 34-check attachment lifecycle/pacing entry remains unrun after three
-  frontend memory-guard attempts; all 21 existing and 13 new cases remain intact.
-  Scoped-reader frontend memory acceptance is also unrun. No blind retry or
-  widened guard is queued. Native pending Escape/Back has earlier passing evidence.
-- Missing glyphs, full shaping/IME, accessibility, resize and input-latency
-  acceptance remain open. Date/cost Usage, charts, aliases, installed quota clients,
-  Connect/MCP, multi-source Briefs, deliberate excluded-content removal and child
-  results remain in the broader parity work. See `docs/parity.md`.
-- Physical-Mac 100k import 36.194s, unchanged 3.910s and 16-record append 23.816s
-  are historical observations. Search/late/scoped p95 were 42/7/17ms. The owner
-  accepts import taking seconds; marginal append remains slow. No Swift speed
-  comparison is claimed. Any comparison must use equivalent work on one host.
+Usage metric cards passed 130 Linux assertions in compile-fix-v3 (receipt42719aa3):
+19 summary, 19 interaction, 20 existing UI, 47 controller and 25 list-row.
+The pure Bend cards remain grounded in the Swift app's information hierarchy.
+A separate 206-input combined candidate is building on Mac with these cards,
+list polish, cancellation and event-seal bytes through the maintained preload.
+It still requires fresh native review; its tests do not revalidate the 201 app.
+
+The byte-oriented event-seal candidate passed 73 focused and 1,611 preservation
+checks, including 27 crash cuts. The four-test collector correction is additive;
+its original failure remains preserved. One same-physical-Mac benchmark pair
+measured baseline/candidate import 45.304/42.028s, unchanged 4.405/5.570s and
+16-record append 28.252/26.535s for 100k records. Exact bytes, prefix identities
+and seals matched. This modest single-pair result does not solve slow append or
+establish statistical significance. It is unadopted and outside the 201 bundle.
+Receipt: `build/event-seal-bytes-integration/mac-paired-01/receipt.json` (0b0402d5).
 
 ## Exact continuation
 
-1. Publish the adopted 37 paths plus README, progress/parity/acceptance and two
-   receipts, using explicit-path tree preparation in a separate index. Verified
-   parent is reader commit `242475d173610af61f89d1f4ecee9a6de9c986b4`, on
-   `ba8f3c9df633d73d37b9552ff103b8c32b6f65b7`. Keep PR #1 draft/unmerged.
-   Record resulting commit/ref receipts under `build/library-usage-prose-publication`.
-2. Repair toolbar geometry in isolated `build/toolbar-geometry-integration`.
-   Preserve all 113 polish assertions, align painter and hits in every mode,
-   and adjust future native click coordinates where the button genuinely moves.
-3. Child-results candidate is `build/child-results-current-integration`, based
-   on current Usage/prose. Backend 51, worker 31, route 6 and prose 89 assertions
-   passed in separately bound runs. Its 24 GUI assertions remain unrun after a
-   guarded frontend failure. A test-only boxed-state fixture/split is being
-   prepared; production inputs and earlier failures remain intact. Require exact
-   combined Mac/native validation before adoption.
-4. Image-file transport candidate is `build/attachment-spool-integration`:
-   13-file patch `3d7938df…`, 141 assertions passed, including supervised PNG,
-   JPEG and retained-image workers. Private nonce-bound spool, bounded parent
-   parsing and cleanup replace large stdout payloads. See HANDOFF.md and
-   TRANSPORT.md for exact bindings and limits. It is not adopted or native-UI
-   accepted, and does not alone fix pending Close. Reconcile with current sources
-   before any combined app build. Pure decode and worker lifetime remain work.
-5. No Mac compiler or Tart is running at this checkpoint. Host disk hit ENOSPC
-   during evidence collection; completed artifacts are retained. Recover only
-   scoped, losslessly verified generated artifacts before another Mac build.
-   Run full Mac compilation and Tart sequentially. Do not alter other projects,
-   original Juice, unrelated VMs or private data.
+1. For further PR updates, refresh head/draft status and publish only explicit paths,
+   preserving script modes, parent history, unrelated files and root HEAD/index.
+   Verify the published app closure. Keep PR draft and unmerged.
+2. The command `python3 build/combined206-mac/runs/4f49b7aa-34e5-4476-90f9-824a7bd97875/run-mac.py`
+   is already running in session 26497. Collect logs, receipt and process status
+   from that directory first; do not restart if active. See `build/combined206-mac/HANDOFF.md`.
+   Then exercise the combined app. Screenshot Usage Overview before Command+A switches to
+   Report; validate both copy paths and drill-down. Test actual pending Close.
+   Do not overlap Tart with compilation or claim unrun inline-PNG checks passed.
+
+Missing glyphs, shaping/IME, accessibility, resizing, latency, Usage charts/date/
+costs and broader parity remain open. Current focused gates are not a fresh
+full-suite/proof run. No Swift performance comparison or goal completion is claimed.

@@ -10,7 +10,7 @@ import ./attachment_asset_identity.bend as Identity
 import ./attachment_preview_chrome.bend as Chrome
 import ./attachment_preview.bend as Preview
 import ./attachment_image_decode.bend as ImageDecode
-import ./attachment_image_worker.bend as ImageWorker
+import ./attachment_image_spool_worker.bend as ImageWorker
 import ./attachment_image_binding.bend as ImageBinding
 import ./attachment_image_types.bend as T
 import ./attachment_decode.bend as Decode

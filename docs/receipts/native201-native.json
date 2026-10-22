@@ -1,0 +1,210 @@
+{
+  "schema": 1,
+  "scope": "Observed native macOS Tart reader/Usage, Child-result navigation and retained-image feature acceptance of adopted executable 943eee7e; synthetic fixtures only. JPEG/PNG full profile failed its tiny-worker observer check; retained normal Close did not run.",
+  "application_inputs": 201,
+  "binary_sha256": "943eee7e9192873a497dfd5f39fe269cb3ef117b5fa3e1863723a5fbbfcb4423",
+  "candidate_binding_sha256": "af1d8eacd7d24bfeb98e899ea1381784a12b0aa0b9854fe309ecc1fc96f4e1ee",
+  "source_adoption_or_default_promotion": true,
+  "reader_usage": {
+    "native_result_sha256": "835518778ead713b3b51d06916eabb9710dbe94c9aba8f23dd67f95c1c04dca9",
+    "staging_seal_sha256": "b6bf506424fa5dede25533d8cc3351e4b4dd4108fb0bfa3be0363c4f73793d41",
+    "root_visual_review_sha256": "ff1a9cba8c1eb362c419be8d69f9525942f6fcde037c61454715cba014ef8e67",
+    "root_reviewed_image_count": 17,
+    "scripted_checks_passed": true,
+    "clipboard_comparisons": 38,
+    "canonical_export_comparisons": 3,
+    "inert_toolbar_gap_checks": 3,
+    "export_click": [
+      552,
+      96
+    ],
+    "inert_gap_click": [
+      744,
+      88
+    ],
+    "missing_explicit_root_negatives": 4,
+    "proportional_drag_comparisons": 4,
+    "native_key_pairs": 24,
+    "source_loss_different_pid_restart": true,
+    "known_usage_capture_imported_after_restart": true,
+    "known_usage_capture_second_restart_tested": false,
+    "observed_behavior": [
+      "Native window contained within VM display",
+      "Proportional prose and wrapped partial selection visible",
+      "Expanded tool details visible",
+      "Selection restored after Settings and Usage navigation",
+      "Source-loss reopened transcript visible",
+      "Export hint-gap click leaves visible selection intact",
+      "Usage filters and retained capture rows visible"
+    ],
+    "ready_close_observation_upper_bounds_ms": {
+      "parent": 487,
+      "window": 359
+    },
+    "guest_exit": 0,
+    "owned_wrapper_exit": 143
+  },
+  "child_results": {
+    "native_result_sha256": "8a97f4df1765cb1707c7c3190ca8c85a4db508b6f0bc239d9063964192f67007",
+    "staging_seal_sha256": "5735c45610522b3f04a40ace992cfb4371813880869e9bfa5a54b3a474a478e3",
+    "root_visual_review_sha256": "6a4a1a3391bb330fd8412392977b09f37a1ec58d6c1052d77127374d4fc2b754",
+    "root_reviewed_image_count": 5,
+    "scripted_checks_passed": true,
+    "observed_behavior": [
+      "Original partial selection visible",
+      "Child events and retained candidate displayed with explicit navigation-only provenance",
+      "Retained child transcript and expanded result visible",
+      "Original partial selection restored after three Back actions"
+    ],
+    "canonical_export_click": [
+      552,
+      96
+    ],
+    "original_partial_selection_restored_without_reselect_after_back_actions": 3,
+    "guest_exit": 0,
+    "owned_wrapper_exit": 143,
+    "ready_close_observation_upper_bounds_ms": {
+      "parent": 413,
+      "window": 295
+    },
+    "ready_close_observations_sha256": "c90b65770b14a0ffa0eaba644888a4af691735b9fcd3de4520aac0f258d5e7c4"
+  },
+  "pending_profiles": {
+    "jpeg_png": "Complete profile failed: 323 scans over 10 seconds missed the tiny PNG worker although its preview was visible. JPEG Fit/actual pixels and original 9277-byte export passed again. Inline-PNG process identity, full pixel/export/Back acceptance remains incomplete. Existing retained-PNG feature checks independently cover decoding and private-file transport; the missing tiny-worker observation no longer gates 201 adoption.",
+    "retained_image": "Feature acceptance passed; complete profile remains failed because normal Close did not run. Preserve the failure and its scope; no full-profile pass is claimed."
+  },
+  "limits": [
+    "No pending-worker Close or cancellation acceptance. Ready Close numbers include observation overhead.",
+    "No fresh full suite, proof pass, performance acceptance or Swift-versus-Bend benchmark.",
+    "Missing Unicode glyphs remain visible boxes; exact copy does not establish shaping, IME or accessibility.",
+    "Usage heading clipping, list newline boxes and dense evidence metadata remain visible; follow-up polish is separate.",
+    "No resize or input/rendering latency acceptance.",
+    "Root reviewed actual images; screenshot pixels are not included in this public receipt.",
+    "Native Shift-Tab effect is separate from instrumented confirmation of NSBackTab25; stale callbacks were tested only in pure models."
+  ],
+  "publication_safety": "Synthetic metadata and hashes only; no private histories, transcript content, screenshots, databases, advisor logs or host paths.",
+  "preserved_partial_image_result": {
+    "receipt_sha256": "30d431fce39ad1dbeb2c207ad9191a64e46ce6c606adc2060aebfb49a9e7c31d",
+    "profile_passed": false,
+    "guest_exit": 2,
+    "cleanup_exit": 0,
+    "wrapper_exit": 143,
+    "passed_checks": [
+      "compact Reader clipboard and canonical structured CLI",
+      "four omitted-root negatives",
+      "JPEG exact sampled Fit and actual pixels with observed exact worker",
+      "JPEG Back preserves selected text",
+      "JPEG 9277-byte original export SHA"
+    ],
+    "unverified": [
+      "PNG worker identity",
+      "PNG Fit/actual pixels",
+      "PNG Escape selection restoration",
+      "PNG original export",
+      "normal Close profile"
+    ],
+    "hypothesis": "PNG worker may finish before post-click observation; no route acceptance inferred.",
+    "root_reviewed_image_count": 2
+  },
+  "retained_image": {
+    "feature_result_sha256": "500fe0769395842fe9c66bff02ae50868ccc46da1b7470f8932878ef845a8841",
+    "profile_passed": false,
+    "feature_checks_passed": true,
+    "strict_collector_scope": "All retained feature steps, pixel comparisons, exact export, source-loss restart and selection restoration passed; the profile remains failed solely at the missing normal-Close harness operation before its action.",
+    "pixel_samples_per_view": {
+      "captured-fit": 1085,
+      "captured-actual": 1085,
+      "retained-fit": 1085,
+      "retained-actual": 1085
+    },
+    "exact_pixel_tolerance": 0,
+    "source_loss_different_process_restart": true,
+    "original_export_bytes": 6555,
+    "original_export_sha256": "2fadba069c92c7b9981c87e6d05b7251de6e6ec8c72afc571eaadad49578d64f",
+    "root_reviewed_image_count": 7,
+    "root_reviewed_image_hashes": {
+      "captured-fit.png": "0cb55d237b76234ceb94f053628de8cebfeb415a7c57433c7c8888e470cf3b19",
+      "captured-actual.png": "2eff128ab34efc5567a12b7ac1f8d7138560e6b8264713151ab5a317b39a3a59",
+      "folder-disabled.png": "2019b6d5ed53ea6ae5397b40afb79f005fde5b3bf77947b8e7140f76785c03cb",
+      "retained-fit.png": "0cb55d237b76234ceb94f053628de8cebfeb415a7c57433c7c8888e470cf3b19",
+      "retained-actual.png": "2eff128ab34efc5567a12b7ac1f8d7138560e6b8264713151ab5a317b39a3a59",
+      "retained-escape.png": "498c1ba7082c580f5d6aa853628bb641c92954e4a87b76c21f30ebf7d7bc4123",
+      "restored-filtered.png": "04d71552c4c01a774355b06b49c8cffcada83b78802d078bbcda62b9717e5ca0"
+    },
+    "visual_notes": [
+      "Expected alpha checkerboard and bands rendered at Fit and actual size before and after source loss.",
+      "Disabled folder visible; original filtered text/selection restored.",
+      "Dense evidence text and missing CJK/emoji glyph boxes remain polish limitations."
+    ],
+    "guest_exit": 1,
+    "cleanup_exit": 0,
+    "owned_wrapper_exit": 143,
+    "vm_stopped_at_collection": true,
+    "normal_close": "Not run: the harness had no close-point operation and failed before action timestamp or click. This is not an application Close failure.",
+    "pending_close_tested": false,
+    "rerun_requirement": "Retained feature checks need no rerun for the unrelated missing harness operation. Ready Close has separate passing observations for the exact same executable in reader and Child profiles; no retained-profile Close acceptance is inferred."
+  },
+  "preserved_observer_failures": [
+    {
+      "receipt_sha256": "b19df1a4caa4782aecdbc69a84d637e59b124879ae6f5cde0d89c2984e039678",
+      "profile_passed": false,
+      "guest_exit": 2,
+      "cleanup_exit": 0,
+      "wrapper_exit": 143,
+      "image_click_performed": false,
+      "scope": "The observer rejected a truncated parent executable path before becoming ready; no image route or pixel acceptance from this run."
+    }
+  ],
+  "root_adoption": {
+    "receipt_sha256": "cf5f83bb40cfc719ca274d1676fd6796e3d075d51fc5698c3089646c632521c3",
+    "application_inputs": 201,
+    "exact_adoption_paths": 47,
+    "all_application_inputs_match_tested_executable": true,
+    "default_executables_promoted": 3,
+    "previous_sources_and_executables_preserved": true,
+    "root_head_and_index_unchanged": true
+  },
+  "preserved_observer_v2_result": {
+    "staging_seal_sha256": "ccc646b0a45cd3b916fe0f47afd4343f743e6695284dfc35d53495cb42e2d424",
+    "profile_passed": false,
+    "guest_exit": 2,
+    "cleanup_exit": 0,
+    "wrapper_exit": 143,
+    "vm_stopped": true,
+    "lease_released": true,
+    "png_observer_scans": 323,
+    "png_observer_deadline_seconds": 10,
+    "png_preview_visible": true,
+    "png_worker_observed": false,
+    "jpeg_feature_checks_passed": true,
+    "jpeg_original_export_bytes": 9277,
+    "terminal_receipt_sha256": "fca873e1e3b9e4ee5ac6c643d1516c23affe78720fdde7ddd3c525cc6924d594",
+    "root_visual_review": {
+      "source": "Root message after personally viewing the four actual window images",
+      "images": {
+        "cleanup-before-close.png": "68fce3674335fc155d48c275a98b62be96c8a31a60091a94eb3aecc9c7f47473",
+        "jpeg-fit.png": "6c2f9a6d52de34e2d1ba452d40deb5d8997cb09d514dec714653272c0d8bdd94",
+        "jpeg-actual.png": "01b4b754d903dc5ee19ff62dafd53f415eac3e029d9ca6ca10f9d821a450f7b1",
+        "jpeg-back.png": "f43d82acab3c695b61fdfd8678330a5dab78a78af8da7f4791ff64c89ed944de"
+      },
+      "finding": "PNG 2x1 preview visibly rendered; JPEG Fit and actual-size views and restored selected details fit the viewport.",
+      "limits": "Visual review does not establish PNG exact pixels, worker observation, export, or Back acceptance."
+    },
+    "scope": "No complete inline-PNG profile pass; no assertion weakened. Next combined functional profile will retain pixel/export/Back checks and report the OS child-observation gap separately.",
+    "root_reviewed_image_count": 4,
+    "png_observer_elapsed_seconds": 10.027,
+    "jpeg_exact_pixel_samples": {
+      "fit": 30,
+      "actual": 6
+    },
+    "jpeg_exact_child_identity_observed": true,
+    "jpeg_back_selection_passed": true,
+    "not_completed": [
+      "PNG exact pixel comparisons",
+      "PNG worker identity observation",
+      "PNG Back selection restoration",
+      "PNG original export",
+      "normal Close"
+    ]
+  }
+}

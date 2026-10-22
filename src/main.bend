@@ -5,6 +5,7 @@ import ./attachment_preview_app.bend as PreviewApp
 import ./attachment_preview_worker.bend as PreviewWorker
 import ./attachment_preview_external_worker.bend as ExternalPreviewWorker
 import ./attachment_image_worker.bend as ImageWorker
+import ./attachment_image_spool_worker.bend as SpoolImageWorker
 import ./cli.bend as Cli
 import ./demo.bend as Demo
 import ./quota_entry.bend as Quota
@@ -66,7 +67,9 @@ def preview_kind(+command: String) -> U32:
       Bool.pick(U32,String.eq(command,ImageWorker.inline_command()),3,
         Bool.pick(U32,String.eq(command,ImageWorker.external_command()),4,
           Bool.pick(U32,String.eq(command,LibraryWorker.command()),5,
-            Bool.pick(U32,String.eq(command,LibraryWorker.command_capture()),6,2))))))
+            Bool.pick(U32,String.eq(command,LibraryWorker.command_capture()),6,
+              Bool.pick(U32,String.eq(command,SpoolImageWorker.inline_command()),7,
+                Bool.pick(U32,String.eq(command,SpoolImageWorker.external_command()),8,2))))))))
 
 def run_command(kind: U32,dir: String,program: String,command: String,args: List<String>) -> IO(Unit):
   match kind:
@@ -76,6 +79,8 @@ def run_command(kind: U32,dir: String,program: String,command: String,args: List
     case 4: ImageWorker.external_root(dir,args)
     case 5: LibraryWorker.root(dir,args)
     case 6: LibraryWorker.root_capture(dir,args)
+    case 7: SpoolImageWorker.inline_root(dir,args)
+    case 8: SpoolImageWorker.external_root(dir,args)
     case _: run_ordinary(dir,program,command <> args)
 
 def run(dir: String,program: String,args: List<String>) -> IO(Unit):
@@ -96,10 +101,23 @@ def capture_default(program: String,args: List<&2,String>,explicit_required: Boo
         home : String <- IO.try(String,IO.get_env("HOME"))
         run(home ++ "/Library/Application Support/JuiceBend",program,Route.linear(args))
 
+def image_spool_explicit_root(args: List<&2,String>) -> Bool:
+  match args:
+    case +command <> _: String.eq(command,SpoolImageWorker.inline_command()) || String.eq(command,SpoolImageWorker.external_command())
+    case _: False{}
+
+def capture_root_required(required: Bool,program: String,+args: List<&2,String>) -> IO(Unit):
+  match required:
+    case True{}: IO.die(Unit,2,"Image preview worker requires an explicit existing --data-dir.")
+    case False{}: capture_default(program,args,library_explicit_root(args))
+
+def capture_without_root(program: String,+args: List<&2,String>) -> IO(Unit):
+  capture_root_required(image_spool_explicit_root(args),program,args)
+
 def capture_root(program: String,+args: List<&2,String>,root: Maybe<&2,String>) -> IO(Unit):
   match root:
     case Some{dir}: run(dir,program,Route.linear(args))
-    case None{}: capture_default(program,args,library_explicit_root(args))
+    case None{}: capture_without_root(program,args)
 
 def routed(program: String,route: Route.Route) -> IO(Unit):
   match route:

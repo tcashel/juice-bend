@@ -9,7 +9,8 @@ def read_kind(+command: String) -> U32:
         Bool.pick(U32,String.eq(command,"attachment-roots") || String.eq(command,"captured-attachment"),3,
           Bool.pick(U32,String.eq(command,"attachments") || String.eq(command,"session-scope") ||
             String.eq(command,"why-scope") || String.eq(command,"activity-scope") ||
-            String.eq(command,"relations-scope") || String.eq(command,"relations-page"),4,
+            String.eq(command,"relations-scope") || String.eq(command,"relations-page") ||
+            String.eq(command,"result-link-events") || String.eq(command,"result-link-page"),4,
             Bool.pick(U32,String.eq(command,"library-usage-v1") || String.eq(command,"library-usage-capture-v1"),6,5))))))
 
 def write_kind(+command: String) -> U32:

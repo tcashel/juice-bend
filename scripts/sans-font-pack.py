@@ -87,8 +87,8 @@ def packed_rows(rows: list[list[int]]) -> str:
 
 
 def packed_glyph(glyph: dict) -> str:
-    return "Glyph{" + str(glyph["advance"]) + "," + ",".join(
-        packed_rows(glyph["rows"][y:y + 8]) for y in range(0, 32, 8)) + "}"
+    return "Glyph{" + str(glyph["advance"]) + ",[" + ",".join(
+        packed_rows(glyph["rows"][y:y + 8]) for y in range(0, 32, 8)) + "]}"
 
 
 def tree(glyphs: list[dict], name: str, missing: str) -> str:

@@ -11,7 +11,7 @@ type Rows8 is Data:
   Rows8{a: Row,b: Row,c: Row,d: Row,e: Row,f: Row,g: Row,h: Row}
 
 type Glyph is Data:
-  Glyph{advance: U32,a: Rows8,b: Rows8,c: Rows8,d: Rows8}
+  Glyph{advance: U32,blocks: List<&2,Rows8>}
 
 def zero_row() -> Row:
   Row{0,0,0,0}
@@ -20,7 +20,7 @@ def zero_rows() -> Rows8:
   Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}
 
 def advance(bits: Glyph) -> U32:
-  Glyph{width,a,b,c,d} = bits
+  Glyph{width,_} = bits
   width
 
 def row_word.select_word(row: Row,word: U32) -> U32:
@@ -45,14 +45,22 @@ def row_word.select_row(rows: Rows8,y: U32) -> Row:
     case 7: h
     case _: zero_row()
 
-def row_word.select_block(bits: Glyph,block: U32) -> Rows8:
-  Glyph{width,a,b,c,d} = bits
-  match block:
-    case 0: a
-    case 1: b
-    case 2: c
-    case 3: d
-    case _: zero_rows()
+# A recursive list is a boxed representation boundary. Generated glyphs carry
+# exactly four Rows8 blocks; public out-of-bounds coordinates still return zero.
+def row_word.block(blocks: List<&2,Rows8>,index: U32) -> Rows8:
+  match blocks index:
+    case Nil{} _: zero_rows()
+    case Con{head,_} 0: head
+    case Con{_,rest} n: row_word.block(rest,U32.sub(n,1))
+
+def row_word.block_checked(blocks: List<&2,Rows8>,index: U32,valid: Bool) -> Rows8:
+  match valid:
+    case True{}: row_word.block(blocks,index)
+    case False{}: zero_rows()
+
+def row_word.select_block(bits: Glyph,+block: U32) -> Rows8:
+  Glyph{_,blocks} = bits
+  row_word.block_checked(blocks,block,U32.is_lt(block,4))
 
 # Four little-nibble-x words per row. Out-of-range word or y returns zero.
 def row_word(bits: Glyph,word: U32,+y: U32) -> U32:

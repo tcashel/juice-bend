@@ -13,6 +13,9 @@ for entry do
   if [ "$explicit" -eq 0 ]; then
     case "$entry" in
       tests/png_fixtures.bend|tests/jpeg_fixtures.bend) continue ;;
+      tests/font_unboxed_reference.bend) continue ;;
+      # The chrome, navigation and restoration entries cover all 11 checks.
+      tests/gui_result_links_cards.bend) continue ;;
     esac
   fi
   if [ ! -f "$entry" ]; then

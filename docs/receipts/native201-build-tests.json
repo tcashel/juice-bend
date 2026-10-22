@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "scope": "Adopted 201-input native macOS app and separately bound compiler/font gates. Source adoption and default promotion completed.",
+  "implementation": "Application behavior, UI, tests and benchmark logic remain Bend 2. SQLite and its narrow bridge are the maintained native-code exception. The GC adjustment is development-only compiler tooling.",
+  "source": {
+    "application_inputs": 201,
+    "application_closure_sha256": "cca313b140e1150f7ad30a50cbdbeea4df6f8a76b14eba31d66ac7e720ac5504",
+    "closure_hash_format": "SHA256 of sorted UTF-8 lines: content SHA256, two spaces, repository-relative path, newline",
+    "candidate_binding_sha256": "af1d8eacd7d24bfeb98e899ea1381784a12b0aa0b9854fe309ecc1fc96f4e1ee",
+    "bend_revision": "60ca80aedeec9d8f0629b5f10dd19457d8ad67af",
+    "adoption_inventory_sha256": "5f6418b6ac535c1dec606886dc7fbb549dd8a41466ff4aea2a9ecc22240d0f36"
+  },
+  "mac_build": {
+    "platform": "Darwin arm64",
+    "frontend": "Pinned Bend 2.0.37 compiler copy with isolated GC512 diagnostic transform, read-only telemetry and import relocation; not the maintained minimal preload path",
+    "bun": "1.4.2",
+    "frontend_exit": 0,
+    "frontend_seconds": 337.183,
+    "frontend_peak_physical_footprint_bytes": 10313359328,
+    "frontend_receipt_sha256": "e2cd9fd5549d8b8cd1f23ec40aeaba6e449d5cad388b2c262f3ca6abfc433d2c",
+    "frontend_terminal_collection_sha256": "6c700a4c3714107ceb9dca05024f57d7dc4fabe6fc34f2100a9afb805ea85a02",
+    "frontend_manifest_context_correction_sha256": "d793c6a78103aef03b87e461f2f8f9684d7c7dbf5e574dc744d499b4e6c1cfe6",
+    "native_compiler": "mise-managed LLVM 23.1.4, -O1, macOS 26 target, macOS 27 SDK",
+    "native_exit": 0,
+    "native_compile_seconds": 620.423,
+    "binary_sha256": "943eee7e9192873a497dfd5f39fe269cb3ef117b5fa3e1863723a5fbbfcb4423",
+    "binary_bytes": 28763032,
+    "generated_c_sha256": "8f832bfab35e3b5e1d42bd285d86d1db52ec927249acbfeaaa452c66f6d9dba7",
+    "generated_c_bytes": 123148054,
+    "receipt_sha256": "4aa33cc2164dda0d6218705467f670d345be07a6b35ff1b2208e504b4534b2f2",
+    "terminal_collection_sha256": "c121cb6e4e44c9771ea40394b4483023e724d9c80028e2fa3f320c6b597e849d",
+    "inputs_and_pins_unchanged": true,
+    "owned_build_processes_absent": true,
+    "timing_scope": "Compiler diagnostics only; no application speed, rendering latency or Swift comparison claim."
+  },
+  "separate_linux_gates": {
+    "boxed_font": {
+      "receipt_sha256": "b3a21bf233718bc7b9dc9ab80932d5ed5b8aafb3cc8f1f4b28206ab49a86e1b7",
+      "passed_assertion_groups": 25,
+      "glyph_advances": 612,
+      "row_words": 78336,
+      "pixels": 626688,
+      "scope": "Old/new public font accessors match exactly; not a full-app speed or memory improvement result."
+    },
+    "diagnostic_gc_equivalence": {
+      "receipt_sha256": "ae77d4bf3f589c4dd44548fd3aba968b9fc31730e92bfc93490b4a340330f118",
+      "font_assertions_per_variant": 25,
+      "usage_assertions_per_variant": 20,
+      "literal_generated_c_equal": true,
+      "both_variants_passed": true,
+      "gc_calls_observed": true,
+      "scope": "Original versus diagnostic GC transform at the same frozen source paths; separate tests, not full-app C equivalence."
+    },
+    "actual_pinned_cli_preload": {
+      "receipt_sha256": "ad37da26152926489fc6464806bf121be72682e0627b63d2cafd18112beff211",
+      "preload_sha256": "7cba1caa6a299334bddd283e179c81835ca1d76fde9582f8140aa478f7bc6061",
+      "literal_generated_c_equal": true,
+      "generated_c_sha256": "04a03c0a4d9e4c5bdcaa84fc86ff94e37365f6f661de13700f3897b1245fe799",
+      "assertions_per_variant": 25,
+      "baseline_and_preload_stdout_equal": true,
+      "scope": "Unchanged original pinned CLI/main plus minimal preload; no full-app Mac build with this adapter yet."
+    }
+  },
+  "prior_component_evidence_not_fresh_combined_suite": {
+    "child": "201 PASS lines (194 assertions +7 fixture commands) across focused gates; split11 passed04db9046",
+    "font": "25 exhaustive groups,612 glyphs/78336 packed words/626688 pixels;d6d5d950",
+    "routes": "16 PASS;2ba420cf receipt3deee6c73ffdcf0fb9e979440f908d233b1a6a32338aaa32cba15b8007de79f7",
+    "toolbar": "182 PASS (113 polish +45 geometry +24 reader UI);846d79a6",
+    "transport": "141 PASS across six tests; source manifest OVERLAY.json binds exact receipts"
+  },
+  "pending": {
+    "fresh_full_suite": "not run",
+    "fresh_proofs": "not run",
+    "full_app_with_maintained_gc_preload": "not run",
+    "application_performance": "not measured by these runs"
+  },
+  "publication_safety": "Synthetic technical metadata, repository-relative paths and hashes only; no transcript bodies, screenshot pixels, databases, private source, advisor logs or absolute host paths.",
+  "required_compiler_tooling": {
+    "paths": [
+      "docs/versions.md",
+      "scripts/bend",
+      "toolchain/bend-gc512.ts"
+    ],
+    "patch_sha256": "a14038493245463b04c629503e29a2719285d804be69a6d62619fbff9dff8491",
+    "upstream_compiler_sha256": "5ae06d6c44581bd7e0e2f5952e402659c9be408f79a5a4e86ff23e5be9844ce6",
+    "adapter_sha256": "7cba1caa6a299334bddd283e179c81835ca1d76fde9582f8140aa478f7bc6061",
+    "behavior": "Mise-pinned Bun 1.4.2 preloads an in-memory exact-hash-guarded transform that calls Bun.gc(true) after every 512 existing memo cleanup calls. Original upstream compiler files and CLI arguments remain unchanged. Unsupported Bun/hash or an unused hook fails closed.",
+    "publication_requirement": "The app source publication must include this adapter and wrapper wiring; the unchanged full-app frontend exceeded the 16 GiB guard.",
+    "validation": "Actual original pinned CLI/main plus minimal preload emitted byte-identical font-test C and both native variants passed 25 assertions. These are separate compiler-equivalence checks, not a full-app build or performance result.",
+    "full_app_with_maintained_preload": "The 201-input binary used diagnostic GC512 with telemetry/import relocation. A separate combined 206-input Mac app is now building through the maintained minimal preload; no completed full-app result yet.",
+    "upstream_pins_reverified_unchanged": true,
+    "source_adoption_performed": true
+  },
+  "preserved_child_chrome_preflight_failure": {
+    "receipt_sha256": "f7844bbd88ff64c7eec5d6f67729d67b2fb69d491a7b97e5758250471a3ccdb0",
+    "passed": false,
+    "commands_started": 0,
+    "native_test_executed": false,
+    "frozen_inputs_and_pins_unchanged": true,
+    "owned_processes_absent": true,
+    "scope": "Runner environment preflight only; not a compiler or application failure."
+  },
+  "coordinate_adjusted_child_chrome": {
+    "receipt_sha256": "7b6bdfe65c175373f5de53af39975b8bd4a32c78dde2ace2ddcaab7ee3bb75dc",
+    "passed": true,
+    "assertions": 3,
+    "export_click": [
+      552,
+      96
+    ],
+    "frontend_exit": 0,
+    "native_compile_exit": 0,
+    "test_exit": 0,
+    "compiler_and_runtime_diagnostics_empty": true,
+    "inputs_and_pins_unchanged": true,
+    "owned_processes_absent": true,
+    "binary_sha256": "20dc26709e6beab02881279a35522942d011324d406ff105e2d14b4796e7758d",
+    "generated_c_sha256": "9955d4fee5ebf9113691d8180630dd1447756d5bb25534bfe097d0c9df851e86",
+    "scope": "Bend controller/painter hit and route assertions in a native Mac test executable; no native window/input acceptance from this test."
+  },
+  "root_adoption": {
+    "receipt_sha256": "cf5f83bb40cfc719ca274d1676fd6796e3d075d51fc5698c3089646c632521c3",
+    "application_inputs": 201,
+    "exact_adoption_paths": 47,
+    "all_application_inputs_match_tested_executable": true,
+    "default_executables_promoted": 3,
+    "previous_sources_and_executables_preserved": true,
+    "root_head_and_index_unchanged": true
+  }
+}

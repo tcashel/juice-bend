@@ -6,4 +6,4 @@ export BEND_NO_TELEMETRY=1
 export MISE_STATE_DIR="$ROOT/.tools/mise-state"
 export MISE_CACHE_DIR="$ROOT/.cache/mise"
 export MISE_TRUSTED_CONFIG_PATHS="$ROOT"
-exec mise exec -- bun "$ROOT/.tools/bend/bend2/main.ts" "$@"
+exec mise exec -- bun --preload "$ROOT/toolchain/bend-gc512.ts" "$ROOT/.tools/bend/bend2/main.ts" "$@"

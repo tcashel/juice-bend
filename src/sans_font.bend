@@ -11,7 +11,7 @@ type Rows8 is Data:
   Rows8{a: Row,b: Row,c: Row,d: Row,e: Row,f: Row,g: Row,h: Row}
 
 type Glyph is Data:
-  Glyph{advance: U32,a: Rows8,b: Rows8,c: Rows8,d: Rows8}
+  Glyph{advance: U32,blocks: List<&2,Rows8>}
 
 def zero_row() -> Row:
   Row{0,0,0,0}
@@ -20,7 +20,7 @@ def zero_rows() -> Rows8:
   Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}
 
 def advance(bits: Glyph) -> U32:
-  Glyph{width,a,b,c,d} = bits
+  Glyph{width,_} = bits
   width
 
 def row_word.select_word(row: Row,word: U32) -> U32:
@@ -45,14 +45,22 @@ def row_word.select_row(rows: Rows8,y: U32) -> Row:
     case 7: h
     case _: zero_row()
 
-def row_word.select_block(bits: Glyph,block: U32) -> Rows8:
-  Glyph{width,a,b,c,d} = bits
-  match block:
-    case 0: a
-    case 1: b
-    case 2: c
-    case 3: d
-    case _: zero_rows()
+# A recursive list is a boxed representation boundary. Generated glyphs carry
+# exactly four Rows8 blocks; public out-of-bounds coordinates still return zero.
+def row_word.block(blocks: List<&2,Rows8>,index: U32) -> Rows8:
+  match blocks index:
+    case Nil{} _: zero_rows()
+    case Con{head,_} 0: head
+    case Con{_,rest} n: row_word.block(rest,U32.sub(n,1))
+
+def row_word.block_checked(blocks: List<&2,Rows8>,index: U32,valid: Bool) -> Rows8:
+  match valid:
+    case True{}: row_word.block(blocks,index)
+    case False{}: zero_rows()
+
+def row_word.select_block(bits: Glyph,+block: U32) -> Rows8:
+  Glyph{_,blocks} = bits
+  row_word.block_checked(blocks,block,U32.is_lt(block,4))
 
 # Four little-nibble-x words per row. Out-of-range word or y returns zero.
 def row_word(bits: Glyph,word: U32,+y: U32) -> U32:
@@ -76,11 +84,11 @@ def height(face: U32) -> U32:
 
 
 def face0.missing() -> Glyph:
-  Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{251656960,0,0,0},Row{251263744,0,0,0},Row{251656960,0,0,0},Row{251239168,0,0,0}},Rows8{Row{251656960,0,0,0},Row{251263744,0,0,0},Row{245365504,0,0,0},Row{249420544,0,0,0},Row{245340928,0,0,0},Row{251656960,0,0,0},Row{244288256,0,0,0},Row{241404672,0,0,0}},Rows8{Row{251656960,0,0,0},Row{249096960,0,0,0},Row{251656960,0,0,0},Row{53686784,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+  Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{251656960,0,0,0},Row{251263744,0,0,0},Row{251656960,0,0,0},Row{251239168,0,0,0}},Rows8{Row{251656960,0,0,0},Row{251263744,0,0,0},Row{245365504,0,0,0},Row{249420544,0,0,0},Row{245340928,0,0,0},Row{251656960,0,0,0},Row{244288256,0,0,0},Row{241404672,0,0,0}},Rows8{Row{251656960,0,0,0},Row{249096960,0,0,0},Row{251656960,0,0,0},Row{53686784,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
 
 def face0lllllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,zero_rows(),zero_rows(),zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[zero_rows(),zero_rows(),zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lllllll(code: U32) -> Glyph:
@@ -88,7 +96,7 @@ def face0lllllll(code: U32) -> Glyph:
 
 def face0llllllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2720,0,0,0},Row{2720,0,0,0},Row{2720,0,0,0}},Rows8{Row{2720,0,0,0},Row{2720,0,0,0},Row{2704,0,0,0},Row{2448,0,0,0},zero_row(),zero_row(),Row{2448,0,0,0},Row{2992,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2720,0,0,0},Row{2720,0,0,0},Row{2720,0,0,0}},Rows8{Row{2720,0,0,0},Row{2720,0,0,0},Row{2704,0,0,0},Row{2448,0,0,0},zero_row(),zero_row(),Row{2448,0,0,0},Row{2992,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llllllrl(code: U32) -> Glyph:
@@ -96,7 +104,7 @@ def face0llllllrl(code: U32) -> Glyph:
 
 def face0llllllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2046848,0,0,0},Row{998272,0,0,0},Row{993904,0,0,0}},Rows8{Row{924000,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{7,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2046848,0,0,0},Row{998272,0,0,0},Row{993904,0,0,0}},Rows8{Row{924000,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llllllrr(code: U32) -> Glyph:
@@ -120,7 +128,7 @@ def face0llllll(+code: U32) -> Glyph:
 
 def face0lllllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2013323776,0,0,0},Row{1509995520,0,0,0},Row{1023448576,0,0,0}},Rows8{Row{4294967281,8,0,0},Row{776104992,1,0,0},Row{188755200,0,0,0},Row{157290240,0,0,0},Row{4026531834,0,0,0},Row{650259298,0,0,0},Row{47188080,0,0,0},Row{15795856,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2013323776,0,0,0},Row{1509995520,0,0,0},Row{1023448576,0,0,0}},Rows8{Row{4294967281,8,0,0},Row{776104992,1,0,0},Row{188755200,0,0,0},Row{157290240,0,0,0},Row{4026531834,0,0,0},Row{650259298,0,0,0},Row{47188080,0,0,0},Row{15795856,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lllllrl(code: U32) -> Glyph:
@@ -128,7 +136,7 @@ def face0lllllrl(code: U32) -> Glyph:
 
 def face0lllllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{786432,0,0,0},Row{435148544,0,0,0},Row{2657971824,0,0,0},Row{3289122768,0,0,0}},Rows8{Row{788688,0,0,0},Row{892768,0,0,0},Row{418362368,0,0,0},Row{2926379008,0,0,0},Row{4077649920,2,0,0},Row{4077651169,2,0,0},Row{3177012656,0,0,0},Row{451930384,0,0,0}},Rows8{Row{786432,0,0,0},Row{393216,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{786432,0,0,0},Row{435148544,0,0,0},Row{2657971824,0,0,0},Row{3289122768,0,0,0}},Rows8{Row{788688,0,0,0},Row{892768,0,0,0},Row{418362368,0,0,0},Row{2926379008,0,0,0},Row{4077649920,2,0,0},Row{4077651169,2,0,0},Row{3177012656,0,0,0},Row{451930384,0,0,0}},Rows8{Row{786432,0,0,0},Row{393216,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0lllllrrl(code: U32) -> Glyph:
@@ -136,7 +144,7 @@ def face0lllllrrl(code: U32) -> Glyph:
 
 def face0lllllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{784640,2432,0,0},Row{7093568,467,0,0},Row{8915552,92,0,0}},Rows8{Row{1886063696,10,0,0},Row{3793615872,2,0,0},Row{1795170304,0,0,0},Row{207618048,28354,0,0},Row{65077248,128154,0,0},Row{9043968,184396,0,0},Row{868352,128138,0,0},Row{315648,28370,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{14,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{784640,2432,0,0},Row{7093568,467,0,0},Row{8915552,92,0,0}},Rows8{Row{1886063696,10,0,0},Row{3793615872,2,0,0},Row{1795170304,0,0,0},Row{207618048,28354,0,0},Row{65077248,128154,0,0},Row{9043968,184396,0,0},Row{868352,128138,0,0},Row{315648,28370,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lllllrrr(code: U32) -> Glyph:
@@ -168,7 +176,7 @@ def face0lllll(+code: U32) -> Glyph:
 
 def face0llllrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{9365248,0,0,0},Row{98848576,0,0,0},Row{130026864,0,0,0}},Rows8{Row{48779056,0,0,0},Row{5175552,0,0,0},Row{785424,0,0,0},Row{4051577792,3,0,0},Row{4159963891,1,0,0},Row{2944401907,0,0,0},Row{3216259792,0,0,0},Row{3819891488,6,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{9365248,0,0,0},Row{98848576,0,0,0},Row{130026864,0,0,0}},Rows8{Row{48779056,0,0,0},Row{5175552,0,0,0},Row{785424,0,0,0},Row{4051577792,3,0,0},Row{4159963891,1,0,0},Row{2944401907,0,0,0},Row{3216259792,0,0,0},Row{3819891488,6,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llllrll(code: U32) -> Glyph:
@@ -176,7 +184,7 @@ def face0llllrll(code: U32) -> Glyph:
 
 def face0llllrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2944,0,0,0},Row{2944,0,0,0},Row{2672,0,0,0}},Rows8{Row{2400,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2944,0,0,0},Row{2944,0,0,0},Row{2672,0,0,0}},Rows8{Row{2400,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llllrlrl(code: U32) -> Glyph:
@@ -184,7 +192,7 @@ def face0llllrlrl(code: U32) -> Glyph:
 
 def face0llllrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{319744,0,0,0},Row{55040,0,0,0},Row{31744,0,0,0}},Rows8{Row{16144,0,0,0},Row{3648,0,0,0},Row{3424,0,0,0},Row{3184,0,0,0},Row{3184,0,0,0},Row{3408,0,0,0},Row{12064,0,0,0},Row{27904,0,0,0}},Rows8{Row{50944,0,0,0},Row{254208,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{319744,0,0,0},Row{55040,0,0,0},Row{31744,0,0,0}},Rows8{Row{16144,0,0,0},Row{3648,0,0,0},Row{3424,0,0,0},Row{3184,0,0,0},Row{3184,0,0,0},Row{3408,0,0,0},Row{12064,0,0,0},Row{27904,0,0,0}},Rows8{Row{50944,0,0,0},Row{254208,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0llllrlrr(code: U32) -> Glyph:
@@ -208,7 +216,7 @@ def face0llllrl(+code: U32) -> Glyph:
 
 def face0llllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{754,0,0,0},Row{2224,0,0,0},Row{3424,0,0,0}},Rows8{Row{12064,0,0,0},Row{27904,0,0,0},Row{31744,0,0,0},Row{39424,0,0,0},Row{35328,0,0,0},Row{31744,0,0,0},Row{20240,0,0,0},Row{3664,0,0,0}},Rows8{Row{2480,0,0,0},Row{754,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{754,0,0,0},Row{2224,0,0,0},Row{3424,0,0,0}},Rows8{Row{12064,0,0,0},Row{27904,0,0,0},Row{31744,0,0,0},Row{39424,0,0,0},Row{35328,0,0,0},Row{31744,0,0,0},Row{20240,0,0,0},Row{3664,0,0,0}},Rows8{Row{2480,0,0,0},Row{754,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0llllrrl(code: U32) -> Glyph:
@@ -216,7 +224,7 @@ def face0llllrrl(code: U32) -> Glyph:
 
 def face0llllrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{57344,0,0,0},Row{27447969,0,0,0},Row{7204192,0,0,0}},Rows8{Row{6089808,0,0,0},Row{28496817,0,0,0},Row{57344,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{7,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{57344,0,0,0},Row{27447969,0,0,0},Row{7204192,0,0,0}},Rows8{Row{6089808,0,0,0},Row{28496817,0,0,0},Row{57344,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llllrrrl(code: U32) -> Glyph:
@@ -224,7 +232,7 @@ def face0llllrrrl(code: U32) -> Glyph:
 
 def face0llllrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{4063232,0,0,0},Row{4063232,0,0,0},Row{4063232,0,0,0},Row{4026531744,0,0,0},Row{576594464,0,0,0},Row{4063232,0,0,0},Row{4063232,0,0,0},zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{4063232,0,0,0},Row{4063232,0,0,0},Row{4063232,0,0,0},Row{4026531744,0,0,0},Row{576594464,0,0,0},Row{4063232,0,0,0},Row{4063232,0,0,0},zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llllrrrr(code: U32) -> Glyph:
@@ -264,7 +272,7 @@ def face0llll(+code: U32) -> Glyph:
 
 def face0lllrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2960,0,0,0},Row{1968,0,0,0}},Rows8{Row{992,0,0,0},Row{225,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{4,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2960,0,0,0},Row{1968,0,0,0}},Rows8{Row{992,0,0,0},Row{225,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0lllrlll(code: U32) -> Glyph:
@@ -272,7 +280,7 @@ def face0lllrlll(code: U32) -> Glyph:
 
 def face0lllrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),Row{8388592,0,0,0},Row{1188384,0,0,0},zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),Row{8388592,0,0,0},Row{1188384,0,0,0},zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lllrllrl(code: U32) -> Glyph:
@@ -280,7 +288,7 @@ def face0lllrllrl(code: U32) -> Glyph:
 
 def face0lllrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2448,0,0,0},Row{2992,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2448,0,0,0},Row{2992,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lllrllrr(code: U32) -> Glyph:
@@ -304,7 +312,7 @@ def face0lllrll(+code: U32) -> Glyph:
 
 def face0lllrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{344064,0,0,0},Row{499712,0,0,0},Row{253952,0,0,0}},Rows8{Row{58112,0,0,0},Row{42752,0,0,0},Row{27392,0,0,0},Row{11776,0,0,0},Row{3392,0,0,0},Row{2432,0,0,0},Row{1728,0,0,0},Row{753,0,0,0}},Rows8{Row{212,0,0,0},Row{152,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{344064,0,0,0},Row{499712,0,0,0},Row{253952,0,0,0}},Rows8{Row{58112,0,0,0},Row{42752,0,0,0},Row{27392,0,0,0},Row{11776,0,0,0},Row{3392,0,0,0},Row{2432,0,0,0},Row{1728,0,0,0},Row{753,0,0,0}},Rows8{Row{212,0,0,0},Row{152,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0lllrlrl(code: U32) -> Glyph:
@@ -312,7 +320,7 @@ def face0lllrlrl(code: U32) -> Glyph:
 
 def face0lllrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{63952128,0,0,0},Row{780300080,0,0,0},Row{2348812720,0,0,0}},Rows8{Row{3338667248,0,0,0},Row{3841983218,0,0,0},Row{4093641202,0,0,0},Row{3841983218,0,0,0},Row{3338667248,0,0,0},Row{2348812720,0,0,0},Row{780300096,0,0,0},Row{63952128,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{63952128,0,0,0},Row{780300080,0,0,0},Row{2348812720,0,0,0}},Rows8{Row{3338667248,0,0,0},Row{3841983218,0,0,0},Row{4093641202,0,0,0},Row{3841983218,0,0,0},Row{3338667248,0,0,0},Row{2348812720,0,0,0},Row{780300096,0,0,0},Row{63952128,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lllrlrrl(code: U32) -> Glyph:
@@ -320,7 +328,7 @@ def face0lllrlrrl(code: U32) -> Glyph:
 
 def face0lllrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{522768,0,0,0},Row{515521,0,0,0},Row{508341,0,0,0}},Rows8{Row{507905,0,0,0},Row{507904,0,0,0},Row{507904,0,0,0},Row{507904,0,0,0},Row{507904,0,0,0},Row{507904,0,0,0},Row{507904,0,0,0},Row{507904,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{522768,0,0,0},Row{515521,0,0,0},Row{508341,0,0,0}},Rows8{Row{507905,0,0,0},Row{507904,0,0,0},Row{507904,0,0,0},Row{507904,0,0,0},Row{507904,0,0,0},Row{507904,0,0,0},Row{507904,0,0,0},Row{507904,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lllrlrrr(code: U32) -> Glyph:
@@ -352,7 +360,7 @@ def face0lllrl(+code: U32) -> Glyph:
 
 def face0lllrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{46061312,0,0,0},Row{228810352,0,0,0},Row{1308624832,0,0,0}},Rows8{Row{1577058608,0,0,0},Row{525336576,0,0,0},Row{132251648,0,0,0},Row{12390400,0,0,0},Row{1945600,0,0,0},Row{190720,0,0,0},Row{304242544,0,0,0},Row{2415919072,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{46061312,0,0,0},Row{228810352,0,0,0},Row{1308624832,0,0,0}},Rows8{Row{1577058608,0,0,0},Row{525336576,0,0,0},Row{132251648,0,0,0},Row{12390400,0,0,0},Row{1945600,0,0,0},Row{190720,0,0,0},Row{304242544,0,0,0},Row{2415919072,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lllrrll(code: U32) -> Glyph:
@@ -360,7 +368,7 @@ def face0lllrrll(code: U32) -> Glyph:
 
 def face0lllrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{63952640,0,0,0},Row{512974448,0,0,0},Row{1845495488,0,0,0}},Rows8{Row{1845493760,0,0,0},Row{511770624,0,0,0},Row{82812928,0,0,0},Row{1316167680,0,0,0},Row{3103784960,0,0,0},Row{3103785905,0,0,0},Row{1600277680,0,0,0},Row{114288912,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{63952640,0,0,0},Row{512974448,0,0,0},Row{1845495488,0,0,0}},Rows8{Row{1845493760,0,0,0},Row{511770624,0,0,0},Row{82812928,0,0,0},Row{1316167680,0,0,0},Row{3103784960,0,0,0},Row{3103785905,0,0,0},Row{1600277680,0,0,0},Row{114288912,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lllrrlrl(code: U32) -> Glyph:
@@ -368,7 +376,7 @@ def face0lllrrlrl(code: U32) -> Glyph:
 
 def face0lllrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{232849408,0,0,0},Row{234356736,0,0,0},Row{228466688,0,0,0}},Rows8{Row{225091584,0,0,0},Row{224588544,0,0,0},Row{224430848,0,0,0},Row{224403008,0,0,0},Row{224397248,0,0,0},Row{4294967283,4,0,0},Row{1032008496,1,0,0},Row{224395264,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{232849408,0,0,0},Row{234356736,0,0,0},Row{228466688,0,0,0}},Rows8{Row{225091584,0,0,0},Row{224588544,0,0,0},Row{224430848,0,0,0},Row{224403008,0,0,0},Row{224397248,0,0,0},Row{4294967283,4,0,0},Row{1032008496,1,0,0},Row{224395264,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lllrrlrr(code: U32) -> Glyph:
@@ -392,7 +400,7 @@ def face0lllrrl(+code: U32) -> Glyph:
 
 def face0lllrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{268435296,0,0,0},Row{35793792,0,0,0},Row{2464,0,0,0}},Rows8{Row{1968,0,0,0},Row{45013968,0,0,0},Row{230967696,0,0,0},Row{1594884096,0,0,0},Row{2080374784,0,0,0},Row{1578107825,0,0,0},Row{229854384,0,0,0},Row{45017360,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{268435296,0,0,0},Row{35793792,0,0,0},Row{2464,0,0,0}},Rows8{Row{1968,0,0,0},Row{45013968,0,0,0},Row{230967696,0,0,0},Row{1594884096,0,0,0},Row{2080374784,0,0,0},Row{1578107825,0,0,0},Row{229854384,0,0,0},Row{45017360,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lllrrrll(code: U32) -> Glyph:
@@ -400,7 +408,7 @@ def face0lllrrrll(code: U32) -> Glyph:
 
 def face0lllrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{98550528,0,0,0},Row{1331854880,0,0,0},Row{2566916752,0,0,0}},Rows8{Row{1248,0,0,0},Row{97432817,0,0,0},Row{1334017522,0,0,0},Row{2852129010,0,0,0},Row{3338667249,0,0,0},Row{2852128704,0,0,0},Row{1333948240,0,0,0},Row{97502464,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{98550528,0,0,0},Row{1331854880,0,0,0},Row{2566916752,0,0,0}},Rows8{Row{1248,0,0,0},Row{97432817,0,0,0},Row{1334017522,0,0,0},Row{2852129010,0,0,0},Row{3338667249,0,0,0},Row{2852128704,0,0,0},Row{1333948240,0,0,0},Row{97502464,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lllrrrlr(code: U32) -> Glyph:
@@ -416,7 +424,7 @@ def face0lllrrrl(+code: U32) -> Glyph:
 
 def face0lllrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1342177269,0,0,0},Row{794960417,0,0,0},Row{179306496,0,0,0}},Rows8{Row{66256896,0,0,0},Row{12189696,0,0,0},Row{5185536,0,0,0},Row{823296,0,0,0},Row{385280,0,0,0},Row{55040,0,0,0},Row{28160,0,0,0},Row{7776,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1342177269,0,0,0},Row{794960417,0,0,0},Row{179306496,0,0,0}},Rows8{Row{66256896,0,0,0},Row{12189696,0,0,0},Row{5185536,0,0,0},Row{823296,0,0,0},Row{385280,0,0,0},Row{55040,0,0,0},Row{28160,0,0,0},Row{7776,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lllrrrrl(code: U32) -> Glyph:
@@ -424,7 +432,7 @@ def face0lllrrrrl(code: U32) -> Glyph:
 
 def face0lllrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{63952384,0,0,0},Row{512974432,0,0,0},Row{1845496240,0,0,0}},Rows8{Row{1560283312,0,0,0},Row{510672464,0,0,0},Row{100661760,0,0,0},Row{1065573760,0,0,0},Row{3103786225,0,0,0},Row{3355444210,0,0,0},Row{1851935920,0,0,0},Row{115337488,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{63952384,0,0,0},Row{512974432,0,0,0},Row{1845496240,0,0,0}},Rows8{Row{1560283312,0,0,0},Row{510672464,0,0,0},Row{100661760,0,0,0},Row{1065573760,0,0,0},Row{3103786225,0,0,0},Row{3355444210,0,0,0},Row{1851935920,0,0,0},Row{115337488,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lllrrrrr(code: U32) -> Glyph:
@@ -472,7 +480,7 @@ def face0lll(+code: U32) -> Glyph:
 
 def face0llrllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{46061312,0,0,0},Row{514023040,0,0,0},Row{2080376288,0,0,0}},Rows8{Row{3103785714,0,0,0},Row{3405776113,0,0,0},Row{3464506784,0,0,0},Row{3082811920,0,0,0},Row{2566983680,0,0,0},Row{1308624064,0,0,0},Row{212028816,0,0,0},Row{28240128,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{46061312,0,0,0},Row{514023040,0,0,0},Row{2080376288,0,0,0}},Rows8{Row{3103785714,0,0,0},Row{3405776113,0,0,0},Row{3464506784,0,0,0},Row{3082811920,0,0,0},Row{2566983680,0,0,0},Row{1308624064,0,0,0},Row{212028816,0,0,0},Row{28240128,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrllll(code: U32) -> Glyph:
@@ -480,7 +488,7 @@ def face0llrllll(code: U32) -> Glyph:
 
 def face0llrlllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,zero_rows(),Rows8{Row{2448,0,0,0},Row{2992,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),Row{2448,0,0,0},Row{2992,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[zero_rows(),Rows8{Row{2448,0,0,0},Row{2992,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),Row{2448,0,0,0},Row{2992,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrlllrl(code: U32) -> Glyph:
@@ -488,7 +496,7 @@ def face0llrlllrl(code: U32) -> Glyph:
 
 def face0llrlllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,zero_rows(),Rows8{Row{2912,0,0,0},Row{7552,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),Row{2960,0,0,0},Row{1968,0,0,0}},Rows8{Row{992,0,0,0},Row{225,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{4,[zero_rows(),Rows8{Row{2912,0,0,0},Row{7552,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),Row{2960,0,0,0},Row{1968,0,0,0}},Rows8{Row{992,0,0,0},Row{225,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrlllrr(code: U32) -> Glyph:
@@ -512,7 +520,7 @@ def face0llrlll(+code: U32) -> Glyph:
 
 def face0llrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{1375731712,0,0,0},Row{2408710144,0,0,0},Row{61837824,0,0,0},Row{241280,0,0,0},Row{171648,0,0,0},Row{61837824,0,0,0},Row{2140274688,0,0,0},Row{1375731712,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{1375731712,0,0,0},Row{2408710144,0,0,0},Row{61837824,0,0,0},Row{241280,0,0,0},Row{171648,0,0,0},Row{61837824,0,0,0},Row{2140274688,0,0,0},Row{1375731712,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrllrl(code: U32) -> Glyph:
@@ -520,7 +528,7 @@ def face0llrllrl(code: U32) -> Glyph:
 
 def face0llrllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{zero_row(),zero_row(),Row{2952789872,0,0,0},Row{572662288,0,0,0},zero_row(),Row{2952789872,0,0,0},Row{572662288,0,0,0},zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{zero_row(),zero_row(),Row{2952789872,0,0,0},Row{572662288,0,0,0},zero_row(),Row{2952789872,0,0,0},Row{572662288,0,0,0},zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrllrrl(code: U32) -> Glyph:
@@ -528,7 +536,7 @@ def face0llrllrrl(code: U32) -> Glyph:
 
 def face0llrllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{816,0,0,0},Row{245568,0,0,0},Row{62820864,0,0,0},Row{3196125184,0,0,0},Row{3195076608,1,0,0},Row{79593728,0,0,0},Row{310848,0,0,0},Row{1072,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{816,0,0,0},Row{245568,0,0,0},Row{62820864,0,0,0},Row{3196125184,0,0,0},Row{3195076608,1,0,0},Row{79593728,0,0,0},Row{310848,0,0,0},Row{1072,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrllrrr(code: U32) -> Glyph:
@@ -560,7 +568,7 @@ def face0llrll(+code: U32) -> Glyph:
 
 def face0llrlrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{6159424,0,0,0},Row{49756386,0,0,0},Row{114294981,0,0,0}},Rows8{Row{115343360,0,0,0},Row{32182272,0,0,0},Row{4046848,0,0,0},Row{193536,0,0,0},Row{37888,0,0,0},zero_row(),Row{116224,0,0,0},Row{124672,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{7,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{6159424,0,0,0},Row{49756386,0,0,0},Row{114294981,0,0,0}},Rows8{Row{115343360,0,0,0},Row{32182272,0,0,0},Row{4046848,0,0,0},Row{193536,0,0,0},Row{37888,0,0,0},zero_row(),Row{116224,0,0,0},Row{124672,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrlrll(code: U32) -> Glyph:
@@ -568,7 +576,7 @@ def face0llrlrll(code: U32) -> Glyph:
 
 def face0llrlrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4006092800,124,0,0},Row{861660160,7366,0,0}},Rows8{Row{32288,47360,0,0},Row{3198225040,315515,0,0},Row{1672152288,557183,0,0},Row{2040305,680058,0,0},Row{864498,684153,0,0},Row{2036210,557179,0,0},Row{1654391776,316350,0,0},Row{3200387488,40643,0,0}},Rows8{Row{28464,0,0,0},Row{593159424,116,0,0},Row{4275642368,157,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{14,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4006092800,124,0,0},Row{861660160,7366,0,0}},Rows8{Row{32288,47360,0,0},Row{3198225040,315515,0,0},Row{1672152288,557183,0,0},Row{2040305,680058,0,0},Row{864498,684153,0,0},Row{2036210,557179,0,0},Row{1654391776,316350,0,0},Row{3200387488,40643,0,0}},Rows8{Row{28464,0,0,0},Row{593159424,116,0,0},Row{4275642368,157,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrlrlrl(code: U32) -> Glyph:
@@ -576,7 +584,7 @@ def face0llrlrlrl(code: U32) -> Glyph:
 
 def face0llrlrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{12525568,0,0,0},Row{33386496,0,0,0},Row{114802688,0,0,0}},Rows8{Row{194245120,0,0,0},Row{524343040,0,0,0},Row{1845533696,0,0,0},Row{3389017888,0,0,0},Row{4294967152,2,0,0},Row{3811785408,7,0,0},Row{2415920370,12,0,0},Row{1073742055,47,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{12525568,0,0,0},Row{33386496,0,0,0},Row{114802688,0,0,0}},Rows8{Row{194245120,0,0,0},Row{524343040,0,0,0},Row{1845533696,0,0,0},Row{3389017888,0,0,0},Row{4294967152,2,0,0},Row{3811785408,7,0,0},Row{2415920370,12,0,0},Row{1073742055,47,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrlrlrr(code: U32) -> Glyph:
@@ -600,7 +608,7 @@ def face0llrlrl(+code: U32) -> Glyph:
 
 def face0llrlrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{435158976,0,0,0},Row{2638358976,0,0,0},Row{3841984704,0,0,0}},Rows8{Row{3573549248,0,0,0},Row{2367686848,0,0,0},Row{469761984,0,0,0},Row{3426888128,0,0,0},Row{4043311296,4,0,0},Row{3758098624,5,0,0},Row{3912378816,1,0,0},Row{1005584320,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{435158976,0,0,0},Row{2638358976,0,0,0},Row{3841984704,0,0,0}},Rows8{Row{3573549248,0,0,0},Row{2367686848,0,0,0},Row{469761984,0,0,0},Row{3426888128,0,0,0},Row{4043311296,4,0,0},Row{3758098624,5,0,0},Row{3912378816,1,0,0},Row{1005584320,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrlrrll(code: U32) -> Glyph:
@@ -608,7 +616,7 @@ def face0llrlrrll(code: U32) -> Glyph:
 
 def face0llrlrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1828552960,0,0,0},Row{3861171216,8,0,0},Row{805313920,47,0,0}},Rows8{Row{1744,54,0,0},Row{1009,0,0,0},Row{754,0,0,0},Row{1009,0,0,0},Row{1744,54,0,0},Row{805313920,63,0,0},Row{3861171216,9,0,0},Row{1845330176,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1828552960,0,0,0},Row{3861171216,8,0,0},Row{805313920,47,0,0}},Rows8{Row{1744,54,0,0},Row{1009,0,0,0},Row{754,0,0,0},Row{1009,0,0,0},Row{1744,54,0,0},Row{805313920,63,0,0},Row{3861171216,9,0,0},Row{1845330176,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrlrrlr(code: U32) -> Glyph:
@@ -624,7 +632,7 @@ def face0llrlrrl(+code: U32) -> Glyph:
 
 def face0llrlrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{434110400,0,0,0},Row{3678546368,1,0,0},Row{3221227712,10,0,0}},Rows8{Row{1342179520,30,0,0},Row{536873152,63,0,0},Row{2240,79,0,0},Row{536873152,63,0,0},Row{1342179520,30,0,0},Row{3221227712,9,0,0},Row{3678546368,1,0,0},Row{434110400,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{434110400,0,0,0},Row{3678546368,1,0,0},Row{3221227712,10,0,0}},Rows8{Row{1342179520,30,0,0},Row{536873152,63,0,0},Row{2240,79,0,0},Row{536873152,63,0,0},Row{1342179520,30,0,0},Row{3221227712,9,0,0},Row{3678546368,1,0,0},Row{434110400,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrlrrrl(code: U32) -> Glyph:
@@ -632,7 +640,7 @@ def face0llrlrrrl(code: U32) -> Glyph:
 
 def face0llrlrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2147483584,0,0,0},Row{304228800,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{805306304,0,0,0},Row{35793344,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{304228800,0,0,0},Row{2415919040,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2147483584,0,0,0},Row{304228800,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{805306304,0,0,0},Row{35793344,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{304228800,0,0,0},Row{2415919040,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrlrrrr(code: U32) -> Glyph:
@@ -672,7 +680,7 @@ def face0llrl(+code: U32) -> Glyph:
 
 def face0llrrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1879048128,0,0,0},Row{304228800,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{234880960,0,0,0},Row{35793344,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1879048128,0,0,0},Row{304228800,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{234880960,0,0,0},Row{35793344,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrrlll(code: U32) -> Glyph:
@@ -680,7 +688,7 @@ def face0llrrlll(code: U32) -> Glyph:
 
 def face0llrrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1560117504,0,0,0},Row{4147432464,7,0,0},Row{1610620288,47,0,0}},Rows8{Row{1744,75,0,0},Row{1009,0,0,0},Row{754,0,0,0},Row{4283433969,143,0,0},Row{571475664,140,0,0},Row{536878464,95,0,0},Row{3575958544,11,0,0},Row{2113765632,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1560117504,0,0,0},Row{4147432464,7,0,0},Row{1610620288,47,0,0}},Rows8{Row{1744,75,0,0},Row{1009,0,0,0},Row{754,0,0,0},Row{4283433969,143,0,0},Row{571475664,140,0,0},Row{536878464,95,0,0},Row{3575958544,11,0,0},Row{2113765632,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrrllrl(code: U32) -> Glyph:
@@ -688,7 +696,7 @@ def face0llrrllrl(code: U32) -> Glyph:
 
 def face0llrrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0}},Rows8{Row{536873152,63,0,0},Row{536873152,63,0,0},Row{4294967232,63,0,0},Row{1109535168,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0}},Rows8{Row{536873152,63,0,0},Row{536873152,63,0,0},Row{4294967232,63,0,0},Row{1109535168,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrrllrr(code: U32) -> Glyph:
@@ -712,7 +720,7 @@ def face0llrrll(+code: U32) -> Glyph:
 
 def face0llrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrrlrl(code: U32) -> Glyph:
@@ -720,7 +728,7 @@ def face0llrrlrl(code: U32) -> Glyph:
 
 def face0llrrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{209715200,0,0,0},Row{209715200,0,0,0},Row{209715200,0,0,0}},Rows8{Row{209715200,0,0,0},Row{209715200,0,0,0},Row{209715200,0,0,0},Row{209715200,0,0,0},Row{192938163,0,0,0},Row{178258419,0,0,0},Row{99957456,0,0,0},Row{7203616,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{209715200,0,0,0},Row{209715200,0,0,0},Row{209715200,0,0,0}},Rows8{Row{209715200,0,0,0},Row{209715200,0,0,0},Row{209715200,0,0,0},Row{209715200,0,0,0},Row{192938163,0,0,0},Row{178258419,0,0,0},Row{99957456,0,0,0},Row{7203616,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrrlrrl(code: U32) -> Glyph:
@@ -728,7 +736,7 @@ def face0llrrlrrl(code: U32) -> Glyph:
 
 def face0llrrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3808430272,9,0,0},Row{3171944640,0,0,0},Row{482347200,0,0,0}},Rows8{Row{48892096,0,0,0},Row{4159680,0,0,0},Row{6290368,0,0,0},Row{32010176,0,0,0},Row{181406144,0,0,0},Row{1596983488,0,0,0},Row{3892316352,1,0,0},Row{3221227712,10,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3808430272,9,0,0},Row{3171944640,0,0,0},Row{482347200,0,0,0}},Rows8{Row{48892096,0,0,0},Row{4159680,0,0,0},Row{6290368,0,0,0},Row{32010176,0,0,0},Row{181406144,0,0,0},Row{1596983488,0,0,0},Row{3892316352,1,0,0},Row{3221227712,10,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrrlrrr(code: U32) -> Glyph:
@@ -760,7 +768,7 @@ def face0llrrl(+code: U32) -> Glyph:
 
 def face0llrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{322124224,0,0,0},Row{1342177216,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{322124224,0,0,0},Row{1342177216,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrrrll(code: U32) -> Glyph:
@@ -768,7 +776,7 @@ def face0llrrrll(code: U32) -> Glyph:
 
 def face0llrrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{20416,28560,0,0},Row{40896,28640,0,0},Row{60352,28133,0,0}},Rows8{Row{387008,28058,0,0},Row{269133760,27983,0,0},Row{1612662720,27917,0,0},Row{2960000960,27912,0,0},Row{4055369664,27907,0,0},Row{3354593216,27904,0,0},Row{2126514112,27904,0,0},Row{527435712,27904,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{20416,28560,0,0},Row{40896,28640,0,0},Row{60352,28133,0,0}},Rows8{Row{387008,28058,0,0},Row{269133760,27983,0,0},Row{1612662720,27917,0,0},Row{2960000960,27912,0,0},Row{4055369664,27907,0,0},Row{3354593216,27904,0,0},Row{2126514112,27904,0,0},Row{527435712,27904,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrrrlrl(code: U32) -> Glyph:
@@ -776,7 +784,7 @@ def face0llrrrlrl(code: U32) -> Glyph:
 
 def face0llrrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{11968,95,0,0},Row{44992,95,0,0},Row{260800,95,0,0}},Rows8{Row{829376,95,0,0},Row{7284928,95,0,0},Row{31983808,95,0,0},Row{164694208,95,0,0},Row{793774272,95,0,0},Row{2868906176,94,0,0},Row{4060088512,95,0,0},Row{2147485888,95,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{11968,95,0,0},Row{44992,95,0,0},Row{260800,95,0,0}},Rows8{Row{829376,95,0,0},Row{7284928,95,0,0},Row{31983808,95,0,0},Row{164694208,95,0,0},Row{793774272,95,0,0},Row{2868906176,94,0,0},Row{4060088512,95,0,0},Row{2147485888,95,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrrrlrr(code: U32) -> Glyph:
@@ -800,7 +808,7 @@ def face0llrrrl(+code: U32) -> Glyph:
 
 def face0llrrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1827504384,0,0,0},Row{3861171200,8,0,0},Row{805313920,63,0,0}},Rows8{Row{1744,155,0,0},Row{1009,199,0,0},Row{754,214,0,0},Row{1009,199,0,0},Row{1744,155,0,0},Row{805313920,63,0,0},Row{3861171216,8,0,0},Row{1828552960,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1827504384,0,0,0},Row{3861171200,8,0,0},Row{805313920,63,0,0}},Rows8{Row{1744,155,0,0},Row{1009,199,0,0},Row{754,214,0,0},Row{1009,199,0,0},Row{1744,155,0,0},Row{805313920,63,0,0},Row{3861171216,8,0,0},Row{1828552960,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrrrrll(code: U32) -> Glyph:
@@ -808,7 +816,7 @@ def face0llrrrrll(code: U32) -> Glyph:
 
 def face0llrrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{149946304,0,0,0},Row{2638358976,0,0,0},Row{4110420160,1,0,0}},Rows8{Row{4060088512,2,0,0},Row{4093642944,1,0,0},Row{3156216000,0,0,0},Row{469761984,0,0,0},Row{1190336,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{149946304,0,0,0},Row{2638358976,0,0,0},Row{4110420160,1,0,0}},Rows8{Row{4060088512,2,0,0},Row{4093642944,1,0,0},Row{3156216000,0,0,0},Row{469761984,0,0,0},Row{1190336,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrrrrlr(code: U32) -> Glyph:
@@ -824,7 +832,7 @@ def face0llrrrrl(+code: U32) -> Glyph:
 
 def face0llrrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1827504384,0,0,0},Row{3880180736,8,0,0},Row{1073749376,63,0,0}},Rows8{Row{1744,155,0,0},Row{1009,199,0,0},Row{754,214,0,0},Row{1009,199,0,0},Row{56624848,155,0,0},Row{1583357312,79,0,0},Row{4249279504,9,0,0},Row{3992813824,6,0,0}},Rows8{Row{1073741824,46,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1827504384,0,0,0},Row{3880180736,8,0,0},Row{1073749376,63,0,0}},Rows8{Row{1744,155,0,0},Row{1009,199,0,0},Row{754,214,0,0},Row{1009,199,0,0},Row{56624848,155,0,0},Row{1583357312,79,0,0},Row{4249279504,9,0,0},Row{3992813824,6,0,0}},Rows8{Row{1073741824,46,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrrrrrl(code: U32) -> Glyph:
@@ -832,7 +840,7 @@ def face0llrrrrrl(code: U32) -> Glyph:
 
 def face0llrrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{435158976,0,0,0},Row{2906794432,0,0,0},Row{4110420160,1,0,0}},Rows8{Row{4060088512,2,0,0},Row{4093642944,1,0,0},Row{3139438784,0,0,0},Row{754974656,0,0,0},Row{163719616,0,0,0},Row{1061161152,0,0,0},Row{3137341632,0,0,0},Row{4076865728,5,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{435158976,0,0,0},Row{2906794432,0,0,0},Row{4110420160,1,0,0}},Rows8{Row{4060088512,2,0,0},Row{4093642944,1,0,0},Row{3139438784,0,0,0},Row{754974656,0,0,0},Row{163719616,0,0,0},Row{1061161152,0,0,0},Row{3137341632,0,0,0},Row{4076865728,5,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0llrrrrrr(code: U32) -> Glyph:
@@ -888,7 +896,7 @@ def face0ll(+code: U32) -> Glyph:
 
 def face0lrlllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{148887040,0,0,0},Row{2639421040,0,0,0},Row{3288336336,0,0,0}},Rows8{Row{2256,0,0,0},Row{1425248,0,0,0},Row{436192512,0,0,0},Row{3194028032,0,0,0},Row{4076863488,2,0,0},Row{4076864481,1,0,0},Row{2907921824,0,0,0},Row{417323024,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{148887040,0,0,0},Row{2639421040,0,0,0},Row{3288336336,0,0,0}},Rows8{Row{2256,0,0,0},Row{1425248,0,0,0},Row{436192512,0,0,0},Row{3194028032,0,0,0},Row{4076863488,2,0,0},Row{4076864481,1,0,0},Row{2907921824,0,0,0},Row{417323024,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrlllll(code: U32) -> Glyph:
@@ -896,7 +904,7 @@ def face0lrlllll(code: U32) -> Glyph:
 
 def face0lrllllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4294967285,6,0,0},Row{575619617,1,0,0},Row{4136960,0,0,0}},Rows8{Row{4136960,0,0,0},Row{4136960,0,0,0},Row{4136960,0,0,0},Row{4136960,0,0,0},Row{4136960,0,0,0},Row{4136960,0,0,0},Row{4136960,0,0,0},Row{4136960,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4294967285,6,0,0},Row{575619617,1,0,0},Row{4136960,0,0,0}},Rows8{Row{4136960,0,0,0},Row{4136960,0,0,0},Row{4136960,0,0,0},Row{4136960,0,0,0},Row{4136960,0,0,0},Row{4136960,0,0,0},Row{4136960,0,0,0},Row{4136960,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrllllrl(code: U32) -> Glyph:
@@ -904,7 +912,7 @@ def face0lrllllrl(code: U32) -> Glyph:
 
 def face0lrllllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0}},Rows8{Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873392,47,0,0},Row{1879051648,14,0,0},Row{3877875216,6,0,0},Row{1559142912,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0}},Rows8{Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873392,47,0,0},Row{1879051648,14,0,0},Row{3877875216,6,0,0},Row{1559142912,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrllllrr(code: U32) -> Glyph:
@@ -928,7 +936,7 @@ def face0lrllll(+code: U32) -> Glyph:
 
 def face0lrlllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1073742039,47,0,0},Row{2147484658,12,0,0},Row{3489663168,7,0,0}},Rows8{Row{4076866928,2,0,0},Row{3355459360,0,0,0},Row{2097187840,0,0,0},Row{790681088,0,0,0},Row{208859392,0,0,0},Row{130527232,0,0,0},Row{50094080,0,0,0},Row{12521472,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1073742039,47,0,0},Row{2147484658,12,0,0},Row{3489663168,7,0,0}},Rows8{Row{4076866928,2,0,0},Row{3355459360,0,0,0},Row{2097187840,0,0,0},Row{790681088,0,0,0},Row{208859392,0,0,0},Row{130527232,0,0,0},Row{50094080,0,0,0},Row{12521472,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrlllrl(code: U32) -> Glyph:
@@ -936,7 +944,7 @@ def face0lrlllrl(code: U32) -> Glyph:
 
 def face0lrlllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3187671240,6230016,0,0},Row{4281336308,2048000,0,0},Row{3949987057,815108,0,0}},Rows8{Row{3097495728,569351,0,0},Row{2229275520,319499,0,0},Row{1106448192,127758,0,0},Row{12992256,51007,0,0},Row{9075456,35435,0,0},Row{5089280,19879,0,0},Row{2089984,8164,0,0},Row{847872,3296,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{14,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3187671240,6230016,0,0},Row{4281336308,2048000,0,0},Row{3949987057,815108,0,0}},Rows8{Row{3097495728,569351,0,0},Row{2229275520,319499,0,0},Row{1106448192,127758,0,0},Row{12992256,51007,0,0},Row{9075456,35435,0,0},Row{5089280,19879,0,0},Row{2089984,8164,0,0},Row{847872,3296,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrlllrrl(code: U32) -> Glyph:
@@ -944,7 +952,7 @@ def face0lrlllrrl(code: U32) -> Glyph:
 
 def face0lrlllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3221227234,10,0,0},Row{3875548784,1,0,0},Row{1847634944,0,0,0}},Rows8{Row{195359488,0,0,0},Row{49119232,0,0,0},Row{12525568,0,0,0},Row{83664896,0,0,0},Row{496170240,0,0,0},Row{2383449616,0,0,0},Row{4110421136,3,0,0},Row{2684355572,12,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3221227234,10,0,0},Row{3875548784,1,0,0},Row{1847634944,0,0,0}},Rows8{Row{195359488,0,0,0},Row{49119232,0,0,0},Row{12525568,0,0,0},Row{83664896,0,0,0},Row{496170240,0,0,0},Row{2383449616,0,0,0},Row{4110421136,3,0,0},Row{2684355572,12,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrlllrrr(code: U32) -> Glyph:
@@ -976,7 +984,7 @@ def face0lrlll(+code: U32) -> Glyph:
 
 def face0lrllrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2415919861,13,0,0},Row{4076866240,4,0,0},Row{3137359664,0,0,0}},Rows8{Row{792775168,0,0,0},Row{163963392,0,0,0},Row{32403456,0,0,0},Row{8261632,0,0,0},Row{7143424,0,0,0},Row{7143424,0,0,0},Row{7143424,0,0,0},Row{7143424,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2415919861,13,0,0},Row{4076866240,4,0,0},Row{3137359664,0,0,0}},Rows8{Row{792775168,0,0,0},Row{163963392,0,0,0},Row{32403456,0,0,0},Row{8261632,0,0,0},Row{7143424,0,0,0},Row{7143424,0,0,0},Row{7143424,0,0,0},Row{7143424,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrllrll(code: U32) -> Glyph:
@@ -984,7 +992,7 @@ def face0lrllrll(code: U32) -> Glyph:
 
 def face0lrllrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4026531827,0,0,0},Row{2636259872,0,0,0},Row{510656512,0,0,0}},Rows8{Row{98697216,0,0,0},Row{12255232,0,0,0},Row{3100672,0,0,0},Row{577792,0,0,0},Row{55296,0,0,0},Row{20256,0,0,0},Row{572664752,0,0,0},Row{4294967282,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4026531827,0,0,0},Row{2636259872,0,0,0},Row{510656512,0,0,0}},Rows8{Row{98697216,0,0,0},Row{12255232,0,0,0},Row{3100672,0,0,0},Row{577792,0,0,0},Row{55296,0,0,0},Row{20256,0,0,0},Row{572664752,0,0,0},Row{4294967282,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrllrlrl(code: U32) -> Glyph:
@@ -992,7 +1000,7 @@ def face0lrllrlrl(code: U32) -> Glyph:
 
 def face0lrllrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{327536,0,0,0},Row{76656,0,0,0},Row{2928,0,0,0}},Rows8{Row{2928,0,0,0},Row{2928,0,0,0},Row{2928,0,0,0},Row{2928,0,0,0},Row{2928,0,0,0},Row{2928,0,0,0},Row{2928,0,0,0},Row{2928,0,0,0}},Rows8{Row{2928,0,0,0},Row{327536,0,0,0},Row{74256,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{327536,0,0,0},Row{76656,0,0,0},Row{2928,0,0,0}},Rows8{Row{2928,0,0,0},Row{2928,0,0,0},Row{2928,0,0,0},Row{2928,0,0,0},Row{2928,0,0,0},Row{2928,0,0,0},Row{2928,0,0,0},Row{2928,0,0,0}},Rows8{Row{2928,0,0,0},Row{327536,0,0,0},Row{74256,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrllrlrr(code: U32) -> Glyph:
@@ -1016,7 +1024,7 @@ def face0lrllrl(+code: U32) -> Glyph:
 
 def face0lrllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{69,0,0,0},Row{182,0,0,0},Row{226,0,0,0}},Rows8{Row{1248,0,0,0},Row{2208,0,0,0},Row{2912,0,0,0},Row{7968,0,0,0},Row{19712,0,0,0},Row{35072,0,0,0},Row{50432,0,0,0},Row{127232,0,0,0}},Rows8{Row{376832,0,0,0},Row{622592,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{69,0,0,0},Row{182,0,0,0},Row{226,0,0,0}},Rows8{Row{1248,0,0,0},Row{2208,0,0,0},Row{2912,0,0,0},Row{7968,0,0,0},Row{19712,0,0,0},Row{35072,0,0,0},Row{50432,0,0,0},Row{127232,0,0,0}},Rows8{Row{376832,0,0,0},Row{622592,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrllrrl(code: U32) -> Glyph:
@@ -1024,7 +1032,7 @@ def face0lrllrrl(code: U32) -> Glyph:
 
 def face0lrllrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{36850,0,0,0},Row{35360,0,0,0},Row{35072,0,0,0}},Rows8{Row{35072,0,0,0},Row{35072,0,0,0},Row{35072,0,0,0},Row{35072,0,0,0},Row{35072,0,0,0},Row{35072,0,0,0},Row{35072,0,0,0},Row{35072,0,0,0}},Rows8{Row{35072,0,0,0},Row{36850,0,0,0},Row{4640,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{36850,0,0,0},Row{35360,0,0,0},Row{35072,0,0,0}},Rows8{Row{35072,0,0,0},Row{35072,0,0,0},Row{35072,0,0,0},Row{35072,0,0,0},Row{35072,0,0,0},Row{35072,0,0,0},Row{35072,0,0,0},Row{35072,0,0,0}},Rows8{Row{35072,0,0,0},Row{36850,0,0,0},Row{4640,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrllrrrl(code: U32) -> Glyph:
@@ -1032,7 +1040,7 @@ def face0lrllrrrl(code: U32) -> Glyph:
 
 def face0lrllrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{95232,0,0,0},Row{519168,0,0,0},Row{875840,0,0,0}},Rows8{Row{6096816,0,0,0},Row{12976611,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{7,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{95232,0,0,0},Row{519168,0,0,0},Row{875840,0,0,0}},Rows8{Row{6096816,0,0,0},Row{12976611,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrllrrrr(code: U32) -> Glyph:
@@ -1072,7 +1080,7 @@ def face0lrll(+code: U32) -> Glyph:
 
 def face0lrlrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),zero_rows(),Rows8{Row{117440511,0,0,0},Row{19014178,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{7,[zero_rows(),zero_rows(),Rows8{Row{117440511,0,0,0},Row{19014178,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrlrlll(code: U32) -> Glyph:
@@ -1080,7 +1088,7 @@ def face0lrlrlll(code: U32) -> Glyph:
 
 def face0lrlrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{272,0,0,0},Row{2704,0,0,0},Row{11536,0,0,0},zero_row()},zero_rows(),zero_rows(),zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{272,0,0,0},Row{2704,0,0,0},Row{11536,0,0,0},zero_row()},zero_rows(),zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrlrllrl(code: U32) -> Glyph:
@@ -1088,7 +1096,7 @@ def face0lrlrllrl(code: U32) -> Glyph:
 
 def face0lrlrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{27191840,0,0,0},Row{148126416,0,0,0},Row{192938016,0,0,0},Row{216765968,0,0,0},Row{210009042,0,0,0},Row{210764005,0,0,0},Row{216409843,0,0,0},Row{209383008,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{27191840,0,0,0},Row{148126416,0,0,0},Row{192938016,0,0,0},Row{216765968,0,0,0},Row{210009042,0,0,0},Row{210764005,0,0,0},Row{216409843,0,0,0},Row{209383008,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrlrllrr(code: U32) -> Glyph:
@@ -1112,7 +1120,7 @@ def face0lrlrll(+code: U32) -> Glyph:
 
 def face0lrlrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0}},Rows8{Row{98547424,0,0,0},Row{1064529376,0,0,0},Row{2852129248,0,0,0},Row{3338667488,0,0,0},Row{3338667488,0,0,0},Row{2868906464,0,0,0},Row{1064529376,0,0,0},Row{98547168,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0}},Rows8{Row{98547424,0,0,0},Row{1064529376,0,0,0},Row{2852129248,0,0,0},Row{3338667488,0,0,0},Row{3338667488,0,0,0},Row{2868906464,0,0,0},Row{1064529376,0,0,0},Row{98547168,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrlrlrl(code: U32) -> Glyph:
@@ -1120,7 +1128,7 @@ def face0lrlrlrl(code: U32) -> Glyph:
 
 def face0lrlrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{46065664,0,0,0},Row{496192912,0,0,0},Row{369100273,0,0,0},Row{499,0,0,0},Row{500,0,0,0},Row{369100017,0,0,0},Row{512970128,0,0,0},Row{46065664,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{46065664,0,0,0},Row{496192912,0,0,0},Row{369100273,0,0,0},Row{499,0,0,0},Row{500,0,0,0},Row{369100017,0,0,0},Row{512970128,0,0,0},Row{46065664,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrlrlrrl(code: U32) -> Glyph:
@@ -1128,7 +1136,7 @@ def face0lrlrlrrl(code: U32) -> Glyph:
 
 def face0lrlrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2332033024,0,0,0},Row{2332033024,0,0,0},Row{2332033024,0,0,0}},Rows8{Row{2339301648,0,0,0},Row{2393066912,0,0,0},Row{2383414513,0,0,0},Row{2348810740,0,0,0},Row{2348810740,0,0,0},Row{2383414513,0,0,0},Row{2394115488,0,0,0},Row{2339301648,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2332033024,0,0,0},Row{2332033024,0,0,0},Row{2332033024,0,0,0}},Rows8{Row{2339301648,0,0,0},Row{2393066912,0,0,0},Row{2383414513,0,0,0},Row{2348810740,0,0,0},Row{2348810740,0,0,0},Row{2383414513,0,0,0},Row{2394115488,0,0,0},Row{2339301648,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrlrlrrr(code: U32) -> Glyph:
@@ -1160,7 +1168,7 @@ def face0lrlrl(+code: U32) -> Glyph:
 
 def face0lrlrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{45017088,0,0,0},Row{496192656,0,0,0},Row{1577059057,0,0,0},Row{2147483636,0,0,0},Row{304227316,0,0,0},Row{67110129,0,0,0},Row{797072784,0,0,0},Row{80664576,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{45017088,0,0,0},Row{496192656,0,0,0},Row{1577059057,0,0,0},Row{2147483636,0,0,0},Row{304227316,0,0,0},Row{67110129,0,0,0},Row{797072784,0,0,0},Row{80664576,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrlrrll(code: U32) -> Glyph:
@@ -1168,7 +1176,7 @@ def face0lrlrrll(code: U32) -> Glyph:
 
 def face0lrlrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{845824,0,0,0},Row{151360,0,0,0},Row{3408,0,0,0}},Rows8{Row{720893,0,0,0},Row{77170,0,0,0},Row{3408,0,0,0},Row{3408,0,0,0},Row{3408,0,0,0},Row{3408,0,0,0},Row{3408,0,0,0},Row{3408,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{845824,0,0,0},Row{151360,0,0,0},Row{3408,0,0,0}},Rows8{Row{720893,0,0,0},Row{77170,0,0,0},Row{3408,0,0,0},Row{3408,0,0,0},Row{3408,0,0,0},Row{3408,0,0,0},Row{3408,0,0,0},Row{3408,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrlrrlrl(code: U32) -> Glyph:
@@ -1176,7 +1184,7 @@ def face0lrlrrlrl(code: U32) -> Glyph:
 
 def face0lrlrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{2322524416,0,0,0},Row{2376289680,0,0,0},Row{2383414513,0,0,0},Row{2348810739,0,0,0},Row{2332033268,0,0,0},Row{2383414513,0,0,0},Row{2393066912,0,0,0},Row{2340350224,0,0,0}},Rows8{Row{2080374784,0,0,0},Row{1064516256,0,0,0},Row{80734752,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{2322524416,0,0,0},Row{2376289680,0,0,0},Row{2383414513,0,0,0},Row{2348810739,0,0,0},Row{2332033268,0,0,0},Row{2383414513,0,0,0},Row{2393066912,0,0,0},Row{2340350224,0,0,0}},Rows8{Row{2080374784,0,0,0},Row{1064516256,0,0,0},Row{80734752,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrlrrlrr(code: U32) -> Glyph:
@@ -1200,7 +1208,7 @@ def face0lrlrrl(+code: U32) -> Glyph:
 
 def face0lrlrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0}},Rows8{Row{63878880,0,0,0},Row{228810208,0,0,0},Row{790628320,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0}},Rows8{Row{63878880,0,0,0},Row{228810208,0,0,0},Row{790628320,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrlrrrll(code: U32) -> Glyph:
@@ -1208,7 +1216,7 @@ def face0lrlrrrll(code: U32) -> Glyph:
 
 def face0lrlrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{3,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1489,0,0,0},Row{16,0,0,0},zero_row()},Rows8{Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{3,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1489,0,0,0},Row{16,0,0,0},zero_row()},Rows8{Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrlrrrlr(code: U32) -> Glyph:
@@ -1224,7 +1232,7 @@ def face0lrlrrrl(+code: U32) -> Glyph:
 
 def face0lrlrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{23824,0,0,0},Row{256,0,0,0},zero_row()},Rows8{Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0}},Rows8{Row{19968,0,0,0},Row{12112,0,0,0},Row{2019,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{23824,0,0,0},Row{256,0,0,0},zero_row()},Rows8{Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0}},Rows8{Row{19968,0,0,0},Row{12112,0,0,0},Row{2019,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrlrrrrl(code: U32) -> Glyph:
@@ -1232,7 +1240,7 @@ def face0lrlrrrrl(code: U32) -> Glyph:
 
 def face0lrlrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0}},Rows8{Row{196085216,0,0,0},Row{30016992,0,0,0},Row{1938912,0,0,0},Row{326880,0,0,0},Row{834784,0,0,0},Row{10294752,0,0,0},Row{99878368,0,0,0},Row{779093472,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0}},Rows8{Row{196085216,0,0,0},Row{30016992,0,0,0},Row{1938912,0,0,0},Row{326880,0,0,0},Row{834784,0,0,0},Row{10294752,0,0,0},Row{99878368,0,0,0},Row{779093472,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrlrrrrr(code: U32) -> Glyph:
@@ -1280,7 +1288,7 @@ def face0lrl(+code: U32) -> Glyph:
 
 def face0lrrllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{3,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0}},Rows8{Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{3,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0}},Rows8{Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrllll(code: U32) -> Glyph:
@@ -1288,7 +1296,7 @@ def face0lrrllll(code: U32) -> Glyph:
 
 def face0lrrlllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{12,zero_rows(),Rows8{Row{2711533280,1246,0,0},Row{2111065312,3731,0,0},Row{209716960,12048,0,0},Row{191890912,16144,0,0},Row{191890912,16144,0,0},Row{191890912,16144,0,0},Row{191890912,16144,0,0},Row{191890912,16144,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{12,[zero_rows(),Rows8{Row{2711533280,1246,0,0},Row{2111065312,3731,0,0},Row{209716960,12048,0,0},Row{191890912,16144,0,0},Row{191890912,16144,0,0},Row{191890912,16144,0,0},Row{191890912,16144,0,0},Row{191890912,16144,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrlllrl(code: U32) -> Glyph:
@@ -1296,7 +1304,7 @@ def face0lrrlllrl(code: U32) -> Glyph:
 
 def face0lrrlllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{63878624,0,0,0},Row{228809952,0,0,0},Row{790628320,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{63878624,0,0,0},Row{228809952,0,0,0},Row{790628320,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrlllrr(code: U32) -> Glyph:
@@ -1320,7 +1328,7 @@ def face0lrrlll(+code: U32) -> Glyph:
 
 def face0lrrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{46065664,0,0,0},Row{512970128,0,0,0},Row{2097153521,0,0,0},Row{2852127219,0,0,0},Row{2852127220,0,0,0},Row{2097153265,0,0,0},Row{512970128,0,0,0},Row{46065664,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{46065664,0,0,0},Row{512970128,0,0,0},Row{2097153521,0,0,0},Row{2852127219,0,0,0},Row{2852127220,0,0,0},Row{2097153265,0,0,0},Row{512970128,0,0,0},Row{46065664,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrllrl(code: U32) -> Glyph:
@@ -1328,7 +1336,7 @@ def face0lrrllrl(code: U32) -> Glyph:
 
 def face0lrrllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{98547168,0,0,0},Row{1064529376,0,0,0},Row{2852129248,0,0,0},Row{3338667488,0,0,0},Row{3338667488,0,0,0},Row{2868906464,0,0,0},Row{1064529376,0,0,0},Row{98547424,0,0,0}},Rows8{Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{98547168,0,0,0},Row{1064529376,0,0,0},Row{2852129248,0,0,0},Row{3338667488,0,0,0},Row{3338667488,0,0,0},Row{2868906464,0,0,0},Row{1064529376,0,0,0},Row{98547424,0,0,0}},Rows8{Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrllrrl(code: U32) -> Glyph:
@@ -1336,7 +1344,7 @@ def face0lrrllrrl(code: U32) -> Glyph:
 
 def face0lrrllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{2340350224,0,0,0},Row{2394115488,0,0,0},Row{2383414513,0,0,0},Row{2348810740,0,0,0},Row{2348810740,0,0,0},Row{2383414513,0,0,0},Row{2394115488,0,0,0},Row{2339301648,0,0,0}},Rows8{Row{2332033024,0,0,0},Row{2332033024,0,0,0},Row{2332033024,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{2340350224,0,0,0},Row{2394115488,0,0,0},Row{2383414513,0,0,0},Row{2348810740,0,0,0},Row{2348810740,0,0,0},Row{2383414513,0,0,0},Row{2394115488,0,0,0},Row{2339301648,0,0,0}},Rows8{Row{2332033024,0,0,0},Row{2332033024,0,0,0},Row{2332033024,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrllrrr(code: U32) -> Glyph:
@@ -1368,7 +1376,7 @@ def face0lrrll(+code: U32) -> Glyph:
 
 def face0lrrlrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,zero_rows(),Rows8{Row{968416,0,0,0},Row{155104,0,0,0},Row{1760,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{5,[zero_rows(),Rows8{Row{968416,0,0,0},Row{155104,0,0,0},Row{1760,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrlrll(code: U32) -> Glyph:
@@ -1376,7 +1384,7 @@ def face0lrrlrll(code: U32) -> Glyph:
 
 def face0lrrlrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),Rows8{Row{8321824,0,0,0},Row{98843344,0,0,0},Row{2098672,0,0,0},Row{1486720,0,0,0},Row{82539008,0,0,0},Row{178257968,0,0,0},Row{132393201,0,0,0},Row{9370688,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{7,[zero_rows(),Rows8{Row{8321824,0,0,0},Row{98843344,0,0,0},Row{2098672,0,0,0},Row{1486720,0,0,0},Row{82539008,0,0,0},Row{178257968,0,0,0},Row{132393201,0,0,0},Row{9370688,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrlrlrl(code: U32) -> Glyph:
@@ -1384,7 +1392,7 @@ def face0lrrlrlrl(code: U32) -> Glyph:
 
 def face0lrrlrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2224,0,0,0},Row{2224,0,0,0}},Rows8{Row{131069,0,0,0},Row{10673,0,0,0},Row{2224,0,0,0},Row{2224,0,0,0},Row{2224,0,0,0},Row{2224,0,0,0},Row{11152,0,0,0},Row{261152,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2224,0,0,0},Row{2224,0,0,0}},Rows8{Row{131069,0,0,0},Row{10673,0,0,0},Row{2224,0,0,0},Row{2224,0,0,0},Row{2224,0,0,0},Row{2224,0,0,0},Row{11152,0,0,0},Row{261152,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrlrlrr(code: U32) -> Glyph:
@@ -1408,7 +1416,7 @@ def face0lrrlrl(+code: U32) -> Glyph:
 
 def face0lrrlrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1058014688,0,0,0},Row{1060112080,0,0,0},Row{1067666832,0,0,0},Row{1062071056,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1058014688,0,0,0},Row{1060112080,0,0,0},Row{1067666832,0,0,0},Row{1062071056,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrlrrll(code: U32) -> Glyph:
@@ -1416,7 +1424,7 @@ def face0lrrlrrll(code: U32) -> Glyph:
 
 def face0lrrlrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{1594884311,0,0,0},Row{240124913,0,0,0},Row{161483184,0,0,0},Row{66129488,0,0,0},Row{14044688,0,0,0},Row{8030464,0,0,0},Row{3068928,0,0,0},Row{774144,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{1594884311,0,0,0},Row{240124913,0,0,0},Row{161483184,0,0,0},Row{66129488,0,0,0},Row{14044688,0,0,0},Row{8030464,0,0,0},Row{3068928,0,0,0},Row{774144,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrlrrlr(code: U32) -> Glyph:
@@ -1432,7 +1440,7 @@ def face0lrrlrrl(+code: U32) -> Glyph:
 
 def face0lrrlrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,zero_rows(),Rows8{Row{150012134,3440,0,0},Row{216335345,2224,0,0},Row{529008576,1248,0,0},Row{1280052096,228,0,0},Row{2282626608,168,0,0},Row{3020652032,107,0,0},Row{3758615040,30,0,0},Row{2952983808,12,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[zero_rows(),Rows8{Row{150012134,3440,0,0},Row{216335345,2224,0,0},Row{529008576,1248,0,0},Row{1280052096,228,0,0},Row{2282626608,168,0,0},Row{3020652032,107,0,0},Row{3758615040,30,0,0},Row{2952983808,12,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrlrrrl(code: U32) -> Glyph:
@@ -1440,7 +1448,7 @@ def face0lrrlrrrl(code: U32) -> Glyph:
 
 def face0lrrlrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{195036642,0,0,0},Row{49552752,0,0,0},Row{8162304,0,0,0},Row{848640,0,0,0},Row{848896,0,0,0},Row{9202960,0,0,0},Row{66260112,0,0,0},Row{226493428,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{195036642,0,0,0},Row{49552752,0,0,0},Row{8162304,0,0,0},Row{848640,0,0,0},Row{848896,0,0,0},Row{9202960,0,0,0},Row{66260112,0,0,0},Row{226493428,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrlrrrr(code: U32) -> Glyph:
@@ -1480,7 +1488,7 @@ def face0lrrl(+code: U32) -> Glyph:
 
 def face0lrrrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{1594884311,0,0,0},Row{240124913,0,0,0},Row{162531760,0,0,0},Row{66129488,0,0,0},Row{14044688,0,0,0},Row{8096256,0,0,0},Row{3068928,0,0,0},Row{778240,0,0,0}},Rows8{Row{446464,0,0,0},Row{124704,0,0,0},Row{19936,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{1594884311,0,0,0},Row{240124913,0,0,0},Row{162531760,0,0,0},Row{66129488,0,0,0},Row{14044688,0,0,0},Row{8096256,0,0,0},Row{3068928,0,0,0},Row{778240,0,0,0}},Rows8{Row{446464,0,0,0},Row{124704,0,0,0},Row{19936,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrrlll(code: U32) -> Glyph:
@@ -1488,7 +1496,7 @@ def face0lrrrlll(code: U32) -> Glyph:
 
 def face0lrrrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{201326576,0,0,0},Row{99885600,0,0,0},Row{10223616,0,0,0},Row{1933312,0,0,0},Row{324608,0,0,0},Row{36368,0,0,0},Row{35794336,0,0,0},Row{234881010,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{201326576,0,0,0},Row{99885600,0,0,0},Row{10223616,0,0,0},Row{1933312,0,0,0},Row{324608,0,0,0},Row{36368,0,0,0},Row{35794336,0,0,0},Row{234881010,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrrllrl(code: U32) -> Glyph:
@@ -1496,7 +1504,7 @@ def face0lrrrllrl(code: U32) -> Glyph:
 
 def face0lrrrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3051520,0,0,0},Row{320768,0,0,0},Row{42752,0,0,0}},Rows8{Row{38912,0,0,0},Row{38912,0,0,0},Row{31744,0,0,0},Row{2800,0,0,0},Row{27952,0,0,0},Row{38912,0,0,0},Row{38912,0,0,0},Row{43008,0,0,0}},Rows8{Row{120320,0,0,0},Row{3125248,0,0,0},Row{65536,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3051520,0,0,0},Row{320768,0,0,0},Row{42752,0,0,0}},Rows8{Row{38912,0,0,0},Row{38912,0,0,0},Row{31744,0,0,0},Row{2800,0,0,0},Row{27952,0,0,0},Row{38912,0,0,0},Row{38912,0,0,0},Row{43008,0,0,0}},Rows8{Row{120320,0,0,0},Row{3125248,0,0,0},Row{65536,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrrllrr(code: U32) -> Glyph:
@@ -1520,7 +1528,7 @@ def face0lrrrll(+code: U32) -> Glyph:
 
 def face0lrrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),Row{1568,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0}},Rows8{Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0}},Rows8{Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),Row{1568,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0}},Rows8{Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0}},Rows8{Row{3376,0,0,0},Row{3376,0,0,0},Row{3376,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrrlrl(code: U32) -> Glyph:
@@ -1528,7 +1536,7 @@ def face0lrrrlrl(code: U32) -> Glyph:
 
 def face0lrrrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2274,0,0,0},Row{20032,0,0,0},Row{31232,0,0,0}},Rows8{Row{31232,0,0,0},Row{31232,0,0,0},Row{112640,0,0,0},Row{1028352,0,0,0},Row{316928,0,0,0},Row{35328,0,0,0},Row{31232,0,0,0},Row{31232,0,0,0}},Rows8{Row{23840,0,0,0},Row{3058,0,0,0},Row{16,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2274,0,0,0},Row{20032,0,0,0},Row{31232,0,0,0}},Rows8{Row{31232,0,0,0},Row{31232,0,0,0},Row{112640,0,0,0},Row{1028352,0,0,0},Row{316928,0,0,0},Row{35328,0,0,0},Row{31232,0,0,0},Row{31232,0,0,0}},Rows8{Row{23840,0,0,0},Row{3058,0,0,0},Row{16,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrrlrrl(code: U32) -> Glyph:
@@ -1536,7 +1544,7 @@ def face0lrrrlrrl(code: U32) -> Glyph:
 
 def face0lrrrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{zero_row(),zero_row(),Row{2953108512,1,0,0},Row{3830340256,0,0,0},Row{2145649840,0,0,0},Row{17825792,0,0,0},zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{zero_row(),zero_row(),Row{2953108512,1,0,0},Row{3830340256,0,0,0},Row{2145649840,0,0,0},Row{17825792,0,0,0},zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrrlrrr(code: U32) -> Glyph:
@@ -1568,7 +1576,7 @@ def face0lrrrl(+code: U32) -> Glyph:
 
 def face0lrrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,zero_rows(),zero_rows(),zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[zero_rows(),zero_rows(),zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrrrll(code: U32) -> Glyph:
@@ -1576,7 +1584,7 @@ def face0lrrrrll(code: U32) -> Glyph:
 
 def face0lrrrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,zero_rows(),Rows8{Row{2992,0,0,0},Row{2704,0,0,0},zero_row(),zero_row(),Row{2448,0,0,0},Row{2704,0,0,0},Row{2704,0,0,0},Row{2720,0,0,0}},Rows8{Row{2720,0,0,0},Row{2720,0,0,0},Row{2976,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{4,[zero_rows(),Rows8{Row{2992,0,0,0},Row{2704,0,0,0},zero_row(),zero_row(),Row{2448,0,0,0},Row{2704,0,0,0},Row{2704,0,0,0},Row{2720,0,0,0}},Rows8{Row{2720,0,0,0},Row{2720,0,0,0},Row{2976,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrrrlrl(code: U32) -> Glyph:
@@ -1584,7 +1592,7 @@ def face0lrrrrlrl(code: U32) -> Glyph:
 
 def face0lrrrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{540672,0,0,0},Row{6071040,0,0,0},Row{183291712,0,0,0}},Rows8{Row{490228176,0,0,0},Row{541427,0,0,0},Row{540916,0,0,0},Row{541171,0,0,0},Row{723011552,0,0,0},Row{214675296,0,0,0},Row{26068224,0,0,0},Row{540672,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{540672,0,0,0},Row{6071040,0,0,0},Row{183291712,0,0,0}},Rows8{Row{490228176,0,0,0},Row{541427,0,0,0},Row{540916,0,0,0},Row{541171,0,0,0},Row{723011552,0,0,0},Row{214675296,0,0,0},Row{26068224,0,0,0},Row{540672,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrrrlrr(code: U32) -> Glyph:
@@ -1608,7 +1616,7 @@ def face0lrrrrl(+code: U32) -> Glyph:
 
 def face0lrrrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{115257856,0,0,0},Row{1582611456,0,0,0},Row{2264932144,0,0,0}},Rows8{Row{3648,0,0,0},Row{3904,0,0,0},Row{83886068,0,0,0},Row{19021649,0,0,0},Row{7968,0,0,0},Row{553656096,0,0,0},Row{3090365313,0,0,0},Row{1593835508,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{115257856,0,0,0},Row{1582611456,0,0,0},Row{2264932144,0,0,0}},Rows8{Row{3648,0,0,0},Row{3904,0,0,0},Row{83886068,0,0,0},Row{19021649,0,0,0},Row{7968,0,0,0},Row{553656096,0,0,0},Row{3090365313,0,0,0},Row{1593835508,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrrrrll(code: U32) -> Glyph:
@@ -1616,7 +1624,7 @@ def face0lrrrrrll(code: U32) -> Glyph:
 
 def face0lrrrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1256035776,45,0,0}},Rows8{Row{4197756800,10,0,0},Row{2684357504,9,0,0},Row{805307600,14,0,0},Row{268436208,31,0,0},Row{805307600,15,0,0},Row{2415921808,10,0,0},Row{4180914064,11,0,0},Row{1257153696,27,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1256035776,45,0,0}},Rows8{Row{4197756800,10,0,0},Row{2684357504,9,0,0},Row{805307600,14,0,0},Row{268436208,31,0,0},Row{805307600,15,0,0},Row{2415921808,10,0,0},Row{4180914064,11,0,0},Row{1257153696,27,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrrrrlr(code: U32) -> Glyph:
@@ -1632,7 +1640,7 @@ def face0lrrrrrl(+code: U32) -> Glyph:
 
 def face0lrrrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1327497417,0,0,0},Row{226493427,0,0,0},Row{131074480,0,0,0}},Rows8{Row{32771664,0,0,0},Row{10116352,0,0,0},Row{4179712,0,0,0},Row{184549360,0,0,0},Row{36291104,0,0,0},Row{184549360,0,0,0},Row{36291104,0,0,0},Row{573440,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1327497417,0,0,0},Row{226493427,0,0,0},Row{131074480,0,0,0}},Rows8{Row{32771664,0,0,0},Row{10116352,0,0,0},Row{4179712,0,0,0},Row{184549360,0,0,0},Row{36291104,0,0,0},Row{184549360,0,0,0},Row{36291104,0,0,0},Row{573440,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrrrrrl(code: U32) -> Glyph:
@@ -1640,7 +1648,7 @@ def face0lrrrrrrl(code: U32) -> Glyph:
 
 def face0lrrrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1952,0,0,0},Row{1952,0,0,0},Row{1952,0,0,0}},Rows8{Row{1952,0,0,0},Row{1952,0,0,0},zero_row(),zero_row(),zero_row(),Row{1952,0,0,0},Row{1952,0,0,0},Row{1952,0,0,0}},Rows8{Row{1952,0,0,0},Row{1952,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1952,0,0,0},Row{1952,0,0,0},Row{1952,0,0,0}},Rows8{Row{1952,0,0,0},Row{1952,0,0,0},zero_row(),zero_row(),zero_row(),Row{1952,0,0,0},Row{1952,0,0,0},Row{1952,0,0,0}},Rows8{Row{1952,0,0,0},Row{1952,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0lrrrrrrr(code: U32) -> Glyph:
@@ -1704,7 +1712,7 @@ def face0l(+code: U32) -> Glyph:
 
 def face0rllllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{9365504,0,0,0},Row{97734224,0,0,0},Row{54528880,0,0,0}},Rows8{Row{32288,0,0,0},Row{2948720,0,0,0},Row{100484081,0,0,0},Row{244318689,0,0,0},Row{521153392,0,0,0},Row{161010944,0,0,0},Row{31002624,0,0,0},Row{113246496,0,0,0}},Rows8{Row{114432672,0,0,0},Row{11533344,0,0,0},Row{73728,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{9365504,0,0,0},Row{97734224,0,0,0},Row{54528880,0,0,0}},Rows8{Row{32288,0,0,0},Row{2948720,0,0,0},Row{100484081,0,0,0},Row{244318689,0,0,0},Row{521153392,0,0,0},Row{161010944,0,0,0},Row{31002624,0,0,0},Row{113246496,0,0,0}},Rows8{Row{114432672,0,0,0},Row{11533344,0,0,0},Row{73728,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0rllllll(code: U32) -> Glyph:
@@ -1712,7 +1720,7 @@ def face0rllllll(code: U32) -> Glyph:
 
 def face0rlllllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{64052480,0,0,0},Row{1048832,0,0,0},zero_row()},zero_rows(),zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{64052480,0,0,0},Row{1048832,0,0,0},zero_row()},zero_rows(),zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlllllrl(code: U32) -> Glyph:
@@ -1720,7 +1728,7 @@ def face0rlllllrl(code: U32) -> Glyph:
 
 def face0rlllllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3470266368,23,0,0},Row{1397482240,460,0,0},Row{36112,2992,0,0}},Rows8{Row{3200454000,15906,0,0},Row{2475562928,35341,0,0},Row{812480,39190,0,0},Row{751536,35331,0,0},Row{1885285504,24094,0,0},Row{3756355088,3475,0,0},Row{841544960,1002,0,0},Row{4294651904,42,0,0}},Rows8{Row{303038464,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3470266368,23,0,0},Row{1397482240,460,0,0},Row{36112,2992,0,0}},Rows8{Row{3200454000,15906,0,0},Row{2475562928,35341,0,0},Row{812480,39190,0,0},Row{751536,35331,0,0},Row{1885285504,24094,0,0},Row{3756355088,3475,0,0},Row{841544960,1002,0,0},Row{4294651904,42,0,0}},Rows8{Row{303038464,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlllllrr(code: U32) -> Glyph:
@@ -1744,7 +1752,7 @@ def face0rlllll(+code: U32) -> Glyph:
 
 def face0rllllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1764992,0,0,0},Row{7078562,0,0,0},Row{9344816,0,0,0}},Rows8{Row{9066469,0,0,0},Row{9244855,0,0,0},Row{9162417,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1764992,0,0,0},Row{7078562,0,0,0},Row{9344816,0,0,0}},Rows8{Row{9066469,0,0,0},Row{9244855,0,0,0},Row{9162417,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rllllrl(code: U32) -> Glyph:
@@ -1752,7 +1760,7 @@ def face0rllllrl(code: U32) -> Glyph:
 
 def face0rllllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{1312280832,0,0,0},Row{131181312,0,0,0},Row{11214208,0,0,0},Row{3102194,0,0,0},Row{11214208,0,0,0},Row{131181312,0,0,0},Row{1312280832,0,0,0},zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{1312280832,0,0,0},Row{131181312,0,0,0},Row{11214208,0,0,0},Row{3102194,0,0,0},Row{11214208,0,0,0},Row{131181312,0,0,0},Row{1312280832,0,0,0},zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rllllrrl(code: U32) -> Glyph:
@@ -1760,7 +1768,7 @@ def face0rllllrrl(code: U32) -> Glyph:
 
 def face0rllllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),Row{1342177136,0,0,0},Row{1310859792,0,0,0},Row{1308622848,0,0,0},Row{301989888,0,0,0},zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),Row{1342177136,0,0,0},Row{1310859792,0,0,0},Row{1308622848,0,0,0},Row{301989888,0,0,0},zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rllllrrr(code: U32) -> Glyph:
@@ -1792,7 +1800,7 @@ def face0rllll(+code: U32) -> Glyph:
 
 def face0rlllrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{251656960,0,0,0},Row{251263744,0,0,0},Row{251656960,0,0,0},Row{251239168,0,0,0}},Rows8{Row{251656960,0,0,0},Row{251263744,0,0,0},Row{245365504,0,0,0},Row{249420544,0,0,0},Row{245340928,0,0,0},Row{251656960,0,0,0},Row{244288256,0,0,0},Row{241404672,0,0,0}},Rows8{Row{251656960,0,0,0},Row{249096960,0,0,0},Row{251656960,0,0,0},Row{53686784,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{251656960,0,0,0},Row{251263744,0,0,0},Row{251656960,0,0,0},Row{251239168,0,0,0}},Rows8{Row{251656960,0,0,0},Row{251263744,0,0,0},Row{245365504,0,0,0},Row{249420544,0,0,0},Row{245340928,0,0,0},Row{251656960,0,0,0},Row{244288256,0,0,0},Row{241404672,0,0,0}},Rows8{Row{251656960,0,0,0},Row{249096960,0,0,0},Row{251656960,0,0,0},Row{53686784,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlllrll(code: U32) -> Glyph:
@@ -1800,7 +1808,7 @@ def face0rlllrll(code: U32) -> Glyph:
 
 def face0rlllrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{115258112,0,0,0},Row{2891148880,0,0,0},Row{3251614673,4,0,0}},Rows8{Row{1673769140,9,0,0},Row{1625272484,9,0,0},Row{2999169761,5,0,0},Row{3392167280,0,0,0},Row{452978176,0,0,0},Row{1179648,0,0,0},zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{115258112,0,0,0},Row{2891148880,0,0,0},Row{3251614673,4,0,0}},Rows8{Row{1673769140,9,0,0},Row{1625272484,9,0,0},Row{2999169761,5,0,0},Row{3392167280,0,0,0},Row{452978176,0,0,0},Row{1179648,0,0,0},zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlllrlrl(code: U32) -> Glyph:
@@ -1808,7 +1816,7 @@ def face0rlllrlrl(code: U32) -> Glyph:
 
 def face0rlllrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4194176,0,0,0},Row{1188368,0,0,0},zero_row()},zero_rows(),zero_rows(),zero_rows()}
+    case True{}: Glyph{7,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4194176,0,0,0},Row{1188368,0,0,0},zero_row()},zero_rows(),zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlllrlrr(code: U32) -> Glyph:
@@ -1832,7 +1840,7 @@ def face0rlllrl(+code: U32) -> Glyph:
 
 def face0rlllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{453664,0,0,0},Row{4016080,0,0,0},Row{7930081,0,0,0}},Rows8{Row{6034656,0,0,0},Row{654912,0,0,0},Row{8448,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{453664,0,0,0},Row{4016080,0,0,0},Row{7930081,0,0,0}},Rows8{Row{6034656,0,0,0},Row{654912,0,0,0},Row{8448,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlllrrl(code: U32) -> Glyph:
@@ -1840,7 +1848,7 @@ def face0rlllrrl(code: U32) -> Glyph:
 
 def face0rlllrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{4063232,0,0,0},Row{4063232,0,0,0},Row{3758096272,0,0,0},Row{576594448,0,0,0},Row{4063232,0,0,0},zero_row(),Row{3758096272,0,0,0},Row{572662288,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{4063232,0,0,0},Row{4063232,0,0,0},Row{3758096272,0,0,0},Row{576594448,0,0,0},Row{4063232,0,0,0},zero_row(),Row{3758096272,0,0,0},Row{572662288,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlllrrrl(code: U32) -> Glyph:
@@ -1848,7 +1856,7 @@ def face0rlllrrrl(code: U32) -> Glyph:
 
 def face0rlllrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{585344,0,0,0},Row{4072130,0,0,0},Row{1982464,0,0,0},Row{386304,0,0,0}},Rows8{Row{20064,0,0,0},Row{7270130,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{585344,0,0,0},Row{4072130,0,0,0},Row{1982464,0,0,0},Row{386304,0,0,0}},Rows8{Row{20064,0,0,0},Row{7270130,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlllrrrr(code: U32) -> Glyph:
@@ -1888,7 +1896,7 @@ def face0rlll(+code: U32) -> Glyph:
 
 def face0rllrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1764736,0,0,0},Row{5116273,0,0,0},Row{718592,0,0,0},Row{8130560,0,0,0}},Rows8{Row{8131250,0,0,0},Row{1764720,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1764736,0,0,0},Row{5116273,0,0,0},Row{718592,0,0,0},Row{8130560,0,0,0}},Rows8{Row{8131250,0,0,0},Row{1764720,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rllrlll(code: U32) -> Glyph:
@@ -1896,7 +1904,7 @@ def face0rllrlll(code: U32) -> Glyph:
 
 def face0rllrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{15904,0,0,0},Row{1936,0,0,0},zero_row()},zero_rows(),zero_rows(),zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{15904,0,0,0},Row{1936,0,0,0},zero_row()},zero_rows(),zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rllrllrl(code: U32) -> Glyph:
@@ -1904,7 +1912,7 @@ def face0rllrllrl(code: U32) -> Glyph:
 
 def face0rllrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1059063520,0,0,0},Row{1604402656,0,0,0},Row{3883849952,2,0,0}},Rows8{Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1059063520,0,0,0},Row{1604402656,0,0,0},Row{3883849952,2,0,0}},Rows8{Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0rllrllrr(code: U32) -> Glyph:
@@ -1928,7 +1936,7 @@ def face0rllrll(+code: U32) -> Glyph:
 
 def face0rllrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1073735952,0,0,0},Row{1060896688,0,0,0},Row{1058799602,0,0,0}},Rows8{Row{1058799603,0,0,0},Row{1058799601,0,0,0},Row{1058799520,0,0,0},Row{1058654208,0,0,0},Row{1058013184,0,0,0},Row{1058013184,0,0,0},Row{1058013184,0,0,0},Row{1058013184,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1073735952,0,0,0},Row{1060896688,0,0,0},Row{1058799602,0,0,0}},Rows8{Row{1058799603,0,0,0},Row{1058799601,0,0,0},Row{1058799520,0,0,0},Row{1058654208,0,0,0},Row{1058013184,0,0,0},Row{1058013184,0,0,0},Row{1058013184,0,0,0},Row{1058013184,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rllrlrl(code: U32) -> Glyph:
@@ -1936,7 +1944,7 @@ def face0rllrlrl(code: U32) -> Glyph:
 
 def face0rllrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,zero_rows(),Rows8{zero_row(),zero_row(),Row{2448,0,0,0},Row{2992,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[zero_rows(),Rows8{zero_row(),zero_row(),Row{2448,0,0,0},Row{2992,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rllrlrrl(code: U32) -> Glyph:
@@ -1944,7 +1952,7 @@ def face0rllrlrrl(code: U32) -> Glyph:
 
 def face0rllrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,zero_rows(),zero_rows(),Rows8{Row{1408,0,0,0},Row{27168,0,0,0},Row{15536,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{4,[zero_rows(),zero_rows(),Rows8{Row{1408,0,0,0},Row{27168,0,0,0},Row{15536,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0rllrlrrr(code: U32) -> Glyph:
@@ -1976,7 +1984,7 @@ def face0rllrl(+code: U32) -> Glyph:
 
 def face0rllrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{28561,0,0,0},Row{27781,0,0,0},Row{27648,0,0,0},Row{27648,0,0,0}},Rows8{Row{27648,0,0,0},Row{27648,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{28561,0,0,0},Row{27781,0,0,0},Row{27648,0,0,0},Row{27648,0,0,0}},Rows8{Row{27648,0,0,0},Row{27648,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rllrrll(code: U32) -> Glyph:
@@ -1984,7 +1992,7 @@ def face0rllrrll(code: U32) -> Glyph:
 
 def face0rllrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2944336,0,0,0},Row{14091506,0,0,0},Row{49348806,0,0,0}},Rows8{Row{49348806,0,0,0},Row{14091506,0,0,0},Row{2944336,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{7,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2944336,0,0,0},Row{14091506,0,0,0},Row{49348806,0,0,0}},Rows8{Row{49348806,0,0,0},Row{14091506,0,0,0},Row{2944336,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rllrrlrl(code: U32) -> Glyph:
@@ -1992,7 +2000,7 @@ def face0rllrrlrl(code: U32) -> Glyph:
 
 def face0rllrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{4081122,0,0,0},Row{30948944,0,0,0},Row{179427328,0,0,0},Row{1329127424,0,0,0},Row{179427328,0,0,0},Row{30948944,0,0,0},Row{4081122,0,0,0},zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{4081122,0,0,0},Row{30948944,0,0,0},Row{179427328,0,0,0},Row{1329127424,0,0,0},Row{179427328,0,0,0},Row{30948944,0,0,0},Row{4081122,0,0,0},zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rllrrlrr(code: U32) -> Glyph:
@@ -2016,7 +2024,7 @@ def face0rllrrl(+code: U32) -> Glyph:
 
 def face0rllrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{268439490,46,0,0},Row{2684358519,7,0,0},Row{3556773664,0,0,0}},Rows8{Row{1024462624,0,0,0},Row{160436000,0,0,0},Row{30609184,116,0,0},Row{274464768,237,0,0},Row{2685038592,231,0,0},Row{3288523264,225,0,0},Row{3909118720,2558,0,0},Row{3168,225,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{268439490,46,0,0},Row{2684358519,7,0,0},Row{3556773664,0,0,0}},Rows8{Row{1024462624,0,0,0},Row{160436000,0,0,0},Row{30609184,116,0,0},Row{274464768,237,0,0},Row{2685038592,231,0,0},Row{3288523264,225,0,0},Row{3909118720,2558,0,0},Row{3168,225,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rllrrrll(code: U32) -> Glyph:
@@ -2024,7 +2032,7 @@ def face0rllrrrll(code: U32) -> Glyph:
 
 def face0rllrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{12,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{268439490,46,0,0},Row{2684358519,7,0,0},Row{3556773664,0,0,0}},Rows8{Row{1024462624,0,0,0},Row{160436000,0,0,0},Row{567480096,2028,0,0},Row{1885077504,8009,0,0},Row{684032,3120,0,0},Row{188928,978,0,0},Row{536898304,621,0,0},Row{2147486816,16383,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{12,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{268439490,46,0,0},Row{2684358519,7,0,0},Row{3556773664,0,0,0}},Rows8{Row{1024462624,0,0,0},Row{160436000,0,0,0},Row{567480096,2028,0,0},Row{1885077504,8009,0,0},Row{684032,3120,0,0},Row{188928,978,0,0},Row{536898304,621,0,0},Row{2147486816,16383,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rllrrrlr(code: U32) -> Glyph:
@@ -2040,7 +2048,7 @@ def face0rllrrrl(+code: U32) -> Glyph:
 
 def face0rllrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{12,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{183936,1233,0,0},Row{504673,152,0,0},Row{805498368,29,0,0}},Rows8{Row{3221922304,5,0,0},Row{2802553730,0,0,0},Row{774102688,6192,0,0},Row{112197632,8145,0,0},Row{12976128,7816,0,0},Row{809373696,7709,0,0},Row{1879613440,49134,0,0},Row{54272,7936,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{12,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{183936,1233,0,0},Row{504673,152,0,0},Row{805498368,29,0,0}},Rows8{Row{3221922304,5,0,0},Row{2802553730,0,0,0},Row{774102688,6192,0,0},Row{112197632,8145,0,0},Row{12976128,7816,0,0},Row{809373696,7709,0,0},Row{1879613440,49134,0,0},Row{54272,7936,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rllrrrrl(code: U32) -> Glyph:
@@ -2048,7 +2056,7 @@ def face0rllrrrrl(code: U32) -> Glyph:
 
 def face0rllrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),Rows8{Row{638976,0,0,0},Row{569344,0,0,0},zero_row(),Row{356352,0,0,0},Row{512000,0,0,0},Row{125712,0,0,0},Row{11712,0,0,0},Row{755,0,0,0}},Rows8{Row{111149300,0,0,0},Row{83245537,0,0,0},Row{7207984,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{7,[zero_rows(),Rows8{Row{638976,0,0,0},Row{569344,0,0,0},zero_row(),Row{356352,0,0,0},Row{512000,0,0,0},Row{125712,0,0,0},Row{11712,0,0,0},Row{755,0,0,0}},Rows8{Row{111149300,0,0,0},Row{83245537,0,0,0},Row{7207984,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0rllrrrrr(code: U32) -> Glyph:
@@ -2096,7 +2104,7 @@ def face0rll(+code: U32) -> Glyph:
 
 def face0rlrllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),Row{69632,0,0,0},Row{692224,0,0,0},Row{2953216,0,0,0},zero_row(),Row{12525568,0,0,0},Row{33386496,0,0,0},Row{114802688,0,0,0}},Rows8{Row{194245120,0,0,0},Row{524343040,0,0,0},Row{1845533696,0,0,0},Row{3389017888,0,0,0},Row{4294967152,2,0,0},Row{3811785408,7,0,0},Row{2415920370,12,0,0},Row{1073742055,47,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),Row{69632,0,0,0},Row{692224,0,0,0},Row{2953216,0,0,0},zero_row(),Row{12525568,0,0,0},Row{33386496,0,0,0},Row{114802688,0,0,0}},Rows8{Row{194245120,0,0,0},Row{524343040,0,0,0},Row{1845533696,0,0,0},Row{3389017888,0,0,0},Row{4294967152,2,0,0},Row{3811785408,7,0,0},Row{2415920370,12,0,0},Row{1073742055,47,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrllll(code: U32) -> Glyph:
@@ -2104,7 +2112,7 @@ def face0rlrllll(code: U32) -> Glyph:
 
 def face0rlrlllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),Row{81854464,0,0,0},Row{9895936,0,0,0},zero_row(),Row{12525568,0,0,0},Row{33386496,0,0,0},Row{114802688,0,0,0}},Rows8{Row{194245120,0,0,0},Row{524343040,0,0,0},Row{1845533696,0,0,0},Row{3389017888,0,0,0},Row{4294967152,2,0,0},Row{3811785408,7,0,0},Row{2415920370,12,0,0},Row{1073742055,47,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),Row{81854464,0,0,0},Row{9895936,0,0,0},zero_row(),Row{12525568,0,0,0},Row{33386496,0,0,0},Row{114802688,0,0,0}},Rows8{Row{194245120,0,0,0},Row{524343040,0,0,0},Row{1845533696,0,0,0},Row{3389017888,0,0,0},Row{4294967152,2,0,0},Row{3811785408,7,0,0},Row{2415920370,12,0,0},Row{1073742055,47,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrlllrl(code: U32) -> Glyph:
@@ -2112,7 +2120,7 @@ def face0rlrlllrl(code: U32) -> Glyph:
 
 def face0rlrlllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),Row{13512704,0,0,0},Row{160747776,0,0,0},zero_row(),Row{12525568,0,0,0},Row{33386496,0,0,0},Row{114802688,0,0,0}},Rows8{Row{194245120,0,0,0},Row{524343040,0,0,0},Row{1845533696,0,0,0},Row{3389017888,0,0,0},Row{4294967152,2,0,0},Row{3811785408,7,0,0},Row{2415920370,12,0,0},Row{1073742055,47,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),Row{13512704,0,0,0},Row{160747776,0,0,0},zero_row(),Row{12525568,0,0,0},Row{33386496,0,0,0},Row{114802688,0,0,0}},Rows8{Row{194245120,0,0,0},Row{524343040,0,0,0},Row{1845533696,0,0,0},Row{3389017888,0,0,0},Row{4294967152,2,0,0},Row{3811785408,7,0,0},Row{2415920370,12,0,0},Row{1073742055,47,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrlllrr(code: U32) -> Glyph:
@@ -2136,7 +2144,7 @@ def face0rlrlll(+code: U32) -> Glyph:
 
 def face0rlrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),Row{189509632,0,0,0},Row{114602240,0,0,0},zero_row(),Row{12525568,0,0,0},Row{33386496,0,0,0},Row{114802688,0,0,0}},Rows8{Row{194245120,0,0,0},Row{524343040,0,0,0},Row{1845533696,0,0,0},Row{3389017888,0,0,0},Row{4294967152,2,0,0},Row{3811785408,7,0,0},Row{2415920370,12,0,0},Row{1073742055,47,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),Row{189509632,0,0,0},Row{114602240,0,0,0},zero_row(),Row{12525568,0,0,0},Row{33386496,0,0,0},Row{114802688,0,0,0}},Rows8{Row{194245120,0,0,0},Row{524343040,0,0,0},Row{1845533696,0,0,0},Row{3389017888,0,0,0},Row{4294967152,2,0,0},Row{3811785408,7,0,0},Row{2415920370,12,0,0},Row{1073742055,47,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrllrl(code: U32) -> Glyph:
@@ -2144,7 +2152,7 @@ def face0rlrllrl(code: U32) -> Glyph:
 
 def face0rlrllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),Row{223466496,0,0,0},Row{16781312,0,0,0},zero_row(),Row{12525568,0,0,0},Row{33386496,0,0,0},Row{114802688,0,0,0}},Rows8{Row{194245120,0,0,0},Row{524343040,0,0,0},Row{1845533696,0,0,0},Row{3389017888,0,0,0},Row{4294967152,2,0,0},Row{3811785408,7,0,0},Row{2415920370,12,0,0},Row{1073742055,47,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),Row{223466496,0,0,0},Row{16781312,0,0,0},zero_row(),Row{12525568,0,0,0},Row{33386496,0,0,0},Row{114802688,0,0,0}},Rows8{Row{194245120,0,0,0},Row{524343040,0,0,0},Row{1845533696,0,0,0},Row{3389017888,0,0,0},Row{4294967152,2,0,0},Row{3811785408,7,0,0},Row{2415920370,12,0,0},Row{1073742055,47,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrllrrl(code: U32) -> Glyph:
@@ -2152,7 +2160,7 @@ def face0rlrllrrl(code: U32) -> Glyph:
 
 def face0rlrllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),Row{29179904,0,0,0},Row{128307200,0,0,0},Row{142790656,0,0,0},Row{49242112,0,0,0},Row{13574144,0,0,0},Row{33386496,0,0,0},Row{114802688,0,0,0}},Rows8{Row{194245120,0,0,0},Row{524343040,0,0,0},Row{1845533696,0,0,0},Row{3389017888,0,0,0},Row{4294967152,2,0,0},Row{3811785408,7,0,0},Row{2415920370,12,0,0},Row{1073742055,47,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),Row{29179904,0,0,0},Row{128307200,0,0,0},Row{142790656,0,0,0},Row{49242112,0,0,0},Row{13574144,0,0,0},Row{33386496,0,0,0},Row{114802688,0,0,0}},Rows8{Row{194245120,0,0,0},Row{524343040,0,0,0},Row{1845533696,0,0,0},Row{3389017888,0,0,0},Row{4294967152,2,0,0},Row{3811785408,7,0,0},Row{2415920370,12,0,0},Row{1073742055,47,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrllrrr(code: U32) -> Glyph:
@@ -2184,7 +2192,7 @@ def face0rlrll(+code: U32) -> Glyph:
 
 def face0rlrlrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4259381248,983039,0,0},Row{4090888192,139810,0,0},Row{4085055488,0,0,0}},Rows8{Row{4078915584,0,0,0},Row{4077563904,0,0,0},Row{4077122304,655359,0,0},Row{4076915200,74275,0,0},Row{4294967072,0,0,0},Row{4112662144,0,0,0},Row{4076865505,139810,0,0},Row{4076863974,1048575,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{14,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4259381248,983039,0,0},Row{4090888192,139810,0,0},Row{4085055488,0,0,0}},Rows8{Row{4078915584,0,0,0},Row{4077563904,0,0,0},Row{4077122304,655359,0,0},Row{4076915200,74275,0,0},Row{4294967072,0,0,0},Row{4112662144,0,0,0},Row{4076865505,139810,0,0},Row{4076863974,1048575,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrlrll(code: U32) -> Glyph:
@@ -2192,7 +2200,7 @@ def face0rlrlrll(code: U32) -> Glyph:
 
 def face0rlrlrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1828552960,0,0,0},Row{3861171216,8,0,0},Row{805313920,47,0,0}},Rows8{Row{1744,54,0,0},Row{1009,0,0,0},Row{754,0,0,0},Row{1009,0,0,0},Row{1744,54,0,0},Row{805313920,63,0,0},Row{3861171216,9,0,0},Row{1845330176,0,0,0}},Rows8{Row{45154304,0,0,0},Row{238026752,0,0,0},Row{147128320,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1828552960,0,0,0},Row{3861171216,8,0,0},Row{805313920,47,0,0}},Rows8{Row{1744,54,0,0},Row{1009,0,0,0},Row{754,0,0,0},Row{1009,0,0,0},Row{1744,54,0,0},Row{805313920,63,0,0},Row{3861171216,9,0,0},Row{1845330176,0,0,0}},Rows8{Row{45154304,0,0,0},Row{238026752,0,0,0},Row{147128320,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrlrlrl(code: U32) -> Glyph:
@@ -2200,7 +2208,7 @@ def face0rlrlrlrl(code: U32) -> Glyph:
 
 def face0rlrlrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),Row{4352,0,0,0},Row{254464,0,0,0},Row{684032,0,0,0},zero_row(),Row{2147483584,0,0,0},Row{304228800,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{805306304,0,0,0},Row{35793344,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{304228800,0,0,0},Row{2415919040,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),Row{4352,0,0,0},Row{254464,0,0,0},Row{684032,0,0,0},zero_row(),Row{2147483584,0,0,0},Row{304228800,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{805306304,0,0,0},Row{35793344,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{304228800,0,0,0},Row{2415919040,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrlrlrr(code: U32) -> Glyph:
@@ -2224,7 +2232,7 @@ def face0rlrlrl(+code: U32) -> Glyph:
 
 def face0rlrlrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),Row{13041664,0,0,0},Row{3997696,0,0,0},zero_row(),Row{2147483584,0,0,0},Row{304228800,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{805306304,0,0,0},Row{35793344,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{304228800,0,0,0},Row{2415919040,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),Row{13041664,0,0,0},Row{3997696,0,0,0},zero_row(),Row{2147483584,0,0,0},Row{304228800,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{805306304,0,0,0},Row{35793344,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{304228800,0,0,0},Row{2415919040,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrlrrll(code: U32) -> Glyph:
@@ -2232,7 +2240,7 @@ def face0rlrlrrll(code: U32) -> Glyph:
 
 def face0rlrlrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),Row{6197248,0,0,0},Row{64145152,0,0,0},zero_row(),Row{2147483584,0,0,0},Row{304228800,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{805306304,0,0,0},Row{35793344,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{304228800,0,0,0},Row{2415919040,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),Row{6197248,0,0,0},Row{64145152,0,0,0},zero_row(),Row{2147483584,0,0,0},Row{304228800,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{805306304,0,0,0},Row{35793344,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{304228800,0,0,0},Row{2415919040,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrlrrlr(code: U32) -> Glyph:
@@ -2248,7 +2256,7 @@ def face0rlrlrrl(+code: U32) -> Glyph:
 
 def face0rlrlrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),Row{113281536,0,0,0},Row{1048832,0,0,0},zero_row(),Row{2147483584,0,0,0},Row{304228800,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{805306304,0,0,0},Row{35793344,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{304228800,0,0,0},Row{2415919040,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),Row{113281536,0,0,0},Row{1048832,0,0,0},zero_row(),Row{2147483584,0,0,0},Row{304228800,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{805306304,0,0,0},Row{35793344,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{304228800,0,0,0},Row{2415919040,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrlrrrl(code: U32) -> Glyph:
@@ -2256,7 +2264,7 @@ def face0rlrlrrrl(code: U32) -> Glyph:
 
 def face0rlrlrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),Row{17,0,0,0},Row{184,0,0,0},Row{977,0,0,0},zero_row(),Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),Row{17,0,0,0},Row{184,0,0,0},Row{977,0,0,0},zero_row(),Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrlrrrr(code: U32) -> Glyph:
@@ -2296,7 +2304,7 @@ def face0rlrl(+code: U32) -> Glyph:
 
 def face0rlrrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),zero_row(),Row{24064,0,0,0},Row{2656,0,0,0},zero_row(),Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),zero_row(),Row{24064,0,0,0},Row{2656,0,0,0},zero_row(),Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0}},Rows8{Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0},Row{2240,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrrlll(code: U32) -> Glyph:
@@ -2304,7 +2312,7 @@ def face0rlrrlll(code: U32) -> Glyph:
 
 def face0rlrrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),Row{118320,0,0,0},Row{689361,0,0,0},zero_row(),Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0}},Rows8{Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),Row{118320,0,0,0},Row{689361,0,0,0},zero_row(),Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0}},Rows8{Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrrllrl(code: U32) -> Glyph:
@@ -2312,7 +2320,7 @@ def face0rlrrllrl(code: U32) -> Glyph:
 
 def face0rlrrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),Row{873171,0,0,0},Row{65552,0,0,0},zero_row(),Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0}},Rows8{Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),Row{873171,0,0,0},Row{65552,0,0,0},zero_row(),Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0}},Rows8{Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0},Row{35840,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrrllrr(code: U32) -> Glyph:
@@ -2336,7 +2344,7 @@ def face0rlrrll(+code: U32) -> Glyph:
 
 def face0rlrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{988807056,0,0,0},Row{3912379280,3,0,0},Row{2415922064,12,0,0}},Rows8{Row{536873872,63,0,0},Row{2960,94,0,0},Row{7340029,108,0,0},Row{1191346,94,0,0},Row{536873872,63,0,0},Row{2684357520,12,0,0},Row{3930205072,3,0,0},Row{720371600,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{988807056,0,0,0},Row{3912379280,3,0,0},Row{2415922064,12,0,0}},Rows8{Row{536873872,63,0,0},Row{2960,94,0,0},Row{7340029,108,0,0},Row{1191346,94,0,0},Row{536873872,63,0,0},Row{2684357520,12,0,0},Row{3930205072,3,0,0},Row{720371600,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrrlrl(code: U32) -> Glyph:
@@ -2344,7 +2352,7 @@ def face0rlrrlrl(code: U32) -> Glyph:
 
 def face0rlrrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),zero_row(),Row{979193856,0,0,0},Row{211062784,0,0,0},zero_row(),Row{11968,95,0,0},Row{44992,95,0,0},Row{260800,95,0,0}},Rows8{Row{829376,95,0,0},Row{7284928,95,0,0},Row{31983808,95,0,0},Row{164694208,95,0,0},Row{793774272,95,0,0},Row{2868906176,94,0,0},Row{4060088512,95,0,0},Row{2147485888,95,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),zero_row(),Row{979193856,0,0,0},Row{211062784,0,0,0},zero_row(),Row{11968,95,0,0},Row{44992,95,0,0},Row{260800,95,0,0}},Rows8{Row{829376,95,0,0},Row{7284928,95,0,0},Row{31983808,95,0,0},Row{164694208,95,0,0},Row{793774272,95,0,0},Row{2868906176,94,0,0},Row{4060088512,95,0,0},Row{2147485888,95,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrrlrrl(code: U32) -> Glyph:
@@ -2352,7 +2360,7 @@ def face0rlrrlrrl(code: U32) -> Glyph:
 
 def face0rlrrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),Row{69632,0,0,0},Row{4071424,0,0,0},Row{10944512,0,0,0},zero_row(),Row{1827504384,0,0,0},Row{3861171200,8,0,0},Row{805313920,63,0,0}},Rows8{Row{1744,155,0,0},Row{1009,199,0,0},Row{754,214,0,0},Row{1009,199,0,0},Row{1744,155,0,0},Row{805313920,63,0,0},Row{3861171216,8,0,0},Row{1828552960,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),Row{69632,0,0,0},Row{4071424,0,0,0},Row{10944512,0,0,0},zero_row(),Row{1827504384,0,0,0},Row{3861171200,8,0,0},Row{805313920,63,0,0}},Rows8{Row{1744,155,0,0},Row{1009,199,0,0},Row{754,214,0,0},Row{1009,199,0,0},Row{1744,155,0,0},Row{805313920,63,0,0},Row{3861171216,8,0,0},Row{1828552960,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrrlrrr(code: U32) -> Glyph:
@@ -2384,7 +2392,7 @@ def face0rlrrl(+code: U32) -> Glyph:
 
 def face0rlrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),zero_row(),Row{208666624,0,0,0},Row{63963136,0,0,0},zero_row(),Row{1827504384,0,0,0},Row{3861171200,8,0,0},Row{805313920,63,0,0}},Rows8{Row{1744,155,0,0},Row{1009,199,0,0},Row{754,214,0,0},Row{1009,199,0,0},Row{1744,155,0,0},Row{805313920,63,0,0},Row{3861171216,8,0,0},Row{1828552960,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),zero_row(),Row{208666624,0,0,0},Row{63963136,0,0,0},zero_row(),Row{1827504384,0,0,0},Row{3861171200,8,0,0},Row{805313920,63,0,0}},Rows8{Row{1744,155,0,0},Row{1009,199,0,0},Row{754,214,0,0},Row{1009,199,0,0},Row{1744,155,0,0},Row{805313920,63,0,0},Row{3861171216,8,0,0},Row{1828552960,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrrrll(code: U32) -> Glyph:
@@ -2392,7 +2400,7 @@ def face0rlrrrll(code: U32) -> Glyph:
 
 def face0rlrrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),zero_row(),Row{99221504,0,0,0},Row{1026256896,0,0,0},zero_row(),Row{1827504384,0,0,0},Row{3861171200,8,0,0},Row{805313920,63,0,0}},Rows8{Row{1744,155,0,0},Row{1009,199,0,0},Row{754,214,0,0},Row{1009,199,0,0},Row{1744,155,0,0},Row{805313920,63,0,0},Row{3861171216,8,0,0},Row{1828552960,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),zero_row(),Row{99221504,0,0,0},Row{1026256896,0,0,0},zero_row(),Row{1827504384,0,0,0},Row{3861171200,8,0,0},Row{805313920,63,0,0}},Rows8{Row{1744,155,0,0},Row{1009,199,0,0},Row{754,214,0,0},Row{1009,199,0,0},Row{1744,155,0,0},Row{805313920,63,0,0},Row{3861171216,8,0,0},Row{1828552960,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrrrlrl(code: U32) -> Glyph:
@@ -2400,7 +2408,7 @@ def face0rlrrrlrl(code: U32) -> Glyph:
 
 def face0rlrrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),zero_row(),Row{1231896576,0,0,0},Row{479559680,0,0,0},zero_row(),Row{1827504384,0,0,0},Row{3861171200,8,0,0},Row{805313920,63,0,0}},Rows8{Row{1744,155,0,0},Row{1009,199,0,0},Row{754,214,0,0},Row{1009,199,0,0},Row{1744,155,0,0},Row{805313920,63,0,0},Row{3861171216,8,0,0},Row{1828552960,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),zero_row(),Row{1231896576,0,0,0},Row{479559680,0,0,0},zero_row(),Row{1827504384,0,0,0},Row{3861171200,8,0,0},Row{805313920,63,0,0}},Rows8{Row{1744,155,0,0},Row{1009,199,0,0},Row{754,214,0,0},Row{1009,199,0,0},Row{1744,155,0,0},Row{805313920,63,0,0},Row{3861171216,8,0,0},Row{1828552960,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrrrlrr(code: U32) -> Glyph:
@@ -2424,7 +2432,7 @@ def face0rlrrrl(+code: U32) -> Glyph:
 
 def face0rlrrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),zero_row(),Row{1812504576,0,0,0},Row{16781312,0,0,0},zero_row(),Row{1827504384,0,0,0},Row{3861171200,8,0,0},Row{805313920,63,0,0}},Rows8{Row{1744,155,0,0},Row{1009,199,0,0},Row{754,214,0,0},Row{1009,199,0,0},Row{1744,155,0,0},Row{805313920,63,0,0},Row{3861171216,8,0,0},Row{1828552960,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),zero_row(),Row{1812504576,0,0,0},Row{16781312,0,0,0},zero_row(),Row{1827504384,0,0,0},Row{3861171200,8,0,0},Row{805313920,63,0,0}},Rows8{Row{1744,155,0,0},Row{1009,199,0,0},Row{754,214,0,0},Row{1009,199,0,0},Row{1744,155,0,0},Row{805313920,63,0,0},Row{3861171216,8,0,0},Row{1828552960,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrrrrll(code: U32) -> Glyph:
@@ -2432,7 +2440,7 @@ def face0rlrrrrll(code: U32) -> Glyph:
 
 def face0rlrrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{256,0,0,0},Row{2566921552,0,0,0},Row{764598784,0,0,0},Row{48144384,0,0,0},Row{30380032,0,0,0},Row{480434432,0,0,0},Row{2583702864,0,0,0},Row{268435712,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{256,0,0,0},Row{2566921552,0,0,0},Row{764598784,0,0,0},Row{48144384,0,0,0},Row{30380032,0,0,0},Row{480434432,0,0,0},Row{2583702864,0,0,0},Row{268435712,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrrrrlr(code: U32) -> Glyph:
@@ -2448,7 +2456,7 @@ def face0rlrrrrl(+code: U32) -> Glyph:
 
 def face0rlrrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1827504384,4,0,0},Row{4129606656,47,0,0},Row{4043316608,63,0,0}},Rows8{Row{2835351248,155,0,0},Row{508560369,199,0,0},Row{98632434,214,0,0},Row{10159089,199,0,0},Row{1926864,155,0,0},Row{805568384,63,0,0},Row{3861184272,8,0,0},Row{1828560224,0,0,0}},Rows8{Row{256,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1827504384,4,0,0},Row{4129606656,47,0,0},Row{4043316608,63,0,0}},Rows8{Row{2835351248,155,0,0},Row{508560369,199,0,0},Row{98632434,214,0,0},Row{10159089,199,0,0},Row{1926864,155,0,0},Row{805568384,63,0,0},Row{3861184272,8,0,0},Row{1828560224,0,0,0}},Rows8{Row{256,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrrrrrl(code: U32) -> Glyph:
@@ -2456,7 +2464,7 @@ def face0rlrrrrrl(code: U32) -> Glyph:
 
 def face0rlrrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),Row{69632,0,0,0},Row{1978368,0,0,0},Row{8978432,0,0,0},zero_row(),Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0}},Rows8{Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873392,47,0,0},Row{1879051648,14,0,0},Row{3877875216,6,0,0},Row{1559142912,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),Row{69632,0,0,0},Row{1978368,0,0,0},Row{8978432,0,0,0},zero_row(),Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0}},Rows8{Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873392,47,0,0},Row{1879051648,14,0,0},Row{3877875216,6,0,0},Row{1559142912,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rlrrrrrr(code: U32) -> Glyph:
@@ -2512,7 +2520,7 @@ def face0rl(+code: U32) -> Glyph:
 
 def face0rrlllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),Row{177209344,0,0,0},Row{31588352,0,0,0},zero_row(),Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0}},Rows8{Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873392,47,0,0},Row{1879051648,14,0,0},Row{3877875216,6,0,0},Row{1559142912,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),Row{177209344,0,0,0},Row{31588352,0,0,0},zero_row(),Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0}},Rows8{Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873392,47,0,0},Row{1879051648,14,0,0},Row{3877875216,6,0,0},Row{1559142912,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrlllll(code: U32) -> Glyph:
@@ -2520,7 +2528,7 @@ def face0rrlllll(code: U32) -> Glyph:
 
 def face0rrllllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),Row{65732608,0,0,0},Row{758812672,0,0,0},zero_row(),Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0}},Rows8{Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873392,47,0,0},Row{1879051648,14,0,0},Row{3877875216,6,0,0},Row{1559142912,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),Row{65732608,0,0,0},Row{758812672,0,0,0},zero_row(),Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0}},Rows8{Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873392,47,0,0},Row{1879051648,14,0,0},Row{3877875216,6,0,0},Row{1559142912,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrllllrl(code: U32) -> Glyph:
@@ -2528,7 +2536,7 @@ def face0rrllllrl(code: U32) -> Glyph:
 
 def face0rrllllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),Row{1293336576,0,0,0},Row{16781312,0,0,0},zero_row(),Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0}},Rows8{Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873392,47,0,0},Row{1879051648,14,0,0},Row{3877875216,6,0,0},Row{1559142912,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),Row{1293336576,0,0,0},Row{16781312,0,0,0},zero_row(),Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0}},Rows8{Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873152,63,0,0},Row{536873392,47,0,0},Row{1879051648,14,0,0},Row{3877875216,6,0,0},Row{1559142912,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrllllrr(code: U32) -> Glyph:
@@ -2552,7 +2560,7 @@ def face0rrllll(+code: U32) -> Glyph:
 
 def face0rrlllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),Row{65077248,0,0,0},Row{8912896,0,0,0},zero_row(),Row{2415919861,13,0,0},Row{4076866240,4,0,0},Row{3137359664,0,0,0}},Rows8{Row{792775168,0,0,0},Row{163963392,0,0,0},Row{32403456,0,0,0},Row{8261632,0,0,0},Row{7143424,0,0,0},Row{7143424,0,0,0},Row{7143424,0,0,0},Row{7143424,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),Row{65077248,0,0,0},Row{8912896,0,0,0},zero_row(),Row{2415919861,13,0,0},Row{4076866240,4,0,0},Row{3137359664,0,0,0}},Rows8{Row{792775168,0,0,0},Row{163963392,0,0,0},Row{32403456,0,0,0},Row{8261632,0,0,0},Row{7143424,0,0,0},Row{7143424,0,0,0},Row{7143424,0,0,0},Row{7143424,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrlllrl(code: U32) -> Glyph:
@@ -2560,7 +2568,7 @@ def face0rrlllrl(code: U32) -> Glyph:
 
 def face0rrlllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2000,0,0,0},Row{2000,0,0,0},Row{2000,0,0,0}},Rows8{Row{97451984,0,0,0},Row{1600334032,0,0,0},Row{2835351504,0,0,0},Row{3087009744,0,0,0},Row{1848641488,0,0,0},Row{149946320,0,0,0},Row{141520,0,0,0},Row{2000,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2000,0,0,0},Row{2000,0,0,0},Row{2000,0,0,0}},Rows8{Row{97451984,0,0,0},Row{1600334032,0,0,0},Row{2835351504,0,0,0},Row{3087009744,0,0,0},Row{1848641488,0,0,0},Row{149946320,0,0,0},Row{141520,0,0,0},Row{2000,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrlllrrl(code: U32) -> Glyph:
@@ -2568,7 +2576,7 @@ def face0rrlllrrl(code: U32) -> Glyph:
 
 def face0rrlllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{46065664,0,0,0},Row{229858912,0,0,0},Row{1059063984,0,0,0}},Rows8{Row{790628288,0,0,0},Row{193988544,0,0,0},Row{82786240,0,0,0},Row{1583486912,0,0,0},Row{3087009728,0,0,0},Row{3338667968,0,0,0},Row{2118260672,0,0,0},Row{149899200,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{46065664,0,0,0},Row{229858912,0,0,0},Row{1059063984,0,0,0}},Rows8{Row{790628288,0,0,0},Row{193988544,0,0,0},Row{82786240,0,0,0},Row{1583486912,0,0,0},Row{3087009728,0,0,0},Row{3338667968,0,0,0},Row{2118260672,0,0,0},Row{149899200,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrlllrrr(code: U32) -> Glyph:
@@ -2600,7 +2608,7 @@ def face0rrlll(+code: U32) -> Glyph:
 
 def face0rrllrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4352,0,0,0},Row{43264,0,0,0},Row{188672,0,0,0},zero_row()},Rows8{Row{27191840,0,0,0},Row{148126416,0,0,0},Row{192938016,0,0,0},Row{216765968,0,0,0},Row{210009042,0,0,0},Row{210764005,0,0,0},Row{216409843,0,0,0},Row{209383008,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4352,0,0,0},Row{43264,0,0,0},Row{188672,0,0,0},zero_row()},Rows8{Row{27191840,0,0,0},Row{148126416,0,0,0},Row{192938016,0,0,0},Row{216765968,0,0,0},Row{210009042,0,0,0},Row{210764005,0,0,0},Row{216409843,0,0,0},Row{209383008,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrllrll(code: U32) -> Glyph:
@@ -2608,7 +2616,7 @@ def face0rrllrll(code: U32) -> Glyph:
 
 def face0rrllrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{5115904,0,0,0},Row{618496,0,0,0},zero_row()},Rows8{Row{27191840,0,0,0},Row{148126416,0,0,0},Row{192938016,0,0,0},Row{216765968,0,0,0},Row{210009042,0,0,0},Row{210764005,0,0,0},Row{216409843,0,0,0},Row{209383008,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{5115904,0,0,0},Row{618496,0,0,0},zero_row()},Rows8{Row{27191840,0,0,0},Row{148126416,0,0,0},Row{192938016,0,0,0},Row{216765968,0,0,0},Row{210009042,0,0,0},Row{210764005,0,0,0},Row{216409843,0,0,0},Row{209383008,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrllrlrl(code: U32) -> Glyph:
@@ -2616,7 +2624,7 @@ def face0rrllrlrl(code: U32) -> Glyph:
 
 def face0rrllrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{844544,0,0,0},Row{10046752,0,0,0},zero_row()},Rows8{Row{27191840,0,0,0},Row{148126416,0,0,0},Row{192938016,0,0,0},Row{216765968,0,0,0},Row{210009042,0,0,0},Row{210764005,0,0,0},Row{216409843,0,0,0},Row{209383008,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{844544,0,0,0},Row{10046752,0,0,0},zero_row()},Rows8{Row{27191840,0,0,0},Row{148126416,0,0,0},Row{192938016,0,0,0},Row{216765968,0,0,0},Row{210009042,0,0,0},Row{210764005,0,0,0},Row{216409843,0,0,0},Row{209383008,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrllrlrr(code: U32) -> Glyph:
@@ -2640,7 +2648,7 @@ def face0rrllrl(+code: U32) -> Glyph:
 
 def face0rrllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{11844352,0,0,0},Row{7162656,0,0,0},zero_row()},Rows8{Row{27191840,0,0,0},Row{148126416,0,0,0},Row{192938016,0,0,0},Row{216765968,0,0,0},Row{210009042,0,0,0},Row{210764005,0,0,0},Row{216409843,0,0,0},Row{209383008,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{11844352,0,0,0},Row{7162656,0,0,0},zero_row()},Rows8{Row{27191840,0,0,0},Row{148126416,0,0,0},Row{192938016,0,0,0},Row{216765968,0,0,0},Row{210009042,0,0,0},Row{210764005,0,0,0},Row{216409843,0,0,0},Row{209383008,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrllrrl(code: U32) -> Glyph:
@@ -2648,7 +2656,7 @@ def face0rrllrrl(code: U32) -> Glyph:
 
 def face0rrllrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{12983616,0,0,0},Row{1048832,0,0,0},zero_row()},Rows8{Row{27191840,0,0,0},Row{148126416,0,0,0},Row{192938016,0,0,0},Row{216765968,0,0,0},Row{210009042,0,0,0},Row{210764005,0,0,0},Row{216409843,0,0,0},Row{209383008,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{12983616,0,0,0},Row{1048832,0,0,0},zero_row()},Rows8{Row{27191840,0,0,0},Row{148126416,0,0,0},Row{192938016,0,0,0},Row{216765968,0,0,0},Row{210009042,0,0,0},Row{210764005,0,0,0},Row{216409843,0,0,0},Row{209383008,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrllrrrl(code: U32) -> Glyph:
@@ -2656,7 +2664,7 @@ def face0rrllrrrl(code: U32) -> Glyph:
 
 def face0rrllrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1823744,0,0,0},Row{7953664,0,0,0},Row{8858880,0,0,0},Row{3077632,0,0,0}},Rows8{Row{27261472,0,0,0},Row{148126416,0,0,0},Row{192938016,0,0,0},Row{216765968,0,0,0},Row{210009042,0,0,0},Row{210764005,0,0,0},Row{216409843,0,0,0},Row{209383008,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1823744,0,0,0},Row{7953664,0,0,0},Row{8858880,0,0,0},Row{3077632,0,0,0}},Rows8{Row{27261472,0,0,0},Row{148126416,0,0,0},Row{192938016,0,0,0},Row{216765968,0,0,0},Row{210009042,0,0,0},Row{210764005,0,0,0},Row{216409843,0,0,0},Row{209383008,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrllrrrr(code: U32) -> Glyph:
@@ -2696,7 +2704,7 @@ def face0rrll(+code: U32) -> Glyph:
 
 def face0rrlrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{2728323888,2270,0,0},Row{2663594448,40003,0,0},Row{208666624,127744,0,0},Row{4294961984,196607,0,0},Row{729954547,8738,0,0},Row{513802469,12800,0,0},Row{3186042611,47923,0,0},Row{2721836384,6894,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{2728323888,2270,0,0},Row{2663594448,40003,0,0},Row{208666624,127744,0,0},Row{4294961984,196607,0,0},Row{729954547,8738,0,0},Row{513802469,12800,0,0},Row{3186042611,47923,0,0},Row{2721836384,6894,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrlrlll(code: U32) -> Glyph:
@@ -2704,7 +2712,7 @@ def face0rrlrlll(code: U32) -> Glyph:
 
 def face0rrlrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{46065664,0,0,0},Row{496192912,0,0,0},Row{369100273,0,0,0},Row{499,0,0,0},Row{500,0,0,0},Row{369100017,0,0,0},Row{512970128,0,0,0},Row{46065664,0,0,0}},Rows8{Row{1716224,0,0,0},Row{11866112,0,0,0},Row{8151040,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{46065664,0,0,0},Row{496192912,0,0,0},Row{369100273,0,0,0},Row{499,0,0,0},Row{500,0,0,0},Row{369100017,0,0,0},Row{512970128,0,0,0},Row{46065664,0,0,0}},Rows8{Row{1716224,0,0,0},Row{11866112,0,0,0},Row{8151040,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrlrllrl(code: U32) -> Glyph:
@@ -2712,7 +2720,7 @@ def face0rrlrllrl(code: U32) -> Glyph:
 
 def face0rrlrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4352,0,0,0},Row{123904,0,0,0},Row{434176,0,0,0},zero_row()},Rows8{Row{45017088,0,0,0},Row{496192656,0,0,0},Row{1577059057,0,0,0},Row{2147483636,0,0,0},Row{304227316,0,0,0},Row{67110129,0,0,0},Row{797072784,0,0,0},Row{80664576,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4352,0,0,0},Row{123904,0,0,0},Row{434176,0,0,0},zero_row()},Rows8{Row{45017088,0,0,0},Row{496192656,0,0,0},Row{1577059057,0,0,0},Row{2147483636,0,0,0},Row{304227316,0,0,0},Row{67110129,0,0,0},Row{797072784,0,0,0},Row{80664576,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrlrllrr(code: U32) -> Glyph:
@@ -2736,7 +2744,7 @@ def face0rrlrll(+code: U32) -> Glyph:
 
 def face0rrlrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{10092544,0,0,0},Row{1912832,0,0,0},zero_row()},Rows8{Row{45017088,0,0,0},Row{496192656,0,0,0},Row{1577059057,0,0,0},Row{2147483636,0,0,0},Row{304227316,0,0,0},Row{67110129,0,0,0},Row{797072784,0,0,0},Row{80664576,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{10092544,0,0,0},Row{1912832,0,0,0},zero_row()},Rows8{Row{45017088,0,0,0},Row{496192656,0,0,0},Row{1577059057,0,0,0},Row{2147483636,0,0,0},Row{304227316,0,0,0},Row{67110129,0,0,0},Row{797072784,0,0,0},Row{80664576,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrlrlrl(code: U32) -> Glyph:
@@ -2744,7 +2752,7 @@ def face0rrlrlrl(code: U32) -> Glyph:
 
 def face0rrlrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3064064,0,0,0},Row{30771712,0,0,0},zero_row()},Rows8{Row{45017088,0,0,0},Row{496192656,0,0,0},Row{1577059057,0,0,0},Row{2147483636,0,0,0},Row{304227316,0,0,0},Row{67110129,0,0,0},Row{797072784,0,0,0},Row{80664576,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3064064,0,0,0},Row{30771712,0,0,0},zero_row()},Rows8{Row{45017088,0,0,0},Row{496192656,0,0,0},Row{1577059057,0,0,0},Row{2147483636,0,0,0},Row{304227316,0,0,0},Row{67110129,0,0,0},Row{797072784,0,0,0},Row{80664576,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrlrlrrl(code: U32) -> Glyph:
@@ -2752,7 +2760,7 @@ def face0rrlrlrrl(code: U32) -> Glyph:
 
 def face0rrlrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{64118016,0,0,0},Row{1048832,0,0,0},zero_row()},Rows8{Row{45017088,0,0,0},Row{496192656,0,0,0},Row{1577059057,0,0,0},Row{2147483636,0,0,0},Row{304227316,0,0,0},Row{67110129,0,0,0},Row{797072784,0,0,0},Row{80664576,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{64118016,0,0,0},Row{1048832,0,0,0},zero_row()},Rows8{Row{45017088,0,0,0},Row{496192656,0,0,0},Row{1577059057,0,0,0},Row{2147483636,0,0,0},Row{304227316,0,0,0},Row{67110129,0,0,0},Row{797072784,0,0,0},Row{80664576,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrlrlrrr(code: U32) -> Glyph:
@@ -2784,7 +2792,7 @@ def face0rrlrl(+code: U32) -> Glyph:
 
 def face0rrlrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{16,0,0,0},Row{2224,0,0,0},Row{7712,0,0,0},zero_row()},Rows8{Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{16,0,0,0},Row{2224,0,0,0},Row{7712,0,0,0},zero_row()},Rows8{Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrlrrll(code: U32) -> Glyph:
@@ -2792,7 +2800,7 @@ def face0rrlrrll(code: U32) -> Glyph:
 
 def face0rrlrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{15904,0,0,0},Row{2192,0,0,0},zero_row()},Rows8{Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{15904,0,0,0},Row{2192,0,0,0},zero_row()},Rows8{Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrlrrlrl(code: U32) -> Glyph:
@@ -2800,7 +2808,7 @@ def face0rrlrrlrl(code: U32) -> Glyph:
 
 def face0rrlrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{44624,0,0,0},Row{504803,0,0,0},zero_row()},Rows8{Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{44624,0,0,0},Row{504803,0,0,0},zero_row()},Rows8{Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrlrrlrr(code: U32) -> Glyph:
@@ -2824,7 +2832,7 @@ def face0rrlrrl(+code: U32) -> Glyph:
 
 def face0rrlrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{749765,0,0,0},Row{65552,0,0,0},zero_row()},Rows8{Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{749765,0,0,0},Row{65552,0,0,0},zero_row()},Rows8{Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0},Row{24064,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrlrrrll(code: U32) -> Glyph:
@@ -2832,7 +2840,7 @@ def face0rrlrrrll(code: U32) -> Glyph:
 
 def face0rrlrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{17843456,0,0,0},Row{98227200,0,0,0},Row{9295360,0,0,0},Row{64033792,0,0,0}},Rows8{Row{194832640,0,0,0},Row{531910032,0,0,0},Row{1595933937,0,0,0},Row{1828717044,0,0,0},Row{1811939572,0,0,0},Row{1058014449,0,0,0},Row{196300176,0,0,0},Row{28239872,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{17843456,0,0,0},Row{98227200,0,0,0},Row{9295360,0,0,0},Row{64033792,0,0,0}},Rows8{Row{194832640,0,0,0},Row{531910032,0,0,0},Row{1595933937,0,0,0},Row{1828717044,0,0,0},Row{1811939572,0,0,0},Row{1058014449,0,0,0},Row{196300176,0,0,0},Row{28239872,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrlrrrlr(code: U32) -> Glyph:
@@ -2848,7 +2856,7 @@ def face0rrlrrrl(+code: U32) -> Glyph:
 
 def face0rrlrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{29677056,0,0,0},Row{11221760,0,0,0},zero_row()},Rows8{Row{63878624,0,0,0},Row{228809952,0,0,0},Row{790628320,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{29677056,0,0,0},Row{11221760,0,0,0},zero_row()},Rows8{Row{63878624,0,0,0},Row{228809952,0,0,0},Row{790628320,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrlrrrrl(code: U32) -> Glyph:
@@ -2856,7 +2864,7 @@ def face0rrlrrrrl(code: U32) -> Glyph:
 
 def face0rrlrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4352,0,0,0},Row{123904,0,0,0},Row{495616,0,0,0},zero_row()},Rows8{Row{46065664,0,0,0},Row{512970128,0,0,0},Row{2097153521,0,0,0},Row{2852127219,0,0,0},Row{2852127220,0,0,0},Row{2097153265,0,0,0},Row{512970128,0,0,0},Row{46065664,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4352,0,0,0},Row{123904,0,0,0},Row{495616,0,0,0},zero_row()},Rows8{Row{46065664,0,0,0},Row{512970128,0,0,0},Row{2097153521,0,0,0},Row{2852127219,0,0,0},Row{2852127220,0,0,0},Row{2097153265,0,0,0},Row{512970128,0,0,0},Row{46065664,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrlrrrrr(code: U32) -> Glyph:
@@ -2904,7 +2912,7 @@ def face0rrl(+code: U32) -> Glyph:
 
 def face0rrrllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{11141120,0,0,0},Row{1908736,0,0,0},zero_row()},Rows8{Row{46065664,0,0,0},Row{512970128,0,0,0},Row{2097153521,0,0,0},Row{2852127219,0,0,0},Row{2852127220,0,0,0},Row{2097153265,0,0,0},Row{512970128,0,0,0},Row{46065664,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{11141120,0,0,0},Row{1908736,0,0,0},zero_row()},Rows8{Row{46065664,0,0,0},Row{512970128,0,0,0},Row{2097153521,0,0,0},Row{2852127219,0,0,0},Row{2852127220,0,0,0},Row{2097153265,0,0,0},Row{512970128,0,0,0},Row{46065664,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrllll(code: U32) -> Glyph:
@@ -2912,7 +2920,7 @@ def face0rrrllll(code: U32) -> Glyph:
 
 def face0rrrlllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4112384,0,0,0},Row{30710272,0,0,0},zero_row()},Rows8{Row{46065664,0,0,0},Row{512970128,0,0,0},Row{2097153521,0,0,0},Row{2852127219,0,0,0},Row{2852127220,0,0,0},Row{2097153265,0,0,0},Row{512970128,0,0,0},Row{46065664,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4112384,0,0,0},Row{30710272,0,0,0},zero_row()},Rows8{Row{46065664,0,0,0},Row{512970128,0,0,0},Row{2097153521,0,0,0},Row{2852127219,0,0,0},Row{2852127220,0,0,0},Row{2097153265,0,0,0},Row{512970128,0,0,0},Row{46065664,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrlllrl(code: U32) -> Glyph:
@@ -2920,7 +2928,7 @@ def face0rrrlllrl(code: U32) -> Glyph:
 
 def face0rrrlllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{45471232,0,0,0},Row{12204800,0,0,0},zero_row()},Rows8{Row{46065664,0,0,0},Row{512970128,0,0,0},Row{2097153521,0,0,0},Row{2852127219,0,0,0},Row{2852127220,0,0,0},Row{2097153265,0,0,0},Row{512970128,0,0,0},Row{46065664,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{45471232,0,0,0},Row{12204800,0,0,0},zero_row()},Rows8{Row{46065664,0,0,0},Row{512970128,0,0,0},Row{2097153521,0,0,0},Row{2852127219,0,0,0},Row{2852127220,0,0,0},Row{2097153265,0,0,0},Row{512970128,0,0,0},Row{46065664,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrlllrr(code: U32) -> Glyph:
@@ -2944,7 +2952,7 @@ def face0rrrlll(+code: U32) -> Glyph:
 
 def face0rrrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{80833536,0,0,0},Row{1048832,0,0,0},zero_row()},Rows8{Row{46065664,0,0,0},Row{512970128,0,0,0},Row{2097153521,0,0,0},Row{2852127219,0,0,0},Row{2852127220,0,0,0},Row{2097153265,0,0,0},Row{512970128,0,0,0},Row{46065664,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{80833536,0,0,0},Row{1048832,0,0,0},zero_row()},Rows8{Row{46065664,0,0,0},Row{512970128,0,0,0},Row{2097153521,0,0,0},Row{2852127219,0,0,0},Row{2852127220,0,0,0},Row{2097153265,0,0,0},Row{512970128,0,0,0},Row{46065664,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrllrl(code: U32) -> Glyph:
@@ -2952,7 +2960,7 @@ def face0rrrllrl(code: U32) -> Glyph:
 
 def face0rrrllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{6168576,0,0,0},Row{4988928,0,0,0},zero_row(),Row{3489660800,0,0,0},Row{572662288,0,0,0},Row{4988928,0,0,0},Row{6168576,0,0,0},zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{6168576,0,0,0},Row{4988928,0,0,0},zero_row(),Row{3489660800,0,0,0},Row{572662288,0,0,0},Row{4988928,0,0,0},Row{6168576,0,0,0},zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrllrrl(code: U32) -> Glyph:
@@ -2960,7 +2968,7 @@ def face0rrrllrrl(code: U32) -> Glyph:
 
 def face0rrrllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{2008999936,0,0,0},Row{1338199440,0,0,0},Row{2144470513,0,0,0},Row{2859209203,0,0,0},Row{2852696564,0,0,0},Row{2097196529,0,0,0},Row{512974832,0,0,0},Row{46066131,0,0,0}},Rows8{Row{16,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{2008999936,0,0,0},Row{1338199440,0,0,0},Row{2144470513,0,0,0},Row{2859209203,0,0,0},Row{2852696564,0,0,0},Row{2097196529,0,0,0},Row{512974832,0,0,0},Row{46066131,0,0,0}},Rows8{Row{16,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrllrrr(code: U32) -> Glyph:
@@ -2992,7 +3000,7 @@ def face0rrrll(+code: U32) -> Glyph:
 
 def face0rrrlrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4352,0,0,0},Row{123904,0,0,0},Row{499712,0,0,0},zero_row()},Rows8{Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1058014688,0,0,0},Row{1060112080,0,0,0},Row{1067666832,0,0,0},Row{1062071056,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4352,0,0,0},Row{123904,0,0,0},Row{499712,0,0,0},zero_row()},Rows8{Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1058014688,0,0,0},Row{1060112080,0,0,0},Row{1067666832,0,0,0},Row{1062071056,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrlrll(code: U32) -> Glyph:
@@ -3000,7 +3008,7 @@ def face0rrrlrll(code: U32) -> Glyph:
 
 def face0rrrlrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{10092544,0,0,0},Row{1908736,0,0,0},zero_row()},Rows8{Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1058014688,0,0,0},Row{1060112080,0,0,0},Row{1067666832,0,0,0},Row{1062071056,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{10092544,0,0,0},Row{1908736,0,0,0},zero_row()},Rows8{Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1058014688,0,0,0},Row{1060112080,0,0,0},Row{1067666832,0,0,0},Row{1062071056,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrlrlrl(code: U32) -> Glyph:
@@ -3008,7 +3016,7 @@ def face0rrrlrlrl(code: U32) -> Glyph:
 
 def face0rrrlrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4112640,0,0,0},Row{30706176,0,0,0},zero_row()},Rows8{Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1058014688,0,0,0},Row{1060112080,0,0,0},Row{1067666832,0,0,0},Row{1062071056,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4112640,0,0,0},Row{30706176,0,0,0},zero_row()},Rows8{Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1058014688,0,0,0},Row{1060112080,0,0,0},Row{1067666832,0,0,0},Row{1062071056,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrlrlrr(code: U32) -> Glyph:
@@ -3032,7 +3040,7 @@ def face0rrrlrl(+code: U32) -> Glyph:
 
 def face0rrrlrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{64052480,0,0,0},Row{1048832,0,0,0},zero_row()},Rows8{Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1058014688,0,0,0},Row{1060112080,0,0,0},Row{1067666832,0,0,0},Row{1062071056,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{64052480,0,0,0},Row{1048832,0,0,0},zero_row()},Rows8{Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1056966112,0,0,0},Row{1058014688,0,0,0},Row{1060112080,0,0,0},Row{1067666832,0,0,0},Row{1062071056,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrlrrll(code: U32) -> Glyph:
@@ -3040,7 +3048,7 @@ def face0rrrlrrll(code: U32) -> Glyph:
 
 def face0rrrlrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{7143424,0,0,0},Row{741376,0,0,0},zero_row()},Rows8{Row{1594884311,0,0,0},Row{240124913,0,0,0},Row{162531760,0,0,0},Row{66129488,0,0,0},Row{14044688,0,0,0},Row{8096256,0,0,0},Row{3068928,0,0,0},Row{778240,0,0,0}},Rows8{Row{446464,0,0,0},Row{124704,0,0,0},Row{19936,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{7143424,0,0,0},Row{741376,0,0,0},zero_row()},Rows8{Row{1594884311,0,0,0},Row{240124913,0,0,0},Row{162531760,0,0,0},Row{66129488,0,0,0},Row{14044688,0,0,0},Row{8096256,0,0,0},Row{3068928,0,0,0},Row{778240,0,0,0}},Rows8{Row{446464,0,0,0},Row{124704,0,0,0},Row{19936,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrlrrlr(code: U32) -> Glyph:
@@ -3056,7 +3064,7 @@ def face0rrrlrrl(+code: U32) -> Glyph:
 
 def face0rrrlrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0}},Rows8{Row{98547424,0,0,0},Row{1064529376,0,0,0},Row{2852129248,0,0,0},Row{3338667488,0,0,0},Row{3338667488,0,0,0},Row{2868906464,0,0,0},Row{1064529376,0,0,0},Row{98547424,0,0,0}},Rows8{Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0}},Rows8{Row{98547424,0,0,0},Row{1064529376,0,0,0},Row{2852129248,0,0,0},Row{3338667488,0,0,0},Row{3338667488,0,0,0},Row{2868906464,0,0,0},Row{1064529376,0,0,0},Row{98547424,0,0,0}},Rows8{Row{1504,0,0,0},Row{1504,0,0,0},Row{1504,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrlrrrl(code: U32) -> Glyph:
@@ -3064,7 +3072,7 @@ def face0rrrlrrrl(code: U32) -> Glyph:
 
 def face0rrrlrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{30682400,0,0,0},Row{1048832,0,0,0},zero_row()},Rows8{Row{1594884311,0,0,0},Row{240124913,0,0,0},Row{162531760,0,0,0},Row{66129488,0,0,0},Row{14044688,0,0,0},Row{8096256,0,0,0},Row{3068928,0,0,0},Row{778240,0,0,0}},Rows8{Row{446464,0,0,0},Row{124704,0,0,0},Row{19936,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{30682400,0,0,0},Row{1048832,0,0,0},zero_row()},Rows8{Row{1594884311,0,0,0},Row{240124913,0,0,0},Row{162531760,0,0,0},Row{66129488,0,0,0},Row{14044688,0,0,0},Row{8096256,0,0,0},Row{3068928,0,0,0},Row{778240,0,0,0}},Rows8{Row{446464,0,0,0},Row{124704,0,0,0},Row{19936,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrlrrrr(code: U32) -> Glyph:
@@ -3104,7 +3112,7 @@ def face0rrrl(+code: U32) -> Glyph:
 
 def face0rrrrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),Row{268435455,0,0,0},Row{35791394,0,0,0},zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{7,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),Row{268435455,0,0,0},Row{35791394,0,0,0},zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrrlll(code: U32) -> Glyph:
@@ -3112,7 +3120,7 @@ def face0rrrrlll(code: U32) -> Glyph:
 
 def face0rrrrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),Row{4294967295,16777215,0,0},Row{572662306,2236962,0,0},zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{14,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),Row{4294967295,16777215,0,0},Row{572662306,2236962,0,0},zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrrllrl(code: U32) -> Glyph:
@@ -3120,7 +3128,7 @@ def face0rrrrllrl(code: U32) -> Glyph:
 
 def face0rrrrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{7680,0,0,0},Row{3392,0,0,0},Row{2944,0,0,0}},Rows8{Row{2496,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{7680,0,0,0},Row{3392,0,0,0},Row{2944,0,0,0}},Rows8{Row{2496,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrrllrr(code: U32) -> Glyph:
@@ -3144,7 +3152,7 @@ def face0rrrrll(+code: U32) -> Glyph:
 
 def face0rrrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3680,0,0,0},Row{2944,0,0,0},Row{1696,0,0,0}},Rows8{Row{720,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3680,0,0,0},Row{2944,0,0,0},Row{1696,0,0,0}},Rows8{Row{720,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrrlrl(code: U32) -> Glyph:
@@ -3152,7 +3160,7 @@ def face0rrrrlrl(code: U32) -> Glyph:
 
 def face0rrrrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{8855040,0,0,0},Row{7015744,0,0,0},Row{5114752,0,0,0}},Rows8{Row{2050496,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{8855040,0,0,0},Row{7015744,0,0,0},Row{5114752,0,0,0}},Rows8{Row{2050496,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrrlrrl(code: U32) -> Glyph:
@@ -3160,7 +3168,7 @@ def face0rrrrlrrl(code: U32) -> Glyph:
 
 def face0rrrrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{8195680,0,0,0},Row{4131712,0,0,0},Row{927392,0,0,0}},Rows8{Row{676560,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{8195680,0,0,0},Row{4131712,0,0,0},Row{927392,0,0,0}},Rows8{Row{676560,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrrlrrr(code: U32) -> Glyph:
@@ -3192,7 +3200,7 @@ def face0rrrrl(+code: U32) -> Glyph:
 
 def face0rrrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{zero_row(),Row{4056320,0,0,0},Row{14679568,0,0,0},Row{33554224,0,0,0},Row{14679568,0,0,0},Row{4056320,0,0,0},zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{zero_row(),Row{4056320,0,0,0},Row{14679568,0,0,0},Row{33554224,0,0,0},Row{14679568,0,0,0},Row{4056320,0,0,0},zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrrrll(code: U32) -> Glyph:
@@ -3200,7 +3208,7 @@ def face0rrrrrll(code: U32) -> Glyph:
 
 def face0rrrrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{12,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{176163216,2688,0,0},Row{211815344,3232,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{12,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{176163216,2688,0,0},Row{211815344,3232,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrrrlrl(code: U32) -> Glyph:
@@ -3208,7 +3216,7 @@ def face0rrrrrlrl(code: U32) -> Glyph:
 
 def face0rrrrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{76546048,0,0,0}},Rows8{Row{47775744,0,0,0},Row{2985984,0,0,0},Row{182272,0,0,0},Row{4294893408,40959,0,0},Row{572762880,4642,0,0},Row{1814528,0,0,0},Row{29036544,0,0,0},Row{95485952,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{76546048,0,0,0}},Rows8{Row{47775744,0,0,0},Row{2985984,0,0,0},Row{182272,0,0,0},Row{4294893408,40959,0,0},Row{572762880,4642,0,0},Row{1814528,0,0,0},Row{29036544,0,0,0},Row{95485952,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrrrlrr(code: U32) -> Glyph:
@@ -3232,7 +3240,7 @@ def face0rrrrrl(+code: U32) -> Glyph:
 
 def face0rrrrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{12,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{38797312,0,0,0},Row{771031040,0,0,0},Row{3669901312,1,0,0}},Rows8{Row{2528437248,29,0,0},Row{112221760,458,0,0},Row{112199200,112,0,0},Row{112197632,0,0,0},Row{112197632,0,0,0},Row{112197632,0,0,0},Row{112197632,0,0,0},Row{112197632,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{12,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{38797312,0,0,0},Row{771031040,0,0,0},Row{3669901312,1,0,0}},Rows8{Row{2528437248,29,0,0},Row{112221760,458,0,0},Row{112199200,112,0,0},Row{112197632,0,0,0},Row{112197632,0,0,0},Row{112197632,0,0,0},Row{112197632,0,0,0},Row{112197632,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrrrrll(code: U32) -> Glyph:
@@ -3240,7 +3248,7 @@ def face0rrrrrrll(code: U32) -> Glyph:
 
 def face0rrrrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2969567232,2,0,0}},Rows8{Row{2415919104,45,0,0},Row{0,474,0,0},Row{0,7296,0,0},Row{4294967104,48863,0,0},Row{572662288,15714,0,0},Row{0,998,0,0},Row{1610612736,62,0,0},Row{3506438144,3,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2969567232,2,0,0}},Rows8{Row{2415919104,45,0,0},Row{0,474,0,0},Row{0,7296,0,0},Row{4294967104,48863,0,0},Row{572662288,15714,0,0},Row{0,998,0,0},Row{1610612736,62,0,0},Row{3506438144,3,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrrrrlr(code: U32) -> Glyph:
@@ -3256,7 +3264,7 @@ def face0rrrrrrl(+code: U32) -> Glyph:
 
 def face0rrrrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{12,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{112197632,0,0,0},Row{112197632,0,0,0},Row{112197632,0,0,0}},Rows8{Row{112197632,0,0,0},Row{112197632,0,0,0},Row{112199200,112,0,0},Row{112221760,458,0,0},Row{2528437248,29,0,0},Row{3669905408,2,0,0},Row{771031040,0,0,0},Row{38797312,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{12,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{112197632,0,0,0},Row{112197632,0,0,0},Row{112197632,0,0,0}},Rows8{Row{112197632,0,0,0},Row{112197632,0,0,0},Row{112199200,112,0,0},Row{112221760,458,0,0},Row{2528437248,29,0,0},Row{3669905408,2,0,0},Row{771031040,0,0,0},Row{38797312,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrrrrrl(code: U32) -> Glyph:
@@ -3264,7 +3272,7 @@ def face0rrrrrrrl(code: U32) -> Glyph:
 
 def face0rrrrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{251656960,0,0,0},Row{251263744,0,0,0},Row{251656960,0,0,0},Row{251239168,0,0,0}},Rows8{Row{251656960,0,0,0},Row{251263744,0,0,0},Row{245365504,0,0,0},Row{249420544,0,0,0},Row{245340928,0,0,0},Row{251656960,0,0,0},Row{244288256,0,0,0},Row{241404672,0,0,0}},Rows8{Row{251656960,0,0,0},Row{249096960,0,0,0},Row{251656960,0,0,0},Row{53686784,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{251656960,0,0,0},Row{251263744,0,0,0},Row{251656960,0,0,0},Row{251239168,0,0,0}},Rows8{Row{251656960,0,0,0},Row{251263744,0,0,0},Row{245365504,0,0,0},Row{249420544,0,0,0},Row{245340928,0,0,0},Row{251656960,0,0,0},Row{244288256,0,0,0},Row{241404672,0,0,0}},Rows8{Row{251656960,0,0,0},Row{249096960,0,0,0},Row{251656960,0,0,0},Row{53686784,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face0.missing()
 
 def face0rrrrrrrr(code: U32) -> Glyph:
@@ -3335,11 +3343,11 @@ def face0(+code: U32) -> Glyph:
   face0.choose(code,U32.is_lt(code,167))
 
 def face1.missing() -> Glyph:
-  Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),Row{35791360,0,0,0},Row{251591424,0,0,0},Row{251263744,0,0,0},Row{251587328,0,0,0},Row{251239168,0,0,0}},Rows8{Row{251591424,0,0,0},Row{250215168,0,0,0},Row{245365504,0,0,0},Row{249486080,0,0,0},Row{245340928,0,0,0},Row{251656960,0,0,0},Row{244820736,0,0,0},Row{245340928,0,0,0}},Rows8{Row{250608384,0,0,0},Row{250145536,0,0,0},Row{251656960,0,0,0},Row{89478144,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+  Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),Row{35791360,0,0,0},Row{251591424,0,0,0},Row{251263744,0,0,0},Row{251587328,0,0,0},Row{251239168,0,0,0}},Rows8{Row{251591424,0,0,0},Row{250215168,0,0,0},Row{245365504,0,0,0},Row{249486080,0,0,0},Row{245340928,0,0,0},Row{251656960,0,0,0},Row{244820736,0,0,0},Row{245340928,0,0,0}},Rows8{Row{250608384,0,0,0},Row{250145536,0,0,0},Row{251656960,0,0,0},Row{89478144,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
 
 def face1lllllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,zero_rows(),zero_rows(),zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[zero_rows(),zero_rows(),zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lllllll(code: U32) -> Glyph:
@@ -3347,7 +3355,7 @@ def face1lllllll(code: U32) -> Glyph:
 
 def face1llllllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{16304,0,0,0},Row{16288,0,0,0},Row{12192,0,0,0}},Rows8{Row{12192,0,0,0},Row{12192,0,0,0},Row{12176,0,0,0},Row{8080,0,0,0},zero_row(),Row{256,0,0,0},Row{16304,0,0,0},Row{16016,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{16304,0,0,0},Row{16288,0,0,0},Row{12192,0,0,0}},Rows8{Row{12192,0,0,0},Row{12192,0,0,0},Row{12176,0,0,0},Row{8080,0,0,0},zero_row(),Row{256,0,0,0},Row{16304,0,0,0},Row{16016,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llllllrl(code: U32) -> Glyph:
@@ -3355,7 +3363,7 @@ def face1llllllrl(code: U32) -> Glyph:
 
 def face1llllllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{14430096,0,0,0},Row{14360448,0,0,0},Row{13311856,0,0,0}},Rows8{Row{12193632,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{7,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{14430096,0,0,0},Row{14360448,0,0,0},Row{13311856,0,0,0}},Rows8{Row{12193632,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llllllrr(code: U32) -> Glyph:
@@ -3379,7 +3387,7 @@ def face1llllll(+code: U32) -> Glyph:
 
 def face1lllllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3120755456,0,0,0},Row{2617308416,0,0,0},Row{2113984512,0,0,0}},Rows8{Row{4294967281,11,0,0},Row{2409086577,5,0,0},Row{257977856,0,0,0},Row{764571457,1,0,0},Row{4294967291,2,0,0},Row{1524981396,0,0,0},Row{116395152,0,0,0},Row{66194096,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3120755456,0,0,0},Row{2617308416,0,0,0},Row{2113984512,0,0,0}},Rows8{Row{4294967281,11,0,0},Row{2409086577,5,0,0},Row{257977856,0,0,0},Row{764571457,1,0,0},Row{4294967291,2,0,0},Row{1524981396,0,0,0},Row{116395152,0,0,0},Row{66194096,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lllllrl(code: U32) -> Glyph:
@@ -3387,7 +3395,7 @@ def face1lllllrl(code: U32) -> Glyph:
 
 def face1lllllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{786432,0,0,0},Row{451925760,0,0,0},Row{3486441344,0,0,0},Row{4195098336,3,0,0}},Rows8{Row{286002672,0,0,0},Row{3071904,0,0,0},Row{1006631184,0,0,0},Row{4021096448,1,0,0},Row{4161536577,6,0,0},Row{4178316275,5,0,0},Row{4022259648,1,0,0},Row{1005578512,0,0,0}},Rows8{Row{786432,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{786432,0,0,0},Row{451925760,0,0,0},Row{3486441344,0,0,0},Row{4195098336,3,0,0}},Rows8{Row{286002672,0,0,0},Row{3071904,0,0,0},Row{1006631184,0,0,0},Row{4021096448,1,0,0},Row{4161536577,6,0,0},Row{4178316275,5,0,0},Row{4022259648,1,0,0},Row{1005578512,0,0,0}},Rows8{Row{786432,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1lllllrrl(code: U32) -> Glyph:
@@ -3395,7 +3403,7 @@ def face1lllllrrl(code: U32) -> Glyph:
 
 def face1lllllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{784896,3184,0,0},Row{8293984,994,0,0},Row{11143824,139,0,0}},Rows8{Row{1619869056,29,0,0},Row{3777953312,4,0,0},Row{2852274432,512,0,0},Row{508559360,188369,0,0},Row{114360320,579303,0,0},Row{12124160,696505,0,0},Row{3026944,583910,0,0},Row{507904,114608,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{14,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{784896,3184,0,0},Row{8293984,994,0,0},Row{11143824,139,0,0}},Rows8{Row{1619869056,29,0,0},Row{3777953312,4,0,0},Row{2852274432,512,0,0},Row{508559360,188369,0,0},Row{114360320,579303,0,0},Row{12124160,696505,0,0},Row{3026944,583910,0,0},Row{507904,114608,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lllllrrr(code: U32) -> Glyph:
@@ -3427,7 +3435,7 @@ def face1lllll(+code: U32) -> Glyph:
 
 def face1llllrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{10413568,0,0,0},Row{133807936,0,0,0},Row{198193008,0,0,0}},Rows8{Row{150437728,0,0,0},Row{30408208,0,0,0},Row{2030352,0,0,0},Row{4052729776,8,0,0},Row{4193913076,6,0,0},Row{4022339573,1,0,0},Row{4025065185,1,0,0},Row{4121881392,11,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{10413568,0,0,0},Row{133807936,0,0,0},Row{198193008,0,0,0}},Rows8{Row{150437728,0,0,0},Row{30408208,0,0,0},Row{2030352,0,0,0},Row{4052729776,8,0,0},Row{4193913076,6,0,0},Row{4022339573,1,0,0},Row{4025065185,1,0,0},Row{4121881392,11,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llllrll(code: U32) -> Glyph:
@@ -3435,7 +3443,7 @@ def face1llllrll(code: U32) -> Glyph:
 
 def face1llllrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{12176,0,0,0},Row{8064,0,0,0},Row{8048,0,0,0}},Rows8{Row{3936,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{12176,0,0,0},Row{8064,0,0,0},Row{8048,0,0,0}},Rows8{Row{3936,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llllrlrl(code: U32) -> Glyph:
@@ -3443,7 +3451,7 @@ def face1llllrlrl(code: U32) -> Glyph:
 
 def face1llllrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{586496,0,0,0},Row{195072,0,0,0},Row{53008,0,0,0}},Rows8{Row{36672,0,0,0},Row{24448,0,0,0},Row{16272,0,0,0},Row{12208,0,0,0},Row{12192,0,0,0},Row{16272,0,0,0},Row{32608,0,0,0},Row{48928,0,0,0}},Rows8{Row{195328,0,0,0},Row{586496,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{586496,0,0,0},Row{195072,0,0,0},Row{53008,0,0,0}},Rows8{Row{36672,0,0,0},Row{24448,0,0,0},Row{16272,0,0,0},Row{12208,0,0,0},Row{12192,0,0,0},Row{16272,0,0,0},Row{32608,0,0,0},Row{48928,0,0,0}},Rows8{Row{195328,0,0,0},Row{586496,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1llllrlrr(code: U32) -> Glyph:
@@ -3467,7 +3475,7 @@ def face1llllrl(+code: U32) -> Glyph:
 
 def face1llllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2036,0,0,0},Row{3536,0,0,0},Row{16256,0,0,0}},Rows8{Row{32592,0,0,0},Row{48912,0,0,0},Row{52992,0,0,0},Row{60672,0,0,0},Row{60928,0,0,0},Row{52992,0,0,0},Row{40768,0,0,0},Row{24448,0,0,0}},Rows8{Row{3792,0,0,0},Row{2036,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2036,0,0,0},Row{3536,0,0,0},Row{16256,0,0,0}},Rows8{Row{32592,0,0,0},Row{48912,0,0,0},Row{52992,0,0,0},Row{60672,0,0,0},Row{60928,0,0,0},Row{52992,0,0,0},Row{40768,0,0,0},Row{24448,0,0,0}},Rows8{Row{3792,0,0,0},Row{2036,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1llllrrl(code: U32) -> Glyph:
@@ -3475,7 +3483,7 @@ def face1llllrrl(code: U32) -> Glyph:
 
 def face1llllrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{376832,0,0,0},Row{78034576,0,0,0},Row{45088080,0,0,0}},Rows8{Row{27262016,0,0,0},Row{79083424,0,0,0},Row{376832,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{376832,0,0,0},Row{78034576,0,0,0},Row{45088080,0,0,0}},Rows8{Row{27262016,0,0,0},Row{79083424,0,0,0},Row{376832,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llllrrrl(code: U32) -> Glyph:
@@ -3483,7 +3491,7 @@ def face1llllrrrl(code: U32) -> Glyph:
 
 def face1llllrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{8327168,0,0,0},Row{8327168,0,0,0},Row{579809824,0,0,0},Row{4294967216,2,0,0},Row{1437558080,1,0,0},Row{8327168,0,0,0},Row{8327168,0,0,0},zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{8327168,0,0,0},Row{8327168,0,0,0},Row{579809824,0,0,0},Row{4294967216,2,0,0},Row{1437558080,1,0,0},Row{8327168,0,0,0},Row{8327168,0,0,0},zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llllrrrr(code: U32) -> Glyph:
@@ -3523,7 +3531,7 @@ def face1llll(+code: U32) -> Glyph:
 
 def face1lllrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{12192,0,0,0}},Rows8{Row{3264,0,0,0},Row{2272,0,0,0},Row{1009,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{4,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{12192,0,0,0}},Rows8{Row{3264,0,0,0},Row{2272,0,0,0},Row{1009,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1lllrlll(code: U32) -> Glyph:
@@ -3531,7 +3539,7 @@ def face1lllrlll(code: U32) -> Glyph:
 
 def face1lllrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),Rows8{zero_row(),zero_row(),Row{1188384,0,0,0},Row{9437168,0,0,0},Row{3495248,0,0,0},zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{7,[zero_rows(),Rows8{zero_row(),zero_row(),Row{1188384,0,0,0},Row{9437168,0,0,0},Row{3495248,0,0,0},zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lllrllrl(code: U32) -> Glyph:
@@ -3539,7 +3547,7 @@ def face1lllrllrl(code: U32) -> Glyph:
 
 def face1lllrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{256,0,0,0},Row{16304,0,0,0},Row{11920,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{256,0,0,0},Row{16304,0,0,0},Row{11920,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lllrllrr(code: U32) -> Glyph:
@@ -3563,7 +3571,7 @@ def face1lllrll(+code: U32) -> Glyph:
 
 def face1lllrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{475136,0,0,0},Row{831488,0,0,0},Row{585984,0,0,0}},Rows8{Row{324608,0,0,0},Row{129024,0,0,0},Row{48128,0,0,0},Row{36624,0,0,0},Row{20304,0,0,0},Row{3728,0,0,0},Row{3024,0,0,0},Row{2034,0,0,0}},Rows8{Row{1014,0,0,0},Row{234,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{475136,0,0,0},Row{831488,0,0,0},Row{585984,0,0,0}},Rows8{Row{324608,0,0,0},Row{129024,0,0,0},Row{48128,0,0,0},Row{36624,0,0,0},Row{20304,0,0,0},Row{3728,0,0,0},Row{3024,0,0,0},Row{2034,0,0,0}},Rows8{Row{1014,0,0,0},Row{234,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1lllrlrl(code: U32) -> Glyph:
@@ -3571,7 +3579,7 @@ def face1lllrlrl(code: U32) -> Glyph:
 
 def face1lllrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{132105472,0,0,0},Row{2143870784,0,0,0},Row{4244647872,1,0,0}},Rows8{Row{4160752881,5,0,0},Row{4127197684,7,0,0},Row{4110420212,8,0,0},Row{4127197684,7,0,0},Row{4160752881,5,0,0},Row{4244647872,1,0,0},Row{2412306240,0,0,0},Row{132105472,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{132105472,0,0,0},Row{2143870784,0,0,0},Row{4244647872,1,0,0}},Rows8{Row{4160752881,5,0,0},Row{4127197684,7,0,0},Row{4110420212,8,0,0},Row{4127197684,7,0,0},Row{4160752881,5,0,0},Row{4244647872,1,0,0},Row{2412306240,0,0,0},Row{132105472,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lllrlrrl(code: U32) -> Glyph:
@@ -3579,7 +3587,7 @@ def face1lllrlrrl(code: U32) -> Glyph:
 
 def face1lllrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{981520,0,0,0},Row{982978,0,0,0},Row{976101,0,0,0}},Rows8{Row{974883,0,0,0},Row{974848,0,0,0},Row{974848,0,0,0},Row{974848,0,0,0},Row{974848,0,0,0},Row{974848,0,0,0},Row{974848,0,0,0},Row{974848,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{981520,0,0,0},Row{982978,0,0,0},Row{976101,0,0,0}},Rows8{Row{974883,0,0,0},Row{974848,0,0,0},Row{974848,0,0,0},Row{974848,0,0,0},Row{974848,0,0,0},Row{974848,0,0,0},Row{974848,0,0,0},Row{974848,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lllrlrrr(code: U32) -> Glyph:
@@ -3611,7 +3619,7 @@ def face1lllrl(+code: U32) -> Glyph:
 
 def face1lllrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{80730112,0,0,0},Row{1072218000,0,0,0},Row{2670726385,0,0,0}},Rows8{Row{2937062225,0,0,0},Row{2138046464,0,0,0},Row{502464512,0,0,0},Row{65937408,0,0,0},Row{5231104,0,0,0},Row{392464,0,0,0},Row{1735909312,0,0,0},Row{3758096369,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{80730112,0,0,0},Row{1072218000,0,0,0},Row{2670726385,0,0,0}},Rows8{Row{2937062225,0,0,0},Row{2138046464,0,0,0},Row{502464512,0,0,0},Row{65937408,0,0,0},Row{5231104,0,0,0},Row{392464,0,0,0},Row{1735909312,0,0,0},Row{3758096369,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lllrrll(code: U32) -> Glyph:
@@ -3619,7 +3627,7 @@ def face1lllrrll(code: U32) -> Glyph:
 
 def face1lllrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{115332864,0,0,0},Row{1608044416,0,0,0},Row{3205500384,0,0,0}},Rows8{Row{3204448528,0,0,0},Row{1872957440,0,0,0},Row{150970368,0,0,0},Row{2946838528,0,0,0},Row{4227858432,2,0,0},Row{4227861218,2,0,0},Row{2949169088,0,0,0},Row{417323280,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{115332864,0,0,0},Row{1608044416,0,0,0},Row{3205500384,0,0,0}},Rows8{Row{3204448528,0,0,0},Row{1872957440,0,0,0},Row{150970368,0,0,0},Row{2946838528,0,0,0},Row{4227858432,2,0,0},Row{4227861218,2,0,0},Row{2949169088,0,0,0},Row{417323280,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lllrrlrl(code: U32) -> Glyph:
@@ -3627,7 +3635,7 @@ def face1lllrrlrl(code: U32) -> Glyph:
 
 def face1lllrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1609760768,0,0,0},Row{1610350592,0,0,0},Row{1607426048,0,0,0}},Rows8{Row{1601036544,0,0,0},Row{1600452608,0,0,0},Row{1600175904,0,0,0},Row{1600139168,0,0,0},Row{2948107763,5,0,0},Row{4294967284,10,0,0},Row{1600126976,0,0,0},Row{1600126976,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1609760768,0,0,0},Row{1610350592,0,0,0},Row{1607426048,0,0,0}},Rows8{Row{1601036544,0,0,0},Row{1600452608,0,0,0},Row{1600175904,0,0,0},Row{1600139168,0,0,0},Row{2948107763,5,0,0},Row{4294967284,10,0,0},Row{1600126976,0,0,0},Row{1600126976,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lllrrlrr(code: U32) -> Glyph:
@@ -3651,7 +3659,7 @@ def face1lllrrl(+code: U32) -> Glyph:
 
 def face1lllrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1610612624,0,0,0},Row{662142640,0,0,0},Row{3520,0,0,0}},Rows8{Row{1182928,0,0,0},Row{150986224,0,0,0},Row{1876328129,0,0,0},Row{3206545408,0,0,0},Row{3724541952,0,0,0},Row{2939161331,0,0,0},Row{1072213952,0,0,0},Row{80668944,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1610612624,0,0,0},Row{662142640,0,0,0},Row{3520,0,0,0}},Rows8{Row{1182928,0,0,0},Row{150986224,0,0,0},Row{1876328129,0,0,0},Row{3206545408,0,0,0},Row{3724541952,0,0,0},Row{2939161331,0,0,0},Row{1072213952,0,0,0},Row{80668944,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lllrrrll(code: U32) -> Glyph:
@@ -3659,7 +3667,7 @@ def face1lllrrrll(code: U32) -> Glyph:
 
 def face1lllrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{148812544,0,0,0},Row{2411257392,0,0,0},Row{4227870640,1,0,0}},Rows8{Row{1117169,0,0,0},Row{754952691,0,0,0},Row{3483746036,0,0,0},Row{4227866356,2,0,0},Row{4177529842,3,0,0},Row{4227866320,1,0,0},Row{2412306256,0,0,0},Row{132105472,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{148812544,0,0,0},Row{2411257392,0,0,0},Row{4227870640,1,0,0}},Rows8{Row{1117169,0,0,0},Row{754952691,0,0,0},Row{3483746036,0,0,0},Row{4227866356,2,0,0},Row{4177529842,3,0,0},Row{4227866320,1,0,0},Row{2412306256,0,0,0},Row{132105472,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lllrrrlr(code: U32) -> Glyph:
@@ -3675,7 +3683,7 @@ def face1lllrrrl(+code: U32) -> Glyph:
 
 def face1lllrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2415919095,0,0,0},Row{2142730099,0,0,0},Row{533725184,0,0,0}},Rows8{Row{167051264,0,0,0},Row{50069504,0,0,0},Row{11485184,0,0,0},Row{4169728,0,0,0},Row{848384,0,0,0},Row{391424,0,0,0},Row{57104,0,0,0},Row{28544,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2415919095,0,0,0},Row{2142730099,0,0,0},Row{533725184,0,0,0}},Rows8{Row{167051264,0,0,0},Row{50069504,0,0,0},Row{11485184,0,0,0},Row{4169728,0,0,0},Row{848384,0,0,0},Row{391424,0,0,0},Row{57104,0,0,0},Row{28544,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lllrrrrl(code: U32) -> Glyph:
@@ -3683,7 +3691,7 @@ def face1lllrrrrl(code: U32) -> Glyph:
 
 def face1lllrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{115332864,0,0,0},Row{1875431280,0,0,0},Row{3473940176,0,0,0}},Rows8{Row{3456110288,0,0,0},Row{1871941472,0,0,0},Row{184547840,0,0,0},Row{2677448608,0,0,0},Row{4211084275,2,0,0},Row{4227861491,3,0,0},Row{3484991424,0,0,0},Row{417323280,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{115332864,0,0,0},Row{1875431280,0,0,0},Row{3473940176,0,0,0}},Rows8{Row{3456110288,0,0,0},Row{1871941472,0,0,0},Row{184547840,0,0,0},Row{2677448608,0,0,0},Row{4211084275,2,0,0},Row{4227861491,3,0,0},Row{3484991424,0,0,0},Row{417323280,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lllrrrrr(code: U32) -> Glyph:
@@ -3731,7 +3739,7 @@ def face1lll(+code: U32) -> Glyph:
 
 def face1llrllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{97507072,0,0,0},Row{1339608976,0,0,0},Row{3474984177,0,0,0}},Rows8{Row{4227860724,1,0,0},Row{4244638451,3,0,0},Row{4288905168,3,0,0},Row{4207935024,2,0,0},Row{3942859008,0,0,0},Row{2938112721,0,0,0},Row{787005344,0,0,0},Row{62842896,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{97507072,0,0,0},Row{1339608976,0,0,0},Row{3474984177,0,0,0}},Rows8{Row{4227860724,1,0,0},Row{4244638451,3,0,0},Row{4288905168,3,0,0},Row{4207935024,2,0,0},Row{3942859008,0,0,0},Row{2938112721,0,0,0},Row{787005344,0,0,0},Row{62842896,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrllll(code: U32) -> Glyph:
@@ -3739,7 +3747,7 @@ def face1llrllll(code: U32) -> Glyph:
 
 def face1llrlllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,zero_rows(),Rows8{Row{256,0,0,0},Row{16304,0,0,0},Row{11920,0,0,0},zero_row(),zero_row(),Row{256,0,0,0},Row{16304,0,0,0},Row{11920,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[zero_rows(),Rows8{Row{256,0,0,0},Row{16304,0,0,0},Row{11920,0,0,0},zero_row(),zero_row(),Row{256,0,0,0},Row{16304,0,0,0},Row{11920,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrlllrl(code: U32) -> Glyph:
@@ -3747,7 +3755,7 @@ def face1llrlllrl(code: U32) -> Glyph:
 
 def face1llrlllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,zero_rows(),Rows8{Row{256,0,0,0},Row{24448,0,0,0},Row{20080,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),Row{12192,0,0,0}},Rows8{Row{3264,0,0,0},Row{2272,0,0,0},Row{1009,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{5,[zero_rows(),Rows8{Row{256,0,0,0},Row{24448,0,0,0},Row{20080,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),Row{12192,0,0,0}},Rows8{Row{3264,0,0,0},Row{2272,0,0,0},Row{1009,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrlllrr(code: U32) -> Glyph:
@@ -3771,7 +3779,7 @@ def face1llrlll(+code: U32) -> Glyph:
 
 def face1llrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{2734686208,0,0,0},Row{4021551104,0,0,0},Row{418366976,0,0,0},Row{380864,0,0,0},Row{1499056,0,0,0},Row{686797824,0,0,0},Row{4020436992,0,0,0},Row{2181038080,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{2734686208,0,0,0},Row{4021551104,0,0,0},Row{418366976,0,0,0},Row{380864,0,0,0},Row{1499056,0,0,0},Row{686797824,0,0,0},Row{4020436992,0,0,0},Row{2181038080,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrllrl(code: U32) -> Glyph:
@@ -3779,7 +3787,7 @@ def face1llrllrl(code: U32) -> Glyph:
 
 def face1llrllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{zero_row(),Row{572662288,0,0,0},Row{4294967184,0,0,0},Row{1431655728,0,0,0},Row{572662288,0,0,0},Row{4294967184,0,0,0},Row{1431655728,0,0,0},zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{zero_row(),Row{572662288,0,0,0},Row{4294967184,0,0,0},Row{1431655728,0,0,0},Row{572662288,0,0,0},Row{4294967184,0,0,0},Row{1431655728,0,0,0},zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrllrrl(code: U32) -> Glyph:
@@ -3787,7 +3795,7 @@ def face1llrllrrl(code: U32) -> Glyph:
 
 def face1llrllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{5728,0,0,0},Row{1568624,0,0,0},Row{703575296,0,0,0},Row{4271046656,3,0,0},Row{4020502528,3,0,0},Row{401589760,0,0,0},Row{450432,0,0,0},Row{1360,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{5728,0,0,0},Row{1568624,0,0,0},Row{703575296,0,0,0},Row{4271046656,3,0,0},Row{4020502528,3,0,0},Row{401589760,0,0,0},Row{450432,0,0,0},Row{1360,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrllrrr(code: U32) -> Glyph:
@@ -3819,7 +3827,7 @@ def face1llrll(+code: U32) -> Glyph:
 
 def face1llrlrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{9370672,0,0,0},Row{150703842,0,0,0},Row{232785654,0,0,0}},Rows8{Row{233897984,0,0,0},Row{133959680,0,0,0},Row{8376320,0,0,0},Row{586752,0,0,0},Row{242688,0,0,0},Row{8192,0,0,0},Row{521984,0,0,0},Row{386560,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{9370672,0,0,0},Row{150703842,0,0,0},Row{232785654,0,0,0}},Rows8{Row{233897984,0,0,0},Row{133959680,0,0,0},Row{8376320,0,0,0},Row{586752,0,0,0},Row{242688,0,0,0},Row{8192,0,0,0},Row{521984,0,0,0},Row{386560,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrlrll(code: U32) -> Glyph:
@@ -3827,7 +3835,7 @@ def face1llrlrll(code: U32) -> Glyph:
 
 def face1llrlrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4006023168,653,0,0},Row{2294276864,20202,0,0},Row{253456,191248,0,0}},Rows8{Row{302006160,712993,0,0},Row{4290906848,2064619,0,0},Row{1995114226,4145390,0,0},Row{7279860,5189864,0,0},Row{5186804,4145383,0,0},Row{8328946,2056426,0,0},Row{2850687712,776702,0,0},Row{3467718544,183971,0,0}},Rows8{Row{253472,0,0,0},Row{2294277120,969,0,0},Row{4274458624,941,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{14,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4006023168,653,0,0},Row{2294276864,20202,0,0},Row{253456,191248,0,0}},Rows8{Row{302006160,712993,0,0},Row{4290906848,2064619,0,0},Row{1995114226,4145390,0,0},Row{7279860,5189864,0,0},Row{5186804,4145383,0,0},Row{8328946,2056426,0,0},Row{2850687712,776702,0,0},Row{3467718544,183971,0,0}},Rows8{Row{253472,0,0,0},Row{2294277120,969,0,0},Row{4274458624,941,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrlrlrl(code: U32) -> Glyph:
@@ -3835,7 +3843,7 @@ def face1llrlrlrl(code: U32) -> Glyph:
 
 def face1llrlrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{117391360,0,0,0},Row{201297920,0,0,0},Row{533585920,0,0,0}},Rows8{Row{1871311872,0,0,0},Row{3209033728,0,0,0},Row{4261608704,1,0,0},Row{4194357040,5,0,0},Row{4294967168,10,0,0},Row{4169703376,31,0,0},Row{2684358131,95,0,0},Row{1342179575,175,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{117391360,0,0,0},Row{201297920,0,0,0},Row{533585920,0,0,0}},Rows8{Row{1871311872,0,0,0},Row{3209033728,0,0,0},Row{4261608704,1,0,0},Row{4194357040,5,0,0},Row{4294967168,10,0,0},Row{4169703376,31,0,0},Row{2684358131,95,0,0},Row{1342179575,175,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrlrlrr(code: U32) -> Glyph:
@@ -3859,7 +3867,7 @@ def face1llrlrl(+code: U32) -> Glyph:
 
 def face1llrlrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{720371696,0,0,0},Row{3483860720,0,0,0},Row{4211084784,2,0,0}},Rows8{Row{4194307568,2,0,0},Row{3210882544,0,0,0},Row{771751920,0,0,0},Row{4000669168,2,0,0},Row{4127198704,8,0,0},Row{4127198704,8,0,0},Row{4271341296,3,0,0},Row{1560281072,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{720371696,0,0,0},Row{3483860720,0,0,0},Row{4211084784,2,0,0}},Rows8{Row{4194307568,2,0,0},Row{3210882544,0,0,0},Row{771751920,0,0,0},Row{4000669168,2,0,0},Row{4127198704,8,0,0},Row{4127198704,8,0,0},Row{4271341296,3,0,0},Row{1560281072,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrlrrll(code: U32) -> Glyph:
@@ -3867,7 +3875,7 @@ def face1llrlrrll(code: U32) -> Glyph:
 
 def face1llrlrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2113769728,0,0,0},Row{4236967184,11,0,0},Row{2684383120,95,0,0}},Rows8{Row{805309921,89,0,0},Row{2803,0,0,0},Row{2292,0,0,0},Row{2803,0,0,0},Row{536874481,89,0,0},Row{2684383120,95,0,0},Row{4236967184,10,0,0},Row{2113769728,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2113769728,0,0,0},Row{4236967184,11,0,0},Row{2684383120,95,0,0}},Rows8{Row{805309921,89,0,0},Row{2803,0,0,0},Row{2292,0,0,0},Row{2803,0,0,0},Row{536874481,89,0,0},Row{2684383120,95,0,0},Row{4236967184,10,0,0},Row{2113769728,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrlrrlr(code: U32) -> Glyph:
@@ -3883,7 +3891,7 @@ def face1llrlrrl(+code: U32) -> Glyph:
 
 def face1llrlrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{702545904,0,0,0},Row{4020797168,2,0,0},Row{4093644272,11,0,0}},Rows8{Row{2952793584,47,0,0},Row{2147487216,95,0,0},Row{1610616304,111,0,0},Row{2147487216,95,0,0},Row{2952793584,47,0,0},Row{4110421488,11,0,0},Row{4020797168,2,0,0},Row{702545904,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{702545904,0,0,0},Row{4020797168,2,0,0},Row{4093644272,11,0,0}},Rows8{Row{2952793584,47,0,0},Row{2147487216,95,0,0},Row{1610616304,111,0,0},Row{2147487216,95,0,0},Row{2952793584,47,0,0},Row{4110421488,11,0,0},Row{4020797168,2,0,0},Row{702545904,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrlrrrl(code: U32) -> Glyph:
@@ -3891,7 +3899,7 @@ def face1llrlrrrl(code: U32) -> Glyph:
 
 def face1llrlrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2952790000,0,0,0},Row{1467449072,0,0,0},Row{3568,0,0,0}},Rows8{Row{3568,0,0,0},Row{304229872,0,0,0},Row{1342177264,0,0,0},Row{357916144,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{1467449072,0,0,0},Row{2952790000,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2952790000,0,0,0},Row{1467449072,0,0,0},Row{3568,0,0,0}},Rows8{Row{3568,0,0,0},Row{304229872,0,0,0},Row{1342177264,0,0,0},Row{357916144,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{1467449072,0,0,0},Row{2952790000,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrlrrrr(code: U32) -> Glyph:
@@ -3931,7 +3939,7 @@ def face1llrl(+code: U32) -> Glyph:
 
 def face1llrrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2415919088,0,0,0},Row{1199013616,0,0,0},Row{3568,0,0,0}},Rows8{Row{3568,0,0,0},Row{35794416,0,0,0},Row{536870896,0,0,0},Row{89480688,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2415919088,0,0,0},Row{1199013616,0,0,0},Row{3568,0,0,0}},Rows8{Row{3568,0,0,0},Row{35794416,0,0,0},Row{536870896,0,0,0},Row{89480688,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrrlll(code: U32) -> Glyph:
@@ -3939,7 +3947,7 @@ def face1llrrlll(code: U32) -> Glyph:
 
 def face1llrrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1828552960,0,0,0},Row{4236967184,9,0,0},Row{3221254032,79,0,0}},Rows8{Row{1073745377,108,0,0},Row{2547,0,0,0},Row{571476212,34,0,0},Row{4284484339,191,0,0},Row{1696599537,175,0,0},Row{1879076768,127,0,0},Row{4220189968,28,0,0},Row{2382205184,1,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1828552960,0,0,0},Row{4236967184,9,0,0},Row{3221254032,79,0,0}},Rows8{Row{1073745377,108,0,0},Row{2547,0,0,0},Row{571476212,34,0,0},Row{4284484339,191,0,0},Row{1696599537,175,0,0},Row{1879076768,127,0,0},Row{4220189968,28,0,0},Row{2382205184,1,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrrllrl(code: U32) -> Glyph:
@@ -3947,7 +3955,7 @@ def face1llrrllrl(code: U32) -> Glyph:
 
 def face1llrrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1610616304,111,0,0},Row{1610616304,111,0,0},Row{1610616304,111,0,0}},Rows8{Row{1610616304,111,0,0},Row{1914842608,111,0,0},Row{4294967280,111,0,0},Row{2505399792,111,0,0},Row{1610616304,111,0,0},Row{1610616304,111,0,0},Row{1610616304,111,0,0},Row{1610616304,111,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1610616304,111,0,0},Row{1610616304,111,0,0},Row{1610616304,111,0,0}},Rows8{Row{1610616304,111,0,0},Row{1914842608,111,0,0},Row{4294967280,111,0,0},Row{2505399792,111,0,0},Row{1610616304,111,0,0},Row{1610616304,111,0,0},Row{1610616304,111,0,0},Row{1610616304,111,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrrllrr(code: U32) -> Glyph:
@@ -3971,7 +3979,7 @@ def face1llrrll(+code: U32) -> Glyph:
 
 def face1llrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0}},Rows8{Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0}},Rows8{Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrrlrl(code: U32) -> Glyph:
@@ -3979,7 +3987,7 @@ def face1llrrlrl(code: U32) -> Glyph:
 
 def face1llrrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{531628032,0,0,0},Row{531628032,0,0,0},Row{531628032,0,0,0}},Rows8{Row{531628032,0,0,0},Row{531628032,0,0,0},Row{531628032,0,0,0},Row{531628032,0,0,0},Row{531629526,0,0,0},Row{248514549,0,0,0},Row{167481057,0,0,0},Row{27126576,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{531628032,0,0,0},Row{531628032,0,0,0},Row{531628032,0,0,0}},Rows8{Row{531628032,0,0,0},Row{531628032,0,0,0},Row{531628032,0,0,0},Row{531628032,0,0,0},Row{531629526,0,0,0},Row{248514549,0,0,0},Row{167481057,0,0,0},Row{27126576,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrrlrrl(code: U32) -> Glyph:
@@ -3987,7 +3995,7 @@ def face1llrrlrrl(code: U32) -> Glyph:
 
 def face1llrrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4093644272,30,0,0},Row{4263513584,3,0,0},Row{1874922992,0,0,0}},Rows8{Row{167382512,0,0,0},Row{13594096,0,0,0},Row{31452912,0,0,0},Row{167370736,0,0,0},Row{1070673648,0,0,0},Row{3745517040,0,0,0},Row{4177530352,8,0,0},Row{3774877168,63,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4093644272,30,0,0},Row{4263513584,3,0,0},Row{1874922992,0,0,0}},Rows8{Row{167382512,0,0,0},Row{13594096,0,0,0},Row{31452912,0,0,0},Row{167370736,0,0,0},Row{1070673648,0,0,0},Row{3745517040,0,0,0},Row{4177530352,8,0,0},Row{3774877168,63,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrrlrrr(code: U32) -> Glyph:
@@ -4019,7 +4027,7 @@ def face1llrrl(+code: U32) -> Glyph:
 
 def face1llrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0}},Rows8{Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{966369008,0,0,0},Row{1610612720,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0}},Rows8{Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{966369008,0,0,0},Row{1610612720,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrrrll(code: U32) -> Glyph:
@@ -4027,7 +4035,7 @@ def face1llrrrll(code: U32) -> Glyph:
 
 def face1llrrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{61424,57329,0,0},Row{327664,57334,0,0},Row{654832,57067,0,0}},Rows8{Row{269405424,56767,0,0},Row{1615826160,56943,0,0},Row{2963225840,56879,0,0},Row{4042067184,56844,0,0},Row{4143451376,56838,0,0},Row{4260564208,56833,0,0},Row{3218083056,56832,0,0},Row{1869614320,56832,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{61424,57329,0,0},Row{327664,57334,0,0},Row{654832,57067,0,0}},Rows8{Row{269405424,56767,0,0},Row{1615826160,56943,0,0},Row{2963225840,56879,0,0},Row{4042067184,56844,0,0},Row{4143451376,56838,0,0},Row{4260564208,56833,0,0},Row{3218083056,56832,0,0},Row{1869614320,56832,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrrrlrl(code: U32) -> Glyph:
@@ -4035,7 +4043,7 @@ def face1llrrrlrl(code: U32) -> Glyph:
 
 def face1llrrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1073770480,159,0,0},Row{1073868784,159,0,0},Row{1074331376,159,0,0}},Rows8{Row{1076874480,159,0,0},Row{1085230576,159,0,0},Row{1157303792,159,0,0},Row{1290931696,159,0,0},Row{2407534064,159,0,0},Row{3977252336,159,0,0},Row{4110421488,159,0,0},Row{2952793584,159,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1073770480,159,0,0},Row{1073868784,159,0,0},Row{1074331376,159,0,0}},Rows8{Row{1076874480,159,0,0},Row{1085230576,159,0,0},Row{1157303792,159,0,0},Row{1290931696,159,0,0},Row{2407534064,159,0,0},Row{3977252336,159,0,0},Row{4110421488,159,0,0},Row{2952793584,159,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrrrlrr(code: U32) -> Glyph:
@@ -4059,7 +4067,7 @@ def face1llrrrl(+code: U32) -> Glyph:
 
 def face1llrrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2113765632,0,0,0},Row{4236967184,10,0,0},Row{2684383120,111,0,0}},Rows8{Row{536874465,207,0,0},Row{2803,238,0,0},Row{2292,508,0,0},Row{2803,238,0,0},Row{536874481,207,0,0},Row{2684383120,111,0,0},Row{4236967184,10,0,0},Row{2113769728,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2113765632,0,0,0},Row{4236967184,10,0,0},Row{2684383120,111,0,0}},Rows8{Row{536874465,207,0,0},Row{2803,238,0,0},Row{2292,508,0,0},Row{2803,238,0,0},Row{536874481,207,0,0},Row{2684383120,111,0,0},Row{4236967184,10,0,0},Row{2113769728,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrrrrll(code: U32) -> Glyph:
@@ -4067,7 +4075,7 @@ def face1llrrrrll(code: U32) -> Glyph:
 
 def face1llrrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{435159024,0,0,0},Row{3484974832,0,0,0},Row{4211084784,4,0,0}},Rows8{Row{4143975920,6,0,0},Row{4177530352,5,0,0},Row{4016254448,1,0,0},Row{1325400048,0,0,0},Row{21323248,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{435159024,0,0,0},Row{3484974832,0,0,0},Row{4211084784,4,0,0}},Rows8{Row{4143975920,6,0,0},Row{4177530352,5,0,0},Row{4016254448,1,0,0},Row{1325400048,0,0,0},Row{21323248,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrrrrlr(code: U32) -> Glyph:
@@ -4083,7 +4091,7 @@ def face1llrrrrl(+code: U32) -> Glyph:
 
 def face1llrrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2113765632,0,0,0},Row{4273863952,10,0,0},Row{2969603984,111,0,0}},Rows8{Row{805309921,191,0,0},Row{2803,238,0,0},Row{2292,508,0,0},Row{2803,254,0,0},Row{663752177,207,0,0},Row{3746598800,111,0,0},Row{4290641168,11,0,0},Row{3724382464,29,0,0}},Rows8{Row{268435456,71,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2113765632,0,0,0},Row{4273863952,10,0,0},Row{2969603984,111,0,0}},Rows8{Row{805309921,191,0,0},Row{2803,238,0,0},Row{2292,508,0,0},Row{2803,254,0,0},Row{663752177,207,0,0},Row{3746598800,111,0,0},Row{4290641168,11,0,0},Row{3724382464,29,0,0}},Rows8{Row{268435456,71,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrrrrrl(code: U32) -> Glyph:
@@ -4091,7 +4099,7 @@ def face1llrrrrrl(code: U32) -> Glyph:
 
 def face1llrrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{451936240,0,0,0},Row{3484974832,0,0,0},Row{4211084784,3,0,0}},Rows8{Row{4143975920,6,0,0},Row{4177530352,5,0,0},Row{4267912688,1,0,0},Row{1593835504,0,0,0},Row{234249712,0,0,0},Row{1871711728,0,0,0},Row{3995078128,1,0,0},Row{4160753136,8,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{451936240,0,0,0},Row{3484974832,0,0,0},Row{4211084784,3,0,0}},Rows8{Row{4143975920,6,0,0},Row{4177530352,5,0,0},Row{4267912688,1,0,0},Row{1593835504,0,0,0},Row{234249712,0,0,0},Row{1871711728,0,0,0},Row{3995078128,1,0,0},Row{4160753136,8,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1llrrrrrr(code: U32) -> Glyph:
@@ -4147,7 +4155,7 @@ def face1ll(+code: U32) -> Glyph:
 
 def face1lrlllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{435148288,0,0,0},Row{3483946880,0,0,0},Row{4177530336,3,0,0}},Rows8{Row{7920,0,0,0},Row{5894064,0,0,0},Row{1593834000,0,0,0},Row{4290056192,2,0,0},Row{4160749873,6,0,0},Row{4160752371,5,0,0},Row{3752378288,1,0,0},Row{720361488,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{435148288,0,0,0},Row{3483946880,0,0,0},Row{4177530336,3,0,0}},Rows8{Row{7920,0,0,0},Row{5894064,0,0,0},Row{1593834000,0,0,0},Row{4290056192,2,0,0},Row{4160749873,6,0,0},Row{4160752371,5,0,0},Row{3752378288,1,0,0},Row{720361488,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrlllll(code: U32) -> Glyph:
@@ -4155,7 +4163,7 @@ def face1lrlllll(code: U32) -> Glyph:
 
 def face1lrllllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4294967287,10,0,0},Row{2009044851,5,0,0},Row{9388032,0,0,0}},Rows8{Row{9388032,0,0,0},Row{9388032,0,0,0},Row{9388032,0,0,0},Row{9388032,0,0,0},Row{9388032,0,0,0},Row{9388032,0,0,0},Row{9388032,0,0,0},Row{9388032,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4294967287,10,0,0},Row{2009044851,5,0,0},Row{9388032,0,0,0}},Rows8{Row{9388032,0,0,0},Row{9388032,0,0,0},Row{9388032,0,0,0},Row{9388032,0,0,0},Row{9388032,0,0,0},Row{9388032,0,0,0},Row{9388032,0,0,0},Row{9388032,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrllllrl(code: U32) -> Glyph:
@@ -4163,7 +4171,7 @@ def face1lrllllrl(code: U32) -> Glyph:
 
 def face1lrllllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0}},Rows8{Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2415922912,63,0,0},Row{3774894000,30,0,0},Row{4253679408,7,0,0},Row{1559143168,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0}},Rows8{Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2415922912,63,0,0},Row{3774894000,30,0,0},Row{4253679408,7,0,0},Row{1559143168,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrllllrr(code: U32) -> Glyph:
@@ -4187,7 +4195,7 @@ def face1lrllll(+code: U32) -> Glyph:
 
 def face1lrlllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1073743863,175,0,0},Row{2415922418,95,0,0},Row{3758108624,31,0,0}},Rows8{Row{4076896128,11,0,0},Row{4160798512,6,0,0},Row{4227988736,1,0,0},Row{3206936576,0,0,0},Row{1869280000,0,0,0},Row{530436096,0,0,0},Row{200245248,0,0,0},Row{134164480,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1073743863,175,0,0},Row{2415922418,95,0,0},Row{3758108624,31,0,0}},Rows8{Row{4076896128,11,0,0},Row{4160798512,6,0,0},Row{4227988736,1,0,0},Row{3206936576,0,0,0},Row{1869280000,0,0,0},Row{530436096,0,0,0},Row{200245248,0,0,0},Row{134164480,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrlllrl(code: U32) -> Glyph:
@@ -4195,7 +4203,7 @@ def face1lrlllrl(code: U32) -> Glyph:
 
 def face1lrlllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4261414648,13574147,0,0},Row{4281338612,9396231,0,0},Row{4016049649,6262794,0,0}},Rows8{Row{3198164928,2080782,0,0},Row{2362466176,848175,0,0},Row{1223855936,586863,0,0},Row{351649552,391071,0,0},Row{33090560,129740,0,0},Row{13432832,52728,0,0},Row{9434112,36852,0,0},Row{6287616,24561,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{14,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4261414648,13574147,0,0},Row{4281338612,9396231,0,0},Row{4016049649,6262794,0,0}},Rows8{Row{3198164928,2080782,0,0},Row{2362466176,848175,0,0},Row{1223855936,586863,0,0},Row{351649552,391071,0,0},Row{33090560,129740,0,0},Row{13432832,52728,0,0},Row{9434112,36852,0,0},Row{6287616,24561,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrlllrrl(code: U32) -> Glyph:
@@ -4203,7 +4211,7 @@ def face1lrlllrrl(code: U32) -> Glyph:
 
 def face1lrlllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3506450145,47,0,0},Row{4160794464,8,0,0},Row{3743742976,1,0,0}},Rows8{Row{1336668928,0,0,0},Row{184520704,0,0,0},Row{83828736,0,0,0},Row{218079232,0,0,0},Row{2140861696,0,0,0},Row{3994218000,2,0,0},Row{4127227808,11,0,0},Row{2952793333,111,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3506450145,47,0,0},Row{4160794464,8,0,0},Row{3743742976,1,0,0}},Rows8{Row{1336668928,0,0,0},Row{184520704,0,0,0},Row{83828736,0,0,0},Row{218079232,0,0,0},Row{2140861696,0,0,0},Row{3994218000,2,0,0},Row{4127227808,11,0,0},Row{2952793333,111,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrlllrrr(code: U32) -> Glyph:
@@ -4235,7 +4243,7 @@ def face1lrlll(+code: U32) -> Glyph:
 
 def face1lrllrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2952793078,95,0,0},Row{4076883904,12,0,0},Row{4211134272,4,0,0}},Rows8{Row{3208968960,0,0,0},Row{1068233472,0,0,0},Row{184520704,0,0,0},Row{50274304,0,0,0},Row{15532032,0,0,0},Row{15532032,0,0,0},Row{15532032,0,0,0},Row{15532032,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2952793078,95,0,0},Row{4076883904,12,0,0},Row{4211134272,4,0,0}},Rows8{Row{3208968960,0,0,0},Row{1068233472,0,0,0},Row{184520704,0,0,0},Row{50274304,0,0,0},Row{15532032,0,0,0},Row{15532032,0,0,0},Row{15532032,0,0,0},Row{15532032,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrllrll(code: U32) -> Glyph:
@@ -4243,7 +4251,7 @@ def face1lrllrll(code: U32) -> Glyph:
 
 def face1lrllrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4294967283,5,0,0},Row{4018632561,2,0,0},Row{2139095040,0,0,0}},Rows8{Row{217251840,0,0,0},Row{66846720,0,0,0},Row{10448896,0,0,0},Row{2023936,0,0,0},Row{391680,0,0,0},Row{44864,0,0,0},Row{2004324305,2,0,0},Row{4294967283,5,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4294967283,5,0,0},Row{4018632561,2,0,0},Row{2139095040,0,0,0}},Rows8{Row{217251840,0,0,0},Row{66846720,0,0,0},Row{10448896,0,0,0},Row{2023936,0,0,0},Row{391680,0,0,0},Row{44864,0,0,0},Row{2004324305,2,0,0},Row{4294967283,5,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrllrlrl(code: U32) -> Glyph:
@@ -4251,7 +4259,7 @@ def face1lrllrlrl(code: U32) -> Glyph:
 
 def face1lrllrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{74272,0,0,0},Row{524192,0,0,0},Row{159648,0,0,0},Row{8096,0,0,0}},Rows8{Row{8096,0,0,0},Row{8096,0,0,0},Row{8096,0,0,0},Row{8096,0,0,0},Row{8096,0,0,0},Row{8096,0,0,0},Row{8096,0,0,0},Row{8096,0,0,0}},Rows8{Row{81824,0,0,0},Row{524192,0,0,0},Row{152880,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{74272,0,0,0},Row{524192,0,0,0},Row{159648,0,0,0},Row{8096,0,0,0}},Rows8{Row{8096,0,0,0},Row{8096,0,0,0},Row{8096,0,0,0},Row{8096,0,0,0},Row{8096,0,0,0},Row{8096,0,0,0},Row{8096,0,0,0},Row{8096,0,0,0}},Rows8{Row{81824,0,0,0},Row{524192,0,0,0},Row{152880,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrllrlrr(code: U32) -> Glyph:
@@ -4275,7 +4283,7 @@ def face1lrllrl(+code: U32) -> Glyph:
 
 def face1lrllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{101,0,0,0},Row{504,0,0,0},Row{1524,0,0,0}},Rows8{Row{2528,0,0,0},Row{3504,0,0,0},Row{12144,0,0,0},Row{28464,0,0,0},Row{40448,0,0,0},Row{55808,0,0,0},Row{194048,0,0,0},Row{455168,0,0,0}},Rows8{Row{708608,0,0,0},Row{954368,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{101,0,0,0},Row{504,0,0,0},Row{1524,0,0,0}},Rows8{Row{2528,0,0,0},Row{3504,0,0,0},Row{12144,0,0,0},Row{28464,0,0,0},Row{40448,0,0,0},Row{55808,0,0,0},Row{194048,0,0,0},Row{455168,0,0,0}},Rows8{Row{708608,0,0,0},Row{954368,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrllrrl(code: U32) -> Glyph:
@@ -4283,7 +4291,7 @@ def face1lrllrrl(code: U32) -> Glyph:
 
 def face1lrllrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{8737,0,0,0},Row{57332,0,0,0},Row{56657,0,0,0},Row{56320,0,0,0}},Rows8{Row{56320,0,0,0},Row{56320,0,0,0},Row{56320,0,0,0},Row{56320,0,0,0},Row{56320,0,0,0},Row{56320,0,0,0},Row{56320,0,0,0},Row{56320,0,0,0}},Rows8{Row{56609,0,0,0},Row{57332,0,0,0},Row{17745,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{8737,0,0,0},Row{57332,0,0,0},Row{56657,0,0,0},Row{56320,0,0,0}},Rows8{Row{56320,0,0,0},Row{56320,0,0,0},Row{56320,0,0,0},Row{56320,0,0,0},Row{56320,0,0,0},Row{56320,0,0,0},Row{56320,0,0,0},Row{56320,0,0,0}},Rows8{Row{56609,0,0,0},Row{57332,0,0,0},Row{17745,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrllrrrl(code: U32) -> Glyph:
@@ -4291,7 +4299,7 @@ def face1lrllrrrl(code: U32) -> Glyph:
 
 def face1lrllrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{164864,0,0,0},Row{654592,0,0,0},Row{3108688,0,0,0}},Rows8{Row{9243072,0,0,0},Row{31917044,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{7,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{164864,0,0,0},Row{654592,0,0,0},Row{3108688,0,0,0}},Rows8{Row{9243072,0,0,0},Row{31917044,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrllrrrr(code: U32) -> Glyph:
@@ -4331,7 +4339,7 @@ def face1lrll(+code: U32) -> Glyph:
 
 def face1lrlrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{19014178,0,0,0}},Rows8{Row{150994943,0,0,0},Row{55924053,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{7,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{19014178,0,0,0}},Rows8{Row{150994943,0,0,0},Row{55924053,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrlrlll(code: U32) -> Glyph:
@@ -4339,7 +4347,7 @@ def face1lrlrlll(code: U32) -> Glyph:
 
 def face1lrlrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{544,0,0,0},Row{12160,0,0,0},Row{36096,0,0,0},zero_row()},zero_rows(),zero_rows(),zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{544,0,0,0},Row{12160,0,0,0},Row{36096,0,0,0},zero_row()},zero_rows(),zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrlrllrl(code: U32) -> Glyph:
@@ -4347,7 +4355,7 @@ def face1lrlrllrl(code: U32) -> Glyph:
 
 def face1lrlrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{45017632,0,0,0},Row{217685713,0,0,0},Row{531628865,0,0,0},Row{536581648,0,0,0},Row{532061922,0,0,0},Row{532678135,0,0,0},Row{535530997,0,0,0},Row{530116224,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{45017632,0,0,0},Row{217685713,0,0,0},Row{531628865,0,0,0},Row{536581648,0,0,0},Row{532061922,0,0,0},Row{532678135,0,0,0},Row{535530997,0,0,0},Row{530116224,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrlrllrr(code: U32) -> Glyph:
@@ -4371,7 +4379,7 @@ def face1lrlrll(+code: U32) -> Glyph:
 
 def face1lrlrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0}},Rows8{Row{149781489,0,0,0},Row{2413350641,0,0,0},Row{3994033905,0,0,0},Row{4211084273,1,0,0},Row{4211084273,1,0,0},Row{3994033905,0,0,0},Row{2413350641,0,0,0},Row{149846769,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0}},Rows8{Row{149781489,0,0,0},Row{2413350641,0,0,0},Row{3994033905,0,0,0},Row{4211084273,1,0,0},Row{4211084273,1,0,0},Row{3994033905,0,0,0},Row{2413350641,0,0,0},Row{149846769,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrlrlrl(code: U32) -> Glyph:
@@ -4379,7 +4387,7 @@ def face1lrlrlrl(code: U32) -> Glyph:
 
 def face1lrlrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{80668672,0,0,0},Row{803782560,0,0,0},Row{1244662770,0,0,0},Row{2037,0,0,0},Row{2037,0,0,0},Row{1261440242,0,0,0},Row{787005344,0,0,0},Row{80668688,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{80668672,0,0,0},Row{803782560,0,0,0},Row{1244662770,0,0,0},Row{2037,0,0,0},Row{2037,0,0,0},Row{1261440242,0,0,0},Row{787005344,0,0,0},Row{80668688,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrlrlrrl(code: U32) -> Glyph:
@@ -4387,7 +4395,7 @@ def face1lrlrlrrl(code: U32) -> Glyph:
 
 def face1lrlrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3472883712,0,0,0},Row{3472883712,0,0,0},Row{3472883712,0,0,0}},Rows8{Row{3477989904,0,0,0},Row{3487088576,0,0,0},Row{3477081075,0,0,0},Row{3472885749,0,0,0},Row{3472885749,0,0,0},Row{3477081075,0,0,0},Row{3487088576,0,0,0},Row{3461212688,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3472883712,0,0,0},Row{3472883712,0,0,0},Row{3472883712,0,0,0}},Rows8{Row{3477989904,0,0,0},Row{3487088576,0,0,0},Row{3477081075,0,0,0},Row{3472885749,0,0,0},Row{3472885749,0,0,0},Row{3477081075,0,0,0},Row{3487088576,0,0,0},Row{3461212688,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrlrlrrr(code: U32) -> Glyph:
@@ -4419,7 +4427,7 @@ def face1lrlrl(+code: U32) -> Glyph:
 
 def face1lrlrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{62842880,0,0,0},Row{785948576,0,0,0},Row{2404526578,0,0,0},Row{2952790005,0,0,0},Row{894786037,0,0,0},Row{639634162,0,0,0},Row{1339604896,0,0,0},Row{97511440,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{62842880,0,0,0},Row{785948576,0,0,0},Row{2404526578,0,0,0},Row{2952790005,0,0,0},Row{894786037,0,0,0},Row{639634162,0,0,0},Row{1339604896,0,0,0},Row{97511440,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrlrrll(code: U32) -> Glyph:
@@ -4427,7 +4435,7 @@ def face1lrlrrll(code: U32) -> Glyph:
 
 def face1lrlrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3074048,0,0,0},Row{577360,0,0,0},Row{24432,0,0,0}},Rows8{Row{1048573,0,0,0},Row{503734,0,0,0},Row{24432,0,0,0},Row{24432,0,0,0},Row{24432,0,0,0},Row{24432,0,0,0},Row{24432,0,0,0},Row{24432,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3074048,0,0,0},Row{577360,0,0,0},Row{24432,0,0,0}},Rows8{Row{1048573,0,0,0},Row{503734,0,0,0},Row{24432,0,0,0},Row{24432,0,0,0},Row{24432,0,0,0},Row{24432,0,0,0},Row{24432,0,0,0},Row{24432,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrlrrlrl(code: U32) -> Glyph:
@@ -4435,7 +4443,7 @@ def face1lrlrrlrl(code: U32) -> Glyph:
 
 def face1lrlrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{3461212688,0,0,0},Row{3487088560,0,0,0},Row{3477081330,0,0,0},Row{3472885749,0,0,0},Row{3472885749,0,0,0},Row{3477081075,0,0,0},Row{3487088576,0,0,0},Row{3461212960,0,0,0}},Rows8{Row{3205497360,0,0,0},Row{1875418832,0,0,0},Row{115337760,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{3461212688,0,0,0},Row{3487088560,0,0,0},Row{3477081330,0,0,0},Row{3472885749,0,0,0},Row{3472885749,0,0,0},Row{3477081075,0,0,0},Row{3487088576,0,0,0},Row{3461212960,0,0,0}},Rows8{Row{3205497360,0,0,0},Row{1875418832,0,0,0},Row{115337760,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrlrrlrr(code: U32) -> Glyph:
@@ -4459,7 +4467,7 @@ def face1lrlrrl(+code: U32) -> Glyph:
 
 def face1lrlrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2801,0,0,0},Row{2801,0,0,0},Row{2801,0,0,0}},Rows8{Row{133069553,0,0,0},Row{1609088753,0,0,0},Row{2404388337,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2801,0,0,0},Row{2801,0,0,0},Row{2801,0,0,0}},Rows8{Row{133069553,0,0,0},Row{1609088753,0,0,0},Row{2404388337,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrlrrrll(code: U32) -> Glyph:
@@ -4467,7 +4475,7 @@ def face1lrlrrrll(code: U32) -> Glyph:
 
 def face1lrlrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{16,0,0,0},Row{3057,0,0,0},Row{560,0,0,0},zero_row()},Rows8{Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{16,0,0,0},Row{3057,0,0,0},Row{560,0,0,0},zero_row()},Rows8{Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrlrrrlr(code: U32) -> Glyph:
@@ -4483,7 +4491,7 @@ def face1lrlrrrl(+code: U32) -> Glyph:
 
 def face1lrlrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{256,0,0,0},Row{48928,0,0,0},Row{8960,0,0,0},zero_row()},Rows8{Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0}},Rows8{Row{44832,0,0,0},Row{36770,0,0,0},Row{6884,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{256,0,0,0},Row{48928,0,0,0},Row{8960,0,0,0},zero_row()},Rows8{Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0}},Rows8{Row{44832,0,0,0},Row{36770,0,0,0},Row{6884,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrlrrrrl(code: U32) -> Glyph:
@@ -4491,7 +4499,7 @@ def face1lrlrrrrl(code: U32) -> Glyph:
 
 def face1lrlrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0}},Rows8{Row{1337986033,0,0,0},Row{117050353,0,0,0},Row{10456049,0,0,0},Row{982769,0,0,0},Row{7331825,0,0,0},Row{49159409,0,0,0},Row{217385969,0,0,0},Row{2408582129,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0}},Rows8{Row{1337986033,0,0,0},Row{117050353,0,0,0},Row{10456049,0,0,0},Row{982769,0,0,0},Row{7331825,0,0,0},Row{49159409,0,0,0},Row{217385969,0,0,0},Row{2408582129,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrlrrrrr(code: U32) -> Glyph:
@@ -4539,7 +4547,7 @@ def face1lrl(+code: U32) -> Glyph:
 
 def face1lrrllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0}},Rows8{Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0}},Rows8{Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrllll(code: U32) -> Glyph:
@@ -4547,7 +4555,7 @@ def face1lrrllll(code: U32) -> Glyph:
 
 def face1lrrlllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{1407093233,2541,0,0},Row{3707354609,28616,0,0},Row{1335889393,40752,0,0},Row{1065356273,44832,0,0},Row{1065356273,44832,0,0},Row{1065356273,44832,0,0},Row{1065356273,44832,0,0},Row{1065356273,44832,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{1407093233,2541,0,0},Row{3707354609,28616,0,0},Row{1335889393,40752,0,0},Row{1065356273,44832,0,0},Row{1065356273,44832,0,0},Row{1065356273,44832,0,0},Row{1065356273,44832,0,0},Row{1065356273,44832,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrlllrl(code: U32) -> Glyph:
@@ -4555,7 +4563,7 @@ def face1lrrlllrl(code: U32) -> Glyph:
 
 def face1lrrlllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{133069297,0,0,0},Row{1609088497,0,0,0},Row{2404388337,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{133069297,0,0,0},Row{1609088497,0,0,0},Row{2404388337,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrlllrr(code: U32) -> Glyph:
@@ -4579,7 +4587,7 @@ def face1lrrlll(+code: U32) -> Glyph:
 
 def face1lrrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{80668672,0,0,0},Row{1072218016,0,0,0},Row{2940210418,0,0,0},Row{3724544245,0,0,0},Row{3724543989,0,0,0},Row{2940210418,0,0,0},Row{1072218016,0,0,0},Row{80668688,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{80668672,0,0,0},Row{1072218016,0,0,0},Row{2940210418,0,0,0},Row{3724544245,0,0,0},Row{3724543989,0,0,0},Row{2940210418,0,0,0},Row{1072218016,0,0,0},Row{80668688,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrllrl(code: U32) -> Glyph:
@@ -4587,7 +4595,7 @@ def face1lrrllrl(code: U32) -> Glyph:
 
 def face1lrrllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{149781233,0,0,0},Row{2413350641,0,0,0},Row{3994033905,0,0,0},Row{4211084273,1,0,0},Row{4211084273,1,0,0},Row{3994033905,0,0,0},Row{2413350641,0,0,0},Row{149847025,0,0,0}},Rows8{Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{149781233,0,0,0},Row{2413350641,0,0,0},Row{3994033905,0,0,0},Row{4211084273,1,0,0},Row{4211084273,1,0,0},Row{3994033905,0,0,0},Row{2413350641,0,0,0},Row{149847025,0,0,0}},Rows8{Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrllrrl(code: U32) -> Glyph:
@@ -4595,7 +4603,7 @@ def face1lrrllrrl(code: U32) -> Glyph:
 
 def face1lrrllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{3461212688,0,0,0},Row{3487088576,0,0,0},Row{3477081075,0,0,0},Row{3472885749,0,0,0},Row{3472885749,0,0,0},Row{3477081075,0,0,0},Row{3487088576,0,0,0},Row{3477989904,0,0,0}},Rows8{Row{3472883712,0,0,0},Row{3472883712,0,0,0},Row{3472883712,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{3461212688,0,0,0},Row{3487088576,0,0,0},Row{3477081075,0,0,0},Row{3472885749,0,0,0},Row{3472885749,0,0,0},Row{3477081075,0,0,0},Row{3487088576,0,0,0},Row{3477989904,0,0,0}},Rows8{Row{3472883712,0,0,0},Row{3472883712,0,0,0},Row{3472883712,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrllrrr(code: U32) -> Glyph:
@@ -4627,7 +4635,7 @@ def face1lrrll(+code: U32) -> Glyph:
 
 def face1lrrlrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,zero_rows(),Rows8{Row{5217009,0,0,0},Row{3722993,0,0,0},Row{3569,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[zero_rows(),Rows8{Row{5217009,0,0,0},Row{3722993,0,0,0},Row{3569,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrlrll(code: U32) -> Glyph:
@@ -4635,7 +4643,7 @@ def face1lrrlrll(code: U32) -> Glyph:
 
 def face1lrrlrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{27192112,0,0,0},Row{184131297,0,0,0},Row{72354802,0,0,0},Row{4837296,0,0,0},Row{184325376,0,0,0},Row{532677474,0,0,0},Row{234458866,0,0,0},Row{45018176,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{27192112,0,0,0},Row{184131297,0,0,0},Row{72354802,0,0,0},Row{4837296,0,0,0},Row{184325376,0,0,0},Row{532677474,0,0,0},Row{234458866,0,0,0},Row{45018176,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrlrlrl(code: U32) -> Glyph:
@@ -4643,7 +4651,7 @@ def face1lrrlrlrl(code: U32) -> Glyph:
 
 def face1lrrlrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4032,0,0,0},Row{4032,0,0,0}},Rows8{Row{524285,0,0,0},Row{229334,0,0,0},Row{4032,0,0,0},Row{4032,0,0,0},Row{4032,0,0,0},Row{4032,0,0,0},Row{303008,0,0,0},Row{588832,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4032,0,0,0},Row{4032,0,0,0}},Rows8{Row{524285,0,0,0},Row{229334,0,0,0},Row{4032,0,0,0},Row{4032,0,0,0},Row{4032,0,0,0},Row{4032,0,0,0},Row{303008,0,0,0},Row{588832,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrlrlrr(code: U32) -> Glyph:
@@ -4667,7 +4675,7 @@ def face1lrrlrl(+code: U32) -> Glyph:
 
 def face1lrrlrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2673872368,0,0,0},Row{2681847728,0,0,0},Row{2672618272,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2673872368,0,0,0},Row{2681847728,0,0,0},Row{2672618272,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrlrrll(code: U32) -> Glyph:
@@ -4675,7 +4683,7 @@ def face1lrrlrrll(code: U32) -> Glyph:
 
 def face1lrrlrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{3473933816,0,0,0},Row{1868565235,0,0,0},Row{531631824,0,0,0},Row{200363888,0,0,0},Row{99983136,0,0,0},Row{32168960,0,0,0},Row{10417664,0,0,0},Row{5239040,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{3473933816,0,0,0},Row{1868565235,0,0,0},Row{531631824,0,0,0},Row{200363888,0,0,0},Row{99983136,0,0,0},Row{32168960,0,0,0},Row{10417664,0,0,0},Row{5239040,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrlrrlr(code: U32) -> Glyph:
@@ -4691,7 +4699,7 @@ def face1lrrlrrl(+code: U32) -> Glyph:
 
 def face1lrrlrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{12,zero_rows(),Rows8{Row{233899256,24448,0,0},Row{536152308,8128,0,0},Row{1608060128,3057,0,0},Row{2375815088,2036,0,0},Row{3378466656,759,0,0},Row{4112494368,219,0,0},Row{4044160256,159,0,0},Row{3221813504,95,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{12,[zero_rows(),Rows8{Row{233899256,24448,0,0},Row{536152308,8128,0,0},Row{1608060128,3057,0,0},Row{2375815088,2036,0,0},Row{3378466656,759,0,0},Row{4112494368,219,0,0},Row{4044160256,159,0,0},Row{3221813504,95,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrlrrrl(code: U32) -> Glyph:
@@ -4699,7 +4707,7 @@ def face1lrrlrrrl(code: U32) -> Glyph:
 
 def face1lrrlrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{1068502003,0,0,0},Row{167006096,0,0,0},Row{32296464,0,0,0},Row{7337472,0,0,0},Row{7337728,0,0,0},Row{48999968,0,0,0},Row{183709616,0,0,0},Row{1603274997,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{1068502003,0,0,0},Row{167006096,0,0,0},Row{32296464,0,0,0},Row{7337472,0,0,0},Row{7337728,0,0,0},Row{48999968,0,0,0},Row{183709616,0,0,0},Row{1603274997,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrlrrrr(code: U32) -> Glyph:
@@ -4739,7 +4747,7 @@ def face1lrrl(+code: U32) -> Glyph:
 
 def face1lrrrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{3473933816,0,0,0},Row{1868565235,0,0,0},Row{531631824,0,0,0},Row{183586672,0,0,0},Row{100048672,0,0,0},Row{15391488,0,0,0},Row{10417664,0,0,0},Row{4190464,0,0,0}},Rows8{Row{909312,0,0,0},Row{522864,0,0,0},Row{40672,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{3473933816,0,0,0},Row{1868565235,0,0,0},Row{531631824,0,0,0},Row{183586672,0,0,0},Row{100048672,0,0,0},Row{15391488,0,0,0},Row{10417664,0,0,0},Row{4190464,0,0,0}},Rows8{Row{909312,0,0,0},Row{522864,0,0,0},Row{40672,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrrlll(code: U32) -> Glyph:
@@ -4747,7 +4755,7 @@ def face1lrrrlll(code: U32) -> Glyph:
 
 def face1lrrrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{251658225,0,0,0},Row{200963952,0,0,0},Row{49090560,0,0,0},Row{6266880,0,0,0},Row{652800,0,0,0},Row{122672,0,0,0},Row{393719761,0,0,0},Row{536870899,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{251658225,0,0,0},Row{200963952,0,0,0},Row{49090560,0,0,0},Row{6266880,0,0,0},Row{652800,0,0,0},Row{122672,0,0,0},Row{393719761,0,0,0},Row{536870899,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrrllrl(code: U32) -> Glyph:
@@ -4755,7 +4763,7 @@ def face1lrrrllrl(code: U32) -> Glyph:
 
 def face1lrrrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{10321920,0,0,0},Row{6091776,0,0,0},Row{259840,0,0,0}},Rows8{Row{194560,0,0,0},Row{194560,0,0,0},Row{60720,0,0,0},Row{15856,0,0,0},Row{52832,0,0,0},Row{194816,0,0,0},Row{194560,0,0,0},Row{194560,0,0,0}},Rows8{Row{2749952,0,0,0},Row{10469632,0,0,0},Row{3342336,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{10321920,0,0,0},Row{6091776,0,0,0},Row{259840,0,0,0}},Rows8{Row{194560,0,0,0},Row{194560,0,0,0},Row{60720,0,0,0},Row{15856,0,0,0},Row{52832,0,0,0},Row{194816,0,0,0},Row{194560,0,0,0},Row{194560,0,0,0}},Rows8{Row{2749952,0,0,0},Row{10469632,0,0,0},Row{3342336,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrrllrr(code: U32) -> Glyph:
@@ -4779,7 +4787,7 @@ def face1lrrrll(+code: U32) -> Glyph:
 
 def face1lrrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),Row{14368,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0}},Rows8{Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0}},Rows8{Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),Row{14368,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0}},Rows8{Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0}},Rows8{Row{24400,0,0,0},Row{24400,0,0,0},Row{24400,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrrlrl(code: U32) -> Glyph:
@@ -4787,7 +4795,7 @@ def face1lrrrlrl(code: U32) -> Glyph:
 
 def face1lrrrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{11236,0,0,0},Row{44962,0,0,0},Row{56576,0,0,0}},Rows8{Row{56064,0,0,0},Row{60160,0,0,0},Row{1505280,0,0,0},Row{7315456,0,0,0},Row{2750208,0,0,0},Row{60160,0,0,0},Row{56064,0,0,0},Row{56320,0,0,0}},Rows8{Row{48977,0,0,0},Row{20212,0,0,0},Row{321,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{11236,0,0,0},Row{44962,0,0,0},Row{56576,0,0,0}},Rows8{Row{56064,0,0,0},Row{60160,0,0,0},Row{1505280,0,0,0},Row{7315456,0,0,0},Row{2750208,0,0,0},Row{60160,0,0,0},Row{56064,0,0,0},Row{56320,0,0,0}},Rows8{Row{48977,0,0,0},Row{20212,0,0,0},Row{321,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrrlrrl(code: U32) -> Glyph:
@@ -4795,7 +4803,7 @@ def face1lrrrlrrl(code: U32) -> Glyph:
 
 def face1lrrrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{zero_row(),zero_row(),Row{3255364656,3,0,0},Row{4241469104,2,0,0},Row{2126710688,0,0,0},zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{zero_row(),zero_row(),Row{3255364656,3,0,0},Row{4241469104,2,0,0},Row{2126710688,0,0,0},zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrrlrrr(code: U32) -> Glyph:
@@ -4827,7 +4835,7 @@ def face1lrrrl(+code: U32) -> Glyph:
 
 def face1lrrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,zero_rows(),zero_rows(),zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[zero_rows(),zero_rows(),zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrrrll(code: U32) -> Glyph:
@@ -4835,7 +4843,7 @@ def face1lrrrrll(code: U32) -> Glyph:
 
 def face1lrrrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,zero_rows(),Rows8{Row{11920,0,0,0},Row{16304,0,0,0},Row{256,0,0,0},Row{8080,0,0,0},Row{12176,0,0,0},Row{12176,0,0,0},Row{12192,0,0,0},Row{16288,0,0,0}},Rows8{Row{16288,0,0,0},Row{16304,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{5,[zero_rows(),Rows8{Row{11920,0,0,0},Row{16304,0,0,0},Row{256,0,0,0},Row{8080,0,0,0},Row{12176,0,0,0},Row{12176,0,0,0},Row{12192,0,0,0},Row{16288,0,0,0}},Rows8{Row{16288,0,0,0},Row{16304,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrrrlrl(code: U32) -> Glyph:
@@ -4843,7 +4851,7 @@ def face1lrrrrlrl(code: U32) -> Glyph:
 
 def face1lrrrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{602112,0,0,0},Row{7181056,0,0,0},Row{486539088,0,0,0}},Rows8{Row{1871273697,0,0,0},Row{35207668,0,0,0},Row{604150,0,0,0},Row{17381621,0,0,0},Row{1870220785,0,0,0},Row{503246704,0,0,0},Row{26129664,0,0,0},Row{602112,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{602112,0,0,0},Row{7181056,0,0,0},Row{486539088,0,0,0}},Rows8{Row{1871273697,0,0,0},Row{35207668,0,0,0},Row{604150,0,0,0},Row{17381621,0,0,0},Row{1870220785,0,0,0},Row{503246704,0,0,0},Row{26129664,0,0,0},Row{602112,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrrrlrr(code: U32) -> Glyph:
@@ -4867,7 +4875,7 @@ def face1lrrrrl(+code: U32) -> Glyph:
 
 def face1lrrrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{149856768,0,0,0},Row{2679831808,0,0,0},Row{3674246976,0,0,0}},Rows8{Row{28496,0,0,0},Row{19038049,0,0,0},Row{83886069,0,0,0},Row{22388594,0,0,0},Row{32560,0,0,0},Row{1929408320,1,0,0},Row{4254703315,1,0,0},Row{2399141877,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{149856768,0,0,0},Row{2679831808,0,0,0},Row{3674246976,0,0,0}},Rows8{Row{28496,0,0,0},Row{19038049,0,0,0},Row{83886069,0,0,0},Row{22388594,0,0,0},Row{32560,0,0,0},Row{1929408320,1,0,0},Row{4254703315,1,0,0},Row{2399141877,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrrrrll(code: U32) -> Glyph:
@@ -4875,7 +4883,7 @@ def face1lrrrrrll(code: U32) -> Glyph:
 
 def face1lrrrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2162704,1,0,0},Row{1577031888,93,0,0}},Rows8{Row{4201111408,29,0,0},Row{2147491168,13,0,0},Row{268437424,62,0,0},Row{1488,93,0,0},Row{268437680,63,0,0},Row{2684366432,13,0,0},Row{4236898224,79,0,0},Row{738030736,58,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2162704,1,0,0},Row{1577031888,93,0,0}},Rows8{Row{4201111408,29,0,0},Row{2147491168,13,0,0},Row{268437424,62,0,0},Row{1488,93,0,0},Row{268437680,63,0,0},Row{2684366432,13,0,0},Row{4236898224,79,0,0},Row{738030736,58,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrrrrlr(code: U32) -> Glyph:
@@ -4891,7 +4899,7 @@ def face1lrrrrrl(+code: U32) -> Glyph:
 
 def face1lrrrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2136999161,0,0,0},Row{801114867,0,0,0},Row{183639744,0,0,0}},Rows8{Row{83390304,0,0,0},Row{14532112,0,0,0},Row{44038688,0,0,0},Row{251658227,0,0,0},Row{125761393,0,0,0},Row{251658227,0,0,0},Row{90043729,0,0,0},Row{847872,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2136999161,0,0,0},Row{801114867,0,0,0},Row{183639744,0,0,0}},Rows8{Row{83390304,0,0,0},Row{14532112,0,0,0},Row{44038688,0,0,0},Row{251658227,0,0,0},Row{125761393,0,0,0},Row{251658227,0,0,0},Row{90043729,0,0,0},Row{847872,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrrrrrl(code: U32) -> Glyph:
@@ -4899,7 +4907,7 @@ def face1lrrrrrrl(code: U32) -> Glyph:
 
 def face1lrrrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3984,0,0,0},Row{3984,0,0,0},Row{3984,0,0,0}},Rows8{Row{3984,0,0,0},Row{3984,0,0,0},zero_row(),zero_row(),zero_row(),Row{3984,0,0,0},Row{3984,0,0,0},Row{3984,0,0,0}},Rows8{Row{3984,0,0,0},Row{3984,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3984,0,0,0},Row{3984,0,0,0},Row{3984,0,0,0}},Rows8{Row{3984,0,0,0},Row{3984,0,0,0},zero_row(),zero_row(),zero_row(),Row{3984,0,0,0},Row{3984,0,0,0},Row{3984,0,0,0}},Rows8{Row{3984,0,0,0},Row{3984,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1lrrrrrrr(code: U32) -> Glyph:
@@ -4963,7 +4971,7 @@ def face1l(+code: U32) -> Glyph:
 
 def face1rllllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{10414608,0,0,0},Row{133799824,0,0,0},Row{74452400,0,0,0}},Rows8{Row{175968,0,0,0},Row{45083744,0,0,0},Row{501613555,0,0,0},Row{1061161202,0,0,0},Row{194502240,0,0,0},Row{65962240,0,0,0},Row{182518288,0,0,0},Row{183844304,0,0,0}},Rows8{Row{66059840,0,0,0},Row{1327360,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{10414608,0,0,0},Row{133799824,0,0,0},Row{74452400,0,0,0}},Rows8{Row{175968,0,0,0},Row{45083744,0,0,0},Row{501613555,0,0,0},Row{1061161202,0,0,0},Row{194502240,0,0,0},Row{65962240,0,0,0},Row{182518288,0,0,0},Row{183844304,0,0,0}},Rows8{Row{66059840,0,0,0},Row{1327360,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1rllllll(code: U32) -> Glyph:
@@ -4971,7 +4979,7 @@ def face1rllllll(code: U32) -> Glyph:
 
 def face1rlllllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1048832,0,0,0},Row{166899472,0,0,0},Row{19927808,0,0,0},zero_row()},zero_rows(),zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1048832,0,0,0},Row{166899472,0,0,0},Row{19927808,0,0,0},zero_row()},zero_rows(),zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlllllrl(code: U32) -> Glyph:
@@ -4979,7 +4987,7 @@ def face1rlllllrl(code: U32) -> Glyph:
 
 def face1rlllllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{303038464,0,0,0},Row{4294721536,42,0,0},Row{2273179136,1006,0,0}},Rows8{Row{3756375840,7636,0,0},Row{3334352528,28493,0,0},Row{538925760,40471,0,0},Row{269380288,40196,0,0},Row{3013553808,28461,0,0},Row{4025917232,7860,0,0},Row{2003564544,1533,0,0},Row{4294860800,77,0,0}},Rows8{Row{892338176,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{303038464,0,0,0},Row{4294721536,42,0,0},Row{2273179136,1006,0,0}},Rows8{Row{3756375840,7636,0,0},Row{3334352528,28493,0,0},Row{538925760,40471,0,0},Row{269380288,40196,0,0},Row{3013553808,28461,0,0},Row{4025917232,7860,0,0},Row{2003564544,1533,0,0},Row{4294860800,77,0,0}},Rows8{Row{892338176,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlllllrr(code: U32) -> Glyph:
@@ -5003,7 +5011,7 @@ def face1rlllll(+code: U32) -> Glyph:
 
 def face1rllllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1830528,0,0,0},Row{10302899,0,0,0},Row{12490544,0,0,0}},Rows8{Row{12343541,0,0,0},Row{12469224,0,0,0},Row{12304322,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1830528,0,0,0},Row{10302899,0,0,0},Row{12490544,0,0,0}},Rows8{Row{12343541,0,0,0},Row{12469224,0,0,0},Row{12304322,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rllllrl(code: U32) -> Glyph:
@@ -5011,7 +5019,7 @@ def face1rllllrl(code: U32) -> Glyph:
 
 def face1rllllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{3710771712,1,0,0},Row{1068755968,0,0,0},Row{133722000,0,0,0},Row{14626034,0,0,0},Row{133722000,0,0,0},Row{1068755968,0,0,0},Row{3710771712,1,0,0},zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{3710771712,1,0,0},Row{1068755968,0,0,0},Row{133722000,0,0,0},Row{14626034,0,0,0},Row{133722000,0,0,0},Row{1068755968,0,0,0},Row{3710771712,1,0,0},zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rllllrrl(code: U32) -> Glyph:
@@ -5019,7 +5027,7 @@ def face1rllllrrl(code: U32) -> Glyph:
 
 def face1rllllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{zero_row(),zero_row(),Row{304226832,0,0,0},Row{2415918976,0,0,0},Row{2404734256,0,0,0},Row{2399141888,0,0,0},Row{620756992,0,0,0},zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{zero_row(),zero_row(),Row{304226832,0,0,0},Row{2415918976,0,0,0},Row{2404734256,0,0,0},Row{2399141888,0,0,0},Row{620756992,0,0,0},zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rllllrrr(code: U32) -> Glyph:
@@ -5051,7 +5059,7 @@ def face1rllll(+code: U32) -> Glyph:
 
 def face1rlllrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),Row{35791360,0,0,0},Row{251591424,0,0,0},Row{251263744,0,0,0},Row{251587328,0,0,0},Row{251239168,0,0,0}},Rows8{Row{251591424,0,0,0},Row{250215168,0,0,0},Row{245365504,0,0,0},Row{249486080,0,0,0},Row{245340928,0,0,0},Row{251656960,0,0,0},Row{244820736,0,0,0},Row{245340928,0,0,0}},Rows8{Row{250608384,0,0,0},Row{250145536,0,0,0},Row{251656960,0,0,0},Row{89478144,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),Row{35791360,0,0,0},Row{251591424,0,0,0},Row{251263744,0,0,0},Row{251587328,0,0,0},Row{251239168,0,0,0}},Rows8{Row{251591424,0,0,0},Row{250215168,0,0,0},Row{245365504,0,0,0},Row{249486080,0,0,0},Row{245340928,0,0,0},Row{251656960,0,0,0},Row{244820736,0,0,0},Row{245340928,0,0,0}},Rows8{Row{250608384,0,0,0},Row{250145536,0,0,0},Row{251656960,0,0,0},Row{89478144,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlllrll(code: U32) -> Glyph:
@@ -5059,7 +5067,7 @@ def face1rlllrll(code: U32) -> Glyph:
 
 def face1rlllrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1179648,0,0,0},Row{452978432,0,0,0},Row{3179851616,0,0,0},Row{3538928865,4,0,0}},Rows8{Row{1944633540,8,0,0},Row{1910489268,9,0,0},Row{3268920049,6,0,0},Row{3429072512,0,0,0},Row{738195712,0,0,0},Row{3481600,0,0,0},zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1179648,0,0,0},Row{452978432,0,0,0},Row{3179851616,0,0,0},Row{3538928865,4,0,0}},Rows8{Row{1944633540,8,0,0},Row{1910489268,9,0,0},Row{3268920049,6,0,0},Row{3429072512,0,0,0},Row{738195712,0,0,0},Row{3481600,0,0,0},zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlllrlrl(code: U32) -> Glyph:
@@ -5067,7 +5075,7 @@ def face1rlllrlrl(code: U32) -> Glyph:
 
 def face1rlllrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{139808,0,0,0},Row{3145664,0,0,0},Row{1398080,0,0,0},zero_row()},zero_rows(),zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{139808,0,0,0},Row{3145664,0,0,0},Row{1398080,0,0,0},zero_row()},zero_rows(),zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlllrlrr(code: U32) -> Glyph:
@@ -5091,7 +5099,7 @@ def face1rlllrl(+code: U32) -> Glyph:
 
 def face1rlllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{8448,0,0,0},Row{654912,0,0,0},Row{6257376,0,0,0},Row{9110258,0,0,0}},Rows8{Row{7227633,0,0,0},Row{851808,0,0,0},Row{17152,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{8448,0,0,0},Row{654912,0,0,0},Row{6257376,0,0,0},Row{9110258,0,0,0}},Rows8{Row{7227633,0,0,0},Row{851808,0,0,0},Row{17152,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlllrrl(code: U32) -> Glyph:
@@ -5099,7 +5107,7 @@ def face1rlllrrl(code: U32) -> Glyph:
 
 def face1rlllrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{8327168,0,0,0},Row{579809824,0,0,0},Row{4294967200,2,0,0},Row{1437558064,1,0,0},Row{8327168,0,0,0},Row{572662304,0,0,0},Row{4294967200,2,0,0},Row{1431655728,1,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{8327168,0,0,0},Row{579809824,0,0,0},Row{4294967200,2,0,0},Row{1437558064,1,0,0},Row{8327168,0,0,0},Row{572662304,0,0,0},Row{4294967200,2,0,0},Row{1431655728,1,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlllrrrl(code: U32) -> Glyph:
@@ -5107,7 +5115,7 @@ def face1rlllrrrl(code: U32) -> Glyph:
 
 def face1rlllrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1764992,0,0,0},Row{7292355,0,0,0},Row{6242304,0,0,0},Row{652800,0,0,0}},Rows8{Row{1212288,0,0,0},Row{11534323,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1764992,0,0,0},Row{7292355,0,0,0},Row{6242304,0,0,0},Row{652800,0,0,0}},Rows8{Row{1212288,0,0,0},Row{11534323,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlllrrrr(code: U32) -> Glyph:
@@ -5147,7 +5155,7 @@ def face1rlll(+code: U32) -> Glyph:
 
 def face1rllrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{2878832,0,0,0},Row{9319553,0,0,0},Row{2946816,0,0,0},Row{11354368,0,0,0}},Rows8{Row{12400339,0,0,0},Row{2878832,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{2878832,0,0,0},Row{9319553,0,0,0},Row{2946816,0,0,0},Row{11354368,0,0,0}},Rows8{Row{12400339,0,0,0},Row{2878832,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rllrlll(code: U32) -> Glyph:
@@ -5155,7 +5163,7 @@ def face1rllrlll(code: U32) -> Glyph:
 
 def face1rllrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{8704,0,0,0},Row{28464,0,0,0},Row{3216,0,0,0},zero_row()},zero_rows(),zero_rows(),zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{8704,0,0,0},Row{28464,0,0,0},Row{3216,0,0,0},zero_row()},zero_rows(),zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rllrllrl(code: U32) -> Glyph:
@@ -5163,7 +5171,7 @@ def face1rllrllrl(code: U32) -> Glyph:
 
 def face1rllrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2671775217,0,0,0},Row{3755454449,3,0,0},Row{3883842545,8,0,0}},Rows8{Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2671775217,0,0,0},Row{3755454449,3,0,0},Row{3883842545,8,0,0}},Rows8{Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1rllrllrr(code: U32) -> Glyph:
@@ -5187,7 +5195,7 @@ def face1rllrll(+code: U32) -> Glyph:
 
 def face1rllrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1879042592,0,0,0},Row{1871511504,0,0,0},Row{1865023476,0,0,0}},Rows8{Row{1865023477,0,0,0},Row{1865023476,0,0,0},Row{1865023424,0,0,0},Row{1864947984,0,0,0},Row{1864368128,0,0,0},Row{1864368128,0,0,0},Row{1864368128,0,0,0},Row{1864368128,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1879042592,0,0,0},Row{1871511504,0,0,0},Row{1865023476,0,0,0}},Rows8{Row{1865023477,0,0,0},Row{1865023476,0,0,0},Row{1865023424,0,0,0},Row{1864947984,0,0,0},Row{1864368128,0,0,0},Row{1864368128,0,0,0},Row{1864368128,0,0,0},Row{1864368128,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rllrlrl(code: U32) -> Glyph:
@@ -5195,7 +5203,7 @@ def face1rllrlrl(code: U32) -> Glyph:
 
 def face1rllrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,zero_rows(),Rows8{zero_row(),Row{256,0,0,0},Row{16304,0,0,0},Row{11920,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[zero_rows(),Rows8{zero_row(),Row{256,0,0,0},Row{16304,0,0,0},Row{11920,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rllrlrrl(code: U32) -> Glyph:
@@ -5203,7 +5211,7 @@ def face1rllrlrrl(code: U32) -> Glyph:
 
 def face1rllrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{512,0,0,0}},Rows8{Row{11056,0,0,0},Row{55056,0,0,0},Row{40304,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{5,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{512,0,0,0}},Rows8{Row{11056,0,0,0},Row{55056,0,0,0},Row{40304,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1rllrlrrr(code: U32) -> Glyph:
@@ -5235,7 +5243,7 @@ def face1rllrl(+code: U32) -> Glyph:
 
 def face1rllrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{49025,0,0,0},Row{48580,0,0,0},Row{47873,0,0,0},Row{47872,0,0,0}},Rows8{Row{47872,0,0,0},Row{47872,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{49025,0,0,0},Row{48580,0,0,0},Row{47873,0,0,0},Row{47872,0,0,0}},Rows8{Row{47872,0,0,0},Row{47872,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rllrrll(code: U32) -> Glyph:
@@ -5243,7 +5251,7 @@ def face1rllrrll(code: U32) -> Glyph:
 
 def face1rllrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3997008,0,0,0},Row{32123122,0,0,0},Row{83034615,0,0,0}},Rows8{Row{83034615,0,0,0},Row{32123123,0,0,0},Row{3997008,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{7,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3997008,0,0,0},Row{32123122,0,0,0},Row{83034615,0,0,0}},Rows8{Row{83034615,0,0,0},Row{32123123,0,0,0},Row{3997008,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rllrrlrl(code: U32) -> Glyph:
@@ -5251,7 +5259,7 @@ def face1rllrrlrl(code: U32) -> Glyph:
 
 def face1rllrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{31337698,0,0,0},Row{183803728,0,0,0},Row{2138503168,0,0,0},Row{4246659328,1,0,0},Row{2138503168,0,0,0},Row{183803728,0,0,0},Row{31337698,0,0,0},zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{31337698,0,0,0},Row{183803728,0,0,0},Row{2138503168,0,0,0},Row{4246659328,1,0,0},Row{2138503168,0,0,0},Row{183803728,0,0,0},Row{31337698,0,0,0},zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rllrrlrr(code: U32) -> Glyph:
@@ -5275,7 +5283,7 @@ def face1rllrrl(+code: U32) -> Glyph:
 
 def face1rllrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{12,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{268451778,109,0,0},Row{2147499911,12,0,0},Row{3808444192,2,0,0}},Rows8{Row{2348826400,0,0,0},Row{225460000,0,0,0},Row{81936160,2038,0,0},Row{278593536,2030,0,0},Row{1881038848,1979,0,0},Row{3775258880,1972,0,0},Row{4110461440,12286,0,0},Row{553659968,2242,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{12,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{268451778,109,0,0},Row{2147499911,12,0,0},Row{3808444192,2,0,0}},Rows8{Row{2348826400,0,0,0},Row{225460000,0,0,0},Row{81936160,2038,0,0},Row{278593536,2030,0,0},Row{1881038848,1979,0,0},Row{3775258880,1972,0,0},Row{4110461440,12286,0,0},Row{553659968,2242,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rllrrrll(code: U32) -> Glyph:
@@ -5283,7 +5291,7 @@ def face1rllrrrll(code: U32) -> Glyph:
 
 def face1rllrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{12,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{268451778,109,0,0},Row{2147499911,12,0,0},Row{3808444192,2,0,0}},Rows8{Row{2348826400,0,0,0},Row{225460000,32,0,0},Row{350371616,16124,0,0},Row{1620770816,32366,0,0},Row{1990656,15632,0,0},Row{385280,1730,0,0},Row{536914432,22477,0,0},Row{1342189120,40959,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{12,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{268451778,109,0,0},Row{2147499911,12,0,0},Row{3808444192,2,0,0}},Rows8{Row{2348826400,0,0,0},Row{225460000,32,0,0},Row{350371616,16124,0,0},Row{1620770816,32366,0,0},Row{1990656,15632,0,0},Row{385280,1730,0,0},Row{536914432,22477,0,0},Row{1342189120,40959,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rllrrrlr(code: U32) -> Glyph:
@@ -5299,7 +5307,7 @@ def face1rllrrrl(+code: U32) -> Glyph:
 
 def face1rllrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4352,0,0,0},Row{323504,1984,0,0},Row{645250,199,0,0},Row{537128704,62,0,0}},Rows8{Row{2953626880,9,0,0},Row{3591166148,1,0,0},Row{1309990560,36688,0,0},Row{178257920,36560,0,0},Row{31784960,35527,0,0},Row{275582976,35406,0,0},Row{1074499584,262127,0,0},Row{268624640,39714,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4352,0,0,0},Row{323504,1984,0,0},Row{645250,199,0,0},Row{537128704,62,0,0}},Rows8{Row{2953626880,9,0,0},Row{3591166148,1,0,0},Row{1309990560,36688,0,0},Row{178257920,36560,0,0},Row{31784960,35527,0,0},Row{275582976,35406,0,0},Row{1074499584,262127,0,0},Row{268624640,39714,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rllrrrrl(code: U32) -> Glyph:
@@ -5307,7 +5315,7 @@ def face1rllrrrrl(code: U32) -> Glyph:
 
 def face1rllrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{1945600,0,0,0},Row{3133440,0,0,0},Row{69632,0,0,0},Row{684032,0,0,0},Row{905216,0,0,0},Row{523024,0,0,0},Row{36800,0,0,0},Row{2804,0,0,0}},Rows8{Row{247466484,0,0,0},Row{184197089,0,0,0},Row{27192112,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{1945600,0,0,0},Row{3133440,0,0,0},Row{69632,0,0,0},Row{684032,0,0,0},Row{905216,0,0,0},Row{523024,0,0,0},Row{36800,0,0,0},Row{2804,0,0,0}},Rows8{Row{247466484,0,0,0},Row{184197089,0,0,0},Row{27192112,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1rllrrrrr(code: U32) -> Glyph:
@@ -5355,7 +5363,7 @@ def face1rll(+code: U32) -> Glyph:
 
 def face1rlrllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),Row{139264,0,0,0},Row{3112960,0,0,0},Row{9240576,0,0,0},zero_row(),Row{117391360,0,0,0},Row{201297920,0,0,0},Row{533585920,0,0,0}},Rows8{Row{1871311872,0,0,0},Row{3209033728,0,0,0},Row{4261608704,1,0,0},Row{4194357040,5,0,0},Row{4294967168,10,0,0},Row{4169703376,31,0,0},Row{2684358131,95,0,0},Row{1342179575,175,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),Row{139264,0,0,0},Row{3112960,0,0,0},Row{9240576,0,0,0},zero_row(),Row{117391360,0,0,0},Row{201297920,0,0,0},Row{533585920,0,0,0}},Rows8{Row{1871311872,0,0,0},Row{3209033728,0,0,0},Row{4261608704,1,0,0},Row{4194357040,5,0,0},Row{4294967168,10,0,0},Row{4169703376,31,0,0},Row{2684358131,95,0,0},Row{1342179575,175,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrllll(code: U32) -> Glyph:
@@ -5363,7 +5371,7 @@ def face1rlrllll(code: U32) -> Glyph:
 
 def face1rlrlllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),Row{35651584,0,0,0},Row{182452224,0,0,0},Row{31850496,0,0,0},zero_row(),Row{117391360,0,0,0},Row{201297920,0,0,0},Row{533585920,0,0,0}},Rows8{Row{1871311872,0,0,0},Row{3209033728,0,0,0},Row{4261608704,1,0,0},Row{4194357040,5,0,0},Row{4294967168,10,0,0},Row{4169703376,31,0,0},Row{2684358131,95,0,0},Row{1342179575,175,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),Row{35651584,0,0,0},Row{182452224,0,0,0},Row{31850496,0,0,0},zero_row(),Row{117391360,0,0,0},Row{201297920,0,0,0},Row{533585920,0,0,0}},Rows8{Row{1871311872,0,0,0},Row{3209033728,0,0,0},Row{4261608704,1,0,0},Row{4194357040,5,0,0},Row{4294967168,10,0,0},Row{4169703376,31,0,0},Row{2684358131,95,0,0},Row{1342179575,175,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrlllrl(code: U32) -> Glyph:
@@ -5371,7 +5379,7 @@ def face1rlrlllrl(code: U32) -> Glyph:
 
 def face1rlrlllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),Row{82718720,0,0,0},Row{1047060992,0,0,0},zero_row(),Row{117391360,0,0,0},Row{201297920,0,0,0},Row{533585920,0,0,0}},Rows8{Row{1871311872,0,0,0},Row{3209033728,0,0,0},Row{4261608704,1,0,0},Row{4194357040,5,0,0},Row{4294967168,10,0,0},Row{4169703376,31,0,0},Row{2684358131,95,0,0},Row{1342179575,175,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),Row{82718720,0,0,0},Row{1047060992,0,0,0},zero_row(),Row{117391360,0,0,0},Row{201297920,0,0,0},Row{533585920,0,0,0}},Rows8{Row{1871311872,0,0,0},Row{3209033728,0,0,0},Row{4261608704,1,0,0},Row{4194357040,5,0,0},Row{4294967168,10,0,0},Row{4169703376,31,0,0},Row{2684358131,95,0,0},Row{1342179575,175,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrlllrr(code: U32) -> Glyph:
@@ -5395,7 +5403,7 @@ def face1rlrlll(+code: U32) -> Glyph:
 
 def face1rlrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),Row{1262260224,0,0,0},Row{501604608,0,0,0},Row{16785408,0,0,0},Row{117391360,0,0,0},Row{201297920,0,0,0},Row{533585920,0,0,0}},Rows8{Row{1871311872,0,0,0},Row{3209033728,0,0,0},Row{4261608704,1,0,0},Row{4194357040,5,0,0},Row{4294967168,10,0,0},Row{4169703376,31,0,0},Row{2684358131,95,0,0},Row{1342179575,175,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),Row{1262260224,0,0,0},Row{501604608,0,0,0},Row{16785408,0,0,0},Row{117391360,0,0,0},Row{201297920,0,0,0},Row{533585920,0,0,0}},Rows8{Row{1871311872,0,0,0},Row{3209033728,0,0,0},Row{4261608704,1,0,0},Row{4194357040,5,0,0},Row{4294967168,10,0,0},Row{4169703376,31,0,0},Row{2684358131,95,0,0},Row{1342179575,175,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrllrl(code: U32) -> Glyph:
@@ -5403,7 +5411,7 @@ def face1rlrllrl(code: U32) -> Glyph:
 
 def face1rlrllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),Row{16781312,0,0,0},Row{1866986496,0,0,0},Row{335626240,0,0,0},zero_row(),Row{117391360,0,0,0},Row{201297920,0,0,0},Row{533585920,0,0,0}},Rows8{Row{1871311872,0,0,0},Row{3209033728,0,0,0},Row{4261608704,1,0,0},Row{4194357040,5,0,0},Row{4294967168,10,0,0},Row{4169703376,31,0,0},Row{2684358131,95,0,0},Row{1342179575,175,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),Row{16781312,0,0,0},Row{1866986496,0,0,0},Row{335626240,0,0,0},zero_row(),Row{117391360,0,0,0},Row{201297920,0,0,0},Row{533585920,0,0,0}},Rows8{Row{1871311872,0,0,0},Row{3209033728,0,0,0},Row{4261608704,1,0,0},Row{4194357040,5,0,0},Row{4294967168,10,0,0},Row{4169703376,31,0,0},Row{2684358131,95,0,0},Row{1342179575,175,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrllrrl(code: U32) -> Glyph:
@@ -5411,7 +5419,7 @@ def face1rlrllrrl(code: U32) -> Glyph:
 
 def face1rlrllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),Row{1114112,0,0,0},Row{134172672,0,0,0},Row{229355520,0,0,0},Row{167735296,0,0,0},Row{117391360,0,0,0},Row{201297920,0,0,0},Row{533585920,0,0,0}},Rows8{Row{1871311872,0,0,0},Row{3209033728,0,0,0},Row{4261608704,1,0,0},Row{4194357040,5,0,0},Row{4294967168,10,0,0},Row{4169703376,31,0,0},Row{2684358131,95,0,0},Row{1342179575,175,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),Row{1114112,0,0,0},Row{134172672,0,0,0},Row{229355520,0,0,0},Row{167735296,0,0,0},Row{117391360,0,0,0},Row{201297920,0,0,0},Row{533585920,0,0,0}},Rows8{Row{1871311872,0,0,0},Row{3209033728,0,0,0},Row{4261608704,1,0,0},Row{4194357040,5,0,0},Row{4294967168,10,0,0},Row{4169703376,31,0,0},Row{2684358131,95,0,0},Row{1342179575,175,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrllrrr(code: U32) -> Glyph:
@@ -5443,7 +5451,7 @@ def face1rlrll(+code: U32) -> Glyph:
 
 def face1rlrlrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4294246400,6291455,0,0},Row{4126867456,2586492,0,0},Row{4089389056,8,0,0}},Rows8{Row{4083122176,8,0,0},Row{4077838336,139817,0,0},Row{4077450752,1048575,0,0},Row{4112907264,349531,0,0},Row{4294967088,8,0,0},Row{4149579664,8,0,0},Row{4076871393,3635068,0,0},Row{4076865783,7340031,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{14,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4294246400,6291455,0,0},Row{4126867456,2586492,0,0},Row{4089389056,8,0,0}},Rows8{Row{4083122176,8,0,0},Row{4077838336,139817,0,0},Row{4077450752,1048575,0,0},Row{4112907264,349531,0,0},Row{4294967088,8,0,0},Row{4149579664,8,0,0},Row{4076871393,3635068,0,0},Row{4076865783,7340031,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrlrll(code: U32) -> Glyph:
@@ -5451,7 +5459,7 @@ def face1rlrlrll(code: U32) -> Glyph:
 
 def face1rlrlrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2113769728,0,0,0},Row{4236967184,11,0,0},Row{2684383120,95,0,0}},Rows8{Row{805309921,89,0,0},Row{2803,0,0,0},Row{2292,0,0,0},Row{2803,0,0,0},Row{536874481,89,0,0},Row{2684383120,95,0,0},Row{4236967184,10,0,0},Row{2113769728,0,0,0}},Rows8{Row{46268416,0,0,0},Row{241238016,0,0,0},Row{180748288,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2113769728,0,0,0},Row{4236967184,11,0,0},Row{2684383120,95,0,0}},Rows8{Row{805309921,89,0,0},Row{2803,0,0,0},Row{2292,0,0,0},Row{2803,0,0,0},Row{536874481,89,0,0},Row{2684383120,95,0,0},Row{4236967184,10,0,0},Row{2113769728,0,0,0}},Rows8{Row{46268416,0,0,0},Row{241238016,0,0,0},Row{180748288,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrlrlrl(code: U32) -> Glyph:
@@ -5459,7 +5467,7 @@ def face1rlrlrlrl(code: U32) -> Glyph:
 
 def face1rlrlrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),Row{8448,0,0,0},Row{390144,0,0,0},Row{823296,0,0,0},zero_row(),Row{2952790000,0,0,0},Row{1467449072,0,0,0},Row{3568,0,0,0}},Rows8{Row{3568,0,0,0},Row{304229872,0,0,0},Row{1342177264,0,0,0},Row{357916144,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{1467449072,0,0,0},Row{2952790000,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),Row{8448,0,0,0},Row{390144,0,0,0},Row{823296,0,0,0},zero_row(),Row{2952790000,0,0,0},Row{1467449072,0,0,0},Row{3568,0,0,0}},Rows8{Row{3568,0,0,0},Row{304229872,0,0,0},Row{1342177264,0,0,0},Row{357916144,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{1467449072,0,0,0},Row{2952790000,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrlrlrr(code: U32) -> Glyph:
@@ -5483,7 +5491,7 @@ def face1rlrlrl(+code: U32) -> Glyph:
 
 def face1rlrlrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),Row{18939904,0,0,0},Row{31064064,0,0,0},Row{5185536,0,0,0},zero_row(),Row{2952790000,0,0,0},Row{1467449072,0,0,0},Row{3568,0,0,0}},Rows8{Row{3568,0,0,0},Row{304229872,0,0,0},Row{1342177264,0,0,0},Row{357916144,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{1467449072,0,0,0},Row{2952790000,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),Row{18939904,0,0,0},Row{31064064,0,0,0},Row{5185536,0,0,0},zero_row(),Row{2952790000,0,0,0},Row{1467449072,0,0,0},Row{3568,0,0,0}},Rows8{Row{3568,0,0,0},Row{304229872,0,0,0},Row{1342177264,0,0,0},Row{357916144,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{1467449072,0,0,0},Row{2952790000,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrlrrll(code: U32) -> Glyph:
@@ -5491,7 +5499,7 @@ def face1rlrlrrll(code: U32) -> Glyph:
 
 def face1rlrlrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),Row{9421056,0,0,0},Row{132369152,0,0,0},zero_row(),Row{2952790000,0,0,0},Row{1467449072,0,0,0},Row{3568,0,0,0}},Rows8{Row{3568,0,0,0},Row{304229872,0,0,0},Row{1342177264,0,0,0},Row{357916144,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{1467449072,0,0,0},Row{2952790000,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),Row{9421056,0,0,0},Row{132369152,0,0,0},zero_row(),Row{2952790000,0,0,0},Row{1467449072,0,0,0},Row{3568,0,0,0}},Rows8{Row{3568,0,0,0},Row{304229872,0,0,0},Row{1342177264,0,0,0},Row{357916144,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{1467449072,0,0,0},Row{2952790000,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrlrrlr(code: U32) -> Glyph:
@@ -5507,7 +5515,7 @@ def face1rlrlrrl(+code: U32) -> Glyph:
 
 def face1rlrlrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),Row{1048832,0,0,0},Row{183614976,0,0,0},Row{36709120,0,0,0},zero_row(),Row{2952790000,0,0,0},Row{1467449072,0,0,0},Row{3568,0,0,0}},Rows8{Row{3568,0,0,0},Row{304229872,0,0,0},Row{1342177264,0,0,0},Row{357916144,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{1467449072,0,0,0},Row{2952790000,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),Row{1048832,0,0,0},Row{183614976,0,0,0},Row{36709120,0,0,0},zero_row(),Row{2952790000,0,0,0},Row{1467449072,0,0,0},Row{3568,0,0,0}},Rows8{Row{3568,0,0,0},Row{304229872,0,0,0},Row{1342177264,0,0,0},Row{357916144,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{1467449072,0,0,0},Row{2952790000,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrlrrrl(code: U32) -> Glyph:
@@ -5515,7 +5523,7 @@ def face1rlrlrrrl(code: U32) -> Glyph:
 
 def face1rlrlrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),Row{544,0,0,0},Row{3744,0,0,0},Row{28176,0,0,0},zero_row(),Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0}},Rows8{Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),Row{544,0,0,0},Row{3744,0,0,0},Row{28176,0,0,0},zero_row(),Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0}},Rows8{Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrlrrrr(code: U32) -> Glyph:
@@ -5555,7 +5563,7 @@ def face1rlrl(+code: U32) -> Glyph:
 
 def face1rlrrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),Row{8704,0,0,0},Row{36624,0,0,0},Row{3456,0,0,0},zero_row(),Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0}},Rows8{Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),Row{8704,0,0,0},Row{36624,0,0,0},Row{3456,0,0,0},zero_row(),Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0}},Rows8{Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0},Row{3568,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrrlll(code: U32) -> Glyph:
@@ -5563,7 +5571,7 @@ def face1rlrrlll(code: U32) -> Glyph:
 
 def face1rlrrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),Row{257600,0,0,0},Row{3049188,0,0,0},zero_row(),Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0}},Rows8{Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),Row{257600,0,0,0},Row{3049188,0,0,0},zero_row(),Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0}},Rows8{Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrrllrl(code: U32) -> Glyph:
@@ -5571,7 +5579,7 @@ def face1rlrrllrl(code: U32) -> Glyph:
 
 def face1rlrrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),Row{65552,0,0,0},Row{5203446,0,0,0},Row{266305,0,0,0},zero_row(),Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0}},Rows8{Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),Row{65552,0,0,0},Row{5203446,0,0,0},Row{266305,0,0,0},zero_row(),Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0}},Rows8{Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0},Row{57088,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrrllrr(code: U32) -> Glyph:
@@ -5595,7 +5603,7 @@ def face1rlrrll(+code: U32) -> Glyph:
 
 def face1rlrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1542455168,0,0,0},Row{4254572416,7,0,0},Row{3238023040,47,0,0}},Rows8{Row{1342197632,143,0,0},Row{269643698,191,0,0},Row{10485757,207,0,0},Row{540385236,191,0,0},Row{1342197632,143,0,0},Row{3238023040,47,0,0},Row{4254572416,7,0,0},Row{1542455168,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1542455168,0,0,0},Row{4254572416,7,0,0},Row{3238023040,47,0,0}},Rows8{Row{1342197632,143,0,0},Row{269643698,191,0,0},Row{10485757,207,0,0},Row{540385236,191,0,0},Row{1342197632,143,0,0},Row{3238023040,47,0,0},Row{4254572416,7,0,0},Row{1542455168,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrrlrl(code: U32) -> Glyph:
@@ -5603,7 +5611,7 @@ def face1rlrrlrl(code: U32) -> Glyph:
 
 def face1rlrrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),zero_row(),Row{2019385344,0,0,0},Row{1069993984,0,0,0},Row{16785408,0,0,0},Row{1073770480,159,0,0},Row{1073868784,159,0,0},Row{1074331376,159,0,0}},Rows8{Row{1076874480,159,0,0},Row{1085230576,159,0,0},Row{1157303792,159,0,0},Row{1290931696,159,0,0},Row{2407534064,159,0,0},Row{3977252336,159,0,0},Row{4110421488,159,0,0},Row{2952793584,159,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),zero_row(),Row{2019385344,0,0,0},Row{1069993984,0,0,0},Row{16785408,0,0,0},Row{1073770480,159,0,0},Row{1073868784,159,0,0},Row{1074331376,159,0,0}},Rows8{Row{1076874480,159,0,0},Row{1085230576,159,0,0},Row{1157303792,159,0,0},Row{1290931696,159,0,0},Row{2407534064,159,0,0},Row{3977252336,159,0,0},Row{4110421488,159,0,0},Row{2952793584,159,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrrlrrl(code: U32) -> Glyph:
@@ -5611,7 +5619,7 @@ def face1rlrrlrrl(code: U32) -> Glyph:
 
 def face1rlrrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),Row{135168,0,0,0},Row{7286784,0,0,0},Row{13172736,0,0,0},zero_row(),Row{2113765632,0,0,0},Row{4236967184,10,0,0},Row{2684383120,111,0,0}},Rows8{Row{536874465,207,0,0},Row{2803,238,0,0},Row{2292,508,0,0},Row{2803,238,0,0},Row{536874481,207,0,0},Row{2684383120,111,0,0},Row{4236967184,10,0,0},Row{2113769728,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),Row{135168,0,0,0},Row{7286784,0,0,0},Row{13172736,0,0,0},zero_row(),Row{2113765632,0,0,0},Row{4236967184,10,0,0},Row{2684383120,111,0,0}},Rows8{Row{536874465,207,0,0},Row{2803,238,0,0},Row{2292,508,0,0},Row{2803,238,0,0},Row{536874481,207,0,0},Row{2684383120,111,0,0},Row{4236967184,10,0,0},Row{2113769728,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrrlrrr(code: U32) -> Glyph:
@@ -5643,7 +5651,7 @@ def face1rlrrl(+code: U32) -> Glyph:
 
 def face1rlrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),Row{303038464,0,0,0},Row{512753664,0,0,0},Row{99680256,0,0,0},zero_row(),Row{2113765632,0,0,0},Row{4236967184,10,0,0},Row{2684383120,111,0,0}},Rows8{Row{536874465,207,0,0},Row{2803,238,0,0},Row{2292,508,0,0},Row{2803,238,0,0},Row{536874481,207,0,0},Row{2684383120,111,0,0},Row{4236967184,10,0,0},Row{2113769728,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),Row{303038464,0,0,0},Row{512753664,0,0,0},Row{99680256,0,0,0},zero_row(),Row{2113765632,0,0,0},Row{4236967184,10,0,0},Row{2684383120,111,0,0}},Rows8{Row{536874465,207,0,0},Row{2803,238,0,0},Row{2292,508,0,0},Row{2803,238,0,0},Row{536874481,207,0,0},Row{2684383120,111,0,0},Row{4236967184,10,0,0},Row{2113769728,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrrrll(code: U32) -> Glyph:
@@ -5651,7 +5659,7 @@ def face1rlrrrll(code: U32) -> Glyph:
 
 def face1rlrrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),zero_row(),Row{167448576,0,0,0},Row{2386341888,0,0,0},zero_row(),Row{2113765632,0,0,0},Row{4236967184,10,0,0},Row{2684383120,111,0,0}},Rows8{Row{536874465,207,0,0},Row{2803,238,0,0},Row{2292,508,0,0},Row{2803,238,0,0},Row{536874481,207,0,0},Row{2684383120,111,0,0},Row{4236967184,10,0,0},Row{2113769728,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),zero_row(),Row{167448576,0,0,0},Row{2386341888,0,0,0},zero_row(),Row{2113765632,0,0,0},Row{4236967184,10,0,0},Row{2684383120,111,0,0}},Rows8{Row{536874465,207,0,0},Row{2803,238,0,0},Row{2292,508,0,0},Row{2803,238,0,0},Row{536874481,207,0,0},Row{2684383120,111,0,0},Row{4236967184,10,0,0},Row{2113769728,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrrrlrl(code: U32) -> Glyph:
@@ -5659,7 +5667,7 @@ def face1rlrrrlrl(code: U32) -> Glyph:
 
 def face1rlrrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),zero_row(),Row{2272088064,0,0,0},Row{1337442304,0,0,0},Row{16785408,0,0,0},Row{2113765632,0,0,0},Row{4236967184,10,0,0},Row{2684383120,111,0,0}},Rows8{Row{536874465,207,0,0},Row{2803,238,0,0},Row{2292,508,0,0},Row{2803,238,0,0},Row{536874481,207,0,0},Row{2684383120,111,0,0},Row{4236967184,10,0,0},Row{2113769728,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),zero_row(),Row{2272088064,0,0,0},Row{1337442304,0,0,0},Row{16785408,0,0,0},Row{2113765632,0,0,0},Row{4236967184,10,0,0},Row{2684383120,111,0,0}},Rows8{Row{536874465,207,0,0},Row{2803,238,0,0},Row{2292,508,0,0},Row{2803,238,0,0},Row{536874481,207,0,0},Row{2684383120,111,0,0},Row{4236967184,10,0,0},Row{2113769728,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrrrlrr(code: U32) -> Glyph:
@@ -5683,7 +5691,7 @@ def face1rlrrrl(+code: U32) -> Glyph:
 
 def face1rlrrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),Row{16781312,0,0,0},Row{3188449280,0,0,0},Row{587345920,0,0,0},zero_row(),Row{2113765632,0,0,0},Row{4236967184,10,0,0},Row{2684383120,111,0,0}},Rows8{Row{536874465,207,0,0},Row{2803,238,0,0},Row{2292,508,0,0},Row{2803,238,0,0},Row{536874481,207,0,0},Row{2684383120,111,0,0},Row{4236967184,10,0,0},Row{2113769728,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),Row{16781312,0,0,0},Row{3188449280,0,0,0},Row{587345920,0,0,0},zero_row(),Row{2113765632,0,0,0},Row{4236967184,10,0,0},Row{2684383120,111,0,0}},Rows8{Row{536874465,207,0,0},Row{2803,238,0,0},Row{2292,508,0,0},Row{2803,238,0,0},Row{536874481,207,0,0},Row{2684383120,111,0,0},Row{4236967184,10,0,0},Row{2113769728,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrrrrll(code: U32) -> Glyph:
@@ -5691,7 +5699,7 @@ def face1rlrrrrll(code: U32) -> Glyph:
 
 def face1rlrrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{822084608,0,0,0},Row{3708841840,1,0,0},Row{1607990288,0,0,0},Row{100647168,0,0,0},Row{117424384,0,0,0},Row{1875311632,0,0,0},Row{3692060528,1,0,0},Row{553648896,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{822084608,0,0,0},Row{3708841840,1,0,0},Row{1607990288,0,0,0},Row{100647168,0,0,0},Row{117424384,0,0,0},Row{1875311632,0,0,0},Row{3692060528,1,0,0},Row{553648896,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrrrrlr(code: U32) -> Glyph:
@@ -5707,7 +5715,7 @@ def face1rlrrrrl(+code: U32) -> Glyph:
 
 def face1rlrrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2113765632,21,0,0},Row{4236967184,63,0,0},Row{4043337616,111,0,0}},Rows8{Row{3925872097,207,0,0},Row{776997619,238,0,0},Row{115476724,508,0,0},Row{11209459,238,0,0},Row{538869233,207,0,0},Row{2684682128,111,0,0},Row{4236967712,10,0,0},Row{2113773168,0,0,0}},Rows8{Row{512,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{11,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2113765632,21,0,0},Row{4236967184,63,0,0},Row{4043337616,111,0,0}},Rows8{Row{3925872097,207,0,0},Row{776997619,238,0,0},Row{115476724,508,0,0},Row{11209459,238,0,0},Row{538869233,207,0,0},Row{2684682128,111,0,0},Row{4236967712,10,0,0},Row{2113773168,0,0,0}},Rows8{Row{512,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrrrrrl(code: U32) -> Glyph:
@@ -5715,7 +5723,7 @@ def face1rlrrrrrl(code: U32) -> Glyph:
 
 def face1rlrrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),Row{139264,0,0,0},Row{3104768,0,0,0},Row{10223616,0,0,0},zero_row(),Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0}},Rows8{Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2415922912,63,0,0},Row{3774894000,30,0,0},Row{4253679408,7,0,0},Row{1559143168,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),Row{139264,0,0,0},Row{3104768,0,0,0},Row{10223616,0,0,0},zero_row(),Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0}},Rows8{Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2415922912,63,0,0},Row{3774894000,30,0,0},Row{4253679408,7,0,0},Row{1559143168,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rlrrrrrr(code: U32) -> Glyph:
@@ -5771,7 +5779,7 @@ def face1rl(+code: U32) -> Glyph:
 
 def face1rrlllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),Row{34603008,0,0,0},Row{198180864,0,0,0},Row{48496640,0,0,0},zero_row(),Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0}},Rows8{Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2415922912,63,0,0},Row{3774894000,30,0,0},Row{4253679408,7,0,0},Row{1559143168,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),Row{34603008,0,0,0},Row{198180864,0,0,0},Row{48496640,0,0,0},zero_row(),Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0}},Rows8{Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2415922912,63,0,0},Row{3774894000,30,0,0},Row{4253679408,7,0,0},Row{1559143168,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrlllll(code: U32) -> Glyph:
@@ -5779,7 +5787,7 @@ def face1rrlllll(code: U32) -> Glyph:
 
 def face1rrllllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),Row{100540416,0,0,0},Row{1331286528,0,0,0},zero_row(),Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0}},Rows8{Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2415922912,63,0,0},Row{3774894000,30,0,0},Row{4253679408,7,0,0},Row{1559143168,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),Row{100540416,0,0,0},Row{1331286528,0,0,0},zero_row(),Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0}},Rows8{Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2415922912,63,0,0},Row{3774894000,30,0,0},Row{4253679408,7,0,0},Row{1559143168,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrllllrl(code: U32) -> Glyph:
@@ -5787,7 +5795,7 @@ def face1rrllllrl(code: U32) -> Glyph:
 
 def face1rrllllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),Row{16781312,0,0,0},Row{2402874112,0,0,0},Row{335626240,0,0,0},zero_row(),Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0}},Rows8{Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2415922912,63,0,0},Row{3774894000,30,0,0},Row{4253679408,7,0,0},Row{1559143168,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),Row{16781312,0,0,0},Row{2402874112,0,0,0},Row{335626240,0,0,0},zero_row(),Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0}},Rows8{Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2147487216,79,0,0},Row{2415922912,63,0,0},Row{3774894000,30,0,0},Row{4253679408,7,0,0},Row{1559143168,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrllllrr(code: U32) -> Glyph:
@@ -5811,7 +5819,7 @@ def face1rrllll(+code: U32) -> Glyph:
 
 def face1rrlllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),Row{35651584,0,0,0},Row{165740544,0,0,0},Row{30867456,0,0,0},zero_row(),Row{2952793078,95,0,0},Row{4076883904,12,0,0},Row{4211134272,4,0,0}},Rows8{Row{3208968960,0,0,0},Row{1068233472,0,0,0},Row{184520704,0,0,0},Row{50274304,0,0,0},Row{15532032,0,0,0},Row{15532032,0,0,0},Row{15532032,0,0,0},Row{15532032,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),Row{35651584,0,0,0},Row{165740544,0,0,0},Row{30867456,0,0,0},zero_row(),Row{2952793078,95,0,0},Row{4076883904,12,0,0},Row{4211134272,4,0,0}},Rows8{Row{3208968960,0,0,0},Row{1068233472,0,0,0},Row{184520704,0,0,0},Row{50274304,0,0,0},Row{15532032,0,0,0},Row{15532032,0,0,0},Row{15532032,0,0,0},Row{15532032,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrlllrl(code: U32) -> Glyph:
@@ -5819,7 +5827,7 @@ def face1rrlllrl(code: U32) -> Glyph:
 
 def face1rrlllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3312,0,0,0},Row{3312,0,0,0},Row{1191408,0,0,0}},Rows8{Row{738197488,0,0,0},Row{3481624048,0,0,0},Row{4194307312,1,0,0},Row{3729993200,0,0,0},Row{1308622832,0,0,0},Row{3497456,0,0,0},Row{3312,0,0,0},Row{3312,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3312,0,0,0},Row{3312,0,0,0},Row{1191408,0,0,0}},Rows8{Row{738197488,0,0,0},Row{3481624048,0,0,0},Row{4194307312,1,0,0},Row{3729993200,0,0,0},Row{1308622832,0,0,0},Row{3497456,0,0,0},Row{3312,0,0,0},Row{3312,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrlllrrl(code: U32) -> Glyph:
@@ -5827,7 +5835,7 @@ def face1rrlllrrl(code: U32) -> Glyph:
 
 def face1rrlllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{97511424,0,0,0},Row{1608044432,0,0,0},Row{2940210912,0,0,0}},Rows8{Row{2938113264,0,0,0},Row{1336085744,0,0,0},Row{721358064,0,0,0},Row{3732212976,1,0,0},Row{4160752880,5,0,0},Row{4160752880,5,0,0},Row{4019653872,1,0,0},Row{1023352048,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{97511424,0,0,0},Row{1608044432,0,0,0},Row{2940210912,0,0,0}},Rows8{Row{2938113264,0,0,0},Row{1336085744,0,0,0},Row{721358064,0,0,0},Row{3732212976,1,0,0},Row{4160752880,5,0,0},Row{4160752880,5,0,0},Row{4019653872,1,0,0},Row{1023352048,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrlllrrr(code: U32) -> Glyph:
@@ -5859,7 +5867,7 @@ def face1rrlll(+code: U32) -> Glyph:
 
 def face1rrllrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{8704,0,0,0},Row{125184,0,0,0},Row{450816,0,0,0},zero_row()},Rows8{Row{45017632,0,0,0},Row{217685713,0,0,0},Row{531628865,0,0,0},Row{536581648,0,0,0},Row{532061922,0,0,0},Row{532678135,0,0,0},Row{535530997,0,0,0},Row{530116224,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{8704,0,0,0},Row{125184,0,0,0},Row{450816,0,0,0},zero_row()},Rows8{Row{45017632,0,0,0},Row{217685713,0,0,0},Row{531628865,0,0,0},Row{536581648,0,0,0},Row{532061922,0,0,0},Row{532678135,0,0,0},Row{535530997,0,0,0},Row{530116224,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrllrll(code: U32) -> Glyph:
@@ -5867,7 +5875,7 @@ def face1rrllrll(code: U32) -> Glyph:
 
 def face1rrllrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{2228224,0,0,0},Row{9375744,0,0,0},Row{1929216,0,0,0},zero_row()},Rows8{Row{45017632,0,0,0},Row{217685713,0,0,0},Row{531628865,0,0,0},Row{536581648,0,0,0},Row{532061922,0,0,0},Row{532678135,0,0,0},Row{535530997,0,0,0},Row{530116224,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{2228224,0,0,0},Row{9375744,0,0,0},Row{1929216,0,0,0},zero_row()},Rows8{Row{45017632,0,0,0},Row{217685713,0,0,0},Row{531628865,0,0,0},Row{536581648,0,0,0},Row{532061922,0,0,0},Row{532678135,0,0,0},Row{535530997,0,0,0},Row{530116224,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrllrlrl(code: U32) -> Glyph:
@@ -5875,7 +5883,7 @@ def face1rrllrlrl(code: U32) -> Glyph:
 
 def face1rrllrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4121600,0,0,0},Row{48786992,0,0,0},zero_row()},Rows8{Row{45017632,0,0,0},Row{217685713,0,0,0},Row{531628865,0,0,0},Row{536581648,0,0,0},Row{532061922,0,0,0},Row{532678135,0,0,0},Row{535530997,0,0,0},Row{530116224,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4121600,0,0,0},Row{48786992,0,0,0},zero_row()},Rows8{Row{45017632,0,0,0},Row{217685713,0,0,0},Row{531628865,0,0,0},Row{536581648,0,0,0},Row{532061922,0,0,0},Row{532678135,0,0,0},Row{535530997,0,0,0},Row{530116224,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrllrlrr(code: U32) -> Glyph:
@@ -5899,7 +5907,7 @@ def face1rrllrl(+code: U32) -> Glyph:
 
 def face1rrllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{47368960,0,0,0},Row{13528368,0,0,0},Row{66064,0,0,0}},Rows8{Row{45017632,0,0,0},Row{217685713,0,0,0},Row{531628865,0,0,0},Row{536581648,0,0,0},Row{532061922,0,0,0},Row{532678135,0,0,0},Row{535530997,0,0,0},Row{530116224,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{47368960,0,0,0},Row{13528368,0,0,0},Row{66064,0,0,0}},Rows8{Row{45017632,0,0,0},Row{217685713,0,0,0},Row{531628865,0,0,0},Row{536581648,0,0,0},Row{532061922,0,0,0},Row{532678135,0,0,0},Row{535530997,0,0,0},Row{530116224,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrllrrl(code: U32) -> Glyph:
@@ -5907,7 +5915,7 @@ def face1rrllrrl(code: U32) -> Glyph:
 
 def face1rrllrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1048832,0,0,0},Row{100032352,0,0,0},Row{4260864,0,0,0},zero_row()},Rows8{Row{45017632,0,0,0},Row{217685713,0,0,0},Row{531628865,0,0,0},Row{536581648,0,0,0},Row{532061922,0,0,0},Row{532678135,0,0,0},Row{535530997,0,0,0},Row{530116224,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1048832,0,0,0},Row{100032352,0,0,0},Row{4260864,0,0,0},zero_row()},Rows8{Row{45017632,0,0,0},Row{217685713,0,0,0},Row{531628865,0,0,0},Row{536581648,0,0,0},Row{532061922,0,0,0},Row{532678135,0,0,0},Row{535530997,0,0,0},Row{530116224,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrllrrrl(code: U32) -> Glyph:
@@ -5915,7 +5923,7 @@ def face1rrllrrrl(code: U32) -> Glyph:
 
 def face1rrllrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{69632,0,0,0},Row{6288896,0,0,0},Row{12299264,0,0,0},Row{8386560,0,0,0}},Rows8{Row{45087520,0,0,0},Row{217685713,0,0,0},Row{531628865,0,0,0},Row{536581648,0,0,0},Row{532061922,0,0,0},Row{532678135,0,0,0},Row{535530997,0,0,0},Row{530116224,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{69632,0,0,0},Row{6288896,0,0,0},Row{12299264,0,0,0},Row{8386560,0,0,0}},Rows8{Row{45087520,0,0,0},Row{217685713,0,0,0},Row{531628865,0,0,0},Row{536581648,0,0,0},Row{532061922,0,0,0},Row{532678135,0,0,0},Row{535530997,0,0,0},Row{530116224,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrllrrrr(code: U32) -> Glyph:
@@ -5955,7 +5963,7 @@ def face1rrll(+code: U32) -> Glyph:
 
 def face1rrlrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{2996759344,2271,0,0},Row{3757678305,40872,0,0},Row{1068638480,129826,0,0},Row{4294966896,262143,0,0},Row{1589996788,87381,0,0},Row{1070597623,26112,0,0},Row{4008414708,49064,0,0},Row{3275484784,6639,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{2996759344,2271,0,0},Row{3757678305,40872,0,0},Row{1068638480,129826,0,0},Row{4294966896,262143,0,0},Row{1589996788,87381,0,0},Row{1070597623,26112,0,0},Row{4008414708,49064,0,0},Row{3275484784,6639,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrlrlll(code: U32) -> Glyph:
@@ -5963,7 +5971,7 @@ def face1rrlrlll(code: U32) -> Glyph:
 
 def face1rrlrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{80668672,0,0,0},Row{803782560,0,0,0},Row{1244662770,0,0,0},Row{2037,0,0,0},Row{2037,0,0,0},Row{1261440242,0,0,0},Row{787005344,0,0,0},Row{80734224,0,0,0}},Rows8{Row{1781760,0,0,0},Row{14098432,0,0,0},Row{9269248,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{80668672,0,0,0},Row{803782560,0,0,0},Row{1244662770,0,0,0},Row{2037,0,0,0},Row{2037,0,0,0},Row{1261440242,0,0,0},Row{787005344,0,0,0},Row{80734224,0,0,0}},Rows8{Row{1781760,0,0,0},Row{14098432,0,0,0},Row{9269248,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrlrllrl(code: U32) -> Glyph:
@@ -5971,7 +5979,7 @@ def face1rrlrllrl(code: U32) -> Glyph:
 
 def face1rrlrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{8704,0,0,0},Row{194048,0,0,0},Row{638976,0,0,0},zero_row()},Rows8{Row{62842880,0,0,0},Row{785948576,0,0,0},Row{2404526578,0,0,0},Row{2952790005,0,0,0},Row{894786037,0,0,0},Row{639634162,0,0,0},Row{1339604896,0,0,0},Row{97511440,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{8704,0,0,0},Row{194048,0,0,0},Row{638976,0,0,0},zero_row()},Rows8{Row{62842880,0,0,0},Row{785948576,0,0,0},Row{2404526578,0,0,0},Row{2952790005,0,0,0},Row{894786037,0,0,0},Row{639634162,0,0,0},Row{1339604896,0,0,0},Row{97511440,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrlrllrr(code: U32) -> Glyph:
@@ -5995,7 +6003,7 @@ def face1rrlrll(+code: U32) -> Glyph:
 
 def face1rrlrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{2162688,0,0,0},Row{12386304,0,0,0},Row{3096576,0,0,0},zero_row()},Rows8{Row{62842880,0,0,0},Row{785948576,0,0,0},Row{2404526578,0,0,0},Row{2952790005,0,0,0},Row{894786037,0,0,0},Row{639634162,0,0,0},Row{1339604896,0,0,0},Row{97511440,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{2162688,0,0,0},Row{12386304,0,0,0},Row{3096576,0,0,0},zero_row()},Rows8{Row{62842880,0,0,0},Row{785948576,0,0,0},Row{2404526578,0,0,0},Row{2952790005,0,0,0},Row{894786037,0,0,0},Row{639634162,0,0,0},Row{1339604896,0,0,0},Row{97511440,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrlrlrl(code: U32) -> Glyph:
@@ -6003,7 +6011,7 @@ def face1rrlrlrl(code: U32) -> Glyph:
 
 def face1rrlrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{6279680,0,0,0},Row{99917072,0,0,0},zero_row()},Rows8{Row{62842880,0,0,0},Row{785948576,0,0,0},Row{2404526578,0,0,0},Row{2952790005,0,0,0},Row{894786037,0,0,0},Row{639634162,0,0,0},Row{1339604896,0,0,0},Row{97511440,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{6279680,0,0,0},Row{99917072,0,0,0},zero_row()},Rows8{Row{62842880,0,0,0},Row{785948576,0,0,0},Row{2404526578,0,0,0},Row{2952790005,0,0,0},Row{894786037,0,0,0},Row{639634162,0,0,0},Row{1339604896,0,0,0},Row{97511440,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrlrlrrl(code: U32) -> Glyph:
@@ -6011,7 +6019,7 @@ def face1rrlrlrrl(code: U32) -> Glyph:
 
 def face1rrlrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1048832,0,0,0},Row{150179632,0,0,0},Row{20976640,0,0,0},zero_row()},Rows8{Row{62842880,0,0,0},Row{785948576,0,0,0},Row{2404526578,0,0,0},Row{2952790005,0,0,0},Row{894786037,0,0,0},Row{639634162,0,0,0},Row{1339604896,0,0,0},Row{97511440,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1048832,0,0,0},Row{150179632,0,0,0},Row{20976640,0,0,0},zero_row()},Rows8{Row{62842880,0,0,0},Row{785948576,0,0,0},Row{2404526578,0,0,0},Row{2952790005,0,0,0},Row{894786037,0,0,0},Row{639634162,0,0,0},Row{1339604896,0,0,0},Row{97511440,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrlrlrrr(code: U32) -> Glyph:
@@ -6043,7 +6051,7 @@ def face1rrlrl(+code: U32) -> Glyph:
 
 def face1rrlrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{5,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{288,0,0,0},Row{3248,0,0,0},Row{20256,0,0,0},zero_row()},Rows8{Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{5,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{288,0,0,0},Row{3248,0,0,0},Row{20256,0,0,0},zero_row()},Rows8{Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrlrrll(code: U32) -> Glyph:
@@ -6051,7 +6059,7 @@ def face1rrlrrll(code: U32) -> Glyph:
 
 def face1rrlrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{8704,0,0,0},Row{28464,0,0,0},Row{3216,0,0,0},zero_row()},Rows8{Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{8704,0,0,0},Row{28464,0,0,0},Row{3216,0,0,0},zero_row()},Rows8{Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrlrrlrl(code: U32) -> Glyph:
@@ -6059,7 +6067,7 @@ def face1rrlrrlrl(code: U32) -> Glyph:
 
 def face1rrlrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{188256,0,0,0},Row{1938677,0,0,0},zero_row()},Rows8{Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{188256,0,0,0},Row{1938677,0,0,0},zero_row()},Rows8{Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrlrrlrr(code: U32) -> Glyph:
@@ -6083,7 +6091,7 @@ def face1rrlrrl(+code: U32) -> Glyph:
 
 def face1rrlrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{65552,0,0,0},Row{4162552,0,0,0},Row{266305,0,0,0},zero_row()},Rows8{Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{65552,0,0,0},Row{4162552,0,0,0},Row{266305,0,0,0},zero_row()},Rows8{Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0},Row{48912,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrlrrrll(code: U32) -> Glyph:
@@ -6091,7 +6099,7 @@ def face1rrlrrrll(code: U32) -> Glyph:
 
 def face1rrlrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{71330560,0,0,0},Row{63825664,0,0,0},Row{30263808,0,0,0}},Rows8{Row{182658304,0,0,0},Row{1068432688,0,0,0},Row{2413199312,0,0,0},Row{2939160820,0,0,0},Row{2936014581,0,0,0},Row{2133854707,0,0,0},Row{518565824,0,0,0},Row{62843152,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{71330560,0,0,0},Row{63825664,0,0,0},Row{30263808,0,0,0}},Rows8{Row{182658304,0,0,0},Row{1068432688,0,0,0},Row{2413199312,0,0,0},Row{2939160820,0,0,0},Row{2936014581,0,0,0},Row{2133854707,0,0,0},Row{518565824,0,0,0},Row{62843152,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrlrrrlr(code: U32) -> Glyph:
@@ -6107,7 +6115,7 @@ def face1rrlrrrl(+code: U32) -> Glyph:
 
 def face1rrlrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{126211584,0,0,0},Row{66874624,0,0,0},Row{1049088,0,0,0}},Rows8{Row{133069297,0,0,0},Row{1609088497,0,0,0},Row{2404388337,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{126211584,0,0,0},Row{66874624,0,0,0},Row{1049088,0,0,0}},Rows8{Row{133069297,0,0,0},Row{1609088497,0,0,0},Row{2404388337,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrlrrrrl(code: U32) -> Glyph:
@@ -6115,7 +6123,7 @@ def face1rrlrrrrl(code: U32) -> Glyph:
 
 def face1rrlrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{8704,0,0,0},Row{324864,0,0,0},Row{761856,0,0,0},zero_row()},Rows8{Row{80668672,0,0,0},Row{1072218016,0,0,0},Row{2940210418,0,0,0},Row{3724544245,0,0,0},Row{3724543989,0,0,0},Row{2940210418,0,0,0},Row{1072218016,0,0,0},Row{80668688,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{8704,0,0,0},Row{324864,0,0,0},Row{761856,0,0,0},zero_row()},Rows8{Row{80668672,0,0,0},Row{1072218016,0,0,0},Row{2940210418,0,0,0},Row{3724544245,0,0,0},Row{3724543989,0,0,0},Row{2940210418,0,0,0},Row{1072218016,0,0,0},Row{80668688,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrlrrrrr(code: U32) -> Glyph:
@@ -6163,7 +6171,7 @@ def face1rrl(+code: U32) -> Glyph:
 
 def face1rrrllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{2162688,0,0,0},Row{13303808,0,0,0},Row{4141056,0,0,0},zero_row()},Rows8{Row{80668672,0,0,0},Row{1072218016,0,0,0},Row{2940210418,0,0,0},Row{3724544245,0,0,0},Row{3724543989,0,0,0},Row{2940210418,0,0,0},Row{1072218016,0,0,0},Row{80668688,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{2162688,0,0,0},Row{13303808,0,0,0},Row{4141056,0,0,0},zero_row()},Rows8{Row{80668672,0,0,0},Row{1072218016,0,0,0},Row{2940210418,0,0,0},Row{3724544245,0,0,0},Row{3724543989,0,0,0},Row{2940210418,0,0,0},Row{1072218016,0,0,0},Row{80668688,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrllll(code: U32) -> Glyph:
@@ -6171,7 +6179,7 @@ def face1rrrllll(code: U32) -> Glyph:
 
 def face1rrrlllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{8376576,0,0,0},Row{115653648,0,0,0},zero_row()},Rows8{Row{80668672,0,0,0},Row{1072218016,0,0,0},Row{2940210418,0,0,0},Row{3724544245,0,0,0},Row{3724543989,0,0,0},Row{2940210418,0,0,0},Row{1072218016,0,0,0},Row{80668688,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{8376576,0,0,0},Row{115653648,0,0,0},zero_row()},Rows8{Row{80668672,0,0,0},Row{1072218016,0,0,0},Row{2940210418,0,0,0},Row{3724544245,0,0,0},Row{3724543989,0,0,0},Row{2940210418,0,0,0},Row{1072218016,0,0,0},Row{80668688,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrlllrl(code: U32) -> Glyph:
@@ -6179,7 +6187,7 @@ def face1rrrlllrl(code: U32) -> Glyph:
 
 def face1rrrlllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{110483200,0,0,0},Row{49110528,0,0,0},Row{1049088,0,0,0}},Rows8{Row{80668672,0,0,0},Row{1072218016,0,0,0},Row{2940210418,0,0,0},Row{3724544245,0,0,0},Row{3724543989,0,0,0},Row{2940210418,0,0,0},Row{1072218016,0,0,0},Row{80668688,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{110483200,0,0,0},Row{49110528,0,0,0},Row{1049088,0,0,0}},Rows8{Row{80668672,0,0,0},Row{1072218016,0,0,0},Row{2940210418,0,0,0},Row{3724544245,0,0,0},Row{3724543989,0,0,0},Row{2940210418,0,0,0},Row{1072218016,0,0,0},Row{80668688,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrlllrr(code: U32) -> Glyph:
@@ -6203,7 +6211,7 @@ def face1rrrlll(+code: U32) -> Glyph:
 
 def face1rrrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1048832,0,0,0},Row{166895392,0,0,0},Row{19927808,0,0,0},zero_row()},Rows8{Row{80668672,0,0,0},Row{1072218016,0,0,0},Row{2940210418,0,0,0},Row{3724544245,0,0,0},Row{3724543989,0,0,0},Row{2940210418,0,0,0},Row{1072218016,0,0,0},Row{80668688,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1048832,0,0,0},Row{166895392,0,0,0},Row{19927808,0,0,0},zero_row()},Rows8{Row{80668672,0,0,0},Row{1072218016,0,0,0},Row{2940210418,0,0,0},Row{3724544245,0,0,0},Row{3724543989,0,0,0},Row{2940210418,0,0,0},Row{1072218016,0,0,0},Row{80668688,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrllrl(code: U32) -> Glyph:
@@ -6211,7 +6219,7 @@ def face1rrrllrl(code: U32) -> Glyph:
 
 def face1rrrllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{9318400,0,0,0},Row{11481088,0,0,0},Row{573841952,0,0,0},Row{4294967200,1,0,0},Row{1431655728,0,0,0},Row{65536,0,0,0},Row{11481088,0,0,0},Row{9318400,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{9318400,0,0,0},Row{11481088,0,0,0},Row{573841952,0,0,0},Row{4294967200,1,0,0},Row{1431655728,0,0,0},Row{65536,0,0,0},Row{11481088,0,0,0},Row{9318400,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrllrrl(code: U32) -> Glyph:
@@ -6219,7 +6227,7 @@ def face1rrrllrrl(code: U32) -> Glyph:
 
 def face1rrrllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{2546919424,0,0,0},Row{2147008416,0,0,0},Row{2951810290,0,0,0},Row{3732605173,0,0,0},Row{3725175029,0,0,0},Row{2940256242,0,0,0},Row{1072218096,0,0,0},Row{80669411,0,0,0}},Rows8{Row{16,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{2546919424,0,0,0},Row{2147008416,0,0,0},Row{2951810290,0,0,0},Row{3732605173,0,0,0},Row{3725175029,0,0,0},Row{2940256242,0,0,0},Row{1072218096,0,0,0},Row{80669411,0,0,0}},Rows8{Row{16,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrllrrr(code: U32) -> Glyph:
@@ -6251,7 +6259,7 @@ def face1rrrll(+code: U32) -> Glyph:
 
 def face1rrrlrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{8704,0,0,0},Row{324864,0,0,0},Row{761856,0,0,0},zero_row()},Rows8{Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2673872368,0,0,0},Row{2681847728,0,0,0},Row{2672618272,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{8704,0,0,0},Row{324864,0,0,0},Row{761856,0,0,0},zero_row()},Rows8{Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2673872368,0,0,0},Row{2681847728,0,0,0},Row{2672618272,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrlrll(code: U32) -> Glyph:
@@ -6259,7 +6267,7 @@ def face1rrrlrll(code: U32) -> Glyph:
 
 def face1rrrlrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{18939904,0,0,0},Row{14352384,0,0,0},Row{4141056,0,0,0},zero_row()},Rows8{Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2673872368,0,0,0},Row{2681847728,0,0,0},Row{2672618272,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{18939904,0,0,0},Row{14352384,0,0,0},Row{4141056,0,0,0},zero_row()},Rows8{Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2673872368,0,0,0},Row{2681847728,0,0,0},Row{2672618272,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrlrlrl(code: U32) -> Glyph:
@@ -6267,7 +6275,7 @@ def face1rrrlrlrl(code: U32) -> Glyph:
 
 def face1rrrlrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{8376576,0,0,0},Row{115588112,0,0,0},zero_row()},Rows8{Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2673872368,0,0,0},Row{2681847728,0,0,0},Row{2672618272,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{8376576,0,0,0},Row{115588112,0,0,0},zero_row()},Rows8{Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2673872368,0,0,0},Row{2681847728,0,0,0},Row{2672618272,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrlrlrr(code: U32) -> Glyph:
@@ -6291,7 +6299,7 @@ def face1rrrlrl(+code: U32) -> Glyph:
 
 def face1rrrlrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1048832,0,0,0},Row{166899472,0,0,0},Row{19927808,0,0,0},zero_row()},Rows8{Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2673872368,0,0,0},Row{2681847728,0,0,0},Row{2672618272,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1048832,0,0,0},Row{166899472,0,0,0},Row{19927808,0,0,0},zero_row()},Rows8{Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2669677553,0,0,0},Row{2673872368,0,0,0},Row{2681847728,0,0,0},Row{2672618272,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrlrrll(code: U32) -> Glyph:
@@ -6299,7 +6307,7 @@ def face1rrrlrrll(code: U32) -> Glyph:
 
 def face1rrrlrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{2162688,0,0,0},Row{12386304,0,0,0},Row{3035136,0,0,0},zero_row()},Rows8{Row{3473933816,0,0,0},Row{1868565235,0,0,0},Row{531631824,0,0,0},Row{183586672,0,0,0},Row{100048672,0,0,0},Row{15391488,0,0,0},Row{10417664,0,0,0},Row{4190464,0,0,0}},Rows8{Row{909312,0,0,0},Row{522864,0,0,0},Row{40672,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{2162688,0,0,0},Row{12386304,0,0,0},Row{3035136,0,0,0},zero_row()},Rows8{Row{3473933816,0,0,0},Row{1868565235,0,0,0},Row{531631824,0,0,0},Row{183586672,0,0,0},Row{100048672,0,0,0},Row{15391488,0,0,0},Row{10417664,0,0,0},Row{4190464,0,0,0}},Rows8{Row{909312,0,0,0},Row{522864,0,0,0},Row{40672,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrlrrlr(code: U32) -> Glyph:
@@ -6315,7 +6323,7 @@ def face1rrrlrrl(+code: U32) -> Glyph:
 
 def face1rrrlrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0}},Rows8{Row{149781489,0,0,0},Row{2413350641,0,0,0},Row{3994033905,0,0,0},Row{4211084273,1,0,0},Row{4211084273,1,0,0},Row{3994033905,0,0,0},Row{2413350641,0,0,0},Row{149847025,0,0,0}},Rows8{Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0}},Rows8{Row{149781489,0,0,0},Row{2413350641,0,0,0},Row{3994033905,0,0,0},Row{4211084273,1,0,0},Row{4211084273,1,0,0},Row{3994033905,0,0,0},Row{2413350641,0,0,0},Row{149847025,0,0,0}},Rows8{Row{3057,0,0,0},Row{3057,0,0,0},Row{3057,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrlrrrl(code: U32) -> Glyph:
@@ -6323,7 +6331,7 @@ def face1rrrlrrrl(code: U32) -> Glyph:
 
 def face1rrrlrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1048832,0,0,0},Row{133463856,0,0,0},Row{20976640,0,0,0},zero_row()},Rows8{Row{3473933816,0,0,0},Row{1868565235,0,0,0},Row{531631824,0,0,0},Row{183586672,0,0,0},Row{100048672,0,0,0},Row{15391488,0,0,0},Row{10417664,0,0,0},Row{4190464,0,0,0}},Rows8{Row{909312,0,0,0},Row{522864,0,0,0},Row{40672,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{1048832,0,0,0},Row{133463856,0,0,0},Row{20976640,0,0,0},zero_row()},Rows8{Row{3473933816,0,0,0},Row{1868565235,0,0,0},Row{531631824,0,0,0},Row{183586672,0,0,0},Row{100048672,0,0,0},Row{15391488,0,0,0},Row{10417664,0,0,0},Row{4190464,0,0,0}},Rows8{Row{909312,0,0,0},Row{522864,0,0,0},Row{40672,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrlrrrr(code: U32) -> Glyph:
@@ -6363,7 +6371,7 @@ def face1rrrl(+code: U32) -> Glyph:
 
 def face1rrrrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),Rows8{zero_row(),zero_row(),Row{35791394,0,0,0},Row{268435455,0,0,0},Row{89478485,0,0,0},zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{7,[zero_rows(),Rows8{zero_row(),zero_row(),Row{35791394,0,0,0},Row{268435455,0,0,0},Row{89478485,0,0,0},zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrrlll(code: U32) -> Glyph:
@@ -6371,7 +6379,7 @@ def face1rrrrlll(code: U32) -> Glyph:
 
 def face1rrrrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{zero_row(),zero_row(),Row{572662306,2236962,0,0},Row{4294967295,16777215,0,0},Row{1431655765,5592405,0,0},zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{14,[zero_rows(),Rows8{zero_row(),zero_row(),Row{572662306,2236962,0,0},Row{4294967295,16777215,0,0},Row{1431655765,5592405,0,0},zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrrllrl(code: U32) -> Glyph:
@@ -6379,7 +6387,7 @@ def face1rrrrllrl(code: U32) -> Glyph:
 
 def face1rrrrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{32000,0,0,0},Row{24352,0,0,0},Row{16240,0,0,0}},Rows8{Row{8112,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{32000,0,0,0},Row{24352,0,0,0},Row{16240,0,0,0}},Rows8{Row{8112,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrrllrr(code: U32) -> Glyph:
@@ -6403,7 +6411,7 @@ def face1rrrrll(+code: U32) -> Glyph:
 
 def face1rrrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{4,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{28496,0,0,0},Row{12160,0,0,0}},Rows8{Row{3232,0,0,0},Row{2240,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{4,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{28496,0,0,0},Row{12160,0,0,0}},Rows8{Row{3232,0,0,0},Row{2240,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrrlrl(code: U32) -> Glyph:
@@ -6411,7 +6419,7 @@ def face1rrrrlrl(code: U32) -> Glyph:
 
 def face1rrrrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{131104000,0,0,0},Row{99770144,0,0,0},Row{49758064,0,0,0}},Rows8{Row{16457648,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{7,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{131104000,0,0,0},Row{99770144,0,0,0},Row{49758064,0,0,0}},Rows8{Row{16457648,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrrlrrl(code: U32) -> Glyph:
@@ -6419,7 +6427,7 @@ def face1rrrrlrrl(code: U32) -> Glyph:
 
 def face1rrrrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{100101968,0,0,0},Row{33107840,0,0,0}},Rows8{Row{12258464,0,0,0},Row{7145664,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{7,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{100101968,0,0,0},Row{33107840,0,0,0}},Rows8{Row{12258464,0,0,0},Row{7145664,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrrlrrr(code: U32) -> Glyph:
@@ -6451,7 +6459,7 @@ def face1rrrrl(+code: U32) -> Glyph:
 
 def face1rrrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),Rows8{zero_row(),Row{715264,0,0,0},Row{9437040,0,0,0},Row{11534224,0,0,0},Row{9437040,0,0,0},Row{715264,0,0,0},zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{7,[zero_rows(),Rows8{zero_row(),Row{715264,0,0,0},Row{9437040,0,0,0},Row{11534224,0,0,0},Row{9437040,0,0,0},Row{715264,0,0,0},zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrrrll(code: U32) -> Glyph:
@@ -6459,7 +6467,7 @@ def face1rrrrrll(code: U32) -> Glyph:
 
 def face1rrrrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{16777472,4096,0,0},Row{2940223408,195584,0,0},Row{2385522320,121344,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{16777472,4096,0,0},Row{2940223408,195584,0,0},Row{2385522320,121344,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrrrlrl(code: U32) -> Glyph:
@@ -6467,7 +6475,7 @@ def face1rrrrrlrl(code: U32) -> Glyph:
 
 def face1rrrrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{33554432,0,0,0},Row{497025024,0,0,0}},Rows8{Row{116981760,0,0,0},Row{7311360,0,0,0},Row{572975104,4642,0,0},Row{4294967136,40959,0,0},Row{1431825152,13653,0,0},Row{5156864,0,0,0},Row{83562496,0,0,0},Row{514916352,0,0,0}},Rows8{Row{51380224,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{33554432,0,0,0},Row{497025024,0,0,0}},Rows8{Row{116981760,0,0,0},Row{7311360,0,0,0},Row{572975104,4642,0,0},Row{4294967136,40959,0,0},Row{1431825152,13653,0,0},Row{5156864,0,0,0},Row{83562496,0,0,0},Row{514916352,0,0,0}},Rows8{Row{51380224,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrrrlrr(code: U32) -> Glyph:
@@ -6491,7 +6499,7 @@ def face1rrrrrl(+code: U32) -> Glyph:
 
 def face1rrrrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{12,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{85983232,0,0,0},Row{1607598080,0,0,0},Row{4276953088,5,0,0}},Rows8{Row{2643316992,79,0,0},Row{243461136,1275,0,0},Row{243285584,2737,0,0},Row{243269888,16,0,0},Row{243269632,0,0,0},Row{243269632,0,0,0},Row{243269632,0,0,0},Row{243269632,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{12,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{85983232,0,0,0},Row{1607598080,0,0,0},Row{4276953088,5,0,0}},Rows8{Row{2643316992,79,0,0},Row{243461136,1275,0,0},Row{243285584,2737,0,0},Row{243269888,16,0,0},Row{243269632,0,0,0},Row{243269632,0,0,0},Row{243269632,0,0,0},Row{243269632,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrrrrll(code: U32) -> Glyph:
@@ -6499,7 +6507,7 @@ def face1rrrrrrll(code: U32) -> Glyph:
 
 def face1rrrrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{536870912,0,0,0},Row{3623878656,2,0,0}},Rows8{Row{3791650816,45,0,0},Row{536870912,477,0,0},Row{572662288,7620,0,0},Row{4294967104,49151,0,0},Row{1431655696,16069,0,0},Row{268435456,1004,0,0},Row{3238002688,62,0,0},Row{3909091328,3,0,0}},Rows8{Row{822083584,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{536870912,0,0,0},Row{3623878656,2,0,0}},Rows8{Row{3791650816,45,0,0},Row{536870912,477,0,0},Row{572662288,7620,0,0},Row{4294967104,49151,0,0},Row{1431655696,16069,0,0},Row{268435456,1004,0,0},Row{3238002688,62,0,0},Row{3909091328,3,0,0}},Rows8{Row{822083584,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrrrrlr(code: U32) -> Glyph:
@@ -6515,7 +6523,7 @@ def face1rrrrrrl(+code: U32) -> Glyph:
 
 def face1rrrrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{12,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{243269632,0,0,0},Row{243269632,0,0,0},Row{243269632,0,0,0}},Rows8{Row{243269632,0,0,0},Row{243269888,16,0,0},Row{243285584,2737,0,0},Row{243461392,1275,0,0},Row{2643316992,79,0,0},Row{4276953088,5,0,0},Row{1607598080,0,0,0},Row{85983232,0,0,0}},zero_rows(),zero_rows()}
+    case True{}: Glyph{12,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{243269632,0,0,0},Row{243269632,0,0,0},Row{243269632,0,0,0}},Rows8{Row{243269632,0,0,0},Row{243269888,16,0,0},Row{243285584,2737,0,0},Row{243461392,1275,0,0},Row{2643316992,79,0,0},Row{4276953088,5,0,0},Row{1607598080,0,0,0},Row{85983232,0,0,0}},zero_rows(),zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrrrrrl(code: U32) -> Glyph:
@@ -6523,7 +6531,7 @@ def face1rrrrrrrl(code: U32) -> Glyph:
 
 def face1rrrrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),Row{35791360,0,0,0},Row{251591424,0,0,0},Row{251263744,0,0,0},Row{251587328,0,0,0},Row{251239168,0,0,0}},Rows8{Row{251591424,0,0,0},Row{250215168,0,0,0},Row{245365504,0,0,0},Row{249486080,0,0,0},Row{245340928,0,0,0},Row{251656960,0,0,0},Row{244820736,0,0,0},Row{245340928,0,0,0}},Rows8{Row{250608384,0,0,0},Row{250145536,0,0,0},Row{251656960,0,0,0},Row{89478144,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),Row{35791360,0,0,0},Row{251591424,0,0,0},Row{251263744,0,0,0},Row{251587328,0,0,0},Row{251239168,0,0,0}},Rows8{Row{251591424,0,0,0},Row{250215168,0,0,0},Row{245365504,0,0,0},Row{249486080,0,0,0},Row{245340928,0,0,0},Row{251656960,0,0,0},Row{244820736,0,0,0},Row{245340928,0,0,0}},Rows8{Row{250608384,0,0,0},Row{250145536,0,0,0},Row{251656960,0,0,0},Row{89478144,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face1.missing()
 
 def face1rrrrrrrr(code: U32) -> Glyph:
@@ -6594,11 +6602,11 @@ def face1(+code: U32) -> Glyph:
   face1.choose(code,U32.is_lt(code,167))
 
 def face2.missing() -> Glyph:
-  Glyph{14,Rows8{zero_row(),zero_row(),zero_row(),Row{3149615104,2747,0,0},Row{4294930432,3839,0,0},Row{9400320,3825,0,0},Row{2330947584,3838,0,0},Row{294612992,3826,0,0}},Rows8{Row{3135205376,3837,0,0},Row{2056220672,3839,0,0},Row{294612992,3826,0,0},Row{2866769920,3835,0,0},Row{1827631104,3836,0,0},Row{1905225728,3829,0,0},Row{3135205376,3828,0,0},Row{2900324352,3835,0,0}},Rows8{Row{982478848,3827,0,0},Row{3129962496,3828,0,0},Row{294612992,3826,0,0},Row{4294930432,3839,0,0},Row{1705996288,3829,0,0},Row{4237258752,3829,0,0},Row{1133473792,3826,0,0},Row{3168759808,3835,0,0}},Rows8{Row{1526689792,3836,0,0},Row{1100967936,3829,0,0},Row{3151982592,3835,0,0},Row{4294930432,3839,0,0},zero_row(),zero_row(),zero_row(),zero_row()}}
+  Glyph{14,[Rows8{zero_row(),zero_row(),zero_row(),Row{3149615104,2747,0,0},Row{4294930432,3839,0,0},Row{9400320,3825,0,0},Row{2330947584,3838,0,0},Row{294612992,3826,0,0}},Rows8{Row{3135205376,3837,0,0},Row{2056220672,3839,0,0},Row{294612992,3826,0,0},Row{2866769920,3835,0,0},Row{1827631104,3836,0,0},Row{1905225728,3829,0,0},Row{3135205376,3828,0,0},Row{2900324352,3835,0,0}},Rows8{Row{982478848,3827,0,0},Row{3129962496,3828,0,0},Row{294612992,3826,0,0},Row{4294930432,3839,0,0},Row{1705996288,3829,0,0},Row{4237258752,3829,0,0},Row{1133473792,3826,0,0},Row{3168759808,3835,0,0}},Rows8{Row{1526689792,3836,0,0},Row{1100967936,3829,0,0},Row{3151982592,3835,0,0},Row{4294930432,3839,0,0},zero_row(),zero_row(),zero_row(),zero_row()}]}
 
 def face2lllllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,zero_rows(),zero_rows(),zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[zero_rows(),zero_rows(),zero_rows(),zero_rows()]}
     case False{}: face2.missing()
 
 def face2lllllll(code: U32) -> Glyph:
@@ -6606,7 +6614,7 @@ def face2lllllll(code: U32) -> Glyph:
 
 def face2llllllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),Rows8{Row{2096896,0,0,0},Row{1048064,0,0,0},Row{1048064,0,0,0},Row{1048064,0,0,0},Row{982528,0,0,0},Row{982272,0,0,0},Row{982272,0,0,0},Row{982272,0,0,0}},Rows8{Row{916736,0,0,0},Row{916480,0,0,0},Row{916480,0,0,0},zero_row(),zero_row(),Row{780800,0,0,0},Row{4194096,0,0,0},Row{780800,0,0,0}},zero_rows()}
+    case True{}: Glyph{7,[zero_rows(),Rows8{Row{2096896,0,0,0},Row{1048064,0,0,0},Row{1048064,0,0,0},Row{1048064,0,0,0},Row{982528,0,0,0},Row{982272,0,0,0},Row{982272,0,0,0},Row{982272,0,0,0}},Rows8{Row{916736,0,0,0},Row{916480,0,0,0},Row{916480,0,0,0},zero_row(),zero_row(),Row{780800,0,0,0},Row{4194096,0,0,0},Row{780800,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llllllrl(code: U32) -> Glyph:
@@ -6614,7 +6622,7 @@ def face2llllllrl(code: U32) -> Glyph:
 
 def face2llllllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{12,zero_rows(),Rows8{Row{4128177152,79,0,0},Row{4128111360,79,0,0},Row{4111333888,63,0,0},Row{4094490880,47,0,0},Row{4077648128,31,0,0},Row{4077582336,31,0,0},zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{12,[zero_rows(),Rows8{Row{4128177152,79,0,0},Row{4128111360,79,0,0},Row{4111333888,63,0,0},Row{4094490880,47,0,0},Row{4077648128,31,0,0},Row{4077582336,31,0,0},zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face2.missing()
 
 def face2llllllrr(code: U32) -> Glyph:
@@ -6638,7 +6646,7 @@ def face2llllll(+code: U32) -> Glyph:
 
 def face2lllllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{Row{167313408,261632,0,0},Row{117178368,130848,0,0},Row{66977792,57168,0,0},Row{33497088,44912,0,0},Row{4294967168,13631487,0,0},Row{4294967200,11534335,0,0},Row{1152365616,2387956,0,0},Row{7319552,8178,0,0}},Rows8{Row{5234688,3572,0,0},Row{1147139137,216312,0,0},Row{4294967287,851967,0,0},Row{4294967290,720895,0,0},Row{653312,1278,0,0},Row{268958464,511,0,0},Row{1074068736,239,0,0},Row{1610809104,191,0,0}},zero_rows()}
+    case True{}: Glyph{14,[zero_rows(),Rows8{Row{167313408,261632,0,0},Row{117178368,130848,0,0},Row{66977792,57168,0,0},Row{33497088,44912,0,0},Row{4294967168,13631487,0,0},Row{4294967200,11534335,0,0},Row{1152365616,2387956,0,0},Row{7319552,8178,0,0}},Rows8{Row{5234688,3572,0,0},Row{1147139137,216312,0,0},Row{4294967287,851967,0,0},Row{4294967290,720895,0,0},Row{653312,1278,0,0},Row{268958464,511,0,0},Row{1074068736,239,0,0},Row{1610809104,191,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lllllrl(code: U32) -> Glyph:
@@ -6646,7 +6654,7 @@ def face2lllllrl(code: U32) -> Glyph:
 
 def face2lllllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3590324224,0,0,0},Row{3590324224,0,0,0}},Rows8{Row{4292349952,1742,0,0},Row{4294959872,49151,0,0},Row{3938450960,589800,0,0},Row{3591044944,982560,0,0},Row{3590782848,488704,0,0},Row{3592224608,0,0,0},Row{3706715664,1,0,0},Row{4294955776,1471,0,0}},Rows8{Row{4273274880,118783,0,0},Row{3858759680,786408,0,0},Row{3590324224,3144976,0,0},Row{3590372528,5241344,0,0},Row{3590717376,3144976,0,0},Row{3937402720,851927,0,0},Row{4294965504,192511,0,0},Row{4293611520,6350,0,0}},Rows8{Row{3590324224,0,0,0},Row{3590324224,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{14,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3590324224,0,0,0},Row{3590324224,0,0,0}},Rows8{Row{4292349952,1742,0,0},Row{4294959872,49151,0,0},Row{3938450960,589800,0,0},Row{3591044944,982560,0,0},Row{3590782848,488704,0,0},Row{3592224608,0,0,0},Row{3706715664,1,0,0},Row{4294955776,1471,0,0}},Rows8{Row{4273274880,118783,0,0},Row{3858759680,786408,0,0},Row{3590324224,3144976,0,0},Row{3590372528,5241344,0,0},Row{3590717376,3144976,0,0},Row{3937402720,851927,0,0},Row{4294965504,192511,0,0},Row{4293611520,6350,0,0}},Rows8{Row{3590324224,0,0,0},Row{3590324224,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2lllllrrl(code: U32) -> Glyph:
@@ -6654,7 +6662,7 @@ def face2lllllrrl(code: U32) -> Glyph:
 
 def face2lllllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{22,zero_rows(),Rows8{Row{2113757184,3506438144,63,0},Row{4294964736,4177526790,8,0},Row{4182440704,3477078028,0,0},Row{4060347648,1070661645,0,0},Row{4182440704,133824524,0,0},Row{4294964736,12537862,0,0},Row{2113757184,3072256,0,0},Row{0,457472,0,0}},Rows8{Row{0,3288383328,1759,0},Row{0,4281343714,24575,0},Row{0,3214935547,53156,0},Row{1879048192,1337983151,61216,0},Row{4076863488,1337983005,61216,0},Row{4227858432,3214934020,53156,0},Row{2675965952,4282384384,24575,0},Row{502464512,3305111552,1759,0}},zero_rows()}
+    case True{}: Glyph{22,[zero_rows(),Rows8{Row{2113757184,3506438144,63,0},Row{4294964736,4177526790,8,0},Row{4182440704,3477078028,0,0},Row{4060347648,1070661645,0,0},Row{4182440704,133824524,0,0},Row{4294964736,12537862,0,0},Row{2113757184,3072256,0,0},Row{0,457472,0,0}},Rows8{Row{0,3288383328,1759,0},Row{0,4281343714,24575,0},Row{0,3214935547,53156,0},Row{1879048192,1337983151,61216,0},Row{4076863488,1337983005,61216,0},Row{4227858432,3214934020,53156,0},Row{2675965952,4282384384,24575,0},Row{502464512,3305111552,1759,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lllllrrr(code: U32) -> Glyph:
@@ -6686,7 +6694,7 @@ def face2lllll(+code: U32) -> Glyph:
 
 def face2llllrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{15,zero_rows(),Rows8{Row{3755544576,25,0,0},Row{4294955264,479,0,0},Row{2493511424,1791,0,0},Row{981504,2301,0,0},Row{269416448,1534,0,0},Row{3531600640,191,0,0},Row{4278153216,26,0,0},Row{2952757248,0,0,0}},Rows8{Row{4294965760,7335941,0,0},Row{4247453568,6288190,0,0},Row{3808489440,3144159,0,0},Row{1342226416,917503,0,0},Row{126944,458744,0,0},Row{1970077568,458750,0,0},Row{4294966016,5242367,0,0},Row{3756810240,49275449,0,0}},zero_rows()}
+    case True{}: Glyph{15,[zero_rows(),Rows8{Row{3755544576,25,0,0},Row{4294955264,479,0,0},Row{2493511424,1791,0,0},Row{981504,2301,0,0},Row{269416448,1534,0,0},Row{3531600640,191,0,0},Row{4278153216,26,0,0},Row{2952757248,0,0,0}},Rows8{Row{4294965760,7335941,0,0},Row{4247453568,6288190,0,0},Row{3808489440,3144159,0,0},Row{1342226416,917503,0,0},Row{126944,458744,0,0},Row{1970077568,458750,0,0},Row{4294966016,5242367,0,0},Row{3756810240,49275449,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llllrll(code: U32) -> Glyph:
@@ -6694,7 +6702,7 @@ def face2llllrll(code: U32) -> Glyph:
 
 def face2llllrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),Rows8{Row{982016,0,0,0},Row{916224,0,0,0},Row{915968,0,0,0},Row{850176,0,0,0},Row{784640,0,0,0},Row{718848,0,0,0},zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{7,[zero_rows(),Rows8{Row{982016,0,0,0},Row{916224,0,0,0},Row{915968,0,0,0},Row{850176,0,0,0},Row{784640,0,0,0},Row{718848,0,0,0},zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face2.missing()
 
 def face2llllrlrl(code: U32) -> Glyph:
@@ -6702,7 +6710,7 @@ def face2llllrlrl(code: U32) -> Glyph:
 
 def face2llllrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1073217536,0,0,0}},Rows8{Row{217976832,0,0,0},Row{117403648,0,0,0},Row{33538048,0,0,0},Row{13627904,0,0,0},Row{9434624,0,0,0},Row{5241088,0,0,0},Row{2095872,0,0,0},Row{982272,0,0,0}},Rows8{Row{916992,0,0,0},Row{917248,0,0,0},Row{916992,0,0,0},Row{1047808,0,0,0},Row{3144192,0,0,0},Row{6289152,0,0,0},Row{11531008,0,0,0},Row{15716352,0,0,0}},Rows8{Row{100630528,0,0,0},Row{201199616,0,0,0},Row{804716544,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1073217536,0,0,0}},Rows8{Row{217976832,0,0,0},Row{117403648,0,0,0},Row{33538048,0,0,0},Row{13627904,0,0,0},Row{9434624,0,0,0},Row{5241088,0,0,0},Row{2095872,0,0,0},Row{982272,0,0,0}},Rows8{Row{916992,0,0,0},Row{917248,0,0,0},Row{916992,0,0,0},Row{1047808,0,0,0},Row{3144192,0,0,0},Row{6289152,0,0,0},Row{11531008,0,0,0},Row{15716352,0,0,0}},Rows8{Row{100630528,0,0,0},Row{201199616,0,0,0},Row{804716544,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2llllrlrr(code: U32) -> Glyph:
@@ -6726,7 +6734,7 @@ def face2llllrl(+code: U32) -> Glyph:
 
 def face2llllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{49121,0,0,0}},Rows8{Row{262032,0,0,0},Row{720688,0,0,0},Row{2030592,0,0,0},Row{6289408,0,0,0},Row{9434112,0,0,0},Row{13627648,0,0,0},Row{15716352,0,0,0},Row{33533952,0,0,0}},Rows8{Row{50307072,0,0,0},Row{67084288,0,0,0},Row{50307072,0,0,0},Row{33538048,0,0,0},Row{14671872,0,0,0},Row{11530752,0,0,0},Row{7337728,0,0,0},Row{2095872,0,0,0}},Rows8{Row{720672,0,0,0},Row{262016,0,0,0},Row{45024,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{49121,0,0,0}},Rows8{Row{262032,0,0,0},Row{720688,0,0,0},Row{2030592,0,0,0},Row{6289408,0,0,0},Row{9434112,0,0,0},Row{13627648,0,0,0},Row{15716352,0,0,0},Row{33533952,0,0,0}},Rows8{Row{50307072,0,0,0},Row{67084288,0,0,0},Row{50307072,0,0,0},Row{33538048,0,0,0},Row{14671872,0,0,0},Row{11530752,0,0,0},Row{7337728,0,0,0},Row{2095872,0,0,0}},Rows8{Row{720672,0,0,0},Row{262016,0,0,0},Row{45024,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2llllrrl(code: U32) -> Glyph:
@@ -6734,7 +6742,7 @@ def face2llllrrl(code: U32) -> Glyph:
 
 def face2llllrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{12,zero_rows(),Rows8{Row{233832448,0,0,0},Row{216007680,49,0,0},Row{1272172048,477,0,0},Row{4278188320,415,0,0},Row{3757977600,2,0,0},Row{4294960912,126,0,0},Row{1809178400,494,0,0},Row{216012032,65,0,0}},Rows8{Row{233832448,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{12,[zero_rows(),Rows8{Row{233832448,0,0,0},Row{216007680,49,0,0},Row{1272172048,477,0,0},Row{4278188320,415,0,0},Row{3757977600,2,0,0},Row{4294960912,126,0,0},Row{1809178400,494,0,0},Row{216012032,65,0,0}},Rows8{Row{233832448,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llllrrrl(code: U32) -> Glyph:
@@ -6742,7 +6750,7 @@ def face2llllrrrl(code: U32) -> Glyph:
 
 def face2llllrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{15,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4227858432,9,0,0},Row{4227858432,9,0,0},Row{4227858432,9,0,0},Row{4227858432,9,0,0}},Rows8{Row{4249109504,214091,0,0},Row{4294967040,851967,0,0},Row{4294967040,851967,0,0},Row{4227858432,9,0,0},Row{4227858432,9,0,0},Row{4227858432,9,0,0},Row{4227858432,9,0,0},zero_row()},zero_rows()}
+    case True{}: Glyph{15,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4227858432,9,0,0},Row{4227858432,9,0,0},Row{4227858432,9,0,0},Row{4227858432,9,0,0}},Rows8{Row{4249109504,214091,0,0},Row{4294967040,851967,0,0},Row{4294967040,851967,0,0},Row{4227858432,9,0,0},Row{4227858432,9,0,0},Row{4227858432,9,0,0},Row{4227858432,9,0,0},zero_row()},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llllrrrr(code: U32) -> Glyph:
@@ -6782,7 +6790,7 @@ def face2llll(+code: U32) -> Glyph:
 
 def face2lllrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2030592,0,0,0}},Rows8{Row{720384,0,0,0},Row{458528,0,0,0},Row{130880,0,0,0},Row{49008,0,0,0},Row{32656,0,0,0},zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{7,[zero_rows(),zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2030592,0,0,0}},Rows8{Row{720384,0,0,0},Row{458528,0,0,0},Row{130880,0,0,0},Row{49008,0,0,0},Row{32656,0,0,0},zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2lllrlll(code: U32) -> Glyph:
@@ -6790,7 +6798,7 @@ def face2lllrlll(code: U32) -> Glyph:
 
 def face2lllrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,zero_rows(),zero_rows(),Rows8{Row{1145324576,3,0,0},Row{4294967152,11,0,0},Row{4294967152,11,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{10,[zero_rows(),zero_rows(),Rows8{Row{1145324576,3,0,0},Row{4294967152,11,0,0},Row{4294967152,11,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lllrllrl(code: U32) -> Glyph:
@@ -6798,7 +6806,7 @@ def face2lllrllrl(code: U32) -> Glyph:
 
 def face2lllrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{715264,0,0,0},Row{4194080,0,0,0},Row{715264,0,0,0}},zero_rows()}
+    case True{}: Glyph{7,[zero_rows(),zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{715264,0,0,0},Row{4194080,0,0,0},Row{715264,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lllrllrr(code: U32) -> Glyph:
@@ -6822,7 +6830,7 @@ def face2lllrll(+code: U32) -> Glyph:
 
 def face2lllrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3482320896,0,0,0}},Rows8{Row{2412773376,0,0,0},Row{1341259776,0,0,0},Row{536281088,0,0,0},Row{200998912,0,0,0},Row{134086656,0,0,0},Row{67059712,0,0,0},Row{15695872,0,0,0},Row{11517952,0,0,0}},Rows8{Row{7336192,0,0,0},Row{3142912,0,0,0},Row{915712,0,0,0},Row{654592,0,0,0},Row{392992,0,0,0},Row{130912,0,0,0},Row{49056,0,0,0},Row{32736,0,0,0}},Rows8{Row{16372,0,0,0},Row{3832,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3482320896,0,0,0}},Rows8{Row{2412773376,0,0,0},Row{1341259776,0,0,0},Row{536281088,0,0,0},Row{200998912,0,0,0},Row{134086656,0,0,0},Row{67059712,0,0,0},Row{15695872,0,0,0},Row{11517952,0,0,0}},Rows8{Row{7336192,0,0,0},Row{3142912,0,0,0},Row{915712,0,0,0},Row{654592,0,0,0},Row{392992,0,0,0},Row{130912,0,0,0},Row{49056,0,0,0},Row{32736,0,0,0}},Rows8{Row{16372,0,0,0},Row{3832,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2lllrlrl(code: U32) -> Glyph:
@@ -6830,7 +6838,7 @@ def face2lllrlrl(code: U32) -> Glyph:
 
 def face2lllrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{15,zero_rows(),Rows8{Row{4273274880,669,0,0},Row{4294942720,16127,0,0},Row{1189083136,126969,0,0},Row{3079952,655232,0,0},Row{589664,982544,0,0},Row{327584,3144448,0,0},Row{131008,6289664,0,0},Row{65488,7337984,0,0}},Rows8{Row{65488,7337984,0,0},Row{131008,6289664,0,0},Row{327584,4193024,0,0},Row{589680,982544,0,0},Row{2031376,655232,0,0},Row{1189083136,126969,0,0},Row{4294942720,20223,0,0},Row{4273274880,669,0,0}},zero_rows()}
+    case True{}: Glyph{15,[zero_rows(),Rows8{Row{4273274880,669,0,0},Row{4294942720,16127,0,0},Row{1189083136,126969,0,0},Row{3079952,655232,0,0},Row{589664,982544,0,0},Row{327584,3144448,0,0},Row{131008,6289664,0,0},Row{65488,7337984,0,0}},Rows8{Row{65488,7337984,0,0},Row{131008,6289664,0,0},Row{327584,4193024,0,0},Row{589680,982544,0,0},Row{2031376,655232,0,0},Row{1189083136,126969,0,0},Row{4294942720,20223,0,0},Row{4273274880,669,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lllrlrrl(code: U32) -> Glyph:
@@ -6838,7 +6846,7 @@ def face2lllrlrrl(code: U32) -> Glyph:
 
 def face2lllrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{Row{3221110784,0,0,0},Row{3221223168,0,0,0},Row{3221159840,0,0,0},Row{3220414448,0,0,0},Row{3220309472,0,0,0},Row{3220307984,0,0,0},Row{3220307968,0,0,0},Row{3220307968,0,0,0}},Rows8{Row{3220307968,0,0,0},Row{3220307968,0,0,0},Row{3220307968,0,0,0},Row{3220307968,0,0,0},Row{3220307968,0,0,0},Row{3220307968,0,0,0},Row{3220307968,0,0,0},Row{3220307968,0,0,0}},zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{Row{3221110784,0,0,0},Row{3221223168,0,0,0},Row{3221159840,0,0,0},Row{3220414448,0,0,0},Row{3220309472,0,0,0},Row{3220307984,0,0,0},Row{3220307968,0,0,0},Row{3220307968,0,0,0}},Rows8{Row{3220307968,0,0,0},Row{3220307968,0,0,0},Row{3220307968,0,0,0},Row{3220307968,0,0,0},Row{3220307968,0,0,0},Row{3220307968,0,0,0},Row{3220307968,0,0,0},Row{3220307968,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lllrlrrr(code: U32) -> Glyph:
@@ -6870,7 +6878,7 @@ def face2lllrl(+code: U32) -> Glyph:
 
 def face2lllrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{Row{4023984128,107,0,0},Row{4294960128,3071,0,0},Row{1703935504,36860,0,0},Row{524128,61409,0,0},Row{192128,196512,0,0},Row{0,130992,0,0},Row{0,49139,0,0},Row{268435456,16381,0,0}},Rows8{Row{3238002688,2047,0,0},Row{4228907008,159,0,0},Row{4290838528,9,0,0},Row{2684096512,0,0,0},Row{184537344,0,0,0},Row{1154481424,83012,0,0},Row{4294967168,458751,0,0},Row{4294967168,458751,0,0}},zero_rows()}
+    case True{}: Glyph{14,[zero_rows(),Rows8{Row{4023984128,107,0,0},Row{4294960128,3071,0,0},Row{1703935504,36860,0,0},Row{524128,61409,0,0},Row{192128,196512,0,0},Row{0,130992,0,0},Row{0,49139,0,0},Row{268435456,16381,0,0}},Rows8{Row{3238002688,2047,0,0},Row{4228907008,159,0,0},Row{4290838528,9,0,0},Row{2684096512,0,0,0},Row{184537344,0,0,0},Row{1154481424,83012,0,0},Row{4294967168,458751,0,0},Row{4294967168,458751,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lllrrll(code: U32) -> Glyph:
@@ -6878,7 +6886,7 @@ def face2lllrrll(code: U32) -> Glyph:
 
 def face2lllrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{Row{4006088704,396,0,0},Row{4294959872,12031,0,0},Row{1436548624,53242,0,0},Row{589664,262064,0,0},Row{157232,327552,0,0},Row{0,131008,0,0},Row{1412431872,32763,0,0},Row{4289724416,1487,0,0}},Rows8{Row{4289724416,19711,0,0},Row{536870912,327654,0,0},Row{0,786256,0,0},Row{21824,917280,0,0},Row{458656,786272,0,0},Row{1435500352,327673,0,0},Row{4294964992,28671,0,0},Row{4007211008,669,0,0}},zero_rows()}
+    case True{}: Glyph{14,[zero_rows(),Rows8{Row{4006088704,396,0,0},Row{4294959872,12031,0,0},Row{1436548624,53242,0,0},Row{589664,262064,0,0},Row{157232,327552,0,0},Row{0,131008,0,0},Row{1412431872,32763,0,0},Row{4289724416,1487,0,0}},Rows8{Row{4289724416,19711,0,0},Row{536870912,327654,0,0},Row{0,786256,0,0},Row{21824,917280,0,0},Row{458656,786272,0,0},Row{1435500352,327673,0,0},Row{4294964992,28671,0,0},Row{4007211008,669,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lllrrlrl(code: U32) -> Glyph:
@@ -6886,7 +6894,7 @@ def face2lllrrlrl(code: U32) -> Glyph:
 
 def face2lllrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{15,zero_rows(),Rows8{Row{1610612736,36863,0,0},Row{3774873600,36863,0,0},Row{4194304000,36863,0,0},Row{4282384384,36860,0,0},Row{4023451648,36852,0,0},Row{1610088448,36851,0,0},Row{201273344,36851,0,0},Row{49266688,36851,0,0}},Rows8{Row{8386048,36851,0,0},Row{851488,36851,0,0},Row{1431895968,3518455,0,0},Row{4294967248,10485759,0,0},Row{4294967248,10485759,0,0},Row{0,36852,0,0},Row{0,36852,0,0},Row{0,36852,0,0}},zero_rows()}
+    case True{}: Glyph{15,[zero_rows(),Rows8{Row{1610612736,36863,0,0},Row{3774873600,36863,0,0},Row{4194304000,36863,0,0},Row{4282384384,36860,0,0},Row{4023451648,36852,0,0},Row{1610088448,36851,0,0},Row{201273344,36851,0,0},Row{49266688,36851,0,0}},Rows8{Row{8386048,36851,0,0},Row{851488,36851,0,0},Row{1431895968,3518455,0,0},Row{4294967248,10485759,0,0},Row{4294967248,10485759,0,0},Row{0,36852,0,0},Row{0,36852,0,0},Row{0,36852,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lllrrlrr(code: U32) -> Glyph:
@@ -6910,7 +6918,7 @@ def face2lllrrl(+code: U32) -> Glyph:
 
 def face2lllrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{4294966272,36863,0,0},Row{4294966528,36863,0,0},Row{1145765632,9284,0,0},Row{524064,0,0,0},Row{458544,0,0,0},Row{4002807632,125,0,0},Row{4294901600,7423,0,0},Row{1954414464,40958,0,0}},Rows8{Row{82176,131042,0,0},Row{0,327568,0,0},Row{0,393072,0,0},Row{35184,262032,0,0},Row{327584,61409,0,0},Row{1687093056,32765,0,0},Row{4294964992,2559,0,0},Row{4023988224,75,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{4294966272,36863,0,0},Row{4294966528,36863,0,0},Row{1145765632,9284,0,0},Row{524064,0,0,0},Row{458544,0,0,0},Row{4002807632,125,0,0},Row{4294901600,7423,0,0},Row{1954414464,40958,0,0}},Rows8{Row{82176,131042,0,0},Row{0,327568,0,0},Row{0,393072,0,0},Row{35184,262032,0,0},Row{327584,61409,0,0},Row{1687093056,32765,0,0},Row{4294964992,2559,0,0},Row{4023988224,75,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lllrrrll(code: U32) -> Glyph:
@@ -6918,7 +6926,7 @@ def face2lllrrrll(code: U32) -> Glyph:
 
 def face2lllrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{Row{4272160768,669,0,0},Row{4294930432,24319,0,0},Row{1189082368,192504,0,0},Row{3079424,589664,0,0},Row{524096,358160,0,0},Row{822345616,19,0,0},Row{4269866928,6639,0,0},Row{4294569920,53247,0,0}},Rows8{Row{311427024,524244,0,0},Row{655296,851760,0,0},Row{327600,982272,0,0},Row{393088,916992,0,0},Row{786224,720720,0,0},Row{1171257856,262136,0,0},Row{4294947072,24319,0,0},Row{4273340416,669,0,0}},zero_rows()}
+    case True{}: Glyph{14,[zero_rows(),Rows8{Row{4272160768,669,0,0},Row{4294930432,24319,0,0},Row{1189082368,192504,0,0},Row{3079424,589664,0,0},Row{524096,358160,0,0},Row{822345616,19,0,0},Row{4269866928,6639,0,0},Row{4294569920,53247,0,0}},Rows8{Row{311427024,524244,0,0},Row{655296,851760,0,0},Row{327600,982272,0,0},Row{393088,916992,0,0},Row{786224,720720,0,0},Row{1171257856,262136,0,0},Row{4294947072,24319,0,0},Row{4273340416,669,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lllrrrlr(code: U32) -> Glyph:
@@ -6934,7 +6942,7 @@ def face2lllrrrl(+code: U32) -> Glyph:
 
 def face2lllrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{4294967282,53247,0,0},Row{4294967282,53247,0,0},Row{1145324608,49144,0,0},Row{0,20476,0,0},Row{1342177280,3071,0,0},Row{3221225472,1279,0,0},Row{4110417920,191,0,0},Row{4227858432,79,0,0}},Rows8{Row{4283432960,11,0,0},Row{4290772992,4,0,0},Row{3220439040,0,0,0},Row{1073479680,0,0,0},Row{201277440,0,0,0},Row{67092480,0,0,0},Row{12579840,0,0,0},Row{4193280,0,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{4294967282,53247,0,0},Row{4294967282,53247,0,0},Row{1145324608,49144,0,0},Row{0,20476,0,0},Row{1342177280,3071,0,0},Row{3221225472,1279,0,0},Row{4110417920,191,0,0},Row{4227858432,79,0,0}},Rows8{Row{4283432960,11,0,0},Row{4290772992,4,0,0},Row{3220439040,0,0,0},Row{1073479680,0,0,0},Row{201277440,0,0,0},Row{67092480,0,0,0},Row{12579840,0,0,0},Row{4193280,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lllrrrrl(code: U32) -> Glyph:
@@ -6942,7 +6950,7 @@ def face2lllrrrrl(code: U32) -> Glyph:
 
 def face2lllrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{Row{4006088704,397,0,0},Row{4294959872,16127,0,0},Row{1437596928,57338,0,0},Row{786224,327600,0,0},Row{589632,393072,0,0},Row{851728,196528,0,0},Row{1438643968,36858,0,0},Row{4294791168,1519,0,0}},Rows8{Row{4294956032,24319,0,0},Row{291438384,327653,0,0},Row{393120,851776,0,0},Row{131024,982800,0,0},Row{458672,917328,0,0},Row{1436548944,458728,0,0},Row{4294965248,40959,0,0},Row{4007211008,925,0,0}},zero_rows()}
+    case True{}: Glyph{14,[zero_rows(),Rows8{Row{4006088704,397,0,0},Row{4294959872,16127,0,0},Row{1437596928,57338,0,0},Row{786224,327600,0,0},Row{589632,393072,0,0},Row{851728,196528,0,0},Row{1438643968,36858,0,0},Row{4294791168,1519,0,0}},Rows8{Row{4294956032,24319,0,0},Row{291438384,327653,0,0},Row{393120,851776,0,0},Row{131024,982800,0,0},Row{458672,917328,0,0},Row{1436548944,458728,0,0},Row{4294965248,40959,0,0},Row{4007211008,925,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lllrrrrr(code: U32) -> Glyph:
@@ -6990,7 +6998,7 @@ def face2lll(+code: U32) -> Glyph:
 
 def face2llrllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{Row{4007141376,108,0,0},Row{4294960128,7423,0,0},Row{1419771424,49147,0,0},Row{524160,327584,0,0},Row{65472,655152,0,0},Row{61392,851760,0,0},Row{327600,982912,0,0},Row{291438432,983032,0,0}},Rows8{Row{4294966016,916911,0,0},Row{4026433536,851464,0,0},Row{321978368,720656,0,0},Row{96080,458592,0,0},Row{589680,126929,0,0},Row{1687158288,28669,0,0},Row{4294960128,2303,0,0},Row{3755548672,75,0,0}},zero_rows()}
+    case True{}: Glyph{14,[zero_rows(),Rows8{Row{4007141376,108,0,0},Row{4294960128,7423,0,0},Row{1419771424,49147,0,0},Row{524160,327584,0,0},Row{65472,655152,0,0},Row{61392,851760,0,0},Row{327600,982912,0,0},Row{291438432,983032,0,0}},Rows8{Row{4294966016,916911,0,0},Row{4026433536,851464,0,0},Row{321978368,720656,0,0},Row{96080,458592,0,0},Row{589680,126929,0,0},Row{1687158288,28669,0,0},Row{4294960128,2303,0,0},Row{3755548672,75,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrllll(code: U32) -> Glyph:
@@ -6998,7 +7006,7 @@ def face2llrllll(code: U32) -> Glyph:
 
 def face2llrlllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{715264,0,0,0},Row{4194080,0,0,0},Row{715264,0,0,0}},Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{715264,0,0,0},Row{4194080,0,0,0},Row{715264,0,0,0}},zero_rows()}
+    case True{}: Glyph{7,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{715264,0,0,0},Row{4194080,0,0,0},Row{715264,0,0,0}},Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{715264,0,0,0},Row{4194080,0,0,0},Row{715264,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrlllrl(code: U32) -> Glyph:
@@ -7006,7 +7014,7 @@ def face2llrlllrl(code: U32) -> Glyph:
 
 def face2llrlllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2942720,0,0,0},Row{7339520,0,0,0},Row{2942720,0,0,0}},Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2030592,0,0,0}},Rows8{Row{720384,0,0,0},Row{458528,0,0,0},Row{130880,0,0,0},Row{49008,0,0,0},Row{32656,0,0,0},zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{7,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2942720,0,0,0},Row{7339520,0,0,0},Row{2942720,0,0,0}},Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2030592,0,0,0}},Rows8{Row{720384,0,0,0},Row{458528,0,0,0},Row{130880,0,0,0},Row{49008,0,0,0},Row{32656,0,0,0},zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2llrlllrr(code: U32) -> Glyph:
@@ -7030,7 +7038,7 @@ def face2llrlll(+code: U32) -> Glyph:
 
 def face2llrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{15,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),Row{0,131072,0,0},Row{0,583440,0,0},Row{536870912,589800,0,0},Row{4179623936,315391,0,0},Row{4294586368,943,0,0}},Rows8{Row{2399140880,2,0,0},Row{8388400,0,0,0},Row{973078304,0,0,0},Row{4294869248,92,0,0},Row{4252041216,97791,0,0},Row{1610612736,589821,0,0},Row{0,588880,0,0},Row{0,278528,0,0}},zero_rows()}
+    case True{}: Glyph{15,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),Row{0,131072,0,0},Row{0,583440,0,0},Row{536870912,589800,0,0},Row{4179623936,315391,0,0},Row{4294586368,943,0,0}},Rows8{Row{2399140880,2,0,0},Row{8388400,0,0,0},Row{973078304,0,0,0},Row{4294869248,92,0,0},Row{4252041216,97791,0,0},Row{1610612736,589821,0,0},Row{0,588880,0,0},Row{0,278528,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrllrl(code: U32) -> Glyph:
@@ -7038,7 +7046,7 @@ def face2llrllrl(code: U32) -> Glyph:
 
 def face2llrllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{15,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1145324288,148548,0,0},Row{4294966272,655359,0,0},Row{4294966272,655359,0,0}},Rows8{zero_row(),zero_row(),Row{1145324288,148548,0,0},Row{4294966272,655359,0,0},Row{4294966272,655359,0,0},zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{15,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1145324288,148548,0,0},Row{4294966272,655359,0,0},Row{4294966272,655359,0,0}},Rows8{zero_row(),zero_row(),Row{1145324288,148548,0,0},Row{4294966272,655359,0,0},Row{4294966272,655359,0,0},zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrllrrl(code: U32) -> Glyph:
@@ -7046,7 +7054,7 @@ def face2llrllrrl(code: U32) -> Glyph:
 
 def face2llrllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{15,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),Row{768,0,0,0},Row{449024,0,0,0},Row{401603072,0,0,0},Row{4026520832,24,0,0},Row{4289986560,10751,0,0}},Rows8{Row{2449473536,720894,0,0},Row{0,1048465,0,0},Row{1073741824,983035,0,0},Row{4250992640,97791,0,0},Row{4294869504,108,0,0},Row{1560279552,0,0,0},Row{3865088,0,0,0},Row{9728,0,0,0}},zero_rows()}
+    case True{}: Glyph{15,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),Row{768,0,0,0},Row{449024,0,0,0},Row{401603072,0,0,0},Row{4026520832,24,0,0},Row{4289986560,10751,0,0}},Rows8{Row{2449473536,720894,0,0},Row{0,1048465,0,0},Row{1073741824,983035,0,0},Row{4250992640,97791,0,0},Row{4294869504,108,0,0},Row{1560279552,0,0,0},Row{3865088,0,0,0},Row{9728,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrllrrr(code: U32) -> Glyph:
@@ -7078,7 +7086,7 @@ def face2llrll(+code: U32) -> Glyph:
 
 def face2llrlrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{12,zero_rows(),Rows8{Row{3471671552,6,0,0},Row{4294966560,191,0,0},Row{3596353440,2047,0,0},Row{805363696,3327,0,0},Row{18289,3583,0,0},Row{1342177280,3071,0,0},Row{4127195136,1279,0,0},Row{4287627264,111,0,0}},Rows8{Row{3757441024,3,0,0},Row{804913152,0,0,0},Row{217841664,0,0,0},Row{72613888,0,0,0},zero_row(),Row{183177216,0,0,0},Row{805257216,0,0,0},Row{183177216,0,0,0}},zero_rows()}
+    case True{}: Glyph{12,[zero_rows(),Rows8{Row{3471671552,6,0,0},Row{4294966560,191,0,0},Row{3596353440,2047,0,0},Row{805363696,3327,0,0},Row{18289,3583,0,0},Row{1342177280,3071,0,0},Row{4127195136,1279,0,0},Row{4287627264,111,0,0}},Rows8{Row{3757441024,3,0,0},Row{804913152,0,0,0},Row{217841664,0,0,0},Row{72613888,0,0,0},zero_row(),Row{183177216,0,0,0},Row{805257216,0,0,0},Row{183177216,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrlrll(code: U32) -> Glyph:
@@ -7086,7 +7094,7 @@ def face2llrlrll(code: U32) -> Glyph:
 
 def face2llrlrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{22,zero_rows(),Rows8{Row{1912602624,667811547,0,0},Row{4287692800,4294967295,26,0},Row{4026343424,4253435242,735,0},Row{419418368,1342177280,7678,0},Row{7337984,606085904,40930,0},Row{269156112,2676752378,196448,0},Row{3221421920,2684354559,523776,0},Row{4127252384,2683838831,719360,0}},Rows8{Row{4211126208,2680160264,849920,0},Row{4261453776,2675965956,915200,0},Row{4261449680,2675965955,849664,0},Row{4244680640,2678063109,719104,0},Row{4194357152,2682322955,588800,0},Row{4110614384,4026360991,262021,0},Row{2685009696,4268752895,45055,0},Row{6289664,3272007639,2270,0}},Rows8{Row{419418368,0,0,0},Row{4026347520,2825209194,0,0},Row{4288741376,4294967295,4,0},Row{1912602624,1506738139,0,0},zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{22,[zero_rows(),Rows8{Row{1912602624,667811547,0,0},Row{4287692800,4294967295,26,0},Row{4026343424,4253435242,735,0},Row{419418368,1342177280,7678,0},Row{7337984,606085904,40930,0},Row{269156112,2676752378,196448,0},Row{3221421920,2684354559,523776,0},Row{4127252384,2683838831,719360,0}},Rows8{Row{4211126208,2680160264,849920,0},Row{4261453776,2675965956,915200,0},Row{4261449680,2675965955,849664,0},Row{4244680640,2678063109,719104,0},Row{4194357152,2682322955,588800,0},Row{4110614384,4026360991,262021,0},Row{2685009696,4268752895,45055,0},Row{6289664,3272007639,2270,0}},Rows8{Row{419418368,0,0,0},Row{4026347520,2825209194,0,0},Row{4288741376,4294967295,4,0},Row{1912602624,1506738139,0,0},zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2llrlrlrl(code: U32) -> Glyph:
@@ -7094,7 +7102,7 @@ def face2llrlrlrl(code: U32) -> Glyph:
 
 def face2llrlrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,zero_rows(),Rows8{Row{4279238656,239,0,0},Row{4284481536,1279,0,0},Row{3752853504,2815,0,0},Row{2683437056,7931,0,0},Row{1610022912,28663,0,0},Row{536608768,49139,0,0},Row{218046464,131024,0,0},Row{134184960,524176,0,0}},Rows8{Row{50319360,851776,0,0},Row{1156576000,3145284,0,0},Row{4294965248,9437183,0,0},Row{4294966528,14680063,0,0},Row{851776,67096576,0,0},Row{524176,167739392,0,0},Row{196576,251604992,0,0},Row{57332,1610416128,0,0}},zero_rows()}
+    case True{}: Glyph{16,[zero_rows(),Rows8{Row{4279238656,239,0,0},Row{4284481536,1279,0,0},Row{3752853504,2815,0,0},Row{2683437056,7931,0,0},Row{1610022912,28663,0,0},Row{536608768,49139,0,0},Row{218046464,131024,0,0},Row{134184960,524176,0,0}},Rows8{Row{50319360,851776,0,0},Row{1156576000,3145284,0,0},Row{4294965248,9437183,0,0},Row{4294966528,14680063,0,0},Row{851776,67096576,0,0},Row{524176,167739392,0,0},Row{196576,251604992,0,0},Row{57332,1610416128,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrlrlrr(code: U32) -> Glyph:
@@ -7118,7 +7126,7 @@ def face2llrlrl(+code: U32) -> Glyph:
 
 def face2llrlrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{15,zero_rows(),Rows8{Row{4294967136,1998,0,0},Row{4294967136,118783,0,0},Row{1145700192,589799,0,0},Row{524128,851760,0,0},Row{524128,917248,0,0},Row{524128,720704,0,0},Row{1145700192,188391,0,0},Row{4294967136,6911,0,0}},Rows8{Row{4294967136,253951,0,0},Row{524128,1965954,0,0},Row{524128,6289920,0,0},Row{524128,8386304,0,0},Row{524128,7338496,0,0},Row{1145700192,3145637,0,0},Row{4294967136,458751,0,0},Row{4294967136,14814,0,0}},zero_rows()}
+    case True{}: Glyph{15,[zero_rows(),Rows8{Row{4294967136,1998,0,0},Row{4294967136,118783,0,0},Row{1145700192,589799,0,0},Row{524128,851760,0,0},Row{524128,917248,0,0},Row{524128,720704,0,0},Row{1145700192,188391,0,0},Row{4294967136,6911,0,0}},Rows8{Row{4294967136,253951,0,0},Row{524128,1965954,0,0},Row{524128,6289920,0,0},Row{524128,8386304,0,0},Row{524128,7338496,0,0},Row{1145700192,3145637,0,0},Row{4294967136,458751,0,0},Row{4294967136,14814,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrlrrll(code: U32) -> Glyph:
@@ -7126,7 +7134,7 @@ def face2llrlrrll(code: U32) -> Glyph:
 
 def face2llrlrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,zero_rows(),Rows8{Row{3680567296,27631,0,0},Row{4294778880,3014655,0,0},Row{1811931648,31456356,0,0},Row{9436160,167743488,0,0},Row{786224,251531264,0,0},Row{393104,339935232,0,0},Row{196528,0,0,0},Row{65488,0,0,0}},Rows8{Row{65488,0,0,0},Row{196528,0,0,0},Row{393104,339935232,0,0},Row{786224,251531264,0,0},Row{8387584,167743488,0,0},Row{1811931648,31456356,0,0},Row{4294782976,2949119,0,0},Row{3680567296,27615,0,0}},zero_rows()}
+    case True{}: Glyph{16,[zero_rows(),Rows8{Row{3680567296,27631,0,0},Row{4294778880,3014655,0,0},Row{1811931648,31456356,0,0},Row{9436160,167743488,0,0},Row{786224,251531264,0,0},Row{393104,339935232,0,0},Row{196528,0,0,0},Row{65488,0,0,0}},Rows8{Row{65488,0,0,0},Row{196528,0,0,0},Row{393104,339935232,0,0},Row{786224,251531264,0,0},Row{8387584,167743488,0,0},Row{1811931648,31456356,0,0},Row{4294782976,2949119,0,0},Row{3680567296,27615,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrlrrlr(code: U32) -> Glyph:
@@ -7142,7 +7150,7 @@ def face2llrlrrl(+code: U32) -> Glyph:
 
 def face2llrlrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,zero_rows(),Rows8{Row{4026531680,1453,0,0},Row{4294967136,184319,0,0},Row{1145700192,2031559,0,0},Row{524128,11532288,0,0},Row{524128,50315264,0,0},Row{524128,134176768,0,0},Row{524128,167714816,0,0},Row{524128,201265152,0,0}},Rows8{Row{524128,201265152,0,0},Row{524128,167718912,0,0},Row{524128,134176768,0,0},Row{524128,50315264,0,0},Row{524128,11532288,0,0},Row{1145700192,2031559,0,0},Row{4294967136,184319,0,0},Row{4026531680,1453,0,0}},zero_rows()}
+    case True{}: Glyph{16,[zero_rows(),Rows8{Row{4026531680,1453,0,0},Row{4294967136,184319,0,0},Row{1145700192,2031559,0,0},Row{524128,11532288,0,0},Row{524128,50315264,0,0},Row{524128,134176768,0,0},Row{524128,167714816,0,0},Row{524128,201265152,0,0}},Rows8{Row{524128,201265152,0,0},Row{524128,167718912,0,0},Row{524128,134176768,0,0},Row{524128,50315264,0,0},Row{524128,11532288,0,0},Row{1145700192,2031559,0,0},Row{4294967136,184319,0,0},Row{4026531680,1453,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrlrrrl(code: U32) -> Glyph:
@@ -7150,7 +7158,7 @@ def face2llrlrrrl(code: U32) -> Glyph:
 
 def face2llrlrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{4294967136,65535,0,0},Row{4294967136,65535,0,0},Row{1145700192,17476,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{4294967136,32767,0,0}},Rows8{Row{4294967136,32767,0,0},Row{1145700192,9284,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{1145700192,17476,0,0},Row{4294967136,131071,0,0},Row{4294967136,131071,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{4294967136,65535,0,0},Row{4294967136,65535,0,0},Row{1145700192,17476,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{4294967136,32767,0,0}},Rows8{Row{4294967136,32767,0,0},Row{1145700192,9284,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{1145700192,17476,0,0},Row{4294967136,131071,0,0},Row{4294967136,131071,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrlrrrr(code: U32) -> Glyph:
@@ -7190,7 +7198,7 @@ def face2llrl(+code: U32) -> Glyph:
 
 def face2llrrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{4294967136,57343,0,0},Row{4294967136,57343,0,0},Row{1145700192,13380,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{4294967136,12287,0,0}},Rows8{Row{4294967136,12287,0,0},Row{1145700192,5188,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{4294967136,57343,0,0},Row{4294967136,57343,0,0},Row{1145700192,13380,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{4294967136,12287,0,0}},Rows8{Row{4294967136,12287,0,0},Row{1145700192,5188,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrrlll(code: U32) -> Glyph:
@@ -7198,7 +7206,7 @@ def face2llrrlll(code: U32) -> Glyph:
 
 def face2llrrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,zero_rows(),Rows8{Row{3679453184,23519,0,0},Row{4294778880,2949119,0,0},Row{1828708864,31456356,0,0},Row{9435904,167747584,0,0},Row{851760,251596800,0,0},Row{458640,35717120,0,0},Row{196528,0,0,0},Row{65488,340018241,0,0}},Rows8{Row{65488,1610612723,0,0},Row{196528,1610612723,0,0},Row{393104,1073217536,0,0},Row{786240,536608768,0,0},Row{9436160,184508416,0,0},Row{1811931648,49281620,0,0},Row{4294782976,4063231,0,0},Row{3680567296,93167,0,0}},zero_rows()}
+    case True{}: Glyph{16,[zero_rows(),Rows8{Row{3679453184,23519,0,0},Row{4294778880,2949119,0,0},Row{1828708864,31456356,0,0},Row{9435904,167747584,0,0},Row{851760,251596800,0,0},Row{458640,35717120,0,0},Row{196528,0,0,0},Row{65488,340018241,0,0}},Rows8{Row{65488,1610612723,0,0},Row{196528,1610612723,0,0},Row{393104,1073217536,0,0},Row{786240,536608768,0,0},Row{9436160,184508416,0,0},Row{1811931648,49281620,0,0},Row{4294782976,4063231,0,0},Row{3680567296,93167,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrrllrl(code: U32) -> Glyph:
@@ -7206,7 +7214,7 @@ def face2llrrllrl(code: U32) -> Glyph:
 
 def face2llrrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,zero_rows(),Rows8{Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{1145700192,218059844,0,0},Row{4294967136,218103807,0,0}},Rows8{Row{4294967136,218103807,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0}},zero_rows()}
+    case True{}: Glyph{16,[zero_rows(),Rows8{Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{1145700192,218059844,0,0},Row{4294967136,218103807,0,0}},Rows8{Row{4294967136,218103807,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0},Row{524128,218042368,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrrllrr(code: U32) -> Glyph:
@@ -7230,7 +7238,7 @@ def face2llrrll(+code: U32) -> Glyph:
 
 def face2llrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,zero_rows(),Rows8{Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0}},Rows8{Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0}},zero_rows()}
+    case True{}: Glyph{6,[zero_rows(),Rows8{Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0}},Rows8{Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrrlrl(code: U32) -> Glyph:
@@ -7238,7 +7246,7 @@ def face2llrrlrl(code: U32) -> Glyph:
 
 def face2llrrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{0,12283,0,0},Row{0,12283,0,0},Row{0,12283,0,0},Row{0,12283,0,0},Row{0,12283,0,0},Row{0,12283,0,0},Row{0,12283,0,0},Row{0,12283,0,0}},Rows8{Row{0,12283,0,0},Row{0,12283,0,0},Row{31666,12283,0,0},Row{49138,12283,0,0},Row{268562416,3838,0,0},Row{3311206304,2815,0,0},Row{4294966560,479,0,0},Row{3757932800,24,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{0,12283,0,0},Row{0,12283,0,0},Row{0,12283,0,0},Row{0,12283,0,0},Row{0,12283,0,0},Row{0,12283,0,0},Row{0,12283,0,0},Row{0,12283,0,0}},Rows8{Row{0,12283,0,0},Row{0,12283,0,0},Row{31666,12283,0,0},Row{49138,12283,0,0},Row{268562416,3838,0,0},Row{3311206304,2815,0,0},Row{4294966560,479,0,0},Row{3757932800,24,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrrlrrl(code: U32) -> Glyph:
@@ -7246,7 +7254,7 @@ def face2llrrlrrl(code: U32) -> Glyph:
 
 def face2llrrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{15,zero_rows(),Rows8{Row{524128,100660224,0,0},Row{524128,8388128,0,0},Row{524128,655313,0,0},Row{524128,49148,0,0},Row{2684878688,7423,0,0},Row{4161273696,479,0,0},Row{4283957088,62,0,0},Row{4293459808,29,0,0}},Rows8{Row{4294967136,175,0,0},Row{3555721056,1535,0,0},Row{1077870432,12031,0,0},Row{589664,49145,0,0},Row{524128,524241,0,0},Row{524128,4194096,0,0},Row{524128,13629440,0,0},Row{524128,150978560,0,0}},zero_rows()}
+    case True{}: Glyph{15,[zero_rows(),Rows8{Row{524128,100660224,0,0},Row{524128,8388128,0,0},Row{524128,655313,0,0},Row{524128,49148,0,0},Row{2684878688,7423,0,0},Row{4161273696,479,0,0},Row{4283957088,62,0,0},Row{4293459808,29,0,0}},Rows8{Row{4294967136,175,0,0},Row{3555721056,1535,0,0},Row{1077870432,12031,0,0},Row{589664,49145,0,0},Row{524128,524241,0,0},Row{524128,4194096,0,0},Row{524128,13629440,0,0},Row{524128,150978560,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrrlrrr(code: U32) -> Glyph:
@@ -7278,7 +7286,7 @@ def face2llrrl(+code: U32) -> Glyph:
 
 def face2llrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{12,zero_rows(),Rows8{Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0}},Rows8{Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{1718288224,13926,0,0},Row{4294967136,36863,0,0},Row{4294967136,36863,0,0}},zero_rows()}
+    case True{}: Glyph{12,[zero_rows(),Rows8{Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0}},Rows8{Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{1718288224,13926,0,0},Row{4294967136,36863,0,0},Row{4294967136,36863,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrrrll(code: U32) -> Glyph:
@@ -7286,7 +7294,7 @@ def face2llrrrll(code: U32) -> Glyph:
 
 def face2llrrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{20,zero_rows(),Rows8{Row{50331488,4227858432,2815,0},Row{134217568,4281335808,2815,0},Row{234880864,4286578688,2815,0},Row{1073545056,3487563776,2815,0},Row{2683895648,2415132672,2815,0},Row{4023844704,1341784064,2815,0},Row{4288085856,754847749,2815,0},Row{4282842976,939483146,2815,0}},Rows8{Row{4245094240,855617567,2815,0},Row{4161208160,818934111,2815,0},Row{4060544864,812643487,2815,0},Row{2953248608,807401695,2815,0},Row{1611071328,806026751,2815,0},Row{268894048,805634046,2815,0},Row{458592,805367802,2815,0},Row{458592,805343220,2815,0}},zero_rows()}
+    case True{}: Glyph{20,[zero_rows(),Rows8{Row{50331488,4227858432,2815,0},Row{134217568,4281335808,2815,0},Row{234880864,4286578688,2815,0},Row{1073545056,3487563776,2815,0},Row{2683895648,2415132672,2815,0},Row{4023844704,1341784064,2815,0},Row{4288085856,754847749,2815,0},Row{4282842976,939483146,2815,0}},Rows8{Row{4245094240,855617567,2815,0},Row{4161208160,818934111,2815,0},Row{4060544864,812643487,2815,0},Row{2953248608,807401695,2815,0},Row{1611071328,806026751,2815,0},Row{268894048,805634046,2815,0},Row{458592,805367802,2815,0},Row{458592,805343220,2815,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrrrlrl(code: U32) -> Glyph:
@@ -7294,7 +7302,7 @@ def face2llrrrlrl(code: U32) -> Glyph:
 
 def face2llrrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{17,zero_rows(),Rows8{Row{4194144,536608768,0,0},Row{13631328,536608768,0,0},Row{117440352,536608768,0,0},Row{788528992,536608768,0,0},Row{2952396640,536608768,0,0},Row{4290183008,536608772,0,0},Row{4281859936,536608797,0,0},Row{4161339232,536608911,0,0}},Rows8{Row{3507027808,536609791,0,0},Row{1342766944,536611839,0,0},Row{589664,536633338,0,0},Row{589664,536600545,0,0},Row{589664,536805216,0,0},Row{589664,536869632,0,0},Row{589664,536867328,0,0},Row{589664,536834048,0,0}},zero_rows()}
+    case True{}: Glyph{17,[zero_rows(),Rows8{Row{4194144,536608768,0,0},Row{13631328,536608768,0,0},Row{117440352,536608768,0,0},Row{788528992,536608768,0,0},Row{2952396640,536608768,0,0},Row{4290183008,536608772,0,0},Row{4281859936,536608797,0,0},Row{4161339232,536608911,0,0}},Rows8{Row{3507027808,536609791,0,0},Row{1342766944,536611839,0,0},Row{589664,536633338,0,0},Row{589664,536600545,0,0},Row{589664,536805216,0,0},Row{589664,536869632,0,0},Row{589664,536867328,0,0},Row{589664,536834048,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrrrlrr(code: U32) -> Glyph:
@@ -7318,7 +7326,7 @@ def face2llrrrl(+code: U32) -> Glyph:
 
 def face2llrrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{17,zero_rows(),Rows8{Row{3680501760,23519,0,0},Row{4294778880,2949119,0,0},Row{1811931648,31456356,0,0},Row{8387328,184520704,0,0},Row{786224,805109760,0,0},Row{393104,2146893824,0,0},Row{196528,2951938048,0,0},Row{65488,3220307968,0,0}},Rows8{Row{65488,3220307968,0,0},Row{196528,2951938048,0,0},Row{393104,2146893824,0,0},Row{786224,805109760,0,0},Row{8387584,184520704,0,0},Row{1811931648,31456356,0,0},Row{4294778880,2949119,0,0},Row{3680501760,23519,0,0}},zero_rows()}
+    case True{}: Glyph{17,[zero_rows(),Rows8{Row{3680501760,23519,0,0},Row{4294778880,2949119,0,0},Row{1811931648,31456356,0,0},Row{8387328,184520704,0,0},Row{786224,805109760,0,0},Row{393104,2146893824,0,0},Row{196528,2951938048,0,0},Row{65488,3220307968,0,0}},Rows8{Row{65488,3220307968,0,0},Row{196528,2951938048,0,0},Row{393104,2146893824,0,0},Row{786224,805109760,0,0},Row{8387584,184520704,0,0},Row{1811931648,31456356,0,0},Row{4294778880,2949119,0,0},Row{3680501760,23519,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrrrrll(code: U32) -> Glyph:
@@ -7326,7 +7334,7 @@ def face2llrrrrll(code: U32) -> Glyph:
 
 def face2llrrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{Row{4294967136,1726,0,0},Row{4294967136,49151,0,0},Row{1414135648,589799,0,0},Row{524128,982832,0,0},Row{524128,3144704,0,0},Row{524128,4193280,0,0},Row{524128,2096656,0,0},Row{268959584,720835,0,0}},Rows8{Row{4294967136,192511,0,0},Row{4294967136,6895,0,0},Row{1145700192,18,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0}},zero_rows()}
+    case True{}: Glyph{14,[zero_rows(),Rows8{Row{4294967136,1726,0,0},Row{4294967136,49151,0,0},Row{1414135648,589799,0,0},Row{524128,982832,0,0},Row{524128,3144704,0,0},Row{524128,4193280,0,0},Row{524128,2096656,0,0},Row{268959584,720835,0,0}},Rows8{Row{4294967136,192511,0,0},Row{4294967136,6895,0,0},Row{1145700192,18,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrrrrlr(code: U32) -> Glyph:
@@ -7342,7 +7350,7 @@ def face2llrrrrl(+code: U32) -> Glyph:
 
 def face2llrrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{17,zero_rows(),Rows8{Row{3680501760,23519,0,0},Row{4294778880,2949119,0,0},Row{2936005120,31456937,0,0},Row{28310272,184533248,0,0},Row{917296,805179392,0,0},Row{458640,2146893824,0,0},Row{196528,2952003584,0,0},Row{65488,3220307968,0,0}},Rows8{Row{65488,3220307968,0,0},Row{196528,2952003584,0,0},Row{537329552,2146894455,0,0},Row{851760,805186811,0,0},Row{28310528,184545233,0,0},Row{2936005120,31457225,0,0},Row{4294778880,8388607,0,0},Row{3680501760,66042863,0,0}},Rows8{Row{0,771424256,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{17,[zero_rows(),Rows8{Row{3680501760,23519,0,0},Row{4294778880,2949119,0,0},Row{2936005120,31456937,0,0},Row{28310272,184533248,0,0},Row{917296,805179392,0,0},Row{458640,2146893824,0,0},Row{196528,2952003584,0,0},Row{65488,3220307968,0,0}},Rows8{Row{65488,3220307968,0,0},Row{196528,2952003584,0,0},Row{537329552,2146894455,0,0},Row{851760,805186811,0,0},Row{28310528,184545233,0,0},Row{2936005120,31457225,0,0},Row{4294778880,8388607,0,0},Row{3680501760,66042863,0,0}},Rows8{Row{0,771424256,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2llrrrrrl(code: U32) -> Glyph:
@@ -7350,7 +7358,7 @@ def face2llrrrrrl(code: U32) -> Glyph:
 
 def face2llrrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{Row{4294967136,1726,0,0},Row{4294967136,114687,0,0},Row{1145700192,589799,0,0},Row{524128,982832,0,0},Row{524128,4193280,0,0},Row{524128,4193024,0,0},Row{524128,2096656,0,0},Row{268959584,786355,0,0}},Rows8{Row{4294967136,258047,0,0},Row{4294967136,11263,0,0},Row{1951006560,3071,0,0},Row{524128,24573,0,0},Row{524128,57333,0,0},Row{524128,458672,0,0},Row{524128,2031408,0,0},Row{524128,9435648,0,0}},zero_rows()}
+    case True{}: Glyph{14,[zero_rows(),Rows8{Row{4294967136,1726,0,0},Row{4294967136,114687,0,0},Row{1145700192,589799,0,0},Row{524128,982832,0,0},Row{524128,4193280,0,0},Row{524128,4193024,0,0},Row{524128,2096656,0,0},Row{268959584,786355,0,0}},Rows8{Row{4294967136,258047,0,0},Row{4294967136,11263,0,0},Row{1951006560,3071,0,0},Row{524128,24573,0,0},Row{524128,57333,0,0},Row{524128,458672,0,0},Row{524128,2031408,0,0},Row{524128,9435648,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2llrrrrrr(code: U32) -> Glyph:
@@ -7406,7 +7414,7 @@ def face2ll(+code: U32) -> Glyph:
 
 def face2lrlllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{Row{4274458624,1453,0,0},Row{4294955776,45055,0,0},Row{1169161472,589783,0,0},Row{655184,982560,0,0},Row{458608,418816,0,0},Row{3014496,0,0,0},Row{1811938832,2,0,0},Row{4294956032,6095,0,0}},Rows8{Row{4290121728,188415,0,0},Row{1090519040,851945,0,0},Row{0,3144992,0,0},Row{43936,5241344,0,0},Row{393136,3144976,0,0},Row{1168113488,720855,0,0},Row{4294964992,118783,0,0},Row{4275646464,1726,0,0}},zero_rows()}
+    case True{}: Glyph{14,[zero_rows(),Rows8{Row{4274458624,1453,0,0},Row{4294955776,45055,0,0},Row{1169161472,589783,0,0},Row{655184,982560,0,0},Row{458608,418816,0,0},Row{3014496,0,0,0},Row{1811938832,2,0,0},Row{4294956032,6095,0,0}},Rows8{Row{4290121728,188415,0,0},Row{1090519040,851945,0,0},Row{0,3144992,0,0},Row{43936,5241344,0,0},Row{393136,3144976,0,0},Row{1168113488,720855,0,0},Row{4294964992,118783,0,0},Row{4275646464,1726,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrlllll(code: U32) -> Glyph:
@@ -7414,7 +7422,7 @@ def face2lrlllll(code: U32) -> Glyph:
 
 def face2lrllllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{15,zero_rows(),Rows8{Row{4294967282,10485759,0,0},Row{4294967282,10485759,0,0},Row{4284761152,2376780,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0}},Rows8{Row{4281335808,11,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0}},zero_rows()}
+    case True{}: Glyph{15,[zero_rows(),Rows8{Row{4294967282,10485759,0,0},Row{4294967282,10485759,0,0},Row{4284761152,2376780,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0}},Rows8{Row{4281335808,11,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0},Row{4281335808,11,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrllllrl(code: U32) -> Glyph:
@@ -7422,7 +7430,7 @@ def face2lrllllrl(code: U32) -> Glyph:
 
 def face2lrllllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,zero_rows(),Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0}},Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{589648,150949888,0,0},Row{786240,134184960,0,0},Row{6290944,50323968,0,0},Row{1509946880,9436805,0,0},Row{4294930432,655359,0,0},Row{3984785408,18910,0,0}},zero_rows()}
+    case True{}: Glyph{16,[zero_rows(),Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0}},Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{589648,150949888,0,0},Row{786240,134184960,0,0},Row{6290944,50323968,0,0},Row{1509946880,9436805,0,0},Row{4294930432,655359,0,0},Row{3984785408,18910,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrllllrr(code: U32) -> Glyph:
@@ -7446,7 +7454,7 @@ def face2lrllll(+code: U32) -> Glyph:
 
 def face2lrlllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,zero_rows(),Rows8{Row{57332,1610350592,0,0},Row{262112,251600896,0,0},Row{589712,167735296,0,0},Row{917296,83869696,0,0},Row{4193536,14676480,0,0},Row{9435136,9434880,0,0},Row{14676480,4193280,0,0},Row{67092480,917280,0,0}},Rows8{Row{167735296,589680,0,0},Row{234819584,196528,0,0},Row{804978688,53233,0,0},Row{2146828288,32757,0,0},Row{3219193856,12281,0,0},Row{4288675840,3069,0,0},Row{4283432960,1791,0,0},Row{4261412864,511,0,0}},zero_rows()}
+    case True{}: Glyph{16,[zero_rows(),Rows8{Row{57332,1610350592,0,0},Row{262112,251600896,0,0},Row{589712,167735296,0,0},Row{917296,83869696,0,0},Row{4193536,14676480,0,0},Row{9435136,9434880,0,0},Row{14676480,4193280,0,0},Row{67092480,917280,0,0}},Rows8{Row{167735296,589680,0,0},Row{234819584,196528,0,0},Row{804978688,53233,0,0},Row{2146828288,32757,0,0},Row{3219193856,12281,0,0},Row{4288675840,3069,0,0},Row{4283432960,1791,0,0},Row{4261412864,511,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrlllrl(code: U32) -> Glyph:
@@ -7454,7 +7462,7 @@ def face2lrlllrl(code: U32) -> Glyph:
 
 def face2lrlllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{22,zero_rows(),Rows8{Row{49141,917344,13628672,0},Row{61425,3145632,8386560,0},Row{262080,7340000,4193280,0},Row{524160,10485747,982800,0},Row{786240,14659575,720704,0},Row{982528,50298363,458624,0},Row{4193024,117390078,196544,0},Row{813692672,184420095,57329,0}},Rows8{Row{1890579200,234554111,40948,0},Row{2699022336,804716767,24567,0},Row{3523186688,1609760927,8186,0},Row{4127150080,2413822047,3325,0},Row{4227796992,3214934047,2303,0},Row{4294705152,4284481548,1279,0},Row{4294443008,4280287240,239,0},Row{4294180864,4244635652,191,0}},zero_rows()}
+    case True{}: Glyph{22,[zero_rows(),Rows8{Row{49141,917344,13628672,0},Row{61425,3145632,8386560,0},Row{262080,7340000,4193280,0},Row{524160,10485747,982800,0},Row{786240,14659575,720704,0},Row{982528,50298363,458624,0},Row{4193024,117390078,196544,0},Row{813692672,184420095,57329,0}},Rows8{Row{1890579200,234554111,40948,0},Row{2699022336,804716767,24567,0},Row{3523186688,1609760927,8186,0},Row{4127150080,2413822047,3325,0},Row{4227796992,3214934047,2303,0},Row{4294705152,4284481548,1279,0},Row{4294443008,4280287240,239,0},Row{4294180864,4244635652,191,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrlllrrl(code: U32) -> Glyph:
@@ -7462,7 +7470,7 @@ def face2lrlllrrl(code: U32) -> Glyph:
 
 def face2lrlllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,zero_rows(),Rows8{Row{720800,150974464,0,0},Row{6290960,13628928,0,0},Row{32502784,4193824,0,0},Row{167743488,524192,0,0},Row{1073549312,53236,0,0},Row{3220439040,16380,0,0},Row{4287627264,2047,0,0},Row{4262461440,207,0,0}},Rows8{Row{4263510016,751,0,0},Row{4290772992,3071,0,0},Row{2683830272,32763,0,0},Row{520044544,262131,0,0},Row{100651264,851824,0,0},Row{10484224,9436160,0,0},Row{1965920,83882496,0,0},Row{327650,503279616,0,0}},zero_rows()}
+    case True{}: Glyph{16,[zero_rows(),Rows8{Row{720800,150974464,0,0},Row{6290960,13628928,0,0},Row{32502784,4193824,0,0},Row{167743488,524192,0,0},Row{1073549312,53236,0,0},Row{3220439040,16380,0,0},Row{4287627264,2047,0,0},Row{4262461440,207,0,0}},Rows8{Row{4263510016,751,0,0},Row{4290772992,3071,0,0},Row{2683830272,32763,0,0},Row{520044544,262131,0,0},Row{100651264,851824,0,0},Row{10484224,9436160,0,0},Row{1965920,83882496,0,0},Row{327650,503279616,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrlllrrr(code: U32) -> Glyph:
@@ -7494,7 +7502,7 @@ def face2lrlll(+code: U32) -> Glyph:
 
 def face2lrllrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,zero_rows(),Rows8{Row{262131,234844160,0,0},Row{786320,83878144,0,0},Row{5242384,11532288,0,0},Row{13628928,3079968,0,0},Row{117424128,524176,0,0},Row{520040448,57331,0,0},Row{2147024896,24570,0,0},Row{4024500224,3071,0,0}},Rows8{Row{4284481536,767,0,0},Row{4227858432,143,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0}},zero_rows()}
+    case True{}: Glyph{16,[zero_rows(),Rows8{Row{262131,234844160,0,0},Row{786320,83878144,0,0},Row{5242384,11532288,0,0},Row{13628928,3079968,0,0},Row{117424128,524176,0,0},Row{520040448,57331,0,0},Row{2147024896,24570,0,0},Row{4024500224,3071,0,0}},Rows8{Row{4284481536,767,0,0},Row{4227858432,143,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrllrll(code: U32) -> Glyph:
@@ -7502,7 +7510,7 @@ def face2lrllrll(code: U32) -> Glyph:
 
 def face2lrllrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{Row{4294967216,2097151,0,0},Row{4294967216,2097151,0,0},Row{1145324592,589732,0,0},Row{0,53236,0,0},Row{268435456,16382,0,0},Row{2684354560,2047,0,0},Row{4127195136,207,0,0},Row{4263510016,46,0,0}},Rows8{Row{4289724416,6,0,0},Row{3220570112,0,0,0},Row{788406272,0,0,0},Row{100642816,0,0,0},Row{10483456,0,0,0},Row{1146027808,279620,0,0},Row{4294967200,3145727,0,0},Row{4294967216,3145727,0,0}},zero_rows()}
+    case True{}: Glyph{14,[zero_rows(),Rows8{Row{4294967216,2097151,0,0},Row{4294967216,2097151,0,0},Row{1145324592,589732,0,0},Row{0,53236,0,0},Row{268435456,16382,0,0},Row{2684354560,2047,0,0},Row{4127195136,207,0,0},Row{4263510016,46,0,0}},Rows8{Row{4289724416,6,0,0},Row{3220570112,0,0,0},Row{788406272,0,0,0},Row{100642816,0,0,0},Row{10483456,0,0,0},Row{1146027808,279620,0,0},Row{4294967200,3145727,0,0},Row{4294967216,3145727,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrllrlrl(code: U32) -> Glyph:
@@ -7510,7 +7518,7 @@ def face2lrllrlrl(code: U32) -> Glyph:
 
 def face2lrllrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{268434688,0,0,0}},Rows8{Row{268434688,0,0,0},Row{72219904,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0}},Rows8{Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0}},Rows8{Row{72219904,0,0,0},Row{268434688,0,0,0},Row{268434688,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{268434688,0,0,0}},Rows8{Row{268434688,0,0,0},Row{72219904,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0}},Rows8{Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0},Row{851200,0,0,0}},Rows8{Row{72219904,0,0,0},Row{268434688,0,0,0},Row{268434688,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2lrllrlrr(code: U32) -> Glyph:
@@ -7534,7 +7542,7 @@ def face2lrllrl(+code: U32) -> Glyph:
 
 def face2lrllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3832,0,0,0}},Rows8{Row{16372,0,0,0},Row{32736,0,0,0},Row{49056,0,0,0},Row{130912,0,0,0},Row{392992,0,0,0},Row{654592,0,0,0},Row{915712,0,0,0},Row{3142912,0,0,0}},Rows8{Row{7336192,0,0,0},Row{11517952,0,0,0},Row{15695872,0,0,0},Row{67059712,0,0,0},Row{134086656,0,0,0},Row{200998912,0,0,0},Row{536281088,0,0,0},Row{1341259776,0,0,0}},Rows8{Row{2412773376,0,0,0},Row{3750756352,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3832,0,0,0}},Rows8{Row{16372,0,0,0},Row{32736,0,0,0},Row{49056,0,0,0},Row{130912,0,0,0},Row{392992,0,0,0},Row{654592,0,0,0},Row{915712,0,0,0},Row{3142912,0,0,0}},Rows8{Row{7336192,0,0,0},Row{11517952,0,0,0},Row{15695872,0,0,0},Row{67059712,0,0,0},Row{134086656,0,0,0},Row{200998912,0,0,0},Row{536281088,0,0,0},Row{1341259776,0,0,0}},Rows8{Row{2412773376,0,0,0},Row{3750756352,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2lrllrrl(code: U32) -> Glyph:
@@ -7542,7 +7550,7 @@ def face2lrllrrl(code: U32) -> Glyph:
 
 def face2lrllrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{33554368,0,0,0}},Rows8{Row{33554368,0,0,0},Row{33530928,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0}},Rows8{Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0}},Rows8{Row{33530928,0,0,0},Row{33554368,0,0,0},Row{33554368,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{33554368,0,0,0}},Rows8{Row{33554368,0,0,0},Row{33530928,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0}},Rows8{Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0},Row{33525760,0,0,0}},Rows8{Row{33530928,0,0,0},Row{33554368,0,0,0},Row{33554368,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2lrllrrrl(code: U32) -> Glyph:
@@ -7550,7 +7558,7 @@ def face2lrllrrrl(code: U32) -> Glyph:
 
 def face2lrllrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,zero_rows(),Rows8{Row{201273344,0,0,0},Row{1073717248,0,0,0},Row{3213881856,0,0,0},Row{4263115008,3,0,0},Row{4177788432,10,0,0},Row{4060135296,47,0,0},Row{2952810465,159,0,0},zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[zero_rows(),Rows8{Row{201273344,0,0,0},Row{1073717248,0,0,0},Row{3213881856,0,0,0},Row{4263115008,3,0,0},Row{4177788432,10,0,0},Row{4060135296,47,0,0},Row{2952810465,159,0,0},zero_row()},zero_rows(),zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrllrrrr(code: U32) -> Glyph:
@@ -7590,7 +7598,7 @@ def face2lrll(+code: U32) -> Glyph:
 
 def face2lrlrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,zero_rows(),zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1145324612,324,0,0}},Rows8{Row{4294967295,1535,0,0},Row{4294967295,1535,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{11,[zero_rows(),zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1145324612,324,0,0}},Rows8{Row{4294967295,1535,0,0},Row{4294967295,1535,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2lrlrlll(code: U32) -> Glyph:
@@ -7598,7 +7606,7 @@ def face2lrlrlll(code: U32) -> Glyph:
 
 def face2lrlrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{720144,0,0,0},Row{3142656,0,0,0},Row{11501568,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{720144,0,0,0},Row{3142656,0,0,0},Row{11501568,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrlrllrl(code: U32) -> Glyph:
@@ -7606,7 +7614,7 @@ def face2lrlrllrl(code: U32) -> Glyph:
 
 def face2lrlrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3739967488,41,0,0},Row{4294966032,1279,0,0},Row{2489122672,3583,0,0},Row{38704,8187,0,0}},Rows8{Row{822083584,12285,0,0},Row{4293624320,12287,0,0},Row{2060451680,12283,0,0},Row{188385,12282,0,0},Row{268476402,12286,0,0},Row{3595038705,12287,0,0},Row{4026531712,12281,0,0},Row{720357120,12280,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3739967488,41,0,0},Row{4294966032,1279,0,0},Row{2489122672,3583,0,0},Row{38704,8187,0,0}},Rows8{Row{822083584,12285,0,0},Row{4293624320,12287,0,0},Row{2060451680,12283,0,0},Row{188385,12282,0,0},Row{268476402,12286,0,0},Row{3595038705,12287,0,0},Row{4026531712,12281,0,0},Row{720357120,12280,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrlrllrr(code: U32) -> Glyph:
@@ -7630,7 +7638,7 @@ def face2lrlrll(+code: U32) -> Glyph:
 
 def face2lrlrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{4232380288,942,0,0},Row{4294508416,20479,0,0},Row{1438646144,126970,0,0},Row{917376,458672,0,0}},Rows8{Row{524160,720720,0,0},Row{327552,786208,0,0},Row{327552,786208,0,0},Row{524160,655184,0,0},Row{917376,458672,0,0},Row{1438646144,126970,0,0},Row{4294442880,20223,0,0},Row{4232314752,942,0,0}},zero_rows()}
+    case True{}: Glyph{14,[zero_rows(),Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{4232380288,942,0,0},Row{4294508416,20479,0,0},Row{1438646144,126970,0,0},Row{917376,458672,0,0}},Rows8{Row{524160,720720,0,0},Row{327552,786208,0,0},Row{327552,786208,0,0},Row{524160,655184,0,0},Row{917376,458672,0,0},Row{1438646144,126970,0,0},Row{4294442880,20223,0,0},Row{4232314752,942,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrlrlrl(code: U32) -> Glyph:
@@ -7638,7 +7646,7 @@ def face2lrlrlrl(code: U32) -> Glyph:
 
 def face2lrlrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3755548672,75,0,0},Row{4294960384,2559,0,0},Row{1687158304,24573,0,0},Row{524176,40946,0,0}},Rows8{Row{131024,288,0,0},Row{57328,0,0,0},Row{57328,0,0,0},Row{131024,288,0,0},Row{524176,45026,0,0},Row{1687158304,28669,0,0},Row{4294960384,2815,0,0},Row{3755548672,75,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3755548672,75,0,0},Row{4294960384,2559,0,0},Row{1687158304,24573,0,0},Row{524176,40946,0,0}},Rows8{Row{131024,288,0,0},Row{57328,0,0,0},Row{57328,0,0,0},Row{131024,288,0,0},Row{524176,45026,0,0},Row{1687158304,28669,0,0},Row{4294960384,2815,0,0},Row{3755548672,75,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrlrlrrl(code: U32) -> Glyph:
@@ -7646,7 +7654,7 @@ def face2lrlrlrrl(code: U32) -> Glyph:
 
 def face2lrlrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{Row{0,327552,0,0},Row{0,327552,0,0},Row{0,327552,0,0},Row{0,327552,0,0},Row{2934722560,327554,0,0},Row{4294965248,327581,0,0},Row{1687158592,327677,0,0},Row{524192,327666,0,0}},Rows8{Row{131040,327600,0,0},Row{57328,327552,0,0},Row{57328,327552,0,0},Row{131040,327600,0,0},Row{524192,327666,0,0},Row{1687158592,327677,0,0},Row{4294965248,327565,0,0},Row{2934722560,327538,0,0}},zero_rows()}
+    case True{}: Glyph{14,[zero_rows(),Rows8{Row{0,327552,0,0},Row{0,327552,0,0},Row{0,327552,0,0},Row{0,327552,0,0},Row{2934722560,327554,0,0},Row{4294965248,327581,0,0},Row{1687158592,327677,0,0},Row{524192,327666,0,0}},Rows8{Row{131040,327600,0,0},Row{57328,327552,0,0},Row{57328,327552,0,0},Row{131040,327600,0,0},Row{524192,327666,0,0},Row{1687158592,327677,0,0},Row{4294965248,327565,0,0},Row{2934722560,327538,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrlrlrrr(code: U32) -> Glyph:
@@ -7678,7 +7686,7 @@ def face2lrlrl(+code: U32) -> Glyph:
 
 def face2lrlrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3755548672,58,0,0},Row{4294960384,1791,0,0},Row{1686044192,16381,0,0},Row{262032,45026,0,0}},Rows8{Row{1145364432,61380,0,0},Row{4294967280,65535,0,0},Row{4294967280,131071,0,0},Row{57296,0,0,0},Row{327568,13680,0,0},Row{1418657312,40954,0,0},Row{4294960384,7423,0,0},Row{4007206912,364,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3755548672,58,0,0},Row{4294960384,1791,0,0},Row{1686044192,16381,0,0},Row{262032,45026,0,0}},Rows8{Row{1145364432,61380,0,0},Row{4294967280,65535,0,0},Row{4294967280,131071,0,0},Row{57296,0,0,0},Row{327568,13680,0,0},Row{1418657312,40954,0,0},Row{4294960384,7423,0,0},Row{4007206912,364,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrlrrll(code: U32) -> Glyph:
@@ -7686,7 +7694,7 @@ def face2lrlrrll(code: U32) -> Glyph:
 
 def face2lrlrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1466105856,1,0,0}},Rows8{Row{4294934528,2,0,0},Row{3170890752,0,0,0},Row{6289408,0,0,0},Row{4192512,0,0,0},Row{3489660924,0,0,0},Row{3489660924,0,0,0},Row{879753795,0,0,0},Row{4192512,0,0,0}},Rows8{Row{4192512,0,0,0},Row{4192512,0,0,0},Row{4192512,0,0,0},Row{4192512,0,0,0},Row{4192512,0,0,0},Row{4192512,0,0,0},Row{4192512,0,0,0},Row{4192512,0,0,0}},zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1466105856,1,0,0}},Rows8{Row{4294934528,2,0,0},Row{3170890752,0,0,0},Row{6289408,0,0,0},Row{4192512,0,0,0},Row{3489660924,0,0,0},Row{3489660924,0,0,0},Row{879753795,0,0,0},Row{4192512,0,0,0}},Rows8{Row{4192512,0,0,0},Row{4192512,0,0,0},Row{4192512,0,0,0},Row{4192512,0,0,0},Row{4192512,0,0,0},Row{4192512,0,0,0},Row{4192512,0,0,0},Row{4192512,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrlrrlrl(code: U32) -> Glyph:
@@ -7694,7 +7702,7 @@ def face2lrlrrlrl(code: U32) -> Glyph:
 
 def face2lrlrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{2934652928,327538,0,0},Row{4294964992,327565,0,0},Row{1687158576,327677,0,0},Row{524176,327666,0,0}},Rows8{Row{131024,327584,0,0},Row{57328,327552,0,0},Row{57328,327552,0,0},Row{131040,327584,0,0},Row{524192,327666,0,0},Row{1703935808,327677,0,0},Row{4294965504,327565,0,0},Row{2934726656,327538,0,0}},Rows8{Row{4096,196512,0,0},Row{1415249216,53242,0,0},Row{4294966016,12031,0,0},Row{4024127488,396,0,0},zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{14,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{2934652928,327538,0,0},Row{4294964992,327565,0,0},Row{1687158576,327677,0,0},Row{524176,327666,0,0}},Rows8{Row{131024,327584,0,0},Row{57328,327552,0,0},Row{57328,327552,0,0},Row{131040,327584,0,0},Row{524192,327666,0,0},Row{1703935808,327677,0,0},Row{4294965504,327565,0,0},Row{2934726656,327538,0,0}},Rows8{Row{4096,196512,0,0},Row{1415249216,53242,0,0},Row{4294966016,12031,0,0},Row{4024127488,396,0,0},zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2lrlrrlrr(code: U32) -> Glyph:
@@ -7718,7 +7726,7 @@ def face2lrlrrl(+code: U32) -> Glyph:
 
 def face2lrlrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{3947167616,942,0,0},Row{4294508416,12031,0,0},Row{1706033024,45053,0,0},Row{720768,57330,0,0}},Rows8{Row{393088,65488,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{3947167616,942,0,0},Row{4294508416,12031,0,0},Row{1706033024,45053,0,0},Row{720768,57330,0,0}},Rows8{Row{393088,65488,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrlrrrll(code: U32) -> Glyph:
@@ -7726,7 +7734,7 @@ def face2lrlrrrll(code: U32) -> Glyph:
 
 def face2lrlrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{187968,0,0,0}},Rows8{Row{524208,0,0,0},Row{187968,0,0,0},zero_row(),zero_row(),Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0}},Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0}},zero_rows()}
+    case True{}: Glyph{6,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{187968,0,0,0}},Rows8{Row{524208,0,0,0},Row{187968,0,0,0},zero_row(),zero_row(),Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0}},Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrlrrrlr(code: U32) -> Glyph:
@@ -7742,7 +7750,7 @@ def face2lrlrrrl(+code: U32) -> Glyph:
 
 def face2lrlrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2941952,0,0,0}},Rows8{Row{8387328,0,0,0},Row{2941952,0,0,0},zero_row(),zero_row(),Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0}},Rows8{Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0}},Rows8{Row{5241088,0,0,0},Row{3145298,0,0,0},Row{720887,0,0,0},Row{31975,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{7,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2941952,0,0,0}},Rows8{Row{8387328,0,0,0},Row{2941952,0,0,0},zero_row(),zero_row(),Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0}},Rows8{Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0}},Rows8{Row{5241088,0,0,0},Row{3145298,0,0,0},Row{720887,0,0,0},Row{31975,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2lrlrrrrl(code: U32) -> Glyph:
@@ -7750,7 +7758,7 @@ def face2lrlrrrrl(code: U32) -> Glyph:
 
 def face2lrlrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,40953,0,0},Row{2147811200,3071,0,0},Row{4127522688,463,0,0},Row{4282711936,45,0,0}},Rows8{Row{4024958848,2,0,0},Row{2952789888,0,0,0},Row{4294967168,5,0,0},Row{4284219264,46,0,0},Row{4161077120,207,0,0},Row{3221553024,2303,0,0},Row{537198464,20478,0,0},Row{327552,126965,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,40953,0,0},Row{2147811200,3071,0,0},Row{4127522688,463,0,0},Row{4282711936,45,0,0}},Rows8{Row{4024958848,2,0,0},Row{2952789888,0,0,0},Row{4294967168,5,0,0},Row{4284219264,46,0,0},Row{4161077120,207,0,0},Row{3221553024,2303,0,0},Row{537198464,20478,0,0},Row{327552,126965,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrlrrrrr(code: U32) -> Glyph:
@@ -7798,7 +7806,7 @@ def face2lrl(+code: U32) -> Glyph:
 
 def face2lrrllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,zero_rows(),Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0}},Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0}},zero_rows()}
+    case True{}: Glyph{6,[zero_rows(),Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0}},Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrrllll(code: U32) -> Glyph:
@@ -7806,7 +7814,7 @@ def face2lrrllll(code: U32) -> Glyph:
 
 def face2lrrlllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{20,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3964862336,3755409501,7,0},Row{4294442880,4294943743,159,0},Row{2223964032,4165467647,511,0},Row{589696,2684391418,1279,0}},Rows8{Row{393088,1879068663,1535,0},Row{327552,1879068663,1535,0},Row{327552,1879068663,1535,0},Row{327552,1879068663,1535,0},Row{327552,1879068663,1535,0},Row{327552,1879068663,1535,0},Row{327552,1879068663,1535,0},Row{327552,1879068663,1535,0}},zero_rows()}
+    case True{}: Glyph{20,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3964862336,3755409501,7,0},Row{4294442880,4294943743,159,0},Row{2223964032,4165467647,511,0},Row{589696,2684391418,1279,0}},Rows8{Row{393088,1879068663,1535,0},Row{327552,1879068663,1535,0},Row{327552,1879068663,1535,0},Row{327552,1879068663,1535,0},Row{327552,1879068663,1535,0},Row{327552,1879068663,1535,0},Row{327552,1879068663,1535,0},Row{327552,1879068663,1535,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrrlllrl(code: U32) -> Glyph:
@@ -7814,7 +7822,7 @@ def face2lrrlllrl(code: U32) -> Glyph:
 
 def face2lrrlllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3947036544,942,0,0},Row{4294377344,12031,0,0},Row{1705967488,45053,0,0},Row{720768,57330,0,0}},Rows8{Row{393088,65488,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3947036544,942,0,0},Row{4294377344,12031,0,0},Row{1705967488,45053,0,0},Row{720768,57330,0,0}},Rows8{Row{393088,65488,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrrlllrr(code: U32) -> Glyph:
@@ -7838,7 +7846,7 @@ def face2lrrlll(+code: U32) -> Glyph:
 
 def face2lrrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4023984128,91,0,0},Row{4294960384,2559,0,0},Row{1687158304,32765,0,0},Row{524176,61410,0,0}},Rows8{Row{131024,327568,0,0},Row{57328,458592,0,0},Row{57328,458608,0,0},Row{131024,327568,0,0},Row{524176,61410,0,0},Row{1687158304,32765,0,0},Row{4294960384,2559,0,0},Row{4023984128,91,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4023984128,91,0,0},Row{4294960384,2559,0,0},Row{1687158304,32765,0,0},Row{524176,61410,0,0}},Rows8{Row{131024,327568,0,0},Row{57328,458592,0,0},Row{57328,458608,0,0},Row{131024,327568,0,0},Row{524176,61410,0,0},Row{1687158304,32765,0,0},Row{4294960384,2559,0,0},Row{4023984128,91,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrrllrl(code: U32) -> Glyph:
@@ -7846,7 +7854,7 @@ def face2lrrllrl(code: U32) -> Glyph:
 
 def face2lrrllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4232314752,942,0,0},Row{4294442880,20479,0,0},Row{1438646144,126970,0,0},Row{917376,458672,0,0}},Rows8{Row{524160,720720,0,0},Row{327552,786208,0,0},Row{327552,786208,0,0},Row{524160,655184,0,0},Row{917376,458672,0,0},Row{1438646144,126970,0,0},Row{4294508416,20223,0,0},Row{4232380288,942,0,0}},Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{14,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4232314752,942,0,0},Row{4294442880,20479,0,0},Row{1438646144,126970,0,0},Row{917376,458672,0,0}},Rows8{Row{524160,720720,0,0},Row{327552,786208,0,0},Row{327552,786208,0,0},Row{524160,655184,0,0},Row{917376,458672,0,0},Row{1438646144,126970,0,0},Row{4294508416,20223,0,0},Row{4232380288,942,0,0}},Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2lrrllrrl(code: U32) -> Glyph:
@@ -7854,7 +7862,7 @@ def face2lrrllrrl(code: U32) -> Glyph:
 
 def face2lrrllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{2934722560,327538,0,0},Row{4294965248,327565,0,0},Row{1687158592,327677,0,0},Row{524192,327666,0,0}},Rows8{Row{131040,327600,0,0},Row{57328,327552,0,0},Row{57328,327552,0,0},Row{131040,327600,0,0},Row{524192,327666,0,0},Row{1687158592,327677,0,0},Row{4294965248,327581,0,0},Row{2934722560,327554,0,0}},Rows8{Row{0,327552,0,0},Row{0,327552,0,0},Row{0,327552,0,0},Row{0,327552,0,0},zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{14,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{2934722560,327538,0,0},Row{4294965248,327565,0,0},Row{1687158592,327677,0,0},Row{524192,327666,0,0}},Rows8{Row{131040,327600,0,0},Row{57328,327552,0,0},Row{57328,327552,0,0},Row{131040,327600,0,0},Row{524192,327666,0,0},Row{1687158592,327677,0,0},Row{4294965248,327581,0,0},Row{2934722560,327554,0,0}},Rows8{Row{0,327552,0,0},Row{0,327552,0,0},Row{0,327552,0,0},Row{0,327552,0,0},zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2lrrllrrr(code: U32) -> Glyph:
@@ -7886,7 +7894,7 @@ def face2lrrll(+code: U32) -> Glyph:
 
 def face2lrrlrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4252237696,4,0,0},Row{4294573952,4,0,0},Row{1169162112,2,0,0},Row{786304,0,0,0}},Rows8{Row{393088,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0}},zero_rows()}
+    case True{}: Glyph{9,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4252237696,4,0,0},Row{4294573952,4,0,0},Row{1169162112,2,0,0},Row{786304,0,0,0}},Rows8{Row{393088,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrrlrll(code: U32) -> Glyph:
@@ -7894,7 +7902,7 @@ def face2lrrlrll(code: U32) -> Glyph:
 
 def face2lrrlrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{12,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3471601920,24,0,0},Row{4294966544,479,0,0},Row{2489122688,2559,0,0},Row{196512,1143,0,0}},Rows8{Row{3866480,0,0,0},Row{3472882448,39,0,0},Row{4292427776,1535,0,0},Row{1358954496,3838,0,0},Row{43632,12283,0,0},Row{2488991664,3839,0,0},Row{4294966832,1279,0,0},Row{3740041472,41,0,0}},zero_rows()}
+    case True{}: Glyph{12,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3471601920,24,0,0},Row{4294966544,479,0,0},Row{2489122688,2559,0,0},Row{196512,1143,0,0}},Rows8{Row{3866480,0,0,0},Row{3472882448,39,0,0},Row{4292427776,1535,0,0},Row{1358954496,3838,0,0},Row{43632,12283,0,0},Row{2488991664,3839,0,0},Row{4294966832,1279,0,0},Row{3740041472,41,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrrlrlrl(code: U32) -> Glyph:
@@ -7902,7 +7910,7 @@ def face2lrrlrlrl(code: U32) -> Glyph:
 
 def face2lrrlrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{zero_row(),Row{786192,0,0,0},Row{786192,0,0,0},Row{786192,0,0,0},Row{268435452,0,0,0},Row{268435452,0,0,0},Row{72154947,0,0,0},Row{786192,0,0,0}},Rows8{Row{786192,0,0,0},Row{786192,0,0,0},Row{786192,0,0,0},Row{786192,0,0,0},Row{786192,0,0,0},Row{73334272,0,0,0},Row{805304576,0,0,0},Row{1325236480,0,0,0}},zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{zero_row(),Row{786192,0,0,0},Row{786192,0,0,0},Row{786192,0,0,0},Row{268435452,0,0,0},Row{268435452,0,0,0},Row{72154947,0,0,0},Row{786192,0,0,0}},Rows8{Row{786192,0,0,0},Row{786192,0,0,0},Row{786192,0,0,0},Row{786192,0,0,0},Row{786192,0,0,0},Row{73334272,0,0,0},Row{805304576,0,0,0},Row{1325236480,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrrlrlrr(code: U32) -> Glyph:
@@ -7926,7 +7934,7 @@ def face2lrrlrl(+code: U32) -> Glyph:
 
 def face2lrrlrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0}},Rows8{Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{393088,65504,0,0},Row{720736,65524,0,0},Row{2259681072,65518,0,0},Row{4294965760,65450,0,0},Row{2382196736,65440,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0}},Rows8{Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{393088,65504,0,0},Row{720736,65524,0,0},Row{2259681072,65518,0,0},Row{4294965760,65450,0,0},Row{2382196736,65440,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrrlrrll(code: U32) -> Glyph:
@@ -7934,7 +7942,7 @@ def face2lrrlrrll(code: U32) -> Glyph:
 
 def face2lrrlrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{40950,393104,0,0},Row{57313,61408,0,0},Row{327584,36852,0,0},Row{655168,16377,0,0}},Rows8{Row{982272,3326,0,0},Row{1078982656,2047,0,0},Row{2426401280,511,0,0},Row{3772760064,175,0,0},Row{4127154176,95,0,0},Row{4261351424,14,0,0},Row{4294574080,9,0,0},Row{4294180864,3,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{40950,393104,0,0},Row{57313,61408,0,0},Row{327584,36852,0,0},Row{655168,16377,0,0}},Rows8{Row{982272,3326,0,0},Row{1078982656,2047,0,0},Row{2426401280,511,0,0},Row{3772760064,175,0,0},Row{4127154176,95,0,0},Row{4261351424,14,0,0},Row{4294574080,9,0,0},Row{4294180864,3,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrrlrrlr(code: U32) -> Glyph:
@@ -7950,7 +7958,7 @@ def face2lrrlrrl(+code: U32) -> Glyph:
 
 def face2lrrlrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{18,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{805343222,4043312127,223,0},Row{1879101425,4110421759,143,0},Row{2952921024,4177543167,79,0},Row{3758423920,4244668383,14,0}},Rows8{Row{4094230320,4280336270,10,0},Row{4144823552,4283494219,5,0},Row{4212128000,4287889159,1,0},Row{4266652672,3217488643,0,0},Row{3751796992,2147153664,0,0},Row{2684334080,805302784,0,0},Row{1610571776,234868736,0,0},Row{536813568,150966272,0,0}},zero_rows()}
+    case True{}: Glyph{18,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{805343222,4043312127,223,0},Row{1879101425,4110421759,143,0},Row{2952921024,4177543167,79,0},Row{3758423920,4244668383,14,0}},Rows8{Row{4094230320,4280336270,10,0},Row{4144823552,4283494219,5,0},Row{4212128000,4287889159,1,0},Row{4266652672,3217488643,0,0},Row{3751796992,2147153664,0,0},Row{2684334080,805302784,0,0},Row{1610571776,234868736,0,0},Row{536813568,150966272,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrrlrrrl(code: U32) -> Glyph:
@@ -7958,7 +7966,7 @@ def face2lrrlrrrl(code: U32) -> Glyph:
 
 def face2lrrlrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{196561,32760,0,0},Row{537657152,3327,0,0},Row{2958031360,1023,0,0},Row{4107264256,159,0,0}},Rows8{Row{4261371904,29,0,0},Row{4294639616,4,0,0},Row{4294770688,5,0,0},Row{4244602880,30,0,0},Row{4088394496,175,0,0},Row{2419063808,1535,0,0},Row{268959600,7934,0,0},Row{57330,45046,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{196561,32760,0,0},Row{537657152,3327,0,0},Row{2958031360,1023,0,0},Row{4107264256,159,0,0}},Rows8{Row{4261371904,29,0,0},Row{4294639616,4,0,0},Row{4294770688,5,0,0},Row{4244602880,30,0,0},Row{4088394496,175,0,0},Row{2419063808,1535,0,0},Row{268959600,7934,0,0},Row{57330,45046,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrrlrrrr(code: U32) -> Glyph:
@@ -7998,7 +8006,7 @@ def face2lrrl(+code: U32) -> Glyph:
 
 def face2lrrrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{40950,393104,0,0},Row{61409,61408,0,0},Row{327568,36853,0,0},Row{655152,12282,0,0}},Rows8{Row{269417728,3071,0,0},Row{1616901888,1535,0,0},Row{2964320512,239,0,0},Row{4059013120,159,0,0},Row{4177477632,63,0,0},Row{4294770688,12,0,0},Row{4294443008,6,0,0},Row{4025614336,1,0,0}},Rows8{Row{2683568128,0,0,0},Row{805057536,0,0,0},Row{150994752,0,0,0},Row{7138928,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{13,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{40950,393104,0,0},Row{61409,61408,0,0},Row{327568,36853,0,0},Row{655152,12282,0,0}},Rows8{Row{269417728,3071,0,0},Row{1616901888,1535,0,0},Row{2964320512,239,0,0},Row{4059013120,159,0,0},Row{4177477632,63,0,0},Row{4294770688,12,0,0},Row{4294443008,6,0,0},Row{4025614336,1,0,0}},Rows8{Row{2683568128,0,0,0},Row{805057536,0,0,0},Row{150994752,0,0,0},Row{7138928,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2lrrrlll(code: U32) -> Glyph:
@@ -8006,7 +8014,7 @@ def face2lrrrlll(code: U32) -> Glyph:
 
 def face2lrrrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{12,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4294967168,3839,0,0},Row{4294967168,3839,0,0},Row{3292808224,2047,0,0},Row{4143972352,175,0,0}},Rows8{Row{4281335808,29,0,0},Row{4291887104,3,0,0},Row{2147155968,0,0,0},Row{201293824,0,0,0},Row{31454208,0,0,0},Row{1149238816,5188,0,0},Row{4294967200,12287,0,0},Row{4294967200,12287,0,0}},zero_rows()}
+    case True{}: Glyph{12,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4294967168,3839,0,0},Row{4294967168,3839,0,0},Row{3292808224,2047,0,0},Row{4143972352,175,0,0}},Rows8{Row{4281335808,29,0,0},Row{4291887104,3,0,0},Row{2147155968,0,0,0},Row{201293824,0,0,0},Row{31454208,0,0,0},Row{1149238816,5188,0,0},Row{4294967200,12287,0,0},Row{4294967200,12287,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrrrllrl(code: U32) -> Glyph:
@@ -8014,7 +8022,7 @@ def face2lrrrllrl(code: U32) -> Glyph:
 
 def face2lrrrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1660944384,6,0,0}},Rows8{Row{4290838528,12,0,0},Row{4026138624,10,0,0},Row{503250944,0,0,0},Row{150933504,0,0,0},Row{134160384,0,0,0},Row{134160384,0,0,0},Row{134164480,0,0,0},Row{83862016,0,0,0}},Rows8{Row{7208816,0,0,0},Row{2817904,0,0,0},Row{49272096,0,0,0},Row{117391360,0,0,0},Row{134160384,0,0,0},Row{134160384,0,0,0},Row{134160384,0,0,0},Row{167710720,0,0,0}},Rows8{Row{1325203456,1,0,0},Row{4294377472,12,0,0},Row{4269801472,12,0,0},Row{536870912,3,0,0},zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1660944384,6,0,0}},Rows8{Row{4290838528,12,0,0},Row{4026138624,10,0,0},Row{503250944,0,0,0},Row{150933504,0,0,0},Row{134160384,0,0,0},Row{134160384,0,0,0},Row{134164480,0,0,0},Row{83862016,0,0,0}},Rows8{Row{7208816,0,0,0},Row{2817904,0,0,0},Row{49272096,0,0,0},Row{117391360,0,0,0},Row{134160384,0,0,0},Row{134160384,0,0,0},Row{134160384,0,0,0},Row{167710720,0,0,0}},Rows8{Row{1325203456,1,0,0},Row{4294377472,12,0,0},Row{4269801472,12,0,0},Row{536870912,3,0,0},zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2lrrrllrr(code: U32) -> Glyph:
@@ -8038,7 +8046,7 @@ def face2lrrrll(+code: U32) -> Glyph:
 
 def face2lrrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0}},Rows8{Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0}},Rows8{Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0}},Rows8{Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0}},Rows8{Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0}},Rows8{Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0}},Rows8{Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},Row{5240064,0,0,0},zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2lrrrlrl(code: U32) -> Glyph:
@@ -8046,7 +8054,7 @@ def face2lrrrlrl(code: U32) -> Glyph:
 
 def face2lrrrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{13920,0,0,0}},Rows8{Row{1900480,0,0,0},Row{11533984,0,0,0},Row{16765184,0,0,0},Row{33521664,0,0,0},Row{50294784,0,0,0},Row{50294784,0,0,0},Row{67072000,0,0,0},Row{738144256,0,0,0}},Rows8{Row{4292214784,7,0,0},Row{4288872448,7,0,0},Row{1845370880,2,0,0},Row{100622336,0,0,0},Row{50294784,0,0,0},Row{50294784,0,0,0},Row{50294784,0,0,0},Row{33525760,0,0,0}},Rows8{Row{14672912,0,0,0},Row{8388544,0,0,0},Row{585664,0,0,0},Row{560,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{13920,0,0,0}},Rows8{Row{1900480,0,0,0},Row{11533984,0,0,0},Row{16765184,0,0,0},Row{33521664,0,0,0},Row{50294784,0,0,0},Row{50294784,0,0,0},Row{67072000,0,0,0},Row{738144256,0,0,0}},Rows8{Row{4292214784,7,0,0},Row{4288872448,7,0,0},Row{1845370880,2,0,0},Row{100622336,0,0,0},Row{50294784,0,0,0},Row{50294784,0,0,0},Row{50294784,0,0,0},Row{33525760,0,0,0}},Rows8{Row{14672912,0,0,0},Row{8388544,0,0,0},Row{585664,0,0,0},Row{560,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2lrrrlrrl(code: U32) -> Glyph:
@@ -8054,7 +8062,7 @@ def face2lrrrlrrl(code: U32) -> Glyph:
 
 def face2lrrrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{15,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{21237760,0,0,0}},Rows8{Row{1862263808,2094080,0,0},Row{4294966528,982123,0,0},Row{4162256688,589823,0,0},Row{805349920,32251,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{15,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{21237760,0,0,0}},Rows8{Row{1862263808,2094080,0,0},Row{4294966528,982123,0,0},Row{4162256688,589823,0,0},Row{805349920,32251,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrrrlrrr(code: U32) -> Glyph:
@@ -8086,7 +8094,7 @@ def face2lrrrl(+code: U32) -> Glyph:
 
 def face2lrrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,zero_rows(),zero_rows(),zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[zero_rows(),zero_rows(),zero_rows(),zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrrrrll(code: U32) -> Glyph:
@@ -8094,7 +8102,7 @@ def face2lrrrrll(code: U32) -> Glyph:
 
 def face2lrrrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{780800,0,0,0},Row{4194096,0,0,0},Row{780800,0,0,0},zero_row()},Rows8{zero_row(),Row{916480,0,0,0},Row{916480,0,0,0},Row{982016,0,0,0},Row{982272,0,0,0},Row{982272,0,0,0},Row{982272,0,0,0},Row{1048064,0,0,0}},Rows8{Row{1048064,0,0,0},Row{1048064,0,0,0},Row{1048064,0,0,0},Row{2096896,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{7,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{780800,0,0,0},Row{4194096,0,0,0},Row{780800,0,0,0},zero_row()},Rows8{zero_row(),Row{916480,0,0,0},Row{916480,0,0,0},Row{982016,0,0,0},Row{982272,0,0,0},Row{982272,0,0,0},Row{982272,0,0,0},Row{1048064,0,0,0}},Rows8{Row{1048064,0,0,0},Row{1048064,0,0,0},Row{1048064,0,0,0},Row{2096896,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2lrrrrlrl(code: U32) -> Glyph:
@@ -8102,7 +8110,7 @@ def face2lrrrrlrl(code: U32) -> Glyph:
 
 def face2lrrrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{1325400064,0,0,0},Row{1325400064,0,0,0},Row{4023984128,91,0,0},Row{4294964480,2559,0,0},Row{2408578592,28669,0,0},Row{1325924240,40674,0,0},Row{1325531088,32,0,0},Row{1325457392,0,0,0}},Rows8{Row{1325457392,0,0,0},Row{1325461472,16,0,0},Row{1325793184,36321,0,0},Row{1868496688,32763,0,0},Row{4294964992,3071,0,0},Row{4294725632,398,0,0},Row{1594884096,0,0,0},Row{1325400064,0,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{1325400064,0,0,0},Row{1325400064,0,0,0},Row{4023984128,91,0,0},Row{4294964480,2559,0,0},Row{2408578592,28669,0,0},Row{1325924240,40674,0,0},Row{1325531088,32,0,0},Row{1325457392,0,0,0}},Rows8{Row{1325457392,0,0,0},Row{1325461472,16,0,0},Row{1325793184,36321,0,0},Row{1868496688,32763,0,0},Row{4294964992,3071,0,0},Row{4294725632,398,0,0},Row{1594884096,0,0,0},Row{1325400064,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrrrrlrr(code: U32) -> Glyph:
@@ -8126,7 +8134,7 @@ def face2lrrrrl(+code: U32) -> Glyph:
 
 def face2lrrrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{Row{4253155328,1214,0,0},Row{4294848512,32767,0,0},Row{2080362496,262120,0,0},Row{11531264,655168,0,0},Row{6288896,148992,0,0},Row{5240320,0,0,0},Row{6288896,0,0,0},Row{4294967264,223,0,0}},Rows8{Row{4294967264,223,0,0},Row{1150285632,52,0,0},Row{8385280,0,0,0},Row{8385024,0,0,0},Row{5239808,567296,0,0},Row{1718287728,786038,0,0},Row{4294967264,524287,0,0},Row{4294967264,36351,0,0}},zero_rows()}
+    case True{}: Glyph{14,[zero_rows(),Rows8{Row{4253155328,1214,0,0},Row{4294848512,32767,0,0},Row{2080362496,262120,0,0},Row{11531264,655168,0,0},Row{6288896,148992,0,0},Row{5240320,0,0,0},Row{6288896,0,0,0},Row{4294967264,223,0,0}},Rows8{Row{4294967264,223,0,0},Row{1150285632,52,0,0},Row{8385280,0,0,0},Row{8385024,0,0,0},Row{5239808,567296,0,0},Row{1718287728,786038,0,0},Row{4294967264,524287,0,0},Row{4294967264,36351,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrrrrrll(code: U32) -> Glyph:
@@ -8134,7 +8142,7 @@ def face2lrrrrrll(code: U32) -> Glyph:
 
 def face2lrrrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,zero_rows(),Rows8{zero_row(),zero_row(),Row{805311232,3145747,0,0},Row{4269911584,166935551,0,0},Row{4294901568,201261055,0,0},Row{366999040,30406961,0,0},Row{1832448,14639104,0,0},Row{130560,117047296,0,0}},Rows8{Row{48944,183828480,0,0},Row{44864,200474624,0,0},Row{53024,167116800,0,0},Row{261376,100401152,0,0},Row{3011840,13602816,0,0},Row{1508899600,100662644,0,0},Row{4294569808,234545151,0,0},Row{3930081536,60823503,0,0}},zero_rows()}
+    case True{}: Glyph{16,[zero_rows(),Rows8{zero_row(),zero_row(),Row{805311232,3145747,0,0},Row{4269911584,166935551,0,0},Row{4294901568,201261055,0,0},Row{366999040,30406961,0,0},Row{1832448,14639104,0,0},Row{130560,117047296,0,0}},Rows8{Row{48944,183828480,0,0},Row{44864,200474624,0,0},Row{53024,167116800,0,0},Row{261376,100401152,0,0},Row{3011840,13602816,0,0},Row{1508899600,100662644,0,0},Row{4294569808,234545151,0,0},Row{3930081536,60823503,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrrrrrlr(code: U32) -> Glyph:
@@ -8150,7 +8158,7 @@ def face2lrrrrrl(+code: U32) -> Glyph:
 
 def face2lrrrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{36855,57330,0,0},Row{126945,28664,0,0},Row{268894064,3582,0,0},Row{1611464208,1791,0,0},Row{3494901760,239,0,0},Row{4106219776,127,0,0},Row{4244606976,30,0,0},Row{4294927408,842,0,0}},Rows8{Row{4294967200,3583,0,0},Row{4294967200,3583,0,0},Row{2952152112,836,0,0},Row{4294967200,3583,0,0},Row{4294967200,3583,0,0},Row{2683568128,0,0,0},Row{2683568128,0,0,0},Row{2683568128,0,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{36855,57330,0,0},Row{126945,28664,0,0},Row{268894064,3582,0,0},Row{1611464208,1791,0,0},Row{3494901760,239,0,0},Row{4106219776,127,0,0},Row{4244606976,30,0,0},Row{4294927408,842,0,0}},Rows8{Row{4294967200,3583,0,0},Row{4294967200,3583,0,0},Row{2952152112,836,0,0},Row{4294967200,3583,0,0},Row{4294967200,3583,0,0},Row{2683568128,0,0,0},Row{2683568128,0,0,0},Row{2683568128,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2lrrrrrrl(code: U32) -> Glyph:
@@ -8158,7 +8166,7 @@ def face2lrrrrrrl(code: U32) -> Glyph:
 
 def face2lrrrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),Rows8{Row{785408,0,0,0},Row{785408,0,0,0},Row{785408,0,0,0},Row{785408,0,0,0},Row{785408,0,0,0},Row{785408,0,0,0},Row{785408,0,0,0},zero_row()},Rows8{zero_row(),zero_row(),zero_row(),Row{785408,0,0,0},Row{785408,0,0,0},Row{785408,0,0,0},Row{785408,0,0,0},Row{785408,0,0,0}},Rows8{Row{785408,0,0,0},Row{785408,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{7,[zero_rows(),Rows8{Row{785408,0,0,0},Row{785408,0,0,0},Row{785408,0,0,0},Row{785408,0,0,0},Row{785408,0,0,0},Row{785408,0,0,0},Row{785408,0,0,0},zero_row()},Rows8{zero_row(),zero_row(),zero_row(),Row{785408,0,0,0},Row{785408,0,0,0},Row{785408,0,0,0},Row{785408,0,0,0},Row{785408,0,0,0}},Rows8{Row{785408,0,0,0},Row{785408,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2lrrrrrrr(code: U32) -> Glyph:
@@ -8222,7 +8230,7 @@ def face2l(+code: U32) -> Glyph:
 
 def face2rllllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{3471523840,7,0,0},Row{4294964736,175,0,0},Row{2758737408,1279,0,0},Row{524048,1485,0,0},Row{720384,0,0,0},Row{80738304,0,0,0},Row{3489640704,5,0,0},Row{4289130048,719,0,0}},Rows8{Row{2717937600,3583,0,0},Row{36800,20468,0,0},Row{524160,24544,0,0},Row{401603344,7668,0,0},Row{4294795264,383,0,0},Row{4233101312,463,0,0},Row{1879048192,1791,0,0},Row{108320,2559,0,0}},Rows8{Row{1629159216,2047,0,0},Row{4294965760,751,0,0},Row{4294938880,59,0,0},Row{321978368,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{3471523840,7,0,0},Row{4294964736,175,0,0},Row{2758737408,1279,0,0},Row{524048,1485,0,0},Row{720384,0,0,0},Row{80738304,0,0,0},Row{3489640704,5,0,0},Row{4289130048,719,0,0}},Rows8{Row{2717937600,3583,0,0},Row{36800,20468,0,0},Row{524160,24544,0,0},Row{401603344,7668,0,0},Row{4294795264,383,0,0},Row{4233101312,463,0,0},Row{1879048192,1791,0,0},Row{108320,2559,0,0}},Rows8{Row{1629159216,2047,0,0},Row{4294965760,751,0,0},Row{4294938880,59,0,0},Row{321978368,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2rllllll(code: U32) -> Glyph:
@@ -8230,7 +8238,7 @@ def face2rllllll(code: U32) -> Glyph:
 
 def face2rlllllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{274563072,715,0,0}},Rows8{Row{1625288960,2303,0,0},Row{544120832,989,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{274563072,715,0,0}},Rows8{Row{1625288960,2303,0,0},Row{544120832,989,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlllllrl(code: U32) -> Glyph:
@@ -8238,7 +8246,7 @@ def face2rlllllrl(code: U32) -> Glyph:
 
 def face2rlllllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{20,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{0,4913,0,0}},Rows8{Row{3321888768,25034751,0,0},Row{4291952640,1040187391,0,0},Row{2684231680,4294455572,3,0},Row{602918912,4247043818,30,0},Row{3813668352,3797942271,143,0},Row{4228578304,2179970397,239,0},Row{4013293328,867827714,1023,0},Row{3209887520,268435456,1279,0}},Rows8{Row{3745775392,310837248,1279,0},Row{4261871360,1106215210,767,0},Row{4111203072,2692743167,223,0},Row{1349514496,4110938109,111,0},Row{134197248,4284486448,12,0},Row{3757838336,3757864023,2,0},Row{4287692800,452984831,0,0},Row{2466250752,3792621,0,0}},zero_rows()}
+    case True{}: Glyph{20,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{0,4913,0,0}},Rows8{Row{3321888768,25034751,0,0},Row{4291952640,1040187391,0,0},Row{2684231680,4294455572,3,0},Row{602918912,4247043818,30,0},Row{3813668352,3797942271,143,0},Row{4228578304,2179970397,239,0},Row{4013293328,867827714,1023,0},Row{3209887520,268435456,1279,0}},Rows8{Row{3745775392,310837248,1279,0},Row{4261871360,1106215210,767,0},Row{4111203072,2692743167,223,0},Row{1349514496,4110938109,111,0},Row{134197248,4284486448,12,0},Row{3757838336,3757864023,2,0},Row{4287692800,452984831,0,0},Row{2466250752,3792621,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlllllrr(code: U32) -> Glyph:
@@ -8262,7 +8270,7 @@ def face2rlllll(+code: U32) -> Glyph:
 
 def face2rllllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,zero_rows(),Rows8{Row{1827587584,0,0,0},Row{4290510720,7,0,0},Row{4143987312,13,0,0},Row{4234485760,14,0,0},Row{4261412448,14,0,0},Row{4110581747,14,0,0},Row{4194307829,14,0,0},Row{4275757026,14,0,0}},Rows8{Row{4121881408,14,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{10,[zero_rows(),Rows8{Row{1827587584,0,0,0},Row{4290510720,7,0,0},Row{4143987312,13,0,0},Row{4234485760,14,0,0},Row{4261412448,14,0,0},Row{4110581747,14,0,0},Row{4194307829,14,0,0},Row{4275757026,14,0,0}},Rows8{Row{4121881408,14,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rllllrl(code: U32) -> Glyph:
@@ -8270,7 +8278,7 @@ def face2rllllrl(code: U32) -> Glyph:
 
 def face2rllllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3756195840,786257,0,0},Row{788336640,118755,0,0},Row{620740608,12029,0,0},Row{3245341184,1279,0,0}},Rows8{Row{4194893696,111,0,0},Row{4228382608,79,0,0},Row{3512728320,1007,0,0},Row{602915072,11774,0,0},Row{788340736,118755,0,0},Row{3756195840,720721,0,0},zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{14,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3756195840,786257,0,0},Row{788336640,118755,0,0},Row{620740608,12029,0,0},Row{3245341184,1279,0,0}},Rows8{Row{4194893696,111,0,0},Row{4228382608,79,0,0},Row{3512728320,1007,0,0},Row{602915072,11774,0,0},Row{788340736,118755,0,0},Row{3756195840,720721,0,0},zero_row(),zero_row()},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rllllrrl(code: U32) -> Glyph:
@@ -8278,7 +8286,7 @@ def face2rllllrrl(code: U32) -> Glyph:
 
 def face2rllllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{15,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1145324032,13380,0,0}},Rows8{Row{4294965760,53247,0,0},Row{4294965760,53247,0,0},Row{0,53136,0,0},Row{0,53136,0,0},Row{0,53136,0,0},zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{15,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1145324032,13380,0,0}},Rows8{Row{4294965760,53247,0,0},Row{4294965760,53247,0,0},Row{0,53136,0,0},Row{0,53136,0,0},Row{0,53136,0,0},zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rllllrrr(code: U32) -> Glyph:
@@ -8310,7 +8318,7 @@ def face2rllll(+code: U32) -> Glyph:
 
 def face2rlllrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,Rows8{zero_row(),zero_row(),zero_row(),Row{3149615104,2747,0,0},Row{4294930432,3839,0,0},Row{9400320,3825,0,0},Row{2330947584,3838,0,0},Row{294612992,3826,0,0}},Rows8{Row{3135205376,3837,0,0},Row{2056220672,3839,0,0},Row{294612992,3826,0,0},Row{2866769920,3835,0,0},Row{1827631104,3836,0,0},Row{1905225728,3829,0,0},Row{3135205376,3828,0,0},Row{2900324352,3835,0,0}},Rows8{Row{982478848,3827,0,0},Row{3129962496,3828,0,0},Row{294612992,3826,0,0},Row{4294930432,3839,0,0},Row{1705996288,3829,0,0},Row{4237258752,3829,0,0},Row{1133473792,3826,0,0},Row{3168759808,3835,0,0}},Rows8{Row{1526689792,3836,0,0},Row{1100967936,3829,0,0},Row{3151982592,3835,0,0},Row{4294930432,3839,0,0},zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{14,[Rows8{zero_row(),zero_row(),zero_row(),Row{3149615104,2747,0,0},Row{4294930432,3839,0,0},Row{9400320,3825,0,0},Row{2330947584,3838,0,0},Row{294612992,3826,0,0}},Rows8{Row{3135205376,3837,0,0},Row{2056220672,3839,0,0},Row{294612992,3826,0,0},Row{2866769920,3835,0,0},Row{1827631104,3836,0,0},Row{1905225728,3829,0,0},Row{3135205376,3828,0,0},Row{2900324352,3835,0,0}},Rows8{Row{982478848,3827,0,0},Row{3129962496,3828,0,0},Row{294612992,3826,0,0},Row{4294930432,3839,0,0},Row{1705996288,3829,0,0},Row{4237258752,3829,0,0},Row{1133473792,3826,0,0},Row{3168759808,3835,0,0}},Rows8{Row{1526689792,3836,0,0},Row{1100967936,3829,0,0},Row{3151982592,3835,0,0},Row{4294930432,3839,0,0},zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2rlllrll(code: U32) -> Glyph:
@@ -8318,7 +8326,7 @@ def face2rlllrll(code: U32) -> Glyph:
 
 def face2rlllrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{15,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3414294528,107,0,0}},Rows8{Row{4294930432,15871,0,0},Row{309196544,192403,0,0},Row{122656,783616,0,0},Row{4292886416,4165693,0,0},Row{400559312,8335548,0,0},Row{132123360,9375932,0,0},Row{4292873168,8335423,0,0},Row{937439136,4161647,0,0}},Rows8{Row{76595008,844678,0,0},Row{3995904,327265,0,0},Row{3741294592,24319,0,0},Row{4273209344,653,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{15,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3414294528,107,0,0}},Rows8{Row{4294930432,15871,0,0},Row{309196544,192403,0,0},Row{122656,783616,0,0},Row{4292886416,4165693,0,0},Row{400559312,8335548,0,0},Row{132123360,9375932,0,0},Row{4292873168,8335423,0,0},Row{937439136,4161647,0,0}},Rows8{Row{76595008,844678,0,0},Row{3995904,327265,0,0},Row{3741294592,24319,0,0},Row{4273209344,653,0,0},zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlllrlrl(code: U32) -> Glyph:
@@ -8326,7 +8334,7 @@ def face2rlllrlrl(code: U32) -> Glyph:
 
 def face2rlllrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1145324544,0,0,0}},Rows8{Row{4294967056,0,0,0},Row{4294967056,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1145324544,0,0,0}},Rows8{Row{4294967056,0,0,0},Row{4294967056,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlllrlrr(code: U32) -> Glyph:
@@ -8350,7 +8358,7 @@ def face2rlllrl(+code: U32) -> Glyph:
 
 def face2rlllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3342336,0,0,0}},Rows8{Row{1593824256,0,0,0},Row{4294966816,3,0,0},Row{4195532672,10,0,0},Row{4093665184,11,0,0},Row{4233486192,9,0,0},Row{4026531088,2,0,0},Row{720282112,0,0,0},zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3342336,0,0,0}},Rows8{Row{1593824256,0,0,0},Row{4294966816,3,0,0},Row{4195532672,10,0,0},Row{4093665184,11,0,0},Row{4233486192,9,0,0},Row{4026531088,2,0,0},Row{720282112,0,0,0},zero_row()},zero_rows(),zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlllrrl(code: U32) -> Glyph:
@@ -8358,7 +8366,7 @@ def face2rlllrrl(code: U32) -> Glyph:
 
 def face2rlllrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{15,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4227858432,9,0,0},Row{4227858432,9,0,0},Row{4227858432,9,0,0},Row{4294966784,786431,0,0}},Rows8{Row{4294966784,786431,0,0},Row{4249109504,214091,0,0},Row{4227858432,9,0,0},Row{4227858432,9,0,0},zero_row(),Row{4294966784,786431,0,0},Row{4294966784,786431,0,0},Row{1145324544,214084,0,0}},zero_rows()}
+    case True{}: Glyph{15,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4227858432,9,0,0},Row{4227858432,9,0,0},Row{4227858432,9,0,0},Row{4294966784,786431,0,0}},Rows8{Row{4294966784,786431,0,0},Row{4249109504,214091,0,0},Row{4227858432,9,0,0},Row{4227858432,9,0,0},zero_row(),Row{4294966784,786431,0,0},Row{4294966784,786431,0,0},Row{1145324544,214084,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlllrrrl(code: U32) -> Glyph:
@@ -8366,7 +8374,7 @@ def face2rlllrrrl(code: U32) -> Glyph:
 
 def face2rlllrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1273939712,0,0,0},Row{4291489664,4,0,0}},Rows8{Row{4211100304,9,0,0},Row{4245684224,7,0,0},Row{4022468608,1,0,0},Row{771637248,0,0,0},Row{9434880,0,0,0},Row{2863529856,9,0,0},Row{4294967232,13,0,0},zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1273939712,0,0,0},Row{4291489664,4,0,0}},Rows8{Row{4211100304,9,0,0},Row{4245684224,7,0,0},Row{4022468608,1,0,0},Row{771637248,0,0,0},Row{9434880,0,0,0},Row{2863529856,9,0,0},Row{4294967232,13,0,0},zero_row()},zero_rows(),zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlllrrrr(code: U32) -> Glyph:
@@ -8406,7 +8414,7 @@ def face2rlll(+code: U32) -> Glyph:
 
 def face2rllrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{10,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1559147520,0,0,0},Row{4290510672,5,0,0}},Rows8{Row{4160777072,11,0,0},Row{4229955584,9,0,0},Row{2399080448,0,0,0},Row{4273606656,9,0,0},Row{4127208784,47,0,0},Row{4272680864,13,0,0},Row{2382284544,1,0,0},zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{10,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1559147520,0,0,0},Row{4290510672,5,0,0}},Rows8{Row{4160777072,11,0,0},Row{4229955584,9,0,0},Row{2399080448,0,0,0},Row{4273606656,9,0,0},Row{4127208784,47,0,0},Row{4272680864,13,0,0},Row{2382284544,1,0,0},zero_row()},zero_rows(),zero_rows()]}
     case False{}: face2.missing()
 
 def face2rllrlll(code: U32) -> Glyph:
@@ -8414,7 +8422,7 @@ def face2rllrlll(code: U32) -> Glyph:
 
 def face2rllrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,zero_rows(),Rows8{Row{11526400,0,0,0},Row{1963776,0,0,0},Row{261632,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{8,[zero_rows(),Rows8{Row{11526400,0,0,0},Row{1963776,0,0,0},Row{261632,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face2.missing()
 
 def face2rllrllrl(code: U32) -> Glyph:
@@ -8422,7 +8430,7 @@ def face2rllrllrl(code: U32) -> Glyph:
 
 def face2rllrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0}},Rows8{Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{393088,65488,0,0},Row{589696,65522,0,0},Row{1132461952,1376252,0,0},Row{4294836096,7339935,0,0},Row{3735420800,7333894,0,0}},Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{14,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0}},Rows8{Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{393088,65488,0,0},Row{589696,65522,0,0},Row{1132461952,1376252,0,0},Row{4294836096,7339935,0,0},Row{3735420800,7333894,0,0}},Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2rllrllrr(code: U32) -> Glyph:
@@ -8446,7 +8454,7 @@ def face2rllrll(+code: U32) -> Glyph:
 
 def face2rllrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{4293611520,40959,0,0},Row{4294965760,40959,0,0},Row{2147483488,40916,0,0},Row{1342177216,40896,0,0},Row{1342177264,40896,0,0},Row{1342177264,40896,0,0},Row{1342177216,40896,0,0},Row{1342177136,40896,0,0}},Rows8{Row{1342175744,40896,0,0},Row{1340891136,40896,0,0},Row{16777216,40896,0,0},Row{0,40896,0,0},Row{0,40896,0,0},Row{0,40896,0,0},Row{0,40896,0,0},Row{0,40896,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{4293611520,40959,0,0},Row{4294965760,40959,0,0},Row{2147483488,40916,0,0},Row{1342177216,40896,0,0},Row{1342177264,40896,0,0},Row{1342177264,40896,0,0},Row{1342177216,40896,0,0},Row{1342177136,40896,0,0}},Rows8{Row{1342175744,40896,0,0},Row{1340891136,40896,0,0},Row{16777216,40896,0,0},Row{0,40896,0,0},Row{0,40896,0,0},Row{0,40896,0,0},Row{0,40896,0,0},Row{0,40896,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rllrlrl(code: U32) -> Glyph:
@@ -8454,7 +8462,7 @@ def face2rllrlrl(code: U32) -> Glyph:
 
 def face2rllrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{715264,0,0,0}},Rows8{Row{4194080,0,0,0},Row{715264,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{7,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{715264,0,0,0}},Rows8{Row{4194080,0,0,0},Row{715264,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rllrlrrl(code: U32) -> Glyph:
@@ -8462,7 +8470,7 @@ def face2rllrlrrl(code: U32) -> Glyph:
 
 def face2rllrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{192768,0,0,0}},Rows8{Row{4912128,0,0,0},Row{33243392,0,0,0},Row{49872896,0,0,0},Row{11533056,0,0,0},Row{78336,0,0,0},zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{7,[zero_rows(),zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{192768,0,0,0}},Rows8{Row{4912128,0,0,0},Row{33243392,0,0,0},Row{49872896,0,0,0},Row{11533056,0,0,0},Row{78336,0,0,0},zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2rllrlrrr(code: U32) -> Glyph:
@@ -8494,7 +8502,7 @@ def face2rllrl(+code: U32) -> Glyph:
 
 def face2rllrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{14673408,0,0,0},Row{14679968,0,0,0}},Rows8{Row{14649808,0,0,0},Row{14643232,0,0,0},Row{14643200,0,0,0},Row{14643200,0,0,0},Row{14643200,0,0,0},Row{14643200,0,0,0},Row{14643200,0,0,0},zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{7,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{14673408,0,0,0},Row{14679968,0,0,0}},Rows8{Row{14649808,0,0,0},Row{14643232,0,0,0},Row{14643200,0,0,0},Row{14643200,0,0,0},Row{14643200,0,0,0},Row{14643200,0,0,0},Row{14643200,0,0,0},zero_row()},zero_rows(),zero_rows()]}
     case False{}: face2.missing()
 
 def face2rllrrll(code: U32) -> Glyph:
@@ -8502,7 +8510,7 @@ def face2rllrrll(code: U32) -> Glyph:
 
 def face2rllrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,zero_rows(),Rows8{Row{2382275072,1,0,0},Row{4272815664,29,0,0},Row{3506487232,143,0,0},Row{2147504114,223,0,0},Row{1610625011,239,0,0},Row{2147504114,223,0,0},Row{3506483136,143,0,0},Row{4272815664,29,0,0}},Rows8{Row{2382275328,1,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{11,[zero_rows(),Rows8{Row{2382275072,1,0,0},Row{4272815664,29,0,0},Row{3506487232,143,0,0},Row{2147504114,223,0,0},Row{1610625011,239,0,0},Row{2147504114,223,0,0},Row{3506483136,143,0,0},Row{4272815664,29,0,0}},Rows8{Row{2382275328,1,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rllrrlrl(code: U32) -> Glyph:
@@ -8510,7 +8518,7 @@ def face2rllrrlrl(code: U32) -> Glyph:
 
 def face2rllrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4246011824,46,0,0},Row{3811507472,479,0,0},Row{1105191424,3071,0,0},Row{218054656,40951,0,0}},Rows8{Row{2952134656,524176,0,0},Row{3220504576,655232,0,0},Row{486486016,45046,0,0},Row{1121968640,7423,0,0},Row{3795778832,479,0,0},Row{4246011824,46,0,0},zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{14,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4246011824,46,0,0},Row{3811507472,479,0,0},Row{1105191424,3071,0,0},Row{218054656,40951,0,0}},Rows8{Row{2952134656,524176,0,0},Row{3220504576,655232,0,0},Row{486486016,45046,0,0},Row{1121968640,7423,0,0},Row{3795778832,479,0,0},Row{4246011824,46,0,0},zero_row(),zero_row()},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rllrrlrr(code: U32) -> Glyph:
@@ -8534,7 +8542,7 @@ def face2rllrrl(+code: U32) -> Glyph:
 
 def face2rllrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{18,zero_rows(),Rows8{Row{1047840,502464512,0,0},Row{1048289,83623936,0,0},Row{1045442,10452992,0,0},Row{1044753,1962752,0,0},Row{1044736,261392,0,0},Row{1044736,36752,0,0},Row{1044736,3316,0,0},Row{269480192,2283799549,4,0}},Rows8{Row{2685399296,4289724543,7,0},Row{4110417920,4277469195,7,0},Row{3994025984,4159508482,7,0},Row{1873805312,4134506496,7,0},Row{200671232,4128043776,7,0},Row{32382976,4294965248,143,0},Row{6270976,4239041792,92,0},Row{718592,4143972352,7,0}},zero_rows()}
+    case True{}: Glyph{18,[zero_rows(),Rows8{Row{1047840,502464512,0,0},Row{1048289,83623936,0,0},Row{1045442,10452992,0,0},Row{1044753,1962752,0,0},Row{1044736,261392,0,0},Row{1044736,36752,0,0},Row{1044736,3316,0,0},Row{269480192,2283799549,4,0}},Rows8{Row{2685399296,4289724543,7,0},Row{4110417920,4277469195,7,0},Row{3994025984,4159508482,7,0},Row{1873805312,4134506496,7,0},Row{200671232,4128043776,7,0},Row{32382976,4294965248,143,0},Row{6270976,4239041792,92,0},Row{718592,4143972352,7,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rllrrrll(code: U32) -> Glyph:
@@ -8542,7 +8550,7 @@ def face2rllrrrll(code: U32) -> Glyph:
 
 def face2rllrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{19,zero_rows(),Rows8{Row{1047840,502464512,0,0},Row{1048289,83623936,0,0},Row{1045442,10452992,0,0},Row{1044753,1962752,0,0},Row{1044736,261392,0,0},Row{1044736,36752,0,0},Row{1044736,3316,0,0},Row{269480192,4003595261,42,0}},Rows8{Row{2685399296,4277928063,223,0},Row{4110417920,281874443,510,0},Row{3994025984,536870914,207,0},Row{1873805312,3523215360,46,0},Row{200671232,3996123136,2,0},Row{32382976,1877278720,324,0},Row{6270976,4294901760,1279,0},Row{718592,4294901760,1279,0}},zero_rows()}
+    case True{}: Glyph{19,[zero_rows(),Rows8{Row{1047840,502464512,0,0},Row{1048289,83623936,0,0},Row{1045442,10452992,0,0},Row{1044753,1962752,0,0},Row{1044736,261392,0,0},Row{1044736,36752,0,0},Row{1044736,3316,0,0},Row{269480192,4003595261,42,0}},Rows8{Row{2685399296,4277928063,223,0},Row{4110417920,281874443,510,0},Row{3994025984,536870914,207,0},Row{1873805312,3523215360,46,0},Row{200671232,3996123136,2,0},Row{32382976,1877278720,324,0},Row{6270976,4294901760,1279,0},Row{718592,4294901760,1279,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rllrrrlr(code: U32) -> Glyph:
@@ -8558,7 +8566,7 @@ def face2rllrrrl(+code: U32) -> Glyph:
 
 def face2rllrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{20,zero_rows(),Rows8{Row{63887360,4143972352,9,0},Row{520028032,3744464896,1,0},Row{1336945296,1337982976,0,0},Row{802226176,150470656,0,0},Row{99598336,14626816,0,0},Row{1605574656,4182272,0,0},Row{2947902112,522496,0,0},Row{1879048112,1073794880,392,0}},Rows8{Row{114223376,3791662817,767,0},Row{0,4194306042,766,0},Row{1342177280,2940207295,763,0},Row{3791650816,785449006,763,0},Row{4211081216,133693446,763,0},Row{2942304256,4294770688,16383,0},Row{518127616,2863202304,11006,0},Row{100401152,0,764,0}},zero_rows()}
+    case True{}: Glyph{20,[zero_rows(),Rows8{Row{63887360,4143972352,9,0},Row{520028032,3744464896,1,0},Row{1336945296,1337982976,0,0},Row{802226176,150470656,0,0},Row{99598336,14626816,0,0},Row{1605574656,4182272,0,0},Row{2947902112,522496,0,0},Row{1879048112,1073794880,392,0}},Rows8{Row{114223376,3791662817,767,0},Row{0,4194306042,766,0},Row{1342177280,2940207295,763,0},Row{3791650816,785449006,763,0},Row{4211081216,133693446,763,0},Row{2942304256,4294770688,16383,0},Row{518127616,2863202304,11006,0},Row{100401152,0,764,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rllrrrrl(code: U32) -> Glyph:
@@ -8566,7 +8574,7 @@ def face2rllrrrrl(code: U32) -> Glyph:
 
 def face2rllrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{12,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{2930769920,0,0,0},Row{4294115328,3,0,0},Row{2930769920,0,0,0},zero_row()},Rows8{Row{1161822208,0,0,0},Row{3217031168,0,0,0},Row{2951872512,0,0,0},Row{1610428416,0,0,0},Row{150992384,0,0,0},Row{6291280,0,0,0},Row{393136,0,0,0},Row{65504,1636,0,0}},Rows8{Row{196560,3837,0,0},Row{3042836352,2559,0,0},Row{4294966288,479,0,0},Row{3471601664,24,0,0},zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{12,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{2930769920,0,0,0},Row{4294115328,3,0,0},Row{2930769920,0,0,0},zero_row()},Rows8{Row{1161822208,0,0,0},Row{3217031168,0,0,0},Row{2951872512,0,0,0},Row{1610428416,0,0,0},Row{150992384,0,0,0},Row{6291280,0,0,0},Row{393136,0,0,0},Row{65504,1636,0,0}},Rows8{Row{196560,3837,0,0},Row{3042836352,2559,0,0},Row{4294966288,479,0,0},Row{3471601664,24,0,0},zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2rllrrrrr(code: U32) -> Glyph:
@@ -8614,7 +8622,7 @@ def face2rll(+code: U32) -> Glyph:
 
 def face2rlrllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3485466624,0,0,0},Row{4263510016,4,0,0},Row{4110417920,12,0,0},zero_row()},Rows8{Row{4279238656,239,0,0},Row{4284481536,1279,0,0},Row{3752853504,2815,0,0},Row{2683437056,7931,0,0},Row{1610022912,28663,0,0},Row{536608768,49139,0,0},Row{218046464,131024,0,0},Row{134184960,524176,0,0}},Rows8{Row{50319360,851776,0,0},Row{1156576000,3145284,0,0},Row{4294965248,9437183,0,0},Row{4294966528,14680063,0,0},Row{851776,67096576,0,0},Row{524176,167739392,0,0},Row{196576,251604992,0,0},Row{57332,1610416128,0,0}},zero_rows()}
+    case True{}: Glyph{16,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3485466624,0,0,0},Row{4263510016,4,0,0},Row{4110417920,12,0,0},zero_row()},Rows8{Row{4279238656,239,0,0},Row{4284481536,1279,0,0},Row{3752853504,2815,0,0},Row{2683437056,7931,0,0},Row{1610022912,28663,0,0},Row{536608768,49139,0,0},Row{218046464,131024,0,0},Row{134184960,524176,0,0}},Rows8{Row{50319360,851776,0,0},Row{1156576000,3145284,0,0},Row{4294965248,9437183,0,0},Row{4294966528,14680063,0,0},Row{851776,67096576,0,0},Row{524176,167739392,0,0},Row{196576,251604992,0,0},Row{57332,1610416128,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrllll(code: U32) -> Glyph:
@@ -8622,7 +8630,7 @@ def face2rlrllll(code: U32) -> Glyph:
 
 def face2rlrlllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{0,3068,0,0},Row{1342177280,751,0,0},Row{3221225472,95,0,0},zero_row()},Rows8{Row{4279238656,239,0,0},Row{4284481536,1279,0,0},Row{3752853504,2815,0,0},Row{2683437056,7931,0,0},Row{1610022912,28663,0,0},Row{536608768,49139,0,0},Row{218046464,131024,0,0},Row{134184960,524176,0,0}},Rows8{Row{50319360,851776,0,0},Row{1156576000,3145284,0,0},Row{4294965248,9437183,0,0},Row{4294966528,14680063,0,0},Row{851776,67096576,0,0},Row{524176,167739392,0,0},Row{196576,251604992,0,0},Row{57332,1610416128,0,0}},zero_rows()}
+    case True{}: Glyph{16,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{0,3068,0,0},Row{1342177280,751,0,0},Row{3221225472,95,0,0},zero_row()},Rows8{Row{4279238656,239,0,0},Row{4284481536,1279,0,0},Row{3752853504,2815,0,0},Row{2683437056,7931,0,0},Row{1610022912,28663,0,0},Row{536608768,49139,0,0},Row{218046464,131024,0,0},Row{134184960,524176,0,0}},Rows8{Row{50319360,851776,0,0},Row{1156576000,3145284,0,0},Row{4294965248,9437183,0,0},Row{4294966528,14680063,0,0},Row{851776,67096576,0,0},Row{524176,167739392,0,0},Row{196576,251604992,0,0},Row{57332,1610416128,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrlllrl(code: U32) -> Glyph:
@@ -8630,7 +8638,7 @@ def face2rlrlllrl(code: U32) -> Glyph:
 
 def face2rlrlllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,Rows8{zero_row(),zero_row(),zero_row(),Row{4177526784,159,0,0},Row{3213885440,2300,0,0},Row{486080512,36817,0,0},zero_row(),zero_row()},Rows8{Row{4279238656,239,0,0},Row{4284481536,1279,0,0},Row{3752853504,2815,0,0},Row{2683437056,7931,0,0},Row{1610022912,28663,0,0},Row{536608768,49139,0,0},Row{218046464,131024,0,0},Row{134184960,524176,0,0}},Rows8{Row{50319360,851776,0,0},Row{1156576000,3145284,0,0},Row{4294965248,9437183,0,0},Row{4294966528,14680063,0,0},Row{851776,67096576,0,0},Row{524176,167739392,0,0},Row{196576,251604992,0,0},Row{57332,1610416128,0,0}},zero_rows()}
+    case True{}: Glyph{16,[Rows8{zero_row(),zero_row(),zero_row(),Row{4177526784,159,0,0},Row{3213885440,2300,0,0},Row{486080512,36817,0,0},zero_row(),zero_row()},Rows8{Row{4279238656,239,0,0},Row{4284481536,1279,0,0},Row{3752853504,2815,0,0},Row{2683437056,7931,0,0},Row{1610022912,28663,0,0},Row{536608768,49139,0,0},Row{218046464,131024,0,0},Row{134184960,524176,0,0}},Rows8{Row{50319360,851776,0,0},Row{1156576000,3145284,0,0},Row{4294965248,9437183,0,0},Row{4294966528,14680063,0,0},Row{851776,67096576,0,0},Row{524176,167739392,0,0},Row{196576,251604992,0,0},Row{57332,1610416128,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrlllrr(code: U32) -> Glyph:
@@ -8654,7 +8662,7 @@ def face2rlrlll(+code: U32) -> Glyph:
 
 def face2rlrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,Rows8{zero_row(),zero_row(),zero_row(),Row{1765801984,23072,0,0},Row{4294115328,20430,0,0},Row{1425473536,2540,0,0},zero_row(),zero_row()},Rows8{Row{4279238656,239,0,0},Row{4284481536,1279,0,0},Row{3752853504,2815,0,0},Row{2683437056,7931,0,0},Row{1610022912,28663,0,0},Row{536608768,49139,0,0},Row{218046464,131024,0,0},Row{134184960,524176,0,0}},Rows8{Row{50319360,851776,0,0},Row{1156576000,3145284,0,0},Row{4294965248,9437183,0,0},Row{4294966528,14680063,0,0},Row{851776,67096576,0,0},Row{524176,167739392,0,0},Row{196576,251604992,0,0},Row{57332,1610416128,0,0}},zero_rows()}
+    case True{}: Glyph{16,[Rows8{zero_row(),zero_row(),zero_row(),Row{1765801984,23072,0,0},Row{4294115328,20430,0,0},Row{1425473536,2540,0,0},zero_row(),zero_row()},Rows8{Row{4279238656,239,0,0},Row{4284481536,1279,0,0},Row{3752853504,2815,0,0},Row{2683437056,7931,0,0},Row{1610022912,28663,0,0},Row{536608768,49139,0,0},Row{218046464,131024,0,0},Row{134184960,524176,0,0}},Rows8{Row{50319360,851776,0,0},Row{1156576000,3145284,0,0},Row{4294965248,9437183,0,0},Row{4294966528,14680063,0,0},Row{851776,67096576,0,0},Row{524176,167739392,0,0},Row{196576,251604992,0,0},Row{57332,1610416128,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrllrl(code: U32) -> Glyph:
@@ -8662,7 +8670,7 @@ def face2rlrllrl(code: U32) -> Glyph:
 
 def face2rlrllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,Rows8{zero_row(),zero_row(),zero_row(),Row{148176896,23952,0,0},Row{536608768,53234,0,0},Row{182845440,28320,0,0},zero_row(),zero_row()},Rows8{Row{4279238656,239,0,0},Row{4284481536,1279,0,0},Row{3752853504,2815,0,0},Row{2683437056,7931,0,0},Row{1610022912,28663,0,0},Row{536608768,49139,0,0},Row{218046464,131024,0,0},Row{134184960,524176,0,0}},Rows8{Row{50319360,851776,0,0},Row{1156576000,3145284,0,0},Row{4294965248,9437183,0,0},Row{4294966528,14680063,0,0},Row{851776,67096576,0,0},Row{524176,167739392,0,0},Row{196576,251604992,0,0},Row{57332,1610416128,0,0}},zero_rows()}
+    case True{}: Glyph{16,[Rows8{zero_row(),zero_row(),zero_row(),Row{148176896,23952,0,0},Row{536608768,53234,0,0},Row{182845440,28320,0,0},zero_row(),zero_row()},Rows8{Row{4279238656,239,0,0},Row{4284481536,1279,0,0},Row{3752853504,2815,0,0},Row{2683437056,7931,0,0},Row{1610022912,28663,0,0},Row{536608768,49139,0,0},Row{218046464,131024,0,0},Row{134184960,524176,0,0}},Rows8{Row{50319360,851776,0,0},Row{1156576000,3145284,0,0},Row{4294965248,9437183,0,0},Row{4294966528,14680063,0,0},Row{851776,67096576,0,0},Row{524176,167739392,0,0},Row{196576,251604992,0,0},Row{57332,1610416128,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrllrrl(code: U32) -> Glyph:
@@ -8670,7 +8678,7 @@ def face2rlrllrrl(code: U32) -> Glyph:
 
 def face2rlrllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,Rows8{zero_row(),zero_row(),Row{3910139904,414,0,0},Row{1603272704,2549,0,0},Row{198180864,3504,0,0},Row{782237696,2786,0,0},Row{4229955584,463,0,0},Row{268435456,1,0,0}},Rows8{Row{4279238656,239,0,0},Row{4284481536,1279,0,0},Row{3752853504,2815,0,0},Row{2683437056,7931,0,0},Row{1610022912,28663,0,0},Row{536608768,49139,0,0},Row{218046464,131024,0,0},Row{134184960,524176,0,0}},Rows8{Row{50319360,851776,0,0},Row{1156576000,3145284,0,0},Row{4294965248,9437183,0,0},Row{4294966528,14680063,0,0},Row{851776,67096576,0,0},Row{524176,167739392,0,0},Row{196576,251604992,0,0},Row{57332,1610416128,0,0}},zero_rows()}
+    case True{}: Glyph{16,[Rows8{zero_row(),zero_row(),Row{3910139904,414,0,0},Row{1603272704,2549,0,0},Row{198180864,3504,0,0},Row{782237696,2786,0,0},Row{4229955584,463,0,0},Row{268435456,1,0,0}},Rows8{Row{4279238656,239,0,0},Row{4284481536,1279,0,0},Row{3752853504,2815,0,0},Row{2683437056,7931,0,0},Row{1610022912,28663,0,0},Row{536608768,49139,0,0},Row{218046464,131024,0,0},Row{134184960,524176,0,0}},Rows8{Row{50319360,851776,0,0},Row{1156576000,3145284,0,0},Row{4294965248,9437183,0,0},Row{4294966528,14680063,0,0},Row{851776,67096576,0,0},Row{524176,167739392,0,0},Row{196576,251604992,0,0},Row{57332,1610416128,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrllrrr(code: U32) -> Glyph:
@@ -8702,7 +8710,7 @@ def face2rlrll(+code: U32) -> Glyph:
 
 def face2rlrlrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{22,zero_rows(),Rows8{Row{2147483648,4294967295,983039,0},Row{3774873600,4294966255,983039,0},Row{4127195136,1151333503,279620,0},Row{4244635648,8385566,0,0},Row{4283432960,8385545,0,0},Row{4289724416,8385539,0,0},Row{3220373504,8385536,0,0},Row{1610219520,4294964224,524287,0}},Rows8{Row{234823680,4294964224,524287,0},Row{1258258432,1151334212,148548,0},Row{4294959360,8388607,0,0},Row{4294964992,8388607,0,0},Row{4193536,8385536,0,0},Row{851792,1151333376,279620,0},Row{393152,4294964224,1048575,0},Row{61428,4294964224,1048575,0}},zero_rows()}
+    case True{}: Glyph{22,[zero_rows(),Rows8{Row{2147483648,4294967295,983039,0},Row{3774873600,4294966255,983039,0},Row{4127195136,1151333503,279620,0},Row{4244635648,8385566,0,0},Row{4283432960,8385545,0,0},Row{4289724416,8385539,0,0},Row{3220373504,8385536,0,0},Row{1610219520,4294964224,524287,0}},Rows8{Row{234823680,4294964224,524287,0},Row{1258258432,1151334212,148548,0},Row{4294959360,8388607,0,0},Row{4294964992,8388607,0,0},Row{4193536,8385536,0,0},Row{851792,1151333376,279620,0},Row{393152,4294964224,1048575,0},Row{61428,4294964224,1048575,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrlrll(code: U32) -> Glyph:
@@ -8710,7 +8718,7 @@ def face2rlrlrll(code: U32) -> Glyph:
 
 def face2rlrlrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,zero_rows(),Rows8{Row{3680567296,27631,0,0},Row{4294778880,3014655,0,0},Row{1811931648,31456356,0,0},Row{9436160,167743488,0,0},Row{786224,251531264,0,0},Row{393104,339935232,0,0},Row{196528,0,0,0},Row{65488,0,0,0}},Rows8{Row{65488,0,0,0},Row{196528,0,0,0},Row{393104,339935232,0,0},Row{786224,251531264,0,0},Row{8387584,167743488,0,0},Row{1811931648,31456356,0,0},Row{4294782976,2949119,0,0},Row{4217438208,27615,0,0}},Rows8{Row{1610612736,927,0,0},Row{536870912,3524,0,0},Row{0,4033,0,0},Row{3758096384,2303,0,0},Row{805306368,19,0,0},zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{16,[zero_rows(),Rows8{Row{3680567296,27631,0,0},Row{4294778880,3014655,0,0},Row{1811931648,31456356,0,0},Row{9436160,167743488,0,0},Row{786224,251531264,0,0},Row{393104,339935232,0,0},Row{196528,0,0,0},Row{65488,0,0,0}},Rows8{Row{65488,0,0,0},Row{196528,0,0,0},Row{393104,339935232,0,0},Row{786224,251531264,0,0},Row{8387584,167743488,0,0},Row{1811931648,31456356,0,0},Row{4294782976,2949119,0,0},Row{4217438208,27615,0,0}},Rows8{Row{1610612736,927,0,0},Row{536870912,3524,0,0},Row{0,4033,0,0},Row{3758096384,2303,0,0},Row{805306368,19,0,0},zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2rlrlrlrl(code: U32) -> Glyph:
@@ -8718,7 +8726,7 @@ def face2rlrlrlrl(code: U32) -> Glyph:
 
 def face2rlrlrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{184356864,0,0,0},Row{804519936,0,0,0},Row{2675965952,0,0,0},zero_row()},Rows8{Row{4294967136,65535,0,0},Row{4294967136,65535,0,0},Row{1145700192,17476,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{4294967136,32767,0,0}},Rows8{Row{4294967136,32767,0,0},Row{1145700192,9284,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{1145700192,17476,0,0},Row{4294967136,131071,0,0},Row{4294967136,131071,0,0}},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{184356864,0,0,0},Row{804519936,0,0,0},Row{2675965952,0,0,0},zero_row()},Rows8{Row{4294967136,65535,0,0},Row{4294967136,65535,0,0},Row{1145700192,17476,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{4294967136,32767,0,0}},Rows8{Row{4294967136,32767,0,0},Row{1145700192,9284,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{1145700192,17476,0,0},Row{4294967136,131071,0,0},Row{4294967136,131071,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrlrlrr(code: U32) -> Glyph:
@@ -8742,7 +8750,7 @@ def face2rlrlrl(+code: U32) -> Glyph:
 
 def face2rlrlrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3774873600,159,0,0},Row{4143972352,29,0,0},Row{4262461440,3,0,0},zero_row()},Rows8{Row{4294967136,65535,0,0},Row{4294967136,65535,0,0},Row{1145700192,17476,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{4294967136,32767,0,0}},Rows8{Row{4294967136,32767,0,0},Row{1145700192,9284,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{1145700192,17476,0,0},Row{4294967136,131071,0,0},Row{4294967136,131071,0,0}},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3774873600,159,0,0},Row{4143972352,29,0,0},Row{4262461440,3,0,0},zero_row()},Rows8{Row{4294967136,65535,0,0},Row{4294967136,65535,0,0},Row{1145700192,17476,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{4294967136,32767,0,0}},Rows8{Row{4294967136,32767,0,0},Row{1145700192,9284,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{1145700192,17476,0,0},Row{4294967136,131071,0,0},Row{4294967136,131071,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrlrrll(code: U32) -> Glyph:
@@ -8750,7 +8758,7 @@ def face2rlrlrrll(code: U32) -> Glyph:
 
 def face2rlrlrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),Row{4289789952,7,0,0},Row{3673886720,111,0,0},Row{549433600,1790,0,0},zero_row(),zero_row()},Rows8{Row{4294967136,65535,0,0},Row{4294967136,65535,0,0},Row{1145700192,17476,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{4294967136,32767,0,0}},Rows8{Row{4294967136,32767,0,0},Row{1145700192,9284,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{1145700192,17476,0,0},Row{4294967136,131071,0,0},Row{4294967136,131071,0,0}},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),Row{4289789952,7,0,0},Row{3673886720,111,0,0},Row{549433600,1790,0,0},zero_row(),zero_row()},Rows8{Row{4294967136,65535,0,0},Row{4294967136,65535,0,0},Row{1145700192,17476,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{4294967136,32767,0,0}},Rows8{Row{4294967136,32767,0,0},Row{1145700192,9284,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{1145700192,17476,0,0},Row{4294967136,131071,0,0},Row{4294967136,131071,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrlrrlr(code: U32) -> Glyph:
@@ -8766,7 +8774,7 @@ def face2rlrlrrl(+code: U32) -> Glyph:
 
 def face2rlrlrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),Row{8220672,970,0,0},Row{1089462272,2815,0,0},Row{277774336,1260,0,0},zero_row(),zero_row()},Rows8{Row{4294967136,65535,0,0},Row{4294967136,65535,0,0},Row{1145700192,17476,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{4294967136,32767,0,0}},Rows8{Row{4294967136,32767,0,0},Row{1145700192,9284,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{1145700192,17476,0,0},Row{4294967136,131071,0,0},Row{4294967136,131071,0,0}},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),Row{8220672,970,0,0},Row{1089462272,2815,0,0},Row{277774336,1260,0,0},zero_row(),zero_row()},Rows8{Row{4294967136,65535,0,0},Row{4294967136,65535,0,0},Row{1145700192,17476,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{4294967136,32767,0,0}},Rows8{Row{4294967136,32767,0,0},Row{1145700192,9284,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{1145700192,17476,0,0},Row{4294967136,131071,0,0},Row{4294967136,131071,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrlrrrl(code: U32) -> Glyph:
@@ -8774,7 +8782,7 @@ def face2rlrlrrrl(code: U32) -> Glyph:
 
 def face2rlrlrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{57264,0,0,0},Row{392736,0,0,0},Row{914688,0,0,0},zero_row()},Rows8{Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0}},Rows8{Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0}},zero_rows()}
+    case True{}: Glyph{7,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{57264,0,0,0},Row{392736,0,0,0},Row{914688,0,0,0},zero_row()},Rows8{Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0}},Rows8{Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrlrrrr(code: U32) -> Glyph:
@@ -8814,7 +8822,7 @@ def face2rlrl(+code: U32) -> Glyph:
 
 def face2rlrrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{13615104,0,0,0},Row{3077120,0,0,0},Row{457728,0,0,0},zero_row()},Rows8{Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0}},Rows8{Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0}},zero_rows()}
+    case True{}: Glyph{7,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{13615104,0,0,0},Row{3077120,0,0,0},Row{457728,0,0,0},zero_row()},Rows8{Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0}},Rows8{Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0},Row{524128,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrrlll(code: U32) -> Glyph:
@@ -8822,7 +8830,7 @@ def face2rlrrlll(code: U32) -> Glyph:
 
 def face2rlrrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),Row{11532544,0,0,0},Row{167497616,0,0,0},Row{2680233465,0,0,0},zero_row(),zero_row()},Rows8{Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0}},Rows8{Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0}},zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),Row{11532544,0,0,0},Row{167497616,0,0,0},Row{2680233465,0,0,0},zero_row(),zero_row()},Rows8{Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0}},Rows8{Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrrllrl(code: U32) -> Glyph:
@@ -8830,7 +8838,7 @@ def face2rlrrllrl(code: U32) -> Glyph:
 
 def face2rlrrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),Row{1568672212,0,0,0},Row{3757125627,0,0,0},Row{1855982565,0,0,0},zero_row(),zero_row()},Rows8{Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0}},Rows8{Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0}},zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),Row{1568672212,0,0,0},Row{3757125627,0,0,0},Row{1855982565,0,0,0},zero_row(),zero_row()},Rows8{Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0}},Rows8{Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0},Row{8386048,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrrllrr(code: U32) -> Glyph:
@@ -8854,7 +8862,7 @@ def face2rlrrll(+code: U32) -> Glyph:
 
 def face2rlrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{17,zero_rows(),Rows8{Row{4294966016,14542,0,0},Row{4294966016,589823,0,0},Row{1147140864,10485381,0,0},Row{3144448,100647168,0,0},Row{3144448,201269248,0,0},Row{3144448,804978688,0,0},Row{1148190531,1341652995,0,0},Row{4294967292,1610022924,0,0}},Rows8{Row{4294967292,1610022924,0,0},Row{3144448,1341652992,0,0},Row{3144448,804978688,0,0},Row{3144448,201269248,0,0},Row{3144448,100647168,0,0},Row{1147140864,10485381,0,0},Row{4294966016,589823,0,0},Row{4294966016,14542,0,0}},zero_rows()}
+    case True{}: Glyph{17,[zero_rows(),Rows8{Row{4294966016,14542,0,0},Row{4294966016,589823,0,0},Row{1147140864,10485381,0,0},Row{3144448,100647168,0,0},Row{3144448,201269248,0,0},Row{3144448,804978688,0,0},Row{1148190531,1341652995,0,0},Row{4294967292,1610022924,0,0}},Rows8{Row{4294967292,1610022924,0,0},Row{3144448,1341652992,0,0},Row{3144448,804978688,0,0},Row{3144448,201269248,0,0},Row{3144448,100647168,0,0},Row{1147140864,10485381,0,0},Row{4294966016,589823,0,0},Row{4294966016,14542,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrrlrl(code: U32) -> Glyph:
@@ -8862,7 +8870,7 @@ def face2rlrrlrl(code: U32) -> Glyph:
 
 def face2rlrrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{17,Rows8{zero_row(),zero_row(),zero_row(),Row{2300575744,34818,0,0},Row{4290772992,44991,0,0},Row{703660032,11497,0,0},zero_row(),zero_row()},Rows8{Row{4194144,536608768,0,0},Row{13631328,536608768,0,0},Row{117440352,536608768,0,0},Row{788528992,536608768,0,0},Row{2952396640,536608768,0,0},Row{4290183008,536608772,0,0},Row{4281859936,536608797,0,0},Row{4161339232,536608911,0,0}},Rows8{Row{3507027808,536609791,0,0},Row{1342766944,536611839,0,0},Row{589664,536633338,0,0},Row{589664,536600545,0,0},Row{589664,536805216,0,0},Row{589664,536869632,0,0},Row{589664,536867328,0,0},Row{589664,536834048,0,0}},zero_rows()}
+    case True{}: Glyph{17,[Rows8{zero_row(),zero_row(),zero_row(),Row{2300575744,34818,0,0},Row{4290772992,44991,0,0},Row{703660032,11497,0,0},zero_row(),zero_row()},Rows8{Row{4194144,536608768,0,0},Row{13631328,536608768,0,0},Row{117440352,536608768,0,0},Row{788528992,536608768,0,0},Row{2952396640,536608768,0,0},Row{4290183008,536608772,0,0},Row{4281859936,536608797,0,0},Row{4161339232,536608911,0,0}},Rows8{Row{3507027808,536609791,0,0},Row{1342766944,536611839,0,0},Row{589664,536633338,0,0},Row{589664,536600545,0,0},Row{589664,536805216,0,0},Row{589664,536869632,0,0},Row{589664,536867328,0,0},Row{589664,536834048,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrrlrrl(code: U32) -> Glyph:
@@ -8870,7 +8878,7 @@ def face2rlrrlrrl(code: U32) -> Glyph:
 
 def face2rlrrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{17,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4283432960,4,0,0},Row{4177526784,11,0,0},Row{3506438144,79,0,0},zero_row()},Rows8{Row{3680501760,23519,0,0},Row{4294778880,2949119,0,0},Row{1811931648,31456356,0,0},Row{8387328,184520704,0,0},Row{786224,805109760,0,0},Row{393104,2146893824,0,0},Row{196528,2951938048,0,0},Row{65488,3220307968,0,0}},Rows8{Row{65488,3220307968,0,0},Row{196528,2951938048,0,0},Row{393104,2146893824,0,0},Row{786224,805109760,0,0},Row{8387584,184520704,0,0},Row{1811931648,31456356,0,0},Row{4294778880,2949119,0,0},Row{3680501760,23519,0,0}},zero_rows()}
+    case True{}: Glyph{17,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{4283432960,4,0,0},Row{4177526784,11,0,0},Row{3506438144,79,0,0},zero_row()},Rows8{Row{3680501760,23519,0,0},Row{4294778880,2949119,0,0},Row{1811931648,31456356,0,0},Row{8387328,184520704,0,0},Row{786224,805109760,0,0},Row{393104,2146893824,0,0},Row{196528,2951938048,0,0},Row{65488,3220307968,0,0}},Rows8{Row{65488,3220307968,0,0},Row{196528,2951938048,0,0},Row{393104,2146893824,0,0},Row{786224,805109760,0,0},Row{8387584,184520704,0,0},Row{1811931648,31456356,0,0},Row{4294778880,2949119,0,0},Row{3680501760,23519,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrrlrrr(code: U32) -> Glyph:
@@ -8902,7 +8910,7 @@ def face2rlrrl(+code: U32) -> Glyph:
 
 def face2rlrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{17,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{0,20469,0,0},Row{0,2301,0,0},Row{1342177280,207,0,0},zero_row()},Rows8{Row{3680501760,23519,0,0},Row{4294778880,2949119,0,0},Row{1811931648,31456356,0,0},Row{8387328,184520704,0,0},Row{786224,805109760,0,0},Row{393104,2146893824,0,0},Row{196528,2951938048,0,0},Row{65488,3220307968,0,0}},Rows8{Row{65488,3220307968,0,0},Row{196528,2951938048,0,0},Row{393104,2146893824,0,0},Row{786224,805109760,0,0},Row{8387584,184520704,0,0},Row{1811931648,31456356,0,0},Row{4294778880,2949119,0,0},Row{3680501760,23519,0,0}},zero_rows()}
+    case True{}: Glyph{17,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{0,20469,0,0},Row{0,2301,0,0},Row{1342177280,207,0,0},zero_row()},Rows8{Row{3680501760,23519,0,0},Row{4294778880,2949119,0,0},Row{1811931648,31456356,0,0},Row{8387328,184520704,0,0},Row{786224,805109760,0,0},Row{393104,2146893824,0,0},Row{196528,2951938048,0,0},Row{65488,3220307968,0,0}},Rows8{Row{65488,3220307968,0,0},Row{196528,2951938048,0,0},Row{393104,2146893824,0,0},Row{786224,805109760,0,0},Row{8387584,184520704,0,0},Row{1811931648,31456356,0,0},Row{4294778880,2949119,0,0},Row{3680501760,23519,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrrrll(code: U32) -> Glyph:
@@ -8910,7 +8918,7 @@ def face2rlrrrll(code: U32) -> Glyph:
 
 def face2rlrrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{17,Rows8{zero_row(),zero_row(),zero_row(),Row{3808428032,751,0,0},Row{4264558592,12024,0,0},Row{1877147648,188272,0,0},zero_row(),zero_row()},Rows8{Row{3680501760,23519,0,0},Row{4294778880,2949119,0,0},Row{1811931648,31456356,0,0},Row{8387328,184520704,0,0},Row{786224,805109760,0,0},Row{393104,2146893824,0,0},Row{196528,2951938048,0,0},Row{65488,3220307968,0,0}},Rows8{Row{65488,3220307968,0,0},Row{196528,2951938048,0,0},Row{393104,2146893824,0,0},Row{786224,805109760,0,0},Row{8387584,184520704,0,0},Row{1811931648,31456356,0,0},Row{4294778880,2949119,0,0},Row{3680501760,23519,0,0}},zero_rows()}
+    case True{}: Glyph{17,[Rows8{zero_row(),zero_row(),zero_row(),Row{3808428032,751,0,0},Row{4264558592,12024,0,0},Row{1877147648,188272,0,0},zero_row(),zero_row()},Rows8{Row{3680501760,23519,0,0},Row{4294778880,2949119,0,0},Row{1811931648,31456356,0,0},Row{8387328,184520704,0,0},Row{786224,805109760,0,0},Row{393104,2146893824,0,0},Row{196528,2951938048,0,0},Row{65488,3220307968,0,0}},Rows8{Row{65488,3220307968,0,0},Row{196528,2951938048,0,0},Row{393104,2146893824,0,0},Row{786224,805109760,0,0},Row{8387584,184520704,0,0},Row{1811931648,31456356,0,0},Row{4294778880,2949119,0,0},Row{3680501760,23519,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrrrlrl(code: U32) -> Glyph:
@@ -8918,7 +8926,7 @@ def face2rlrrrlrl(code: U32) -> Glyph:
 
 def face2rlrrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{17,Rows8{zero_row(),zero_row(),zero_row(),Row{2282749952,38659,0,0},Row{4289724416,49087,0,0},Row{737148928,15849,0,0},zero_row(),zero_row()},Rows8{Row{3680501760,23519,0,0},Row{4294778880,2949119,0,0},Row{1811931648,31456356,0,0},Row{8387328,184520704,0,0},Row{786224,805109760,0,0},Row{393104,2146893824,0,0},Row{196528,2951938048,0,0},Row{65488,3220307968,0,0}},Rows8{Row{65488,3220307968,0,0},Row{196528,2951938048,0,0},Row{393104,2146893824,0,0},Row{786224,805109760,0,0},Row{8387584,184520704,0,0},Row{1811931648,31456356,0,0},Row{4294778880,2949119,0,0},Row{3680501760,23519,0,0}},zero_rows()}
+    case True{}: Glyph{17,[Rows8{zero_row(),zero_row(),zero_row(),Row{2282749952,38659,0,0},Row{4289724416,49087,0,0},Row{737148928,15849,0,0},zero_row(),zero_row()},Rows8{Row{3680501760,23519,0,0},Row{4294778880,2949119,0,0},Row{1811931648,31456356,0,0},Row{8387328,184520704,0,0},Row{786224,805109760,0,0},Row{393104,2146893824,0,0},Row{196528,2951938048,0,0},Row{65488,3220307968,0,0}},Rows8{Row{65488,3220307968,0,0},Row{196528,2951938048,0,0},Row{393104,2146893824,0,0},Row{786224,805109760,0,0},Row{8387584,184520704,0,0},Row{1811931648,31456356,0,0},Row{4294778880,2949119,0,0},Row{3680501760,23519,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrrrlrr(code: U32) -> Glyph:
@@ -8942,7 +8950,7 @@ def face2rlrrrl(+code: U32) -> Glyph:
 
 def face2rlrrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{17,Rows8{zero_row(),zero_row(),zero_row(),Row{1018232832,44080,0,0},Row{2683633664,327584,0,0},Row{1052835840,118336,0,0},zero_row(),zero_row()},Rows8{Row{3680501760,23519,0,0},Row{4294778880,2949119,0,0},Row{1811931648,31456356,0,0},Row{8387328,184520704,0,0},Row{786224,805109760,0,0},Row{393104,2146893824,0,0},Row{196528,2951938048,0,0},Row{65488,3220307968,0,0}},Rows8{Row{65488,3220307968,0,0},Row{196528,2951938048,0,0},Row{393104,2146893824,0,0},Row{786224,805109760,0,0},Row{8387584,184520704,0,0},Row{1811931648,31456356,0,0},Row{4294778880,2949119,0,0},Row{3680501760,23519,0,0}},zero_rows()}
+    case True{}: Glyph{17,[Rows8{zero_row(),zero_row(),zero_row(),Row{1018232832,44080,0,0},Row{2683633664,327584,0,0},Row{1052835840,118336,0,0},zero_row(),zero_row()},Rows8{Row{3680501760,23519,0,0},Row{4294778880,2949119,0,0},Row{1811931648,31456356,0,0},Row{8387328,184520704,0,0},Row{786224,805109760,0,0},Row{393104,2146893824,0,0},Row{196528,2951938048,0,0},Row{65488,3220307968,0,0}},Rows8{Row{65488,3220307968,0,0},Row{196528,2951938048,0,0},Row{393104,2146893824,0,0},Row{786224,805109760,0,0},Row{8387584,184520704,0,0},Row{1811931648,31456356,0,0},Row{4294778880,2949119,0,0},Row{3680501760,23519,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrrrrll(code: U32) -> Glyph:
@@ -8950,7 +8958,7 @@ def face2rlrrrrll(code: U32) -> Glyph:
 
 def face2rlrrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{15,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{163840,25600,0,0},Row{3012608,458288,0,0},Row{48232192,393187,0,0},Row{1577021440,24574,0,0}},Rows8{Row{4294377472,1535,0,0},Row{4287627264,127,0,0},Row{4293066752,735,0,0},Row{2952671232,11775,0,0},Row{100655872,188407,0,0},Row{6290176,655216,0,0},Row{377088,46848,0,0},zero_row()},zero_rows()}
+    case True{}: Glyph{15,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{163840,25600,0,0},Row{3012608,458288,0,0},Row{48232192,393187,0,0},Row{1577021440,24574,0,0}},Rows8{Row{4294377472,1535,0,0},Row{4287627264,127,0,0},Row{4293066752,735,0,0},Row{2952671232,11775,0,0},Row{100655872,188407,0,0},Row{6290176,655216,0,0},Row{377088,46848,0,0},zero_row()},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrrrrlr(code: U32) -> Glyph:
@@ -8966,7 +8974,7 @@ def face2rlrrrrl(+code: U32) -> Glyph:
 
 def face2rlrrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{17,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{0,6291456,0,0}},Rows8{Row{3680501760,183983071,0,0},Row{4294778880,67108863,0,0},Row{1811931648,33553508,0,0},Row{8387328,184547328,0,0},Row{786224,805236528,0,0},Row{393104,2146918353,0,0},Row{196528,2951940857,0,0},Row{1342242768,3220308447,0,0}},Rows8{Row{3774939088,3220308047,0,0},Row{4211277744,2951938056,0,0},Row{3479568272,2146893824,0,0},Row{1073676080,805109760,0,0},Row{134216704,184520704,0,0},Row{1811935744,31456356,0,0},Row{4294964224,2949119,0,0},Row{3680959232,23519,0,0}},Rows8{Row{24832,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{17,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{0,6291456,0,0}},Rows8{Row{3680501760,183983071,0,0},Row{4294778880,67108863,0,0},Row{1811931648,33553508,0,0},Row{8387328,184547328,0,0},Row{786224,805236528,0,0},Row{393104,2146918353,0,0},Row{196528,2951940857,0,0},Row{1342242768,3220308447,0,0}},Rows8{Row{3774939088,3220308047,0,0},Row{4211277744,2951938056,0,0},Row{3479568272,2146893824,0,0},Row{1073676080,805109760,0,0},Row{134216704,184520704,0,0},Row{1811935744,31456356,0,0},Row{4294964224,2949119,0,0},Row{3680959232,23519,0,0}},Rows8{Row{24832,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2rlrrrrrl(code: U32) -> Glyph:
@@ -8974,7 +8982,7 @@ def face2rlrrrrrl(code: U32) -> Glyph:
 
 def face2rlrrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3752853504,0,0,0},Row{4245684224,6,0,0},Row{4093640704,13,0,0},zero_row()},Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0}},Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{589648,150949888,0,0},Row{786240,134184960,0,0},Row{6290944,50323968,0,0},Row{1509946880,9436805,0,0},Row{4294930432,655359,0,0},Row{3984785408,18910,0,0}},zero_rows()}
+    case True{}: Glyph{16,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3752853504,0,0,0},Row{4245684224,6,0,0},Row{4093640704,13,0,0},zero_row()},Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0}},Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{589648,150949888,0,0},Row{786240,134184960,0,0},Row{6290944,50323968,0,0},Row{1509946880,9436805,0,0},Row{4294930432,655359,0,0},Row{3984785408,18910,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rlrrrrrr(code: U32) -> Glyph:
@@ -9030,7 +9038,7 @@ def face2rl(+code: U32) -> Glyph:
 
 def face2rrlllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{0,7675,0,0},Row{805306368,1023,0,0},Row{2952790016,111,0,0},zero_row()},Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0}},Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{589648,150949888,0,0},Row{786240,134184960,0,0},Row{6290944,50323968,0,0},Row{1509946880,9436805,0,0},Row{4294930432,655359,0,0},Row{3984785408,18910,0,0}},zero_rows()}
+    case True{}: Glyph{16,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{0,7675,0,0},Row{805306368,1023,0,0},Row{2952790016,111,0,0},zero_row()},Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0}},Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{589648,150949888,0,0},Row{786240,134184960,0,0},Row{6290944,50323968,0,0},Row{1509946880,9436805,0,0},Row{4294930432,655359,0,0},Row{3984785408,18910,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrlllll(code: U32) -> Glyph:
@@ -9038,7 +9046,7 @@ def face2rrlllll(code: U32) -> Glyph:
 
 def face2rrllllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,Rows8{zero_row(),zero_row(),zero_row(),Row{4160749568,175,0,0},Row{3481272320,2810,0,0},Row{788004864,44992,0,0},zero_row(),zero_row()},Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0}},Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{589648,150949888,0,0},Row{786240,134184960,0,0},Row{6290944,50323968,0,0},Row{1509946880,9436805,0,0},Row{4294930432,655359,0,0},Row{3984785408,18910,0,0}},zero_rows()}
+    case True{}: Glyph{16,[Rows8{zero_row(),zero_row(),zero_row(),Row{4160749568,175,0,0},Row{3481272320,2810,0,0},Row{788004864,44992,0,0},zero_row(),zero_row()},Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0}},Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{589648,150949888,0,0},Row{786240,134184960,0,0},Row{6290944,50323968,0,0},Row{1509946880,9436805,0,0},Row{4294930432,655359,0,0},Row{3984785408,18910,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrllllrl(code: U32) -> Glyph:
@@ -9046,7 +9054,7 @@ def face2rrllllrl(code: U32) -> Glyph:
 
 def face2rrllllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,Rows8{zero_row(),zero_row(),zero_row(),Row{164888576,28016,0,0},Row{1073348608,57328,0,0},Row{199557120,32400,0,0},zero_row(),zero_row()},Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0}},Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{589648,150949888,0,0},Row{786240,134184960,0,0},Row{6290944,50323968,0,0},Row{1509946880,9436805,0,0},Row{4294930432,655359,0,0},Row{3984785408,18910,0,0}},zero_rows()}
+    case True{}: Glyph{16,[Rows8{zero_row(),zero_row(),zero_row(),Row{164888576,28016,0,0},Row{1073348608,57328,0,0},Row{199557120,32400,0,0},zero_row(),zero_row()},Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{524128,167723008,0,0}},Rows8{Row{524128,167723008,0,0},Row{524128,167723008,0,0},Row{589648,150949888,0,0},Row{786240,134184960,0,0},Row{6290944,50323968,0,0},Row{1509946880,9436805,0,0},Row{4294930432,655359,0,0},Row{3984785408,18910,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrllllrr(code: U32) -> Glyph:
@@ -9070,7 +9078,7 @@ def face2rrllll(+code: U32) -> Glyph:
 
 def face2rrlllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{16,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{268435456,2558,0,0},Row{1879048192,479,0,0},Row{3774873600,63,0,0},zero_row()},Rows8{Row{262131,234844160,0,0},Row{786320,83878144,0,0},Row{5242384,11532288,0,0},Row{13628928,3079968,0,0},Row{117424128,524176,0,0},Row{520040448,57331,0,0},Row{2147024896,24570,0,0},Row{4024500224,3071,0,0}},Rows8{Row{4284481536,767,0,0},Row{4227858432,143,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0}},zero_rows()}
+    case True{}: Glyph{16,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{268435456,2558,0,0},Row{1879048192,479,0,0},Row{3774873600,63,0,0},zero_row()},Rows8{Row{262131,234844160,0,0},Row{786320,83878144,0,0},Row{5242384,11532288,0,0},Row{13628928,3079968,0,0},Row{117424128,524176,0,0},Row{520040448,57331,0,0},Row{2147024896,24570,0,0},Row{4024500224,3071,0,0}},Rows8{Row{4284481536,767,0,0},Row{4227858432,143,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0},Row{4160749568,95,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrlllrl(code: U32) -> Glyph:
@@ -9078,7 +9086,7 @@ def face2rrlllrl(code: U32) -> Glyph:
 
 def face2rrlllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{Row{458608,0,0,0},Row{458608,0,0,0},Row{458608,0,0,0},Row{4026531696,653,0,0},Row{4294967152,24319,0,0},Row{1414135664,192505,0,0},Row{458608,589680,0,0},Row{458608,720656,0,0}},Rows8{Row{458608,720656,0,0},Row{458608,589664,0,0},Row{1414135664,192504,0,0},Row{4294967152,24319,0,0},Row{4026531696,669,0,0},Row{458608,0,0,0},Row{458608,0,0,0},Row{458608,0,0,0}},zero_rows()}
+    case True{}: Glyph{14,[zero_rows(),Rows8{Row{458608,0,0,0},Row{458608,0,0,0},Row{458608,0,0,0},Row{4026531696,653,0,0},Row{4294967152,24319,0,0},Row{1414135664,192505,0,0},Row{458608,589680,0,0},Row{458608,720656,0,0}},Rows8{Row{458608,720656,0,0},Row{458608,589664,0,0},Row{1414135664,192504,0,0},Row{4294967152,24319,0,0},Row{4026531696,669,0,0},Row{458608,0,0,0},Row{458608,0,0,0},Row{458608,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrlllrrl(code: U32) -> Glyph:
@@ -9086,7 +9094,7 @@ def face2rrlllrrl(code: U32) -> Glyph:
 
 def face2rrlllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{Row{4023984128,380,0,0},Row{4294964224,11775,0,0},Row{1437597200,49148,0,0},Row{786240,131041,0,0},Row{524128,130992,0,0},Row{458592,57313,0,0},Row{1392967520,20475,0,0},Row{4211539808,1263,0,0}},Rows8{Row{4211539808,114687,0,0},Row{458592,655266,0,0},Row{458592,1047808,0,0},Row{458592,3144448,0,0},Row{458592,2096656,0,0},Row{1124532064,786373,0,0},Row{4228317024,192511,0,0},Row{4228317024,6367,0,0}},zero_rows()}
+    case True{}: Glyph{14,[zero_rows(),Rows8{Row{4023984128,380,0,0},Row{4294964224,11775,0,0},Row{1437597200,49148,0,0},Row{786240,131041,0,0},Row{524128,130992,0,0},Row{458592,57313,0,0},Row{1392967520,20475,0,0},Row{4211539808,1263,0,0}},Rows8{Row{4211539808,114687,0,0},Row{458592,655266,0,0},Row{458592,1047808,0,0},Row{458592,3144448,0,0},Row{458592,2096656,0,0},Row{1124532064,786373,0,0},Row{4228317024,192511,0,0},Row{4228317024,6367,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrlllrrr(code: U32) -> Glyph:
@@ -9118,7 +9126,7 @@ def face2rrlll(+code: U32) -> Glyph:
 
 def face2rrllrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{32477184,0,0,0},Row{150802432,0,0,0},Row{519241728,0,0,0},zero_row(),Row{3739967488,41,0,0},Row{4294966032,1279,0,0},Row{2489122672,3583,0,0},Row{38704,8187,0,0}},Rows8{Row{822083584,12285,0,0},Row{4293624320,12287,0,0},Row{2060451680,12283,0,0},Row{188385,12282,0,0},Row{268476402,12286,0,0},Row{3595038705,12287,0,0},Row{4026531712,12281,0,0},Row{720357120,12280,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{32477184,0,0,0},Row{150802432,0,0,0},Row{519241728,0,0,0},zero_row(),Row{3739967488,41,0,0},Row{4294966032,1279,0,0},Row{2489122672,3583,0,0},Row{38704,8187,0,0}},Rows8{Row{822083584,12285,0,0},Row{4293624320,12287,0,0},Row{2060451680,12283,0,0},Row{188385,12282,0,0},Row{268476402,12286,0,0},Row{3595038705,12287,0,0},Row{4026531712,12281,0,0},Row{720357120,12280,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrllrll(code: U32) -> Glyph:
@@ -9126,7 +9134,7 @@ def face2rrllrll(code: U32) -> Glyph:
 
 def face2rrllrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{4177526784,30,0,0},Row{4280287232,4,0,0},Row{2408579072,0,0,0},zero_row(),Row{3739967488,41,0,0},Row{4294966032,1279,0,0},Row{2489122672,3583,0,0},Row{38704,8187,0,0}},Rows8{Row{822083584,12285,0,0},Row{4293624320,12287,0,0},Row{2060451680,12283,0,0},Row{188385,12282,0,0},Row{268476402,12286,0,0},Row{3595038705,12287,0,0},Row{4026531712,12281,0,0},Row{720357120,12280,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{4177526784,30,0,0},Row{4280287232,4,0,0},Row{2408579072,0,0,0},zero_row(),Row{3739967488,41,0,0},Row{4294966032,1279,0,0},Row{2489122672,3583,0,0},Row{38704,8187,0,0}},Rows8{Row{822083584,12285,0,0},Row{4293624320,12287,0,0},Row{2060451680,12283,0,0},Row{188385,12282,0,0},Row{268476402,12286,0,0},Row{3595038705,12287,0,0},Row{4026531712,12281,0,0},Row{720357120,12280,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrllrlrl(code: U32) -> Glyph:
@@ -9134,7 +9142,7 @@ def face2rrllrlrl(code: U32) -> Glyph:
 
 def face2rrllrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3489005568,1,0,0}},Rows8{Row{4192165888,27,0,0},Row{2688480768,191,0,0},zero_row(),zero_row(),Row{3739967488,41,0,0},Row{4294966032,1279,0,0},Row{2489122672,3583,0,0},Row{38704,8187,0,0}},Rows8{Row{822083584,12285,0,0},Row{4293624320,12287,0,0},Row{2060451680,12283,0,0},Row{188385,12282,0,0},Row{268476402,12286,0,0},Row{3595038705,12287,0,0},Row{4026531712,12281,0,0},Row{720357120,12280,0,0}},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{3489005568,1,0,0}},Rows8{Row{4192165888,27,0,0},Row{2688480768,191,0,0},zero_row(),zero_row(),Row{3739967488,41,0,0},Row{4294966032,1279,0,0},Row{2489122672,3583,0,0},Row{38704,8187,0,0}},Rows8{Row{822083584,12285,0,0},Row{4293624320,12287,0,0},Row{2060451680,12283,0,0},Row{188385,12282,0,0},Row{268476402,12286,0,0},Row{3595038705,12287,0,0},Row{4026531712,12281,0,0},Row{720357120,12280,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrllrlrr(code: U32) -> Glyph:
@@ -9158,7 +9166,7 @@ def face2rrllrl(+code: U32) -> Glyph:
 
 def face2rrllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{24719360,121,0,0}},Rows8{Row{3472875776,143,0,0},Row{3929535488,27,0,0},zero_row(),zero_row(),Row{3739967488,41,0,0},Row{4294966032,1279,0,0},Row{2489122672,3583,0,0},Row{38704,8187,0,0}},Rows8{Row{822083584,12285,0,0},Row{4293624320,12287,0,0},Row{2060451680,12283,0,0},Row{188385,12282,0,0},Row{268476402,12286,0,0},Row{3595038705,12287,0,0},Row{4026531712,12281,0,0},Row{720357120,12280,0,0}},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{24719360,121,0,0}},Rows8{Row{3472875776,143,0,0},Row{3929535488,27,0,0},zero_row(),zero_row(),Row{3739967488,41,0,0},Row{4294966032,1279,0,0},Row{2489122672,3583,0,0},Row{38704,8187,0,0}},Rows8{Row{822083584,12285,0,0},Row{4293624320,12287,0,0},Row{2060451680,12283,0,0},Row{188385,12282,0,0},Row{268476402,12286,0,0},Row{3595038705,12287,0,0},Row{4026531712,12281,0,0},Row{720357120,12280,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrllrrl(code: U32) -> Glyph:
@@ -9166,7 +9174,7 @@ def face2rrllrrl(code: U32) -> Glyph:
 
 def face2rrllrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1612432128,125,0,0}},Rows8{Row{3495950336,255,0,0},Row{1880941312,158,0,0},zero_row(),zero_row(),Row{3739967488,41,0,0},Row{4294966032,1279,0,0},Row{2489122672,3583,0,0},Row{38704,8187,0,0}},Rows8{Row{822083584,12285,0,0},Row{4293624320,12287,0,0},Row{2060451680,12283,0,0},Row{188385,12282,0,0},Row{268476402,12286,0,0},Row{3595038705,12287,0,0},Row{4026531712,12281,0,0},Row{720357120,12280,0,0}},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1612432128,125,0,0}},Rows8{Row{3495950336,255,0,0},Row{1880941312,158,0,0},zero_row(),zero_row(),Row{3739967488,41,0,0},Row{4294966032,1279,0,0},Row{2489122672,3583,0,0},Row{38704,8187,0,0}},Rows8{Row{822083584,12285,0,0},Row{4293624320,12287,0,0},Row{2060451680,12283,0,0},Row{188385,12282,0,0},Row{268476402,12286,0,0},Row{3595038705,12287,0,0},Row{4026531712,12281,0,0},Row{720357120,12280,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrllrrrl(code: U32) -> Glyph:
@@ -9174,7 +9182,7 @@ def face2rrllrrrl(code: U32) -> Glyph:
 
 def face2rrllrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2933325824,2,0,0},Row{3565117440,12,0,0}},Rows8{Row{2148442112,31,0,0},Row{3243208704,14,0,0},Row{3757703168,3,0,0},Row{34603008,0,0,0},Row{3739967488,41,0,0},Row{4294966032,1279,0,0},Row{2489122672,3583,0,0},Row{38704,8187,0,0}},Rows8{Row{822083584,12285,0,0},Row{4293624320,12287,0,0},Row{2060451680,12283,0,0},Row{188385,12282,0,0},Row{268476402,12286,0,0},Row{3595038705,12287,0,0},Row{4026531712,12281,0,0},Row{720357120,12280,0,0}},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2933325824,2,0,0},Row{3565117440,12,0,0}},Rows8{Row{2148442112,31,0,0},Row{3243208704,14,0,0},Row{3757703168,3,0,0},Row{34603008,0,0,0},Row{3739967488,41,0,0},Row{4294966032,1279,0,0},Row{2489122672,3583,0,0},Row{38704,8187,0,0}},Rows8{Row{822083584,12285,0,0},Row{4293624320,12287,0,0},Row{2060451680,12283,0,0},Row{188385,12282,0,0},Row{268476402,12286,0,0},Row{3595038705,12287,0,0},Row{4026531712,12281,0,0},Row{720357120,12280,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrllrrrr(code: U32) -> Glyph:
@@ -9214,7 +9222,7 @@ def face2rrll(+code: U32) -> Glyph:
 
 def face2rrlrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{20,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3756744704,2935849239,4,0},Row{4294966032,4294966719,127,0},Row{2220621696,3595104255,1279,0},Row{29984,268460027,3070,0}},Rows8{Row{1144061952,1145327355,4091,0},Row{4294956544,4294967295,12287,0},Row{4294967168,4294967295,16383,0},Row{1437681,3578,0,0},Row{268476402,20477,1398,0},Row{3326603249,2774069247,2815,0},Row{4294967168,4294966844,463,0},Row{2096023040,3472720128,23,0}},zero_rows()}
+    case True{}: Glyph{20,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3756744704,2935849239,4,0},Row{4294966032,4294966719,127,0},Row{2220621696,3595104255,1279,0},Row{29984,268460027,3070,0}},Rows8{Row{1144061952,1145327355,4091,0},Row{4294956544,4294967295,12287,0},Row{4294967168,4294967295,16383,0},Row{1437681,3578,0,0},Row{268476402,20477,1398,0},Row{3326603249,2774069247,2815,0},Row{4294967168,4294966844,463,0},Row{2096023040,3472720128,23,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrlrlll(code: U32) -> Glyph:
@@ -9222,7 +9230,7 @@ def face2rrlrlll(code: U32) -> Glyph:
 
 def face2rrlrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3755548672,75,0,0},Row{4294960384,2559,0,0},Row{1687158304,24573,0,0},Row{524176,40946,0,0}},Rows8{Row{131024,288,0,0},Row{57328,0,0,0},Row{57328,0,0,0},Row{131024,288,0,0},Row{524176,45026,0,0},Row{1687158304,28669,0,0},Row{4294960384,2815,0,0},Row{4292419584,75,0,0}},Rows8{Row{3206545408,5,0,0},Row{2484076544,63,0,0},Row{1879048192,79,0,0},Row{4287627264,28,0,0},Row{589299712,0,0,0},zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{13,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3755548672,75,0,0},Row{4294960384,2559,0,0},Row{1687158304,24573,0,0},Row{524176,40946,0,0}},Rows8{Row{131024,288,0,0},Row{57328,0,0,0},Row{57328,0,0,0},Row{131024,288,0,0},Row{524176,45026,0,0},Row{1687158304,28669,0,0},Row{4294960384,2815,0,0},Row{4292419584,75,0,0}},Rows8{Row{3206545408,5,0,0},Row{2484076544,63,0,0},Row{1879048192,79,0,0},Row{4287627264,28,0,0},Row{589299712,0,0,0},zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2rrlrllrl(code: U32) -> Glyph:
@@ -9230,7 +9238,7 @@ def face2rrlrllrl(code: U32) -> Glyph:
 
 def face2rrlrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{100614144,0,0,0},Row{234356736,0,0,0},Row{1606418432,0,0,0},zero_row(),Row{3755548672,58,0,0},Row{4294960384,1791,0,0},Row{1686044192,16381,0,0},Row{262032,45026,0,0}},Rows8{Row{1145364432,61380,0,0},Row{4294967280,65535,0,0},Row{4294967280,131071,0,0},Row{57296,0,0,0},Row{327568,13680,0,0},Row{1418657312,40954,0,0},Row{4294960384,7423,0,0},Row{4007206912,364,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{100614144,0,0,0},Row{234356736,0,0,0},Row{1606418432,0,0,0},zero_row(),Row{3755548672,58,0,0},Row{4294960384,1791,0,0},Row{1686044192,16381,0,0},Row{262032,45026,0,0}},Rows8{Row{1145364432,61380,0,0},Row{4294967280,65535,0,0},Row{4294967280,131071,0,0},Row{57296,0,0,0},Row{327568,13680,0,0},Row{1418657312,40954,0,0},Row{4294960384,7423,0,0},Row{4007206912,364,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrlrllrr(code: U32) -> Glyph:
@@ -9254,7 +9262,7 @@ def face2rrlrll(+code: U32) -> Glyph:
 
 def face2rrlrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{4093640704,95,0,0},Row{4227858432,9,0,0},Row{3745513472,1,0,0},zero_row(),Row{3755548672,58,0,0},Row{4294960384,1791,0,0},Row{1686044192,16381,0,0},Row{262032,45026,0,0}},Rows8{Row{1145364432,61380,0,0},Row{4294967280,65535,0,0},Row{4294967280,131071,0,0},Row{57296,0,0,0},Row{327568,13680,0,0},Row{1418657312,40954,0,0},Row{4294960384,7423,0,0},Row{4007206912,364,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{4093640704,95,0,0},Row{4227858432,9,0,0},Row{3745513472,1,0,0},zero_row(),Row{3755548672,58,0,0},Row{4294960384,1791,0,0},Row{1686044192,16381,0,0},Row{262032,45026,0,0}},Rows8{Row{1145364432,61380,0,0},Row{4294967280,65535,0,0},Row{4294967280,131071,0,0},Row{57296,0,0,0},Row{327568,13680,0,0},Row{1418657312,40954,0,0},Row{4294960384,7423,0,0},Row{4007206912,364,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrlrlrl(code: U32) -> Glyph:
@@ -9262,7 +9270,7 @@ def face2rrlrlrl(code: U32) -> Glyph:
 
 def face2rrlrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4024565760,3,0,0}},Rows8{Row{4177403904,62,0,0},Row{1350558208,1007,0,0},zero_row(),zero_row(),Row{3755548672,58,0,0},Row{4294960384,1791,0,0},Row{1686044192,16381,0,0},Row{262032,45026,0,0}},Rows8{Row{1145364432,61380,0,0},Row{4294967280,65535,0,0},Row{4294967280,131071,0,0},Row{57296,0,0,0},Row{327568,13680,0,0},Row{1418657312,40954,0,0},Row{4294960384,7423,0,0},Row{4007206912,364,0,0}},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4024565760,3,0,0}},Rows8{Row{4177403904,62,0,0},Row{1350558208,1007,0,0},zero_row(),zero_row(),Row{3755548672,58,0,0},Row{4294960384,1791,0,0},Row{1686044192,16381,0,0},Row{262032,45026,0,0}},Rows8{Row{1145364432,61380,0,0},Row{4294967280,65535,0,0},Row{4294967280,131071,0,0},Row{57296,0,0,0},Row{327568,13680,0,0},Row{1418657312,40954,0,0},Row{4294960384,7423,0,0},Row{4007206912,364,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrlrlrrl(code: U32) -> Glyph:
@@ -9270,7 +9278,7 @@ def face2rrlrlrrl(code: U32) -> Glyph:
 
 def face2rrlrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{540844032,444,0,0}},Rows8{Row{2159014656,1535,0,0},Row{810467584,462,0,0},zero_row(),zero_row(),Row{3755548672,58,0,0},Row{4294960384,1791,0,0},Row{1686044192,16381,0,0},Row{262032,45026,0,0}},Rows8{Row{1145364432,61380,0,0},Row{4294967280,65535,0,0},Row{4294967280,131071,0,0},Row{57296,0,0,0},Row{327568,13680,0,0},Row{1418657312,40954,0,0},Row{4294960384,7423,0,0},Row{4007206912,364,0,0}},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{540844032,444,0,0}},Rows8{Row{2159014656,1535,0,0},Row{810467584,462,0,0},zero_row(),zero_row(),Row{3755548672,58,0,0},Row{4294960384,1791,0,0},Row{1686044192,16381,0,0},Row{262032,45026,0,0}},Rows8{Row{1145364432,61380,0,0},Row{4294967280,65535,0,0},Row{4294967280,131071,0,0},Row{57296,0,0,0},Row{327568,13680,0,0},Row{1418657312,40954,0,0},Row{4294960384,7423,0,0},Row{4007206912,364,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrlrlrrr(code: U32) -> Glyph:
@@ -9302,7 +9310,7 @@ def face2rrlrl(+code: U32) -> Glyph:
 
 def face2rrlrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),Rows8{Row{45009,0,0,0},Row{261936,0,0,0},Row{718592,0,0,0},zero_row(),Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0}},Rows8{Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0}},zero_rows()}
+    case True{}: Glyph{7,[zero_rows(),Rows8{Row{45009,0,0,0},Row{261936,0,0,0},Row{718592,0,0,0},zero_row(),Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0}},Rows8{Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrlrrll(code: U32) -> Glyph:
@@ -9310,7 +9318,7 @@ def face2rrlrrll(code: U32) -> Glyph:
 
 def face2rrlrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{7,zero_rows(),Rows8{Row{11522048,0,0,0},Row{1963520,0,0,0},Row{326912,0,0,0},zero_row(),Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0}},Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0}},zero_rows()}
+    case True{}: Glyph{7,[zero_rows(),Rows8{Row{11522048,0,0,0},Row{1963520,0,0,0},Row{326912,0,0,0},zero_row(),Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0}},Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrlrrlrl(code: U32) -> Glyph:
@@ -9318,7 +9326,7 @@ def face2rrlrrlrl(code: U32) -> Glyph:
 
 def face2rrlrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{9,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{134197248,0,0,0}},Rows8{Row{2145057536,0,0,0},Row{4263559088,6,0,0},zero_row(),zero_row(),Row{83853312,0,0,0},Row{83853312,0,0,0},Row{83853312,0,0,0},Row{83853312,0,0,0}},Rows8{Row{83853312,0,0,0},Row{83853312,0,0,0},Row{83853312,0,0,0},Row{83853312,0,0,0},Row{83853312,0,0,0},Row{83853312,0,0,0},Row{83853312,0,0,0},Row{83853312,0,0,0}},zero_rows()}
+    case True{}: Glyph{9,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{134197248,0,0,0}},Rows8{Row{2145057536,0,0,0},Row{4263559088,6,0,0},zero_row(),zero_row(),Row{83853312,0,0,0},Row{83853312,0,0,0},Row{83853312,0,0,0},Row{83853312,0,0,0}},Rows8{Row{83853312,0,0,0},Row{83853312,0,0,0},Row{83853312,0,0,0},Row{83853312,0,0,0},Row{83853312,0,0,0},Row{83853312,0,0,0},Row{83853312,0,0,0},Row{83853312,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrlrrlrr(code: U32) -> Glyph:
@@ -9342,7 +9350,7 @@ def face2rrlrrl(+code: U32) -> Glyph:
 
 def face2rrlrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{8,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1017120726,0,0,0}},Rows8{Row{2951942142,0,0,0},Row{1320225000,0,0,0},zero_row(),zero_row(),Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0}},Rows8{Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0}},zero_rows()}
+    case True{}: Glyph{8,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1017120726,0,0,0}},Rows8{Row{2951942142,0,0,0},Row{1320225000,0,0,0},zero_row(),zero_row(),Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0}},Rows8{Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0},Row{5240832,0,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrlrrrll(code: U32) -> Glyph:
@@ -9350,7 +9358,7 @@ def face2rrlrrrll(code: U32) -> Glyph:
 
 def face2rrlrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2719744,80,0,0}},Rows8{Row{1493155840,1020,0,0},Row{4294377472,60,0,0},Row{4277948416,46,0,0},Row{3241857024,479,0,0},Row{573640704,2558,0,0},Row{3489632512,12280,0,0},Row{4294966016,40941,0,0},Row{826146656,57339,0,0}},Rows8{Row{196544,65505,0,0},Row{53216,130976,0,0},Row{45040,130944,0,0},Row{53216,61344,0,0},Row{327584,40946,0,0},Row{1954479920,16382,0,0},Row{4294964736,1791,0,0},Row{3755618304,58,0,0}},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{2719744,80,0,0}},Rows8{Row{1493155840,1020,0,0},Row{4294377472,60,0,0},Row{4277948416,46,0,0},Row{3241857024,479,0,0},Row{573640704,2558,0,0},Row{3489632512,12280,0,0},Row{4294966016,40941,0,0},Row{826146656,57339,0,0}},Rows8{Row{196544,65505,0,0},Row{53216,130976,0,0},Row{45040,130944,0,0},Row{53216,61344,0,0},Row{327584,40946,0,0},Row{1954479920,16382,0,0},Row{4294964736,1791,0,0},Row{3755618304,58,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrlrrrlr(code: U32) -> Glyph:
@@ -9366,7 +9374,7 @@ def face2rrlrrrl(+code: U32) -> Glyph:
 
 def face2rrlrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{93782016,676,0,0}},Rows8{Row{3489624064,494,0,0},Row{3609112576,110,0,0},zero_row(),zero_row(),Row{3947036544,942,0,0},Row{4294377344,12031,0,0},Row{1705967488,45053,0,0},Row{720768,57330,0,0}},Rows8{Row{393088,65488,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0}},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{93782016,676,0,0}},Rows8{Row{3489624064,494,0,0},Row{3609112576,110,0,0},zero_row(),zero_row(),Row{3947036544,942,0,0},Row{4294377344,12031,0,0},Row{1705967488,45053,0,0},Row{720768,57330,0,0}},Rows8{Row{393088,65488,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrlrrrrl(code: U32) -> Glyph:
@@ -9374,7 +9382,7 @@ def face2rrlrrrrl(code: U32) -> Glyph:
 
 def face2rrlrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{134094848,0,0,0},Row{519438336,0,0,0},Row{2141192192,0,0,0},zero_row(),Row{4023984128,91,0,0},Row{4294960384,2559,0,0},Row{1687158304,32765,0,0},Row{524176,61410,0,0}},Rows8{Row{131024,327568,0,0},Row{57328,458592,0,0},Row{57328,458608,0,0},Row{131024,327568,0,0},Row{524176,61410,0,0},Row{1687158304,32765,0,0},Row{4294960384,2559,0,0},Row{4023984128,91,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{134094848,0,0,0},Row{519438336,0,0,0},Row{2141192192,0,0,0},zero_row(),Row{4023984128,91,0,0},Row{4294960384,2559,0,0},Row{1687158304,32765,0,0},Row{524176,61410,0,0}},Rows8{Row{131024,327568,0,0},Row{57328,458592,0,0},Row{57328,458608,0,0},Row{131024,327568,0,0},Row{524176,61410,0,0},Row{1687158304,32765,0,0},Row{4294960384,2559,0,0},Row{4023984128,91,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrlrrrrr(code: U32) -> Glyph:
@@ -9422,7 +9430,7 @@ def face2rrl(+code: U32) -> Glyph:
 
 def face2rrrllll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{4060086272,127,0,0},Row{4177526784,11,0,0},Row{4011851776,1,0,0},zero_row(),Row{4023984128,91,0,0},Row{4294960384,2559,0,0},Row{1687158304,32765,0,0},Row{524176,61410,0,0}},Rows8{Row{131024,327568,0,0},Row{57328,458592,0,0},Row{57328,458608,0,0},Row{131024,327568,0,0},Row{524176,61410,0,0},Row{1687158304,32765,0,0},Row{4294960384,2559,0,0},Row{4023984128,91,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{4060086272,127,0,0},Row{4177526784,11,0,0},Row{4011851776,1,0,0},zero_row(),Row{4023984128,91,0,0},Row{4294960384,2559,0,0},Row{1687158304,32765,0,0},Row{524176,61410,0,0}},Rows8{Row{131024,327568,0,0},Row{57328,458592,0,0},Row{57328,458608,0,0},Row{131024,327568,0,0},Row{524176,61410,0,0},Row{1687158304,32765,0,0},Row{4294960384,2559,0,0},Row{4023984128,91,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrrllll(code: U32) -> Glyph:
@@ -9430,7 +9438,7 @@ def face2rrrllll(code: U32) -> Glyph:
 
 def face2rrrlllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4291887104,5,0,0}},Rows8{Row{3925676032,79,0,0},Row{1084215552,1279,0,0},zero_row(),zero_row(),Row{4023984128,91,0,0},Row{4294960384,2559,0,0},Row{1687158304,32765,0,0},Row{524176,61410,0,0}},Rows8{Row{131024,327568,0,0},Row{57328,458592,0,0},Row{57328,458608,0,0},Row{131024,327568,0,0},Row{524176,61410,0,0},Row{1687158304,32765,0,0},Row{4294960384,2559,0,0},Row{4023984128,91,0,0}},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4291887104,5,0,0}},Rows8{Row{3925676032,79,0,0},Row{1084215552,1279,0,0},zero_row(),zero_row(),Row{4023984128,91,0,0},Row{4294960384,2559,0,0},Row{1687158304,32765,0,0},Row{524176,61410,0,0}},Rows8{Row{131024,327568,0,0},Row{57328,458592,0,0},Row{57328,458608,0,0},Row{131024,327568,0,0},Row{524176,61410,0,0},Row{1687158304,32765,0,0},Row{4294960384,2559,0,0},Row{4023984128,91,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrrlllrl(code: U32) -> Glyph:
@@ -9438,7 +9446,7 @@ def face2rrrlllrl(code: U32) -> Glyph:
 
 def face2rrrlllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{77004800,677,0,0}},Rows8{Row{3489624064,494,0,0},Row{3609116672,110,0,0},zero_row(),zero_row(),Row{4023984128,91,0,0},Row{4294960384,2559,0,0},Row{1687158304,32765,0,0},Row{524176,61410,0,0}},Rows8{Row{131024,327568,0,0},Row{57328,458592,0,0},Row{57328,458608,0,0},Row{131024,327568,0,0},Row{524176,61410,0,0},Row{1687158304,32765,0,0},Row{4294960384,2559,0,0},Row{4023984128,91,0,0}},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{77004800,677,0,0}},Rows8{Row{3489624064,494,0,0},Row{3609116672,110,0,0},zero_row(),zero_row(),Row{4023984128,91,0,0},Row{4294960384,2559,0,0},Row{1687158304,32765,0,0},Row{524176,61410,0,0}},Rows8{Row{131024,327568,0,0},Row{57328,458592,0,0},Row{57328,458608,0,0},Row{131024,327568,0,0},Row{524176,61410,0,0},Row{1687158304,32765,0,0},Row{4294960384,2559,0,0},Row{4023984128,91,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrrlllrr(code: U32) -> Glyph:
@@ -9462,7 +9470,7 @@ def face2rrrlll(+code: U32) -> Glyph:
 
 def face2rrrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{274567168,715,0,0}},Rows8{Row{1624240384,2047,0,0},Row{544120832,733,0,0},zero_row(),zero_row(),Row{4023984128,91,0,0},Row{4294960384,2559,0,0},Row{1687158304,32765,0,0},Row{524176,61410,0,0}},Rows8{Row{131024,327568,0,0},Row{57328,458592,0,0},Row{57328,458608,0,0},Row{131024,327568,0,0},Row{524176,61410,0,0},Row{1687158304,32765,0,0},Row{4294960384,2559,0,0},Row{4023984128,91,0,0}},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{274567168,715,0,0}},Rows8{Row{1624240384,2047,0,0},Row{544120832,733,0,0},zero_row(),zero_row(),Row{4023984128,91,0,0},Row{4294960384,2559,0,0},Row{1687158304,32765,0,0},Row{524176,61410,0,0}},Rows8{Row{131024,327568,0,0},Row{57328,458592,0,0},Row{57328,458608,0,0},Row{131024,327568,0,0},Row{524176,61410,0,0},Row{1687158304,32765,0,0},Row{4294960384,2559,0,0},Row{4023984128,91,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrrllrl(code: U32) -> Glyph:
@@ -9470,7 +9478,7 @@ def face2rrrllrl(code: U32) -> Glyph:
 
 def face2rrrllrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{15,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3943694336,8,0,0},Row{4282384384,31,0,0},Row{3943694336,8,0,0},zero_row()},Rows8{zero_row(),Row{4294966528,786431,0,0},Row{4294966528,786431,0,0},Row{1145324288,214084,0,0},zero_row(),Row{3943694336,8,0,0},Row{4282384384,31,0,0},Row{3943694336,8,0,0}},zero_rows()}
+    case True{}: Glyph{15,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),Row{3943694336,8,0,0},Row{4282384384,31,0,0},Row{3943694336,8,0,0},zero_row()},Rows8{zero_row(),Row{4294966528,786431,0,0},Row{4294966528,786431,0,0},Row{1145324288,214084,0,0},zero_row(),Row{3943694336,8,0,0},Row{4282384384,31,0,0},Row{3943694336,8,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrrllrrl(code: U32) -> Glyph:
@@ -9478,7 +9486,7 @@ def face2rrrllrrl(code: U32) -> Glyph:
 
 def face2rrrllrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),Row{0,16384,0,0},Row{4023984128,325723,0,0},Row{4294960384,40959,0,0},Row{1687158304,32767,0,0},Row{805830544,61439,0,0}},Rows8{Row{3523346384,327613,0,0},Row{3960528880,458595,0,0},Row{1336991728,458608,0,0},Row{117112784,327568,0,0},Row{9437072,61410,0,0},Row{1687158560,32765,0,0},Row{4294967104,2559,0,0},Row{4023991504,91,0,0}},Rows8{Row{544,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{13,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),Row{0,16384,0,0},Row{4023984128,325723,0,0},Row{4294960384,40959,0,0},Row{1687158304,32767,0,0},Row{805830544,61439,0,0}},Rows8{Row{3523346384,327613,0,0},Row{3960528880,458595,0,0},Row{1336991728,458608,0,0},Row{117112784,327568,0,0},Row{9437072,61410,0,0},Row{1687158560,32765,0,0},Row{4294967104,2559,0,0},Row{4023991504,91,0,0}},Rows8{Row{544,0,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2rrrllrrr(code: U32) -> Glyph:
@@ -9510,7 +9518,7 @@ def face2rrrll(+code: U32) -> Glyph:
 
 def face2rrrlrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{150872064,0,0,0},Row{519372800,0,0,0},Row{2408579072,0,0,0},zero_row(),Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0}},Rows8{Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{393088,65504,0,0},Row{720736,65524,0,0},Row{2259681072,65518,0,0},Row{4294965760,65450,0,0},Row{2382196736,65440,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{150872064,0,0,0},Row{519372800,0,0,0},Row{2408579072,0,0,0},zero_row(),Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0}},Rows8{Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{393088,65504,0,0},Row{720736,65524,0,0},Row{2259681072,65518,0,0},Row{4294965760,65450,0,0},Row{2382196736,65440,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrrlrll(code: U32) -> Glyph:
@@ -9518,7 +9526,7 @@ def face2rrrlrll(code: U32) -> Glyph:
 
 def face2rrrlrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{4060086272,143,0,0},Row{4177526784,12,0,0},Row{4011851776,2,0,0},zero_row(),Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0}},Rows8{Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{393088,65504,0,0},Row{720736,65524,0,0},Row{2259681072,65518,0,0},Row{4294965760,65450,0,0},Row{2382196736,65440,0,0}},zero_rows()}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{4060086272,143,0,0},Row{4177526784,12,0,0},Row{4011851776,2,0,0},zero_row(),Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0}},Rows8{Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{393088,65504,0,0},Row{720736,65524,0,0},Row{2259681072,65518,0,0},Row{4294965760,65450,0,0},Row{2382196736,65440,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrrlrlrl(code: U32) -> Glyph:
@@ -9526,7 +9534,7 @@ def face2rrrlrlrl(code: U32) -> Glyph:
 
 def face2rrrlrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4290838528,5,0,0}},Rows8{Row{3925610496,95,0,0},Row{816824576,1534,0,0},zero_row(),zero_row(),Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0}},Rows8{Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{393088,65504,0,0},Row{720736,65524,0,0},Row{2259681072,65518,0,0},Row{4294965760,65450,0,0},Row{2382196736,65440,0,0}},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{4290838528,5,0,0}},Rows8{Row{3925610496,95,0,0},Row{816824576,1534,0,0},zero_row(),zero_row(),Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0}},Rows8{Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{393088,65504,0,0},Row{720736,65524,0,0},Row{2259681072,65518,0,0},Row{4294965760,65450,0,0},Row{2382196736,65440,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrrlrlrr(code: U32) -> Glyph:
@@ -9550,7 +9558,7 @@ def face2rrrlrl(+code: U32) -> Glyph:
 
 def face2rrrlrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{274563072,715,0,0}},Rows8{Row{1625288960,2303,0,0},Row{544120832,989,0,0},zero_row(),zero_row(),Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0}},Rows8{Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{393088,65504,0,0},Row{720736,65524,0,0},Row{2259681072,65518,0,0},Row{4294965760,65450,0,0},Row{2382196736,65440,0,0}},zero_rows()}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{274563072,715,0,0}},Rows8{Row{1625288960,2303,0,0},Row{544120832,989,0,0},zero_row(),zero_row(),Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0}},Rows8{Row{327552,65472,0,0},Row{327552,65472,0,0},Row{327552,65472,0,0},Row{393088,65504,0,0},Row{720736,65524,0,0},Row{2259681072,65518,0,0},Row{4294965760,65450,0,0},Row{2382196736,65440,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrrlrrll(code: U32) -> Glyph:
@@ -9558,7 +9566,7 @@ def face2rrrlrrll(code: U32) -> Glyph:
 
 def face2rrrlrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,zero_rows(),Rows8{Row{4110417920,79,0,0},Row{4227858432,8,0,0},Row{3478126592,0,0,0},zero_row(),Row{40950,393104,0,0},Row{61409,61408,0,0},Row{327568,36853,0,0},Row{655152,12282,0,0}},Rows8{Row{269417728,3071,0,0},Row{1616901888,1535,0,0},Row{2964320512,239,0,0},Row{4059013120,159,0,0},Row{4177477632,63,0,0},Row{4294770688,12,0,0},Row{4294443008,6,0,0},Row{4025614336,1,0,0}},Rows8{Row{2683568128,0,0,0},Row{805057536,0,0,0},Row{150994752,0,0,0},Row{7138928,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{13,[zero_rows(),Rows8{Row{4110417920,79,0,0},Row{4227858432,8,0,0},Row{3478126592,0,0,0},zero_row(),Row{40950,393104,0,0},Row{61409,61408,0,0},Row{327568,36853,0,0},Row{655152,12282,0,0}},Rows8{Row{269417728,3071,0,0},Row{1616901888,1535,0,0},Row{2964320512,239,0,0},Row{4059013120,159,0,0},Row{4177477632,63,0,0},Row{4294770688,12,0,0},Row{4294443008,6,0,0},Row{4025614336,1,0,0}},Rows8{Row{2683568128,0,0,0},Row{805057536,0,0,0},Row{150994752,0,0,0},Row{7138928,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2rrrlrrlr(code: U32) -> Glyph:
@@ -9574,7 +9582,7 @@ def face2rrrlrrl(+code: U32) -> Glyph:
 
 def face2rrrlrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,zero_rows(),Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{4232380288,942,0,0},Row{4294508416,20479,0,0},Row{1438646144,126970,0,0},Row{917376,458672,0,0}},Rows8{Row{524160,720720,0,0},Row{327552,786208,0,0},Row{327552,786208,0,0},Row{524160,655184,0,0},Row{917376,458672,0,0},Row{1438646144,126970,0,0},Row{4294508416,20223,0,0},Row{4232380288,942,0,0}},Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{14,[zero_rows(),Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{4232380288,942,0,0},Row{4294508416,20479,0,0},Row{1438646144,126970,0,0},Row{917376,458672,0,0}},Rows8{Row{524160,720720,0,0},Row{327552,786208,0,0},Row{327552,786208,0,0},Row{524160,655184,0,0},Row{917376,458672,0,0},Row{1438646144,126970,0,0},Row{4294508416,20223,0,0},Row{4232380288,942,0,0}},Rows8{Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},Row{327552,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2rrrlrrrl(code: U32) -> Glyph:
@@ -9582,7 +9590,7 @@ def face2rrrlrrrl(code: U32) -> Glyph:
 
 def face2rrrlrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{13,Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{809279744,428,0,0}},Rows8{Row{2426401792,1279,0,0},Row{1078903040,462,0,0},zero_row(),zero_row(),Row{40950,393104,0,0},Row{61409,61408,0,0},Row{327568,36853,0,0},Row{655152,12282,0,0}},Rows8{Row{269417728,3071,0,0},Row{1616901888,1535,0,0},Row{2964320512,239,0,0},Row{4059013120,159,0,0},Row{4177477632,63,0,0},Row{4294770688,12,0,0},Row{4294443008,6,0,0},Row{4025614336,1,0,0}},Rows8{Row{2683568128,0,0,0},Row{805057536,0,0,0},Row{150994752,0,0,0},Row{7138928,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{13,[Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{809279744,428,0,0}},Rows8{Row{2426401792,1279,0,0},Row{1078903040,462,0,0},zero_row(),zero_row(),Row{40950,393104,0,0},Row{61409,61408,0,0},Row{327568,36853,0,0},Row{655152,12282,0,0}},Rows8{Row{269417728,3071,0,0},Row{1616901888,1535,0,0},Row{2964320512,239,0,0},Row{4059013120,159,0,0},Row{4177477632,63,0,0},Row{4294770688,12,0,0},Row{4294443008,6,0,0},Row{4025614336,1,0,0}},Rows8{Row{2683568128,0,0,0},Row{805057536,0,0,0},Row{150994752,0,0,0},Row{7138928,0,0,0},zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2rrrlrrrr(code: U32) -> Glyph:
@@ -9622,7 +9630,7 @@ def face2rrrl(+code: U32) -> Glyph:
 
 def face2rrrrlll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,zero_rows(),zero_rows(),Rows8{Row{1145324612,1092,0,0},Row{4294967295,4095,0,0},Row{4294967295,4095,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{11,[zero_rows(),zero_rows(),Rows8{Row{1145324612,1092,0,0},Row{4294967295,4095,0,0},Row{4294967295,4095,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrrrlll(code: U32) -> Glyph:
@@ -9630,7 +9638,7 @@ def face2rrrrlll(code: U32) -> Glyph:
 
 def face2rrrrllrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{22,zero_rows(),zero_rows(),Rows8{Row{1145324612,1145324612,4473924,0},Row{4294967295,4294967295,16777215,0},Row{4294967295,4294967295,16777215,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{22,[zero_rows(),zero_rows(),Rows8{Row{1145324612,1145324612,4473924,0},Row{4294967295,4294967295,16777215,0},Row{4294967295,4294967295,16777215,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrrrllrl(code: U32) -> Glyph:
@@ -9638,7 +9646,7 @@ def face2rrrrllrl(code: U32) -> Glyph:
 
 def face2rrrrllrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,zero_rows(),Rows8{Row{9404416,0,0,0},Row{6279168,0,0,0},Row{4190720,0,0,0},Row{2094848,0,0,0},Row{916480,0,0,0},Row{786192,0,0,0},zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[zero_rows(),Rows8{Row{9404416,0,0,0},Row{6279168,0,0,0},Row{4190720,0,0,0},Row{2094848,0,0,0},Row{916480,0,0,0},Row{786192,0,0,0},zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrrrllrr(code: U32) -> Glyph:
@@ -9662,7 +9670,7 @@ def face2rrrrll(+code: U32) -> Glyph:
 
 def face2rrrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{6,zero_rows(),Rows8{zero_row(),Row{8386048,0,0,0},Row{3143680,0,0,0},Row{850432,0,0,0},Row{523520,0,0,0},Row{261888,0,0,0},Row{57120,0,0,0},zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{6,[zero_rows(),Rows8{zero_row(),Row{8386048,0,0,0},Row{3143680,0,0,0},Row{850432,0,0,0},Row{523520,0,0,0},Row{261888,0,0,0},Row{57120,0,0,0},zero_row()},zero_rows(),zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrrrlrl(code: U32) -> Glyph:
@@ -9670,7 +9678,7 @@ def face2rrrrlrl(code: U32) -> Glyph:
 
 def face2rrrrlrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,zero_rows(),Rows8{Row{9404416,1021,0,0},Row{543150080,511,0,0},Row{1883238912,223,0,0},Row{3223320320,191,0,0},Row{4044225536,143,0,0},Row{4127981328,111,0,0},zero_row(),zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[zero_rows(),Rows8{Row{9404416,1021,0,0},Row{543150080,511,0,0},Row{1883238912,223,0,0},Row{3223320320,191,0,0},Row{4044225536,143,0,0},Row{4127981328,111,0,0},zero_row(),zero_row()},zero_rows(),zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrrrlrrl(code: U32) -> Glyph:
@@ -9678,7 +9686,7 @@ def face2rrrrlrrl(code: U32) -> Glyph:
 
 def face2rrrrlrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,zero_rows(),Rows8{zero_row(),Row{3229611520,495,0,0},Row{3761240064,175,0,0},Row{4060936704,111,0,0},Row{4094164224,31,0,0},Row{4144234240,11,0,0},Row{4177583904,7,0,0},zero_row()},zero_rows(),zero_rows()}
+    case True{}: Glyph{11,[zero_rows(),Rows8{zero_row(),Row{3229611520,495,0,0},Row{3761240064,175,0,0},Row{4060936704,111,0,0},Row{4094164224,31,0,0},Row{4144234240,11,0,0},Row{4177583904,7,0,0},zero_row()},zero_rows(),zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrrrlrrr(code: U32) -> Glyph:
@@ -9710,7 +9718,7 @@ def face2rrrrl(+code: U32) -> Glyph:
 
 def face2rrrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{11,zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1560035328,0,0,0},Row{4294964224,5,0,0}},Rows8{Row{4294966016,12,0,0},Row{4294966528,14,0,0},Row{4294966016,12,0,0},Row{4294964224,5,0,0},Row{1560035328,0,0,0},zero_row(),zero_row(),zero_row()},zero_rows()}
+    case True{}: Glyph{11,[zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{1560035328,0,0,0},Row{4294964224,5,0,0}},Rows8{Row{4294966016,12,0,0},Row{4294966528,14,0,0},Row{4294966016,12,0,0},Row{4294964224,5,0,0},Row{1560035328,0,0,0},zero_row(),zero_row(),zero_row()},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrrrrll(code: U32) -> Glyph:
@@ -9718,7 +9726,7 @@ def face2rrrrrll(code: U32) -> Glyph:
 
 def face2rrrrrlrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{21,zero_rows(),zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{715264,44704,2794,0},Row{4194080,537133042,16383,0},Row{715264,44704,2794,0}},zero_rows()}
+    case True{}: Glyph{21,[zero_rows(),zero_rows(),Rows8{zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),Row{715264,44704,2794,0},Row{4194080,537133042,16383,0},Row{715264,44704,2794,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrrrrlrl(code: U32) -> Glyph:
@@ -9726,7 +9734,7 @@ def face2rrrrrlrl(code: U32) -> Glyph:
 
 def face2rrrrrlrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{21,zero_rows(),Rows8{zero_row(),Row{0,64,0,0},Row{0,3062,0,0},Row{1610612736,7423,0,0},Row{4127195136,447,0,0},Row{4284481536,27,0,0},Row{2683699200,0,0,0},Row{939487232,1145324612,324,0}},Rows8{Row{4294964736,4294967295,1279,0},Row{3991921664,4294967295,1279,0},Row{452870144,0,0,0},Row{3487760384,2,0,0},Row{4264558592,45,0,0},Row{3808428032,735,0,0},Row{805306368,7934,0,0},Row{0,2275,0,0}},Rows8{Row{0,16,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{21,[zero_rows(),Rows8{zero_row(),Row{0,64,0,0},Row{0,3062,0,0},Row{1610612736,7423,0,0},Row{4127195136,447,0,0},Row{4284481536,27,0,0},Row{2683699200,0,0,0},Row{939487232,1145324612,324,0}},Rows8{Row{4294964736,4294967295,1279,0},Row{3991921664,4294967295,1279,0},Row{452870144,0,0,0},Row{3487760384,2,0,0},Row{4264558592,45,0,0},Row{3808428032,735,0,0},Row{805306368,7934,0,0},Row{0,2275,0,0}},Rows8{Row{0,16,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2rrrrrlrr(code: U32) -> Glyph:
@@ -9750,7 +9758,7 @@ def face2rrrrrl(+code: U32) -> Glyph:
 
 def face2rrrrrrll.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{19,zero_rows(),Rows8{Row{0,1473,0,0},Row{268435456,24572,0,0},Row{3238002688,393215,0,0},Row{4245684224,6290941,0,0},Row{3755081728,100633590,0,0},Row{1056776192,1610222838,0,0},Row{66048512,4289727991,6,0},Row{4126720,4212133367,29,0}},Rows8{Row{233472,2701135351,2,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0}},zero_rows()}
+    case True{}: Glyph{19,[zero_rows(),Rows8{Row{0,1473,0,0},Row{268435456,24572,0,0},Row{3238002688,393215,0,0},Row{4245684224,6290941,0,0},Row{3755081728,100633590,0,0},Row{1056776192,1610222838,0,0},Row{66048512,4289727991,6,0},Row{4126720,4212133367,29,0}},Rows8{Row{233472,2701135351,2,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrrrrrll(code: U32) -> Glyph:
@@ -9758,7 +9766,7 @@ def face2rrrrrrll(code: U32) -> Glyph:
 
 def face2rrrrrrlr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{21,zero_rows(),Rows8{zero_row(),Row{0,16384,0,0},Row{0,457488,0,0},Row{0,7339024,0,0},Row{0,117420288,0,0},Row{0,1878724608,0,0},Row{0,4287627264,6,0},Row{1145323776,4147397700,127,0}},Rows8{Row{4294964224,4294967295,1791,0},Row{4294964224,4260364287,1263,0},Row{0,4195352576,78,0},Row{0,4022468608,3,0},Row{0,1056776192,0,0},Row{0,66048512,0,0},Row{0,4128272,0,0},Row{0,256000,0,0}},Rows8{Row{0,4096,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{21,[zero_rows(),Rows8{zero_row(),Row{0,16384,0,0},Row{0,457488,0,0},Row{0,7339024,0,0},Row{0,117420288,0,0},Row{0,1878724608,0,0},Row{0,4287627264,6,0},Row{1145323776,4147397700,127,0}},Rows8{Row{4294964224,4294967295,1791,0},Row{4294964224,4260364287,1263,0},Row{0,4195352576,78,0},Row{0,4022468608,3,0},Row{0,1056776192,0,0},Row{0,66048512,0,0},Row{0,4128272,0,0},Row{0,256000,0,0}},Rows8{Row{0,4096,0,0},zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2rrrrrrlr(code: U32) -> Glyph:
@@ -9774,7 +9782,7 @@ def face2rrrrrrl(+code: U32) -> Glyph:
 
 def face2rrrrrrrl.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{19,zero_rows(),Rows8{Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{299008,2701135351,2,0}},Rows8{Row{5175296,4212133367,29,0},Row{82825728,4290842103,6,0},Row{1056776192,1610288374,0,0},Row{3755016192,100637686,0,0},Row{4245684224,6290941,0,0},Row{3506438144,393215,0,0},Row{268435456,24572,0,0},Row{0,1473,0,0}},zero_rows()}
+    case True{}: Glyph{19,[zero_rows(),Rows8{Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{0,3575,0,0},Row{299008,2701135351,2,0}},Rows8{Row{5175296,4212133367,29,0},Row{82825728,4290842103,6,0},Row{1056776192,1610288374,0,0},Row{3755016192,100637686,0,0},Row{4245684224,6290941,0,0},Row{3506438144,393215,0,0},Row{268435456,24572,0,0},Row{0,1473,0,0}},zero_rows()]}
     case False{}: face2.missing()
 
 def face2rrrrrrrl(code: U32) -> Glyph:
@@ -9782,7 +9790,7 @@ def face2rrrrrrrl(code: U32) -> Glyph:
 
 def face2rrrrrrrr.choose(valid: Bool) -> Glyph:
   match valid:
-    case True{}: Glyph{14,Rows8{zero_row(),zero_row(),zero_row(),Row{3149615104,2747,0,0},Row{4294930432,3839,0,0},Row{9400320,3825,0,0},Row{2330947584,3838,0,0},Row{294612992,3826,0,0}},Rows8{Row{3135205376,3837,0,0},Row{2056220672,3839,0,0},Row{294612992,3826,0,0},Row{2866769920,3835,0,0},Row{1827631104,3836,0,0},Row{1905225728,3829,0,0},Row{3135205376,3828,0,0},Row{2900324352,3835,0,0}},Rows8{Row{982478848,3827,0,0},Row{3129962496,3828,0,0},Row{294612992,3826,0,0},Row{4294930432,3839,0,0},Row{1705996288,3829,0,0},Row{4237258752,3829,0,0},Row{1133473792,3826,0,0},Row{3168759808,3835,0,0}},Rows8{Row{1526689792,3836,0,0},Row{1100967936,3829,0,0},Row{3151982592,3835,0,0},Row{4294930432,3839,0,0},zero_row(),zero_row(),zero_row(),zero_row()}}
+    case True{}: Glyph{14,[Rows8{zero_row(),zero_row(),zero_row(),Row{3149615104,2747,0,0},Row{4294930432,3839,0,0},Row{9400320,3825,0,0},Row{2330947584,3838,0,0},Row{294612992,3826,0,0}},Rows8{Row{3135205376,3837,0,0},Row{2056220672,3839,0,0},Row{294612992,3826,0,0},Row{2866769920,3835,0,0},Row{1827631104,3836,0,0},Row{1905225728,3829,0,0},Row{3135205376,3828,0,0},Row{2900324352,3835,0,0}},Rows8{Row{982478848,3827,0,0},Row{3129962496,3828,0,0},Row{294612992,3826,0,0},Row{4294930432,3839,0,0},Row{1705996288,3829,0,0},Row{4237258752,3829,0,0},Row{1133473792,3826,0,0},Row{3168759808,3835,0,0}},Rows8{Row{1526689792,3836,0,0},Row{1100967936,3829,0,0},Row{3151982592,3835,0,0},Row{4294930432,3839,0,0},zero_row(),zero_row(),zero_row(),zero_row()}]}
     case False{}: face2.missing()
 
 def face2rrrrrrrr(code: U32) -> Glyph:

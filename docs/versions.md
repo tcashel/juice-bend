@@ -27,6 +27,17 @@ The source/compiler cache is ignored under `.tools`; generated C,
 native executables and the module cache are ignored under `build`. Bun does not
 run in the shipped native application process.
 
+`./scripts/bend` preloads `toolchain/bend-gc512.ts` in mise-pinned Bun 1.4.2.
+This small TypeScript build adapter adds full host garbage collection after every
+512 calls to the compiler's existing memo cleanup. It changes the loaded module
+in memory; the pinned upstream files and Bend CLI arguments remain unchanged.
+The adapter accepts only `comp.ts` SHA-256
+`5ae06d6c44581bd7e0e2f5952e402659c9be408f79a5a4e86ff23e5be9844ce6`.
+An unsupported Bun version, compiler hash mismatch or unused preload hook fails
+the command with an error. A compiler update requires reviewing the adapter and
+checking generated C equivalence before updating this guard. The adapter runs
+only during development; application behavior and UI remain in Bend 2.
+
 Connections existing-store admission requires SQLite 3.31+ with NOFOLLOW.
 Its narrow bridge open primitive uses RO/RW and FULLMUTEX without CREATE;
 ordinary capture-open behavior is unchanged. See the Connections native receipt.

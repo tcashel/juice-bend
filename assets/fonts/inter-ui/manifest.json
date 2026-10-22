@@ -20,8 +20,8 @@
     "OFL.txt": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a"
   },
   "atlas_sha256": "3a1333431d12d92ac9a352a9ee59ab36637c2ca8465f6853474f3553381e3c35",
-  "preamble_sha256": "4d157bdbe3399cd22acf1e362a050c29905d6b1da9b2bbf67f09f32dc4513494",
-  "generated_bend_sha256": "55e474ca5071f85675ac8005ef67cbea61e96447c7cd957f025e38bcadfa418f",
+  "preamble_sha256": "5bb98b1144f87c42851d1b5abf5db87d8c229b60976239940b867d36f172d5ac",
+  "generated_bend_sha256": "3860178c43da4f21b3b959d4a42226a19e2523ef3b2f4db80305e9f7704fc8fa",
   "glyphs_per_face": 204,
   "faces": [
     {

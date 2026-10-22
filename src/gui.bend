@@ -14,6 +14,7 @@ import ./domain.bend as Domain
 import ./provenance.bend as P
 import ./gui_files.bend as Files
 import ./gui_relations.bend as Related
+import ./gui_result_links.bend as Child
 import ./gui_settings.bend as Settings
 import ./gui_usage.bend as Usage
 import ./gui_brief.bend as Brief
@@ -68,6 +69,8 @@ type AttachmentOrigin is Data:
   AttachmentOrigin{selection: Selection,view: UI.Bookmark,mode: U32,search: String}
 
 type Navigation is Data:
+  ChildNavigation{origin: Selection,view: UI.Bookmark,search: String,model: Child.Model,
+    events_view: Maybe<&2,UI.Bookmark>,candidates_view: Maybe<&2,UI.Bookmark>}
   NoNavigation{}
   RelatedNavigation{origin: Selection,origin_view: UI.Bookmark,origin_search: String,
     page: Maybe<&2,Related.Page>,page_view: Maybe<&2,UI.Bookmark>,
@@ -280,6 +283,7 @@ def capture_suspended(state: State) -> Bool:
 
 def navigation_phase(value: Navigation) -> U32:
   match value:
+    case ChildNavigation{_,_,_,_,_,_}: 10
     case NoNavigation{}: 3
     case RelatedNavigation{origin,view,search,page,page_view,previous,phase,target}: phase
     case UsageNavigation{_,_,_,_,_}: 4
@@ -501,6 +505,241 @@ def related_export_available(value: Navigation) -> Bool:
   match value:
     case RelatedNavigation{origin,view,search,Some{page},saved,previous,phase,target}: True{}
     case _: False{}
+
+# Explicit child-result navigation never interprets transcript text as an event.
+def child_selection(origin: Selection) -> Selection:
+  Selection{items,snapshot,start,_,_,filters,listing} = origin
+  Selection{items,snapshot,start,50,[],filters,listing}
+
+def child_count(selection: Selection) -> U32:
+  Selection{_,+snapshot,+start,kind,args,_,_} = selection
+  match kind args:
+    case 3 args: Brief.selected_count(args,snapshot,start)
+    case 24 "activity" <> snap <> source <> generation <> extent <> provider <> total <> next <> count <> []:
+      Bool.pick(U32,String.eq(snap,snapshot),U32.min(Files.number(count),40),0)
+    case _ _: 0
+
+def child_restore_value(+state: State,value: Navigation) -> State:
+  State{db,dir,program,ui,_,Form{_,_,source,blame,files,_,settings},jobs,_,serial} = state
+  match value:
+    case ChildNavigation{origin,view,search,_,_,_}:
+      invalidate(State{db,dir,program,UI.restore(ui,view),origin,Form{0,search,source,blame,files,[],settings},jobs,0n,serial})
+    case _: state
+
+def child_restore(+state: State) -> State:
+  child_restore_value(state,navigation(state))
+
+def child_entry_ready(+state: State,valid: Bool) -> State:
+  State{db,dir,program,+ui,Selection{items,+snapshot,+start,kind,args,+filters,listing},Form{_,+search,source,blame,files,_,settings},jobs,_,serial} = state
+  match valid:
+    case False{}: status(state,"Child results need a captured Transcript or Tools range. Open a Claude capture first.")
+    case True{}:
+      +selection = {Selection{items,snapshot,start,kind,args,filters,listing} : Selection}
+      +args = Child.event_args(snapshot,start,child_count(selection),Child.Cursor{start,0},filters)
+      next = UI.set_reader(UI.set_rows(UI.set_results(ui,UI.ChildResults{0,0,False{},False{}}),[]),
+        "Child results | loading","Reading typed result blocks from the exact captured range.\nBack restores the reader and its selection.")
+      queue(State{db,dir,program,next,child_selection(selection),
+        Form{0,search,source,blame,files,[ChildNavigation{selection,UI.bookmark(ui),search,
+          Child.Model{0,args,None{},None{},None{},[],None{}},None{},None{}}],settings},jobs,0n,serial},
+        Request{50,args,snapshot,0,"Child results"})
+
+def child_enter_value(+state: State,value: Navigation) -> State:
+  State{_,_,_,_,Selection{items,+snapshot,start,+kind,args,filters,listing},Form{mode,_,_,_,_,_,_},_,_,_} = state
+  match value:
+    case NoNavigation{}:
+      selection = {Selection{items,snapshot,start,kind,args,filters,listing} : Selection}
+      child_entry_ready(state,U32.is_eq(mode,0) && Bool.not(String.is_empty(snapshot)) &&
+        (U32.is_eq(kind,3) || U32.is_eq(kind,24)) && U32.is_gt(child_count(selection),0))
+    case _: status(state,"Use Back to restore History before choosing a new child result.")
+
+def child_enter(+state: State) -> State:
+  child_enter_value(state,navigation(state))
+
+def child_model_value(+state: State,model: Child.Model,value: Navigation) -> State:
+  match value:
+    case ChildNavigation{origin,view,search,_,events,candidates}:
+      set_navigation(state,ChildNavigation{origin,view,search,model,events,candidates})
+    case _: state
+
+def child_model(+state: State,model: Child.Model) -> State:
+  child_model_value(state,model,navigation(state))
+
+def child_restored(+state: State,value: Navigation,bookmark: UI.Bookmark,phase: U32) -> State:
+  State{db,dir,program,ui,_,Form{_,_,source,blame,files,_,settings},jobs,_,serial} = state
+  match value:
+    case ChildNavigation{+origin,view,+search,Child.Model{_,_,events,selected,candidates,previous,_},saved_events,saved_candidates}:
+      invalidate(State{db,dir,program,UI.restore(ui,bookmark),child_selection(origin),Form{0,search,source,blame,files,
+        [ChildNavigation{origin,view,search,Child.Model{phase,[],events,selected,candidates,previous,None{}},saved_events,saved_candidates}],settings},jobs,0n,serial})
+    case _: state
+
+def child_back_value(+state: State,+value: Navigation) -> State:
+  match value:
+    case ChildNavigation{_,_,_,Child.Model{0,_,_,_,_,_,_},_,_}: child_restore(state)
+    case ChildNavigation{_,_,_,Child.Model{1,_,_,_,_,_,_},Some{bookmark},_}: child_restored(state,value,bookmark,0)
+    case ChildNavigation{_,_,_,Child.Model{_,_,_,_,_,_,_},_,Some{bookmark}}: child_restored(state,value,bookmark,1)
+    case _: child_restore(state)
+
+def child_back(+state: State) -> State:
+  child_back_value(state,navigation(state))
+
+def child_events_apply(+state: State,request: Request,+page: Child.Events,value: Navigation) -> State:
+  State{db,dir,program,ui,_,Form{_,_,source,blame,files,_,settings},jobs,_,serial} = state
+  Request{_,_,_,step,_} = request
+  Child.Events{_,_,_,_,_,more,+rows,text} = page
+  match value:
+    case ChildNavigation{+origin,view,+search,Child.Model{_,_,old,_,_,previous,_},_,_}:
+      +trail = Child.trail(step,old,previous)
+      +next = UI.set_reader(UI.set_rows(UI.set_results(ui,UI.ChildResults{0,U32.from_nat(List.length(&2,Child.ResultEvent,rows)),more,
+        Bool.not(List.is_empty(&2,Child.Cursor,trail))}),Child.titles(rows)),"Child results",text)
+      State{db,dir,program,next,child_selection(origin),Form{0,search,source,blame,files,
+        [ChildNavigation{origin,view,search,Child.Model{0,[],Some{page},None{},None{},trail,None{}},Some{UI.bookmark(next)},None{}}],settings},jobs,0n,serial}
+    case _: state
+
+def child_events_checked(+state: State,request: Request,page: Child.Events,valid: Bool) -> State:
+  match valid:
+    case True{}: child_events_apply(state,request,page,navigation(state))
+    case False{}: status(state,"Child result capture identity changed; original reader retained.")
+
+def child_prior(value: Navigation) -> Maybe<&2,Child.Events>:
+  match value:
+    case ChildNavigation{_,_,_,Child.Model{_,_,events,_,_,_,_},_,_}: events
+    case _: None{}
+
+def child_events_decoded(+state: State,request: Request,result: Result<&2,&2,String,Child.Events>) -> State:
+  match result:
+    case Fail{reason}: status(state,reason)
+    case Done{+page}: child_events_checked(state,request,page,Child.same_prior(page,child_prior(navigation(state))))
+
+def child_events_response(state: State,request: Request,value: Json.Json,args: List<&2,String>,filters: Query.Filters) -> State:
+  match args:
+    case _ <> snapshot <> start <> count <> record <> slot <> provider <> repo <> role <> after <> []:
+      child_events_decoded(state,request,Child.decode_events(value,snapshot,Files.number(start),Files.number(count),
+        Child.Cursor{Files.number(record),Files.number(slot)},filters))
+    case _: status(state,"Invalid child-result request; original reader retained.")
+
+def child_candidates_apply(+state: State,+page: Child.Candidates,value: Navigation) -> State:
+  State{db,dir,program,ui,_,Form{_,_,source,blame,files,_,settings},jobs,_,serial} = state
+  Child.Candidates{_,_,cursor,+rows,text} = page
+  match value:
+    case ChildNavigation{+origin,view,+search,Child.Model{_,_,events,selected,_,previous,_},saved,_}:
+      +next = UI.set_reader(UI.set_rows(UI.set_results(ui,UI.ChildResults{1,U32.from_nat(List.length(&2,Related.Row,rows)),
+        Bool.not(String.is_empty(cursor)),False{}}),Child.candidate_titles(rows)),"Child candidates",text)
+      State{db,dir,program,next,child_selection(origin),Form{0,search,source,blame,files,
+        [ChildNavigation{origin,view,search,Child.Model{1,[],events,selected,Some{page},previous,None{}},saved,Some{UI.bookmark(next)}}],settings},jobs,0n,serial}
+    case _: state
+
+def child_candidates_decoded(+state: State,result: Result<&2,&2,String,Child.Candidates>) -> State:
+  match result:
+    case Fail{reason}: status(state,reason)
+    case Done{page}: child_candidates_apply(state,page,navigation(state))
+
+def child_candidates_response(state: State,value: Json.Json,nav: Navigation,args: List<&2,String>) -> State:
+  match nav args:
+    case ChildNavigation{Selection{_,_,_,_,_,filters,_},_,_,Child.Model{_,_,Some{Child.Events{reference,_,_,_,_,_,_,_}},Some{selected},_,_,_},_,_}
+      _ <> provider <> source <> generation <> snapshot <> extent <> record <> event <> watermark <> cursor <> rest:
+      child_candidates_decoded(state,Child.decode_candidates(value,reference,selected,filters,watermark,cursor))
+    case _ _: status(state,"Child candidate reply has no exact selected event; original reader retained.")
+
+def child_response_checked(+state: State,+request: Request,value: Json.Json,args: List<&2,String>,filters: Query.Filters,valid: Bool) -> State:
+  Request{kind,_,_,_,_} = request
+  match kind valid:
+    case 50 True{}: child_events_response(state,request,value,args,filters)
+    case 51 True{}: child_candidates_response(state,value,navigation(state),args)
+    case _ _: status(state,"Stale child-result reply ignored; original reader retained.")
+
+def child_response(+state: State,+request: Request,value: Json.Json,nav: Navigation) -> State:
+  Request{+kind,+args,_,_,_} = request
+  match nav:
+    case ChildNavigation{Selection{_,_,_,_,_,filters,_},_,_,Child.Model{+phase,expected,_,_,_,_,_},_,_}:
+      child_response_checked(state,request,value,args,filters,
+        String.eq(String.join(args,"\0"),String.join(expected,"\0")) &&
+        ((U32.is_eq(kind,50) && U32.is_eq(phase,0)) || (U32.is_eq(kind,51) && U32.is_eq(phase,1))))
+    case _: state
+
+def child_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
+  match result:
+    case Fail{reason}: status(state,reason)
+    case Done{value}: child_response(state,request,value,navigation(state))
+
+def child_queue(+state: State,+model: Child.Model,kind: U32,args: List<&2,String>,snapshot: String,step: U32) -> State:
+  queue(child_model(state,model),Request{kind,args,snapshot,step,"Child results"})
+
+def child_event_page(+state: State,value: Navigation,cursor: Child.Cursor,step: U32) -> State:
+  match value:
+    case ChildNavigation{Selection{_,_,_,_,_,+filters,_},_,_,Child.Model{0,_,Some{+page},selected,candidates,previous,target},_,_}:
+      Child.Events{reference,start,count,_,_,_,_,_} = page
+      +snapshot = Related.snapshot(reference)
+      +args = Child.event_args(snapshot,start,count,cursor,filters)
+      child_queue(state,Child.Model{0,args,Some{page},selected,candidates,previous,target},50,args,snapshot,step)
+    case _: state
+
+def child_previous(+state: State,+value: Navigation,previous: List<&2,Child.Cursor>) -> State:
+  match previous:
+    case cursor <> _: child_event_page(state,value,cursor,2)
+    case []: state
+
+def child_candidate_page(+state: State,value: Navigation,watermark: String,cursor: String) -> State:
+  match value:
+    case ChildNavigation{Selection{_,_,_,_,_,+filters,_},_,_,Child.Model{_,_,Some{Child.Events{+reference,start,count,from,next,more,rows,text}},Some{+selected},candidates,previous,_},_,_}:
+      page = {Child.Events{reference,start,count,from,next,more,rows,text} : Child.Events}
+      +args = Child.candidate_args(reference,selected,filters,watermark,cursor)
+      child_queue(state,Child.Model{1,args,Some{page},Some{selected},candidates,previous,None{}},51,args,Related.snapshot(reference),0)
+    case _: state
+
+def child_candidate_next(state: State,value: Navigation,watermark: String,next: String,valid: Bool) -> State:
+  match valid:
+    case True{}: child_candidate_page(state,value,watermark,next)
+    case False{}: state
+
+def child_paging_value(+state: State,forward: Bool,+value: Navigation) -> State:
+  match forward value:
+    case True{} ChildNavigation{_,_,_,Child.Model{0,[],Some{Child.Events{_,_,_,_,next,True{},_,_}},_,_,_,_},_,_}:
+      child_event_page(state,value,next,1)
+    case False{} ChildNavigation{_,_,_,Child.Model{0,[],_,_,_,previous,_},_,_}:
+      child_previous(state,value,previous)
+    case True{} ChildNavigation{_,_,_,Child.Model{1,[],_,_,Some{Child.Candidates{watermark,_,+next,_,_}},_,_},_,_}:
+      child_candidate_next(state,value,watermark,next,Bool.not(String.is_empty(next)))
+    case _ _: status(state,"No further child-result page is available; this does not establish absence elsewhere.")
+
+def child_paging(+state: State,forward: Bool) -> State:
+  child_paging_value(state,forward,navigation(state))
+
+def child_select_event(+state: State,+value: Navigation,+index: U32,selected: Maybe<&2,Child.ResultEvent>) -> State:
+  match value selected:
+    case ChildNavigation{+origin,+view,+search,Child.Model{_,_,+events,_,_,+previous,_},+saved,_} Some{+selected}:
+      child_candidate_page(set_navigation(state,ChildNavigation{origin,view,search,
+        Child.Model{1,[],events,Some{selected},None{},previous,None{}},related_saved_selected(saved,index),None{}}),
+        ChildNavigation{origin,view,search,Child.Model{1,[],events,Some{selected},None{},previous,None{}},related_saved_selected(saved,index),None{}},"","0")
+    case _ _: state
+
+def child_select_target(+state: State,value: Navigation,index: U32,row: Maybe<&2,Related.Row>) -> State:
+  match value row:
+    case ChildNavigation{Selection{items,snap,start,kind,args,+filters,listing},view,search,Child.Model{_,_,events,selected,candidates,previous,_},saved,page_view}
+      Some{Related.Row{+target,_,_,_}}:
+      origin = {Selection{items,snap,start,kind,args,filters,listing} : Selection}
+      +snapshot = Related.snapshot(target)
+      +args = scoped_args("session-scope",snapshot,0,"40",filters)
+      queue(set_navigation(state,ChildNavigation{origin,view,search,
+        Child.Model{2,args,events,selected,candidates,previous,Some{target}},saved,related_saved_selected(page_view,index)}),
+        Request{3,args,snapshot,0,"Child capture | " ++ snapshot})
+    case _ _: state
+
+def child_open_value(+state: State,+index: U32,+value: Navigation) -> State:
+  match value:
+    case ChildNavigation{_,_,_,Child.Model{0,[],Some{Child.Events{_,_,_,_,_,_,rows,_}},_,_,_,_},_,_}:
+      child_select_event(state,value,index,Child.select(rows,index))
+    case ChildNavigation{_,_,_,Child.Model{1,[],_,_,Some{Child.Candidates{_,_,_,rows,_}},_,_},_,_}:
+      child_select_target(state,value,index,Related.select(rows,index))
+    case _: status(state,"Wait for the current child-result page before selecting another result.")
+
+def child_open(+state: State,index: U32) -> State:
+  child_open_value(state,index,navigation(state))
+
+def child_loaded(+state: State,value: Navigation) -> State:
+  match value:
+    case ChildNavigation{origin,view,search,Child.Model{_,_,events,selected,candidates,previous,target},saved,page_view}:
+      set_navigation(state,ChildNavigation{origin,view,search,Child.Model{3,[],events,selected,candidates,previous,target},saved,page_view})
+    case _: state
 
 def list_args(kind: U32,filters: Query.Filters,offset: U32) -> List<&2,String>:
   match kind:
@@ -2776,9 +3015,11 @@ def text_done(+state: State,+request: Request,result: Result<&2,&2,String,String
           text_view_args(kind,args,blame,old,snap),
           Bool.pick(Query.Filters,file_kind(kind) || U32.is_eq(kind,14),filters,request_filters(args)),listing},Form{Bool.pick(U32,file_kind(kind),2,0),search,source,form,files,navigation,settings},jobs,refresh_at,serial}
 
-def related_target_result(+state: State,+request: Request,value: Navigation,valid: Bool,+result: Result<&2,&2,String,String>) -> State:
+def related_target_result(+state: State,+request: Request,+value: Navigation,valid: Bool,+result: Result<&2,&2,String,String>) -> State:
   match value valid result:
     case NoNavigation{} _ _: text_done(state,request,result)
+    case ChildNavigation{_,_,_,_,_,_} True{} Done{text}:
+      text_done(child_loaded(state,value),request,Done{text})
     case RelatedNavigation{origin,view,search,page,saved,previous,phase,target} True{} Done{text}:
       text_done(set_navigation(state,RelatedNavigation{origin,view,search,page,saved,previous,2,target}),request,Done{text})
     case _ True{} Fail{message}: status(state,message)
@@ -2789,6 +3030,10 @@ def related_target_valid(+request: Request,+value: Navigation) -> Bool:
   Request{kind,+args,+snap,start,title} = request
   match value:
     case NoNavigation{}: True{}
+    case ChildNavigation{Selection{_,_,_,_,_,filters,_},_,_,Child.Model{+phase,_,_,_,_,_,Some{target}},_,_}:
+      (U32.is_eq(phase,2) || U32.is_eq(phase,3)) && String.eq(snap,Related.snapshot(target)) &&
+        (U32.is_eq(phase,3) || U32.is_eq(start,0)) &&
+        String.eq(String.join(args,"\0"),String.join(scoped_args("session-scope",snap,start,"40",filters),"\0"))
     case RelatedNavigation{origin,view,search,page,saved,previous,+phase,Some{target}}:
       (U32.is_eq(phase,1) || U32.is_eq(phase,2)) && String.eq(snap,Related.snapshot(target)) &&
         (U32.is_eq(phase,2) || U32.is_eq(start,0)) &&
@@ -3630,13 +3875,25 @@ def transcript_apply_metadata(+state: State,+request: Request,+value: Json.Json,
     case True{}: State{db,dir,program,transcript_document_ui(ui,request,value,revision),Selection{items,snap,start,displayed,Brief.range_args(value,snapshot,first,args),filters,listing},form,jobs,deadline,serial}
     case False{}: state
 
+def child_transcript_admitted(value: Navigation,valid: Bool) -> Bool:
+  match value:
+    case ChildNavigation{_,_,_,_,_,_}: valid
+    case _: True{}
+
+def transcript_checked(+state: State,+request: Request,+value: Json.Json,admitted: Bool) -> State:
+  Request{_,_,snapshot,start,_} = request
+  match admitted:
+    case False{}: status(state,"Child transcript response did not match the selected snapshot and captured range; prior view retained.")
+    case True{}:
+      transcript_apply_metadata(related_target_done(state,request,Client.text_result(Done{value})),request,value,
+        related_target_valid(request,navigation(state)) && Brief.range_metadata(value,snapshot,start))
+
 def transcript_done(+state: State,+request: Request,+result: Result<&2,&2,String,Json.Json>) -> State:
   Request{_,_,+snapshot,+start,_} = request
   match result:
     case Fail{message}: related_target_done(state,request,Fail{message})
     case Done{+value}:
-      transcript_apply_metadata(related_target_done(state,request,Client.text_result(Done{value})),request,value,
-        related_target_valid(request,navigation(state)) && Brief.range_metadata(value,snapshot,start))
+      transcript_checked(state,request,value,child_transcript_admitted(navigation(state),Brief.range_metadata(value,snapshot,start)))
 
 def read_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
   Request{+kind,+args,+snap,+start,+title} = request
@@ -3677,6 +3934,8 @@ def read_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.J
       attachment_done(state,request,result)
     case 42: attachment_folder_read_done(state,request,result)
     case 43: attachment_owned_done(state,request,result)
+    case 50: child_done(state,request,result)
+    case 51: child_done(state,request,result)
     case 44: library_done(state,request,result)
     case 45: library_capture_done(state,request,result)
     case 32:
@@ -4201,6 +4460,7 @@ def handle_normal(+state: State,action: UI.Action) -> IO(Maybe<State>):
       IO.pure(Maybe<State>,Some{library_enter(state)})
     case UI.Tools{}:
       IO.pure(Maybe<State>,Some{tools(state)})
+    case UI.ChildResultsOpen{}: IO.pure(Maybe<State>,Some{child_enter(state)})
     case UI.Related{}:
       IO.pure(Maybe<State>,Some{related_enter(state)})
     case UI.Brief{}:
@@ -4477,8 +4737,39 @@ def handle_mode_inner(+state: State,+action: UI.Action,+active: Bool) -> IO(Mayb
     case UI.Storage{} False{}: IO.pure(Maybe<State>,Some{storage(state)})
     case other False{}: handle_navigation(state,other,navigation_phase(navigation(state)))
 
+def child_reader_ready(value: Navigation) -> Bool:
+  match value:
+    case ChildNavigation{_,_,_,Child.Model{3,_,_,_,_,_,Some{_}},_,_}: True{}
+    case _: False{}
+
+def handle_child_reader(state: State,action: UI.Action,ready: Bool) -> IO(Maybe<State>):
+  match ready:
+    case True{}: handle_normal(state,action)
+    case False{}: IO.pure(Maybe<State>,Some{status(state,"Choose a child candidate first, or use Back to restore the original reader.")})
+
+def child_selected_index(state: State) -> U32:
+  State{_,_,_,ui,_,_,_,_,_} = state
+  UI.selected(ui)
+
+def handle_children(+state: State,action: UI.Action) -> IO(Maybe<State>):
+  match action:
+    case UI.Back{}: IO.pure(Maybe<State>,Some{child_back(state)})
+    case UI.Submit{}: IO.pure(Maybe<State>,Some{child_open(state,child_selected_index(state))})
+    case UI.Open{index}: IO.pure(Maybe<State>,Some{child_open(state,index)})
+    case UI.ListNext{}: IO.pure(Maybe<State>,Some{child_paging(state,True{})})
+    case UI.ListPrevious{}: IO.pure(Maybe<State>,Some{child_paging(state,False{})})
+    case UI.Previous{}: handle_child_reader(state,UI.Previous{},child_reader_ready(navigation(state)))
+    case UI.Next{}: handle_child_reader(state,UI.Next{},child_reader_ready(navigation(state)))
+    case UI.Export{}: handle_child_reader(state,UI.Export{},child_reader_ready(navigation(state)))
+    case UI.Copy{text}: handle_normal(state,UI.Copy{text})
+    case UI.CopyStatus{text}: handle_normal(state,UI.CopyStatus{text})
+    case UI.NoAction{}: IO.pure(Maybe<State>,Some{state})
+    case UI.Quit{}: IO.pure(Maybe<State>,None{})
+    case _: IO.pure(Maybe<State>,Some{status(state,"Use Back to return to the saved reader before changing views or filters.")})
+
 def handle_mode_phase(+state: State,+action: UI.Action,active: Bool,phase: U32) -> IO(Maybe<State>):
   match phase:
+    case 10: handle_children(state,action)
     case 5: handle_brief(state,action)
     case 6: handle_quota(state,action)
     case 7: handle_attachments(state,action)

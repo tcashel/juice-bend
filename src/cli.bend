@@ -25,6 +25,7 @@ import ./storage_inventory.bend as Inventory
 import ./repository_cli.bend as Repository
 import ./activity_cli.bend as Activity
 import ./relations_cli.bend as Relations
+import ./result_commands.bend as ResultCommands
 import ./refresh_preferences_cli.bend as RefreshPreferences
 import ./session_usage_cli.bend as SessionUsage
 
@@ -644,6 +645,8 @@ def help() -> IO(Unit):
     "\"repo-source REPO COMMIT PATH FIRST COUNT\",\"repo-blame REPO COMMIT PATH FIRST COUNT\"," ++
     "\"repo-why REPO COMMIT PATH FIRST COUNT\"," ++
     "\"usage SNAPSHOT [START [COUNT]]\",\"session-usage SNAPSHOT\"," ++
+    "\"result-link-events SNAPSHOT START COUNT RECORD EVENT PROVIDER REPOSITORY ROLE AFTER\"," ++
+    "\"result-link-page PROVIDER SOURCE GENERATION SNAPSHOT EXTENT RECORD EVENT WATERMARK AFTER_SOURCE LIMIT FILTER_PROVIDER FILTER_REPOSITORY FILTER_ROLE FILTER_AFTER\"," ++
     "\"brief-prepare (versioned stdin)\",\"brief-check (versioned stdin)\"," ++
     "\"attachments SNAPSHOT START COUNT\",\"export-inline SNAPSHOT RECORD REF JSONPATH DEST\"," ++
     "\"attachment-roots AFTER_ID COUNT\",\"attachment-root-add ABS_ROOT\",\"attachment-root-enable ID\",\"attachment-root-disable ID\"," ++
@@ -658,7 +661,7 @@ def help() -> IO(Unit):
     "\"export_all\":\"stream all retained logical source bytes in the accepted snapshot (decompressed for archives)\"," ++
     "\"export_container\":\"export the exact owned compressed container of an archive snapshot\"}")
 
-def command(db: U32,data_dir: String,cmd: String,args: List<String>) -> IO(Unit):
+def command_existing(db: U32,data_dir: String,cmd: String,args: List<String>) -> IO(Unit):
   match cmd:
     case "attachments": AttachmentCli.run(db,"attachments",args)
     case "export-inline": AttachmentCli.run(db,"export-inline",args)
@@ -855,6 +858,9 @@ def command(db: U32,data_dir: String,cmd: String,args: List<String>) -> IO(Unit)
       help()
     case _:
       failure(Unit,"unknown command; use help")
+
+def command(+db: U32,data_dir: String,cmd: String,args: List<String>) -> IO(Unit):
+  ResultCommands.command(db,cmd,args,other => rest => command_existing(db,data_dir,other,rest))
 
 def run(db: U32,data_dir: String,args: List<String>) -> IO(Unit):
   match args:

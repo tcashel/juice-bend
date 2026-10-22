@@ -1,5 +1,20 @@
 # Reference parity
 
+## Current native app — 2026-10-22
+
+Adopted native app `943eee7e…` now has observed recorded Child-result navigation
+through a retained candidate to its transcript, tool expansion, canonical export
+and three Back actions restoring the original partial selection. The toolbar
+passed three native inert-gap checks. Retained-image features survived source
+loss and restart; their full profile failed before a missing harness Close
+operation, so retained Close remains unrun. JPEG/PNG v2 failed the tiny-worker
+observer check; complete inline-PNG acceptance remains open. Existing retained
+PNG checks cover decoding/transport. The adjusted Child chrome fixture passed
+all three assertions on Mac. These results are navigation/retention
+evidence, not stronger attribution or whole-app parity. The default is now
+`943eee7e…`; prior sources/binaries remain preserved. See the two
+`receipts/native201-*.json` records.
+
 Native History workspace acceptance (2026-10-22): green navigation, provider
 filters, static Inter labels and exact transcript selection/copy now pass in the
 combined app981e84fd. Retained JPEG/PNG, pending Escape/Back, source-loss restart,

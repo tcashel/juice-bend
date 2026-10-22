@@ -70,6 +70,7 @@ def kind(action: UI.Action) -> U32:
     case UI.AttachmentFolderDisable{}: 55
     case UI.AttachmentFolderUse{}: 56
     case UI.LibraryUsage{}: 57
+    case UI.ChildResultsOpen{}: 58
 
 def clicked(result: UI.State & UI.Action,expected: U32,label: String) -> IO(Unit):
   (state,action) = result

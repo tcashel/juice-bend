@@ -47,7 +47,7 @@ def plain_and_admission() -> IO(Unit):
     check(String.eq(UI.reader(s),C.text(state_model(s))) && U32.is_eq(UI.reader_count(s),D.length(UI.reader(s))),"visible content and cached count share projection coordinates")
     check(String.contains(UI.reader(s),"partial_content") && String.contains(UI.reader(s),"Integrity warning stays visible"),"native reader leaves coverage and page warnings visible")
     check(Bool.not(Maybe.is_some(&2,C.Model,UI.card_model(plain))) && String.eq(UI.reader(plain),"complete malformed view café 中文 🙂"),"failed metadata admission keeps full plain reader and retires cards")
-    check(String.eq(UI.top_label(4,False{},False{},False{},"Pause"),"Export captured page") && U32.is_eq(G.top_index(839),4) && U32.is_eq(G.top_index(840),99),"captured-page export has readable label and matching expanded rectangle")
+    check(String.eq(UI.top_label(4,False{},False{},False{},"Pause"),"Export page") && U32.is_eq(G.top_index(679),4) && U32.is_eq(G.top_index(680),99) && U32.is_eq(G.top_index(744),99),"captured-page export has a readable label and matching rectangle separate from status")
 
 def pointer_and_copy() -> IO(Unit):
   +s = base(7,"page-a")

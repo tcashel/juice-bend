@@ -1,5 +1,32 @@
 # Acceptance evidence
 
+## Current native app — 2026-10-22
+
+Adopted native executable `943eee7e…` has 201 exact application inputs. Its
+reader/Usage and Child-result journeys passed in Tart, including exact copy and
+canonical exports, source-loss restart, tool expansion and selection restoration.
+Root reviewed 17 reader/Usage and five Child images. Reader ready Close was
+observed within 487ms for the parent and 359ms for the window; these observation
+upper bounds do not cover pending-worker Close.
+
+Retained-image feature checks passed approved-folder capture, disable/source loss,
+different-process restart, four views with 1,085 exact pixel samples each, the
+original 6,555-byte export and restored filtered selection. Root reviewed seven
+images. The full retained profile failed because its harness lacked normal Close
+and stopped before that action. Retained-profile Close is unrun; this is not an
+application Close failure. JPEG/PNG v2 failed to observe the tiny PNG worker after
+323 scans over 10s, although the preview was visible. JPEG Fit/actual pixels and
+its original 9,277-byte export passed again; no complete inline-PNG profile pass
+is claimed. Existing retained-PNG tests cover decoding and private-file transport.
+The adjusted Child chrome gate passed all three assertions on Mac. See `receipts/native201-native.json`
+and `native201-build-tests.json`.
+
+The full candidate was built with the isolated diagnostic GC512 frontend, then
+LLVM 23.1.4 at -O1. The required minimal preload separately passed byte-identical
+C output through the actual pinned CLI/font test. The full maintained-preload
+Mac app has not yet been built; that gate belongs to the next combined candidate.
+Current focused tests are not a fresh full suite or proof pass.
+
 Latest app 8d424301 adopts Library Usage and proportional message prose; its
 189 application inputs match the promoted executable. The combined native Tart
 run passed 32 exact clipboard comparisons, three summary checks, four proportional

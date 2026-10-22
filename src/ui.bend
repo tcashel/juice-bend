@@ -21,6 +21,7 @@ type Content is Data:
 type Results is Data:
   Results{offset: U32, count: U32, has_more: Bool, ready: Bool}
   LibraryUsageResults{phase: U32,count: U32}
+  ChildResults{phase: U32,count: U32,has_more: Bool,has_previous: Bool}
   RelatedResults{page: U32, count: U32, has_more: Bool, has_previous: Bool}
   SettingsResults{offset: U32,total: U32,automatic: String,ready: Bool}
   BriefResults{phase: U32}
@@ -59,6 +60,7 @@ type Action is Data:
   Why{}
   Usage{}
   LibraryUsage{}
+  ChildResultsOpen{}
   Tools{}
   Related{}
   Attachments{}
@@ -217,10 +219,23 @@ def is_attachment_folders(s: State) -> Bool:
     case AttachmentFoldersResults{_,_,_,_,_,_}: True{}
     case _: False{}
 
+def child_entry_visible(s: State) -> Bool:
+  State{Content{_,_,_,_,+title,_,_,results,files,_},_,_,_} = s
+  match results:
+    case Results{_,_,_,_}:
+      Bool.not(files) && (String.starts_with(title,"Transcript") || String.starts_with(title,"Tools") || String.starts_with(title,"Captured transcript") || String.starts_with(title,"claude | snapshot "))
+    case _: False{}
+
+def is_children(s: State) -> Bool:
+  State{Content{_,_,_,_,_,_,_,results,_,_},_,_,_} = s
+  match results:
+    case ChildResults{_,_,_,_}: True{}
+    case _: False{}
+
 # Presentation context only. The coordinator still admits an actual capture
 # independently before creating an attachment request.
 def attachment_entry_visible(+s: State) -> Bool:
-  Bool.not(is_settings(s) || is_quota(s) || is_brief(s) || is_attachments(s) || is_attachment_folders(s) || is_library_usage(s) || is_files(s))
+  Bool.not(is_children(s) || is_library_usage(s) || is_settings(s) || is_quota(s) || is_brief(s) || is_attachments(s) || is_attachment_folders(s) || is_files(s))
 
 def reader_title_columns(+s: State) -> U32:
   Bool.pick(U32,attachment_entry_visible(s),G.reader_title_columns(),
@@ -396,6 +411,7 @@ def ordinary_result_label(+offset: U32,+count: U32,more: Bool,ready: Bool) -> St
 
 def result_label(results: Results) -> String:
   match results:
+    case ChildResults{phase,count,_,_}: U32.show(count) ++ Bool.pick(String,U32.is_eq(phase,0)," recorded results"," candidates on this page")
     case LibraryUsageResults{+phase,count}: Bool.pick(String,U32.is_eq(phase,2),U32.show(count) ++ " captured sources",Bool.pick(String,U32.is_eq(phase,1),"Reading retained captures","All-time recorded usage"))
     case AttachmentCaptureResults{phase,_,_,_,_,_}: Bool.pick(String,U32.is_eq(phase,2),"Choose a reference for details","Checking attachment evidence")
     case AttachmentFoldersResults{phase,_,_,_,_,_}: Bool.pick(String,U32.is_eq(phase,2),"Explicit capture folder policy","Updating folder policy")
@@ -418,6 +434,7 @@ def result_label(results: Results) -> String:
 
 def result_available(results: Results,forward: Bool) -> Bool:
   match results:
+    case ChildResults{_,_,more,previous}: Bool.pick(Bool,forward,more,previous)
     case LibraryUsageResults{_,_}: False{}
     case AttachmentResults{phase,_,previous,next}: U32.is_eq(phase,2) && Bool.pick(Bool,forward,next,previous)
     case AttachmentCaptureResults{phase,_,previous,next,_,_}: U32.is_eq(phase,2) && Bool.pick(Bool,forward,next,previous)
@@ -1339,10 +1356,15 @@ def mouse_top.query(+s: State,+col: U32,+x: U32,+y: U32,inside: Bool) -> State &
     case True{}: query_click(s,col)
     case False{}: mouse_top.action(s,x,(y >= 80 && y < 112 : U32))
 
+def mouse_child_entry(s: State,col: U32,+x: U32,+y: U32,inside: Bool) -> State & Action:
+  match inside:
+    case True{}: (s,ChildResultsOpen{})
+    case False{}: mouse_top.query(s,col,x,y,G.rect(x,y,G.query_left(),24,G.query_right(),64))
+
 def mouse_top(+s: State,+col: U32,+row: U32) -> State & Action:
   +x = U32.mul(col,G.cell())
   +y = U32.mul(row,G.cell())
-  mouse_top.query(s,col,x,y,G.rect(x,y,G.query_left(),24,G.query_right(),64))
+  mouse_child_entry(s,col,x,y,child_entry_visible(s) && G.rect(x,y,1008,0,1176,24))
 
 # A UI-only inspector. Canonical evidence and its reader scroll stay untouched.
 def status_text(s: State) -> String:
@@ -1675,6 +1697,7 @@ def draw_rows(+fuel: Nat,+c: C.Canvas,rows: List<&2,String>,+at: U32,+selected: 
 
 def list_heading(results: Results,files: Bool) -> String:
   match results:
+    case ChildResults{phase,_,_,_}: Bool.pick(String,U32.is_eq(phase,0),"Recorded child results","Retained child candidates")
     case LibraryUsageResults{_,_}: "Captured sessions"
     case AttachmentResults{_,_,_,_}: "Captured attachments"
     case AttachmentCaptureResults{_,_,_,_,_,_}: "Captured attachments"
@@ -1863,7 +1886,7 @@ def top_label(index: U32,files: Bool,settings: Bool,whole: Bool,automatic: Strin
     case 1: automatic
     case 2: Bool.pick(String,settings,"Add folder","Blame")
     case 3: Bool.pick(String,settings,"Import file","Why")
-    case 4: Bool.pick(String,settings,"Enable selected",Bool.pick(String,files || whole,"Export evidence","Export captured page"))
+    case 4: Bool.pick(String,settings,"Enable selected",Bool.pick(String,files || whole,"Export evidence","Export page"))
     case 5: Bool.pick(String,settings,"Disable selected",Bool.pick(String,whole,"Whole session","Previous page"))
     case _: Bool.pick(String,settings,"Reload settings",Bool.pick(String,whole,"All records","Next page"))
 
@@ -2140,6 +2163,11 @@ def draw_query_actions(+attachments: Bool,+c: C.Canvas,+s: State) -> C.Canvas:
       paste = chrome_text(c,query_action_label(s,True{}),U32.add(G.text_action_x(1),8),G.text_actions_y(),88,0,accent(),paper())
       chrome_text(paste,query_action_label(s,False{}),U32.add(G.text_action_x(2),8),G.text_actions_y(),88,0,accent(),paper())
 
+def draw_child_entry(c: C.Canvas,visible: Bool) -> C.Canvas:
+  match visible:
+    case True{}: chrome_text(box(c,1008,0,168,24,panel()),"Child results",1016,0,152,0,accent(),panel())
+    case False{}: c
+
 def draw_canvas_capture(+s: State,automatic: String,suspended: Bool) -> C.Canvas:
   State{Content{+q,rows,reader,lines,title,status,+scope,+results,+files,cards},Input{+selected,scroll,Edit{+focus,+caret,+anchor,drag,viewport},command,shift},image,dirty} = s
   base = box(C.Flat{paper()},0,0,G.width(),G.header_height(),rail())
@@ -2151,7 +2179,8 @@ def draw_canvas_capture(+s: State,automatic: String,suspended: Bool) -> C.Canvas
   brand = chrome_text(foot,"Juice Bend",16,16,144,2,brand_fg,brand_bg)
   tagline = chrome_text(brand,"Your captured work",16,48,144,0,Bool.pick(U32,history_workspace(s),Palette.navigation_muted(),muted()),brand_bg)
   input_label = chrome_text(tagline,query_label(s),192,0,480,0,muted(),rail())
-  query_bg = box(input_label,G.query_left(),24,U32.sub(G.query_right(),G.query_left()),40,paper())
+  child_entry = draw_child_entry(input_label,child_entry_visible(s))
+  query_bg = box(child_entry,G.query_left(),24,U32.sub(G.query_right(),G.query_left()),40,paper())
   query = draw_library_scope(s,query_bg,q,focus,caret,anchor,is_library_usage(s))
   top = draw_library_top_context(s,query,results,files,automatic,library_phase(s))
   capture = draw_capture_context(is_quota(s),top,suspended)
