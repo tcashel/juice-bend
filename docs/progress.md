@@ -33,27 +33,28 @@ expectation without changing application behavior.
 
 Six separately reviewed recorded-title backend/test files are now adopted;
 preimages and exact hashes are in `build/provider-title-adoption/receipt.json`
-(`da95d0fc…`). They passed650 focused Linux-native assertions and are disjoint
+(`da95d0fc…`). They passed650 focused Linux-native assertions and49 Mac-native
+title assertions, and are disjoint
 from the pending92-file capture/preview/ATIF/discovery adoption. The accepted
 Mac executable and current frozen main build do not include title-v5 yet.
 
-This source builds executable
+The prior reader source snapshot built executable
 `fcbbbfbde90ad072c26fb20ab044522487a6ee4bbe9890f72300765a18518701`
 at `build/next-parity-integration/mac/296cfc88-2887-4325-83d0-d5e2459b54f6/main`.
 It is promoted after the uninstrumented reader journey passed. Promotion receipt:
 `build/reader-polish-promotion/receipt.json`; native result `c61781c0…`.
-All 103 combined main/reader build inputs and 93 pins still match the adopted
-source. `docs/receipts/reader-attachments-native.txt` records passed and failed
+Its103 build inputs and93 pins are frozen separately; the later title backend
+changes are not in that binary. `docs/receipts/reader-attachments-native.txt` records passed and failed
 scopes; its companion input manifest binds the build. Earlier GUI passes used
 `fccb5209…`; do not present them as complete acceptance of the newest executable.
 
 ## Exact continuation
 
-PR #1 remains open/draft/unmerged. This follow-up starts from published commit
-`9ecd2dfe6dd6f855f85773af1822aaeb4164b7c8` (tree `15693d21…`) and adds the
-native event replay and reader/preview/ATIF observations. Its remote receipt is
-`build/native-followup-remote.json`; the prior adoption is preserved separately
-at `build/reader-attachments-remote.json`. No combined attachment UI claim follows.
+PR #1 remains open/draft/unmerged, verified at published commit
+`9a459555cd8bf0086c7432d2f6ec53bf4042e398` (tree `71bbcd59…`), which adds the
+recorded-title backend. Its remote receipt is `build/provider-title-remote.json`.
+Earlier reader and event-replay publications remain in the branch history.
+No combined attachment UI claim follows.
 
 1. **Reader release bug:** first full-GUI run changed a correct selection when
    moving to Copy. Second run passed both cross-wrap copies and exact Back pixels,
@@ -132,10 +133,17 @@ at `build/reader-attachments-remote.json`. No combined attachment UI claim follo
    Its Linux frontend also exceeded300seconds without emitting C; neither
    timeout is a semantic failure or a pass. Default reader is untouched.
    Source-identical profiled retry `baa66041-e59b-403d-95b8-5d4dde1a2408`
-   is active under `reader_release_diagnostic`, session99836: frontend2400s,
-   then native clang-O3 up to1200s. Manifest `ef48a14d…`; final control binding
-   is `build/attachment-capture-ui-integration/final-control-binding-baa66041.json`.
-   Profiling is diagnostic only; absent profile output must remain unclaimed.
+   ended with SIGKILL(-9) after531.740seconds, before its2400s timeout and before
+   C emission. The runner did not timeout-kill it. Darwin reported15,100,510,208
+   bytes peak child RSS; the exact kill cause is unknown. No CPU profile exists.
+   All142 inputs/93 pins/compiler-tool hashes stayed unchanged, and the owned
+   processes are absent. Receipt `7e8ba8aa…`, manifest `ef48a14d…`.
+   A bounded Linux diagnostic (`ea0fbca4`, receipt `a4f6bf54…`) completed loading
+   all142 modules/7082 definitions in23.511s, then hit its8GiB memory guard while
+   checking definitions. This localizes the current problem to validation,
+   without proving the Mac kill cause. A transparent per-definition observer is
+   queued next; do not repeat an unbounded full build before locating the growth.
+   Neither diagnostic is application, UI or performance acceptance.
    The reviewed integrated Tart plan is in
    `build/integrated-assets-native-v3-plan/HANDOFF.md`; final exact main/helper
    receipts, control hashes and retained-preview binding are required to stage.
@@ -187,7 +195,9 @@ at `build/reader-attachments-remote.json`. No combined attachment UI claim follo
    suites passed601 in the preceding run, whose separate test-oracle failure
    remains preserved. A real stale-title bug after oversized records was fixed
    with unreadable-record barriers. Backend source adoption is complete;
-   see `docs/receipts/provider-titles-native.txt`. No Mac title UI or combined
+   Physical-Mac run `0cb148aa` passed49 title assertions with normal clang-O3;
+   root verified all37 source/bridge inputs,93 pins and output hashes. Receipt
+   `40d6137c…`; see `docs/receipts/provider-titles-native.txt`. No Mac title UI or combined
    application acceptance yet. Verified child-result links (`discovery_parity`),
    bounded JPEG decode (`remaining_parity_audit`) and recorded successful-commit
    provenance (`archive_decoder`) continue in separate ignored trees. They do
@@ -197,12 +207,11 @@ Next keep PR #1 current with explicit limitations, then assemble
 capture/ATIF/image UI seams into one new main build and validate actual use.
 Stop only verified owned Tart children; preserve all failed attempts.
 
-Latest publication verified: implementation branch `44e46619357cab333248da298962b67693b60df8`,
-tree `68e1f843…`, exact bare ref `codex/published-native-followup`; protected index
-unchanged. PR body updated; open/draft/unmerged. The PR metadata response still
-reported the prior head while its branch-ref endpoint confirmed the new commit.
-This local live-integration note follows that publication; publish with the next
-coherent app slice. No Tart session remains active.
+Latest app-source publication verified: implementation branch `9a459555…`,
+tree `71bbcd59…`, exact bare ref `codex/published-provider-titles`; protected
+index unchanged. PR metadata confirmed that head and open/draft/unmerged state.
+The Mac title receipt and terminal compiler diagnostics are the current follow-up.
+No Tart session remains active.
 
 ## Remaining goal and measured limits
 

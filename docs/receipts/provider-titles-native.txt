@@ -1,4 +1,4 @@
-Recorded Claude titles — Linux native backend validation
+Recorded Claude titles — Linux and macOS native backend validation
 
 All maintained application and test changes are Bend 2. Four application files
 and two tests were adopted; no native bridge, UI/main or proof-book change.
@@ -55,8 +55,19 @@ Review: cc06411e781871b4f60a4d313c05345dd44b35e398673919181d14d3ae49b04e
 Handoff: dd9f8c2c81be7c965b020f72ebe72434f04d5c7517d8975c056c251b6606063a
 Adoption: da95d0fc2780c042fc3075a565c73b920421fbdaf48e01faed7372cd6fc2b891
 All six maintained preimages were preserved; the checkout index and accepted
-executable are unchanged. The running combined app build uses its frozen older
+executable are unchanged. The frozen combined app build uses its older
 title dependencies and cannot validate this separate change.
+
+Physical Mac follow-up: 0cb148aa-d280-4d59-b1f0-52e1990fe30c
+Darwin arm64, macOS27.0.1; normal pinned scripts/build with clang -O3.
+Provider-title assertions: 49 PASS; exit0; empty runtime stderr.
+Build32.380s and test0.757s are diagnostic timings, not performance acceptance.
+Manifest: 4de5011d016979e46cecb618caeb0ec7c860079809a819d5dd004c17d9084991
+Receipt: 40d6137c3c47976b90a49a6db11ac2bb3ef11c9cdcdd6459d2077e2ff9c4d6f8
+Binary: 408506c23fb5758303d031c3748e0728f9851306bf7df51bb22e4b8a66fabbd9
+Root verified all37 source/bridge files and93 pins against the frozen manifest,
+the generated C/binary and all command-log hashes. The maintained source matches.
+This executes the backend title suite, not the app window or a full suite.
 
 Not claimed: macOS title UI, combined app, full suite, current kernel proofs,
 native input latency, performance, or full feature parity.
