@@ -1,0 +1,33 @@
+Bend worker command routing — native validation and compiler diagnosis
+
+The worker dispatcher now recognizes its exact command with String.eq before
+matching the operand list. This avoids expanding a long string into nested bit
+patterns in the pinned Bend checker. Exact three-operand arity, reserved-prefix
+refusal, request validation and unchanged ordinary arguments are preserved.
+Only Bend application/test source changed; the compiler/runtime/bridge did not.
+
+Physical Mac run40c2a1c0-66b6-4292-8f80-5f521c040d8a used the normal pinned
+scripts/build clang-O3 path. New routing assertions27 + existing protocol28 =
+55 PASS; both executables exited0 with empty runtime stderr. Root verified all
+five source/test files,93 pins, generated C, binaries and command-log hashes.
+Receipt: adbdbb5d5474993a580cac6b167ac0f800b45ffad52fc1b4c3fd5a85be3ecbe9
+Manifest: 6dc8d83136fdccbe75f5cfc40ae6f95c1c7ddd2019e68292813615a8a69118fa
+Source: afa448737f832e2ed32599c41db6c5545540fade758fe9e985b3171cc4c603b9
+Routing test: 55e0ca716a53f1ee2218ead80526b43a088c48fca3c1deebf741eb7c708e36a4
+
+The new cases exercise exact request fields, missing/extra operands, reserved
+command prefixes, NUL/Unicode/whitespace suffixes, path and nonce validation,
+large commands, ordinary argument identity and worker-like text in operands.
+The initial fixture parse failure is retained separately; production code was
+unchanged when its adjacent empty-list pattern was made explicit.
+
+A same-input bounded Linux full-app observer originally reached the worker
+classifier and then exceeded its8GiB memory guard. With only this source change,
+validation passed that definition and reached the GUI read dispatcher before
+the same guard. The loaded book and other definitions also consume memory;
+this is not proof that one function caused all growth. The GUI dispatcher is
+being simplified and validated separately.
+
+Root adoption saved both preimages and left the checkout index and accepted
+reader executable unchanged. No full app, native window, performance or parity
+acceptance follows from these focused checks.

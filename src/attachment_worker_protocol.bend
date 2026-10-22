@@ -113,13 +113,22 @@ def ordinary(reserved: Bool,command: String,args: List<&2,String>) -> Route:
     case True{}: Rejected{}
     case False{}: Ordinary{command <> args}
 
+# Keep string recognition separate from list shape. Literal String patterns
+# expand each character into bit constructors in the pinned Bend checker.
+def worker_arguments(program: String,args: List<&2,String>) -> Route:
+  match args:
+    case root <> relative <> nonce <> []: request(Request{program,root,relative,nonce})
+    case _: Rejected{}
+
+def classify_command(worker: Bool,program: String,+command: String,args: List<&2,String>) -> Route:
+  match worker:
+    case True{}: worker_arguments(program,args)
+    case False{}: ordinary(String.starts_with(command,"--attachment-worker"),command,args)
+
 def classify(program: String,args: List<&2,String>) -> Route:
   match args:
-    case "--attachment-worker-v1" <> root <> relative <> nonce <> []:
-      request(Request{program,root,relative,nonce})
-    case "--attachment-worker-v1" <> _: Rejected{}
     case []: Ordinary{[]}
-    case +command <> rest: ordinary(String.starts_with(command,"--attachment-worker"),command,rest)
+    case +command <> rest: classify_command(String.eq(command,"--attachment-worker-v1"),program,command,rest)
 
 def target(value: Request) -> String:
   Request{_,root,relative,_} = value

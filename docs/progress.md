@@ -38,6 +38,12 @@ title assertions, and are disjoint
 from the pending92-file capture/preview/ATIF/discovery adoption. The accepted
 Mac executable and current frozen main build do not include title-v5 yet.
 
+The worker command classifier is now a separately adopted Bend-only equality
+dispatcher; exact arity, reserved-prefix refusals and ordinary arguments are
+unchanged. New routing27 + existing protocol28 assertions passed on the physical
+Mac with normal clang-O3. See `docs/receipts/worker-dispatch-native.txt` and
+`build/worker-dispatch-adoption/receipt.json`. The accepted reader is unchanged.
+
 The prior reader source snapshot built executable
 `fcbbbfbde90ad072c26fb20ab044522487a6ee4bbe9890f72300765a18518701`
 at `build/next-parity-integration/mac/296cfc88-2887-4325-83d0-d5e2459b54f6/main`.
@@ -141,8 +147,14 @@ No combined attachment UI claim follows.
    A bounded Linux diagnostic (`ea0fbca4`, receipt `a4f6bf54…`) completed loading
    all142 modules/7082 definitions in23.511s, then hit its8GiB memory guard while
    checking definitions. This localizes the current problem to validation,
-   without proving the Mac kill cause. A transparent per-definition observer is
-   queued next; do not repeat an unbounded full build before locating the growth.
+   without proving the Mac kill cause. A transparent per-definition observer
+   (`7766ba9f`) then reached the worker classifier before the same guard;
+   after its verified equality-dispatch rewrite, `ea4945b6` passed that function
+   and reached `Gui.read_job`. Root's isolated GUI read/write dispatcher refactor
+   preserves command arity and fallback behavior; a fresh native subprocess gate
+   passed57 assertions. Its114 existing GUI regression checks and the bounded
+   full-app observer are next. Do not repeat an unbounded full build before
+   checking the resulting memory behavior.
    Neither diagnostic is application, UI or performance acceptance.
    The reviewed integrated Tart plan is in
    `build/integrated-assets-native-v3-plan/HANDOFF.md`; final exact main/helper
