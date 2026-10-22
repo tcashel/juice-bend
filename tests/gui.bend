@@ -237,11 +237,11 @@ def automatic_notice() -> IO(Unit):
     "explicit capture failed"),"background success preserves actionable form failure")
 
 def usage_range() -> IO(Unit):
-  require(String.eq(wanted(Gui.usage(state())),"usage|7|0|40"),"Usage binds the selected captured range")
+  require(String.eq(wanted(Gui.usage(state())),"session-usage|7"),"Usage explicitly binds the whole selected captured snapshot")
 
 def usage_scope_guard() -> IO(Unit):
   require(String.eq(wanted(Gui.usage(scoped_shown())),"none") &&
-    String.contains(state_status(Gui.usage(scoped_shown())),"Clear repository, role and date"),
+    String.contains(state_status(Gui.usage(scoped_shown())),"would widen this repository, role or date scope"),
     "Usage does not silently widen a repository role date scope")
 
 def writer_command(value: Maybe<&2,Gui.Pending>) -> String:

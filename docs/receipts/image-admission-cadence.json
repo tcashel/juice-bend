@@ -1,0 +1,253 @@
+{
+  "schema": "juice-bend-native-admission-cadence-v2",
+  "status": "FAIL",
+  "problems": [
+    "Cadence 80: native window not observed",
+    "Cadence 80: window size differs between cadences",
+    "Guest journey exited nonzero"
+  ],
+  "scope": "One serial native macOS Tart pair with the same binary and VM/display; no production painting, output conversion, physical-host throughput or input-responsiveness acceptance.",
+  "binary_sha256": "cb7e4f438859914019f146d6cb17589e700b240c49cf39757b05d674df2b5eff",
+  "build_manifest_sha256": "c7206b56748a321b1e8c43e09a440318b71407e6d4b65d795944949651731de7",
+  "build_receipt_sha256": "ed297dda2db3bc2a61dc20805a1764b165a2c60773c9ac702d337de0c1941653",
+  "source_files_rehashed": 59,
+  "pins_rehashed": 96,
+  "payload_manifest_sha256": "fbe60ecf14e990fd56d8cab0d317fa3221aa67f31fd9daaf78d9e4645ffbb7f4",
+  "runs": {
+    "1": {
+      "passed": true,
+      "summary": {
+        "admission_ms": 12618,
+        "admission_result_received": true,
+        "capacity": 1048576,
+        "close_requested": false,
+        "frame_observation_ms": 12634,
+        "heartbeat_max_gap_ms": 321,
+        "heartbeat_observation_ms": 12634,
+        "heartbeat_result_received": true,
+        "heartbeat_timed_out": false,
+        "heartbeat_turns": 730,
+        "height": 640,
+        "operation": "production_stream_read_with_window",
+        "pace_ms": 1,
+        "passed": true,
+        "pixel_chunk": 128,
+        "pixels": 655360,
+        "rgba_sha256": "07c69a2430e56b43ab0a3c6904d9d073c507c261574cb5dc8b463e5276747573",
+        "timed_frames": 730,
+        "warmup_frames": 1,
+        "width": 1024,
+        "window_height": 320,
+        "window_width": 480
+      },
+      "exact_pass_lines": 12,
+      "external_elapsed_ms": 14566,
+      "window_geometry": {
+        "Height": 352,
+        "Width": 480,
+        "X": 560,
+        "Y": 164
+      },
+      "native_window_observed": true,
+      "parent_and_window_absent": true,
+      "visible_frame_policy": "Recorded automatic OS chrome; not physical display identity",
+      "visible_frame_observations": [
+        [
+          {
+            "h": 887,
+            "w": 1600,
+            "x": 0,
+            "y": 83
+          }
+        ],
+        [
+          {
+            "h": 888,
+            "w": 1600,
+            "x": 0,
+            "y": 82
+          }
+        ],
+        [
+          {
+            "h": 888,
+            "w": 1600,
+            "x": 0,
+            "y": 82
+          }
+        ],
+        [
+          {
+            "h": 888,
+            "w": 1600,
+            "x": 0,
+            "y": 82
+          }
+        ],
+        [
+          {
+            "h": 888,
+            "w": 1600,
+            "x": 0,
+            "y": 82
+          }
+        ],
+        [
+          {
+            "h": 888,
+            "w": 1600,
+            "x": 0,
+            "y": 82
+          }
+        ],
+        [
+          {
+            "h": 888,
+            "w": 1600,
+            "x": 0,
+            "y": 82
+          }
+        ],
+        [
+          {
+            "h": 888,
+            "w": 1600,
+            "x": 0,
+            "y": 82
+          }
+        ],
+        [
+          {
+            "h": 888,
+            "w": 1600,
+            "x": 0,
+            "y": 82
+          }
+        ],
+        [
+          {
+            "h": 888,
+            "w": 1600,
+            "x": 0,
+            "y": 82
+          }
+        ],
+        [
+          {
+            "h": 888,
+            "w": 1600,
+            "x": 0,
+            "y": 82
+          }
+        ],
+        [
+          {
+            "h": 885,
+            "w": 1600,
+            "x": 0,
+            "y": 85
+          }
+        ]
+      ]
+    },
+    "80": {
+      "passed": false,
+      "summary": {
+        "admission_ms": 901,
+        "admission_result_received": true,
+        "capacity": 1048576,
+        "close_requested": false,
+        "frame_observation_ms": 920,
+        "heartbeat_max_gap_ms": 264,
+        "heartbeat_observation_ms": 920,
+        "heartbeat_result_received": true,
+        "heartbeat_timed_out": false,
+        "heartbeat_turns": 603,
+        "height": 640,
+        "operation": "production_stream_read_with_window",
+        "pace_ms": 80,
+        "passed": true,
+        "pixel_chunk": 128,
+        "pixels": 655360,
+        "rgba_sha256": "07c69a2430e56b43ab0a3c6904d9d073c507c261574cb5dc8b463e5276747573",
+        "timed_frames": 8,
+        "warmup_frames": 1,
+        "width": 1024,
+        "window_height": 320,
+        "window_width": 480
+      },
+      "exact_pass_lines": 12,
+      "external_elapsed_ms": 2807,
+      "window_geometry": null,
+      "native_window_observed": false,
+      "parent_and_window_absent": true,
+      "visible_frame_policy": "Recorded automatic OS chrome; not physical display identity",
+      "visible_frame_observations": [
+        [
+          {
+            "h": 885,
+            "w": 1600,
+            "x": 0,
+            "y": 85
+          }
+        ],
+        [
+          {
+            "h": 888,
+            "w": 1600,
+            "x": 0,
+            "y": 82
+          }
+        ],
+        [
+          {
+            "h": 885,
+            "w": 1600,
+            "x": 0,
+            "y": 85
+          }
+        ]
+      ]
+    }
+  },
+  "physical_display": {
+    "displayId": 1,
+    "mode": {
+      "height": 1000,
+      "id": 8,
+      "pixelHeight": 1000,
+      "pixelWidth": 1600,
+      "refreshRate": 60,
+      "width": 1600
+    },
+    "screens": [
+      {
+        "frame": {
+          "h": 1000,
+          "w": 1600,
+          "x": 0,
+          "y": 0
+        },
+        "scale": 1
+      }
+    ]
+  },
+  "measurement_definition": {
+    "admission_ms": "Production Stream.read operation only; excludes wire construction and assertions.",
+    "timed_frames": "Completed native Window.frame calls after one warm-up; not GPU presentation timestamps.",
+    "heartbeat": "Independent one-millisecond callback task; observation includes start/stop handoff.",
+    "driver": "Same one-second read-only observation schedule; no input, activation, Close or settings changes."
+  },
+  "v1_preserved": {
+    "status": "FAIL; transient visibleFrame invariant rejected the first case; 80ms not run",
+    "result_sha256": "c280f77a9694887e3f0edc6310575416601265ba57b3dd905cc181f4ea669075"
+  },
+  "evidence": {
+    "artifact_files_unchanged": 160,
+    "raw_process_snapshots_reparsed": 17,
+    "artifact_manifest_sha256": "871e051e54c56c0ef18c6809a3091022ddc2589e651c93cf54b209f0b873bdef",
+    "guest_exit": 1,
+    "wrapper_exit": 143
+  },
+  "collected_utc": "2026-10-22T15:28:15.447280+00:00"
+}

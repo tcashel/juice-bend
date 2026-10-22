@@ -8,6 +8,7 @@ import ./evidence.bend as Evidence
 import ./actors.bend as Actors
 import ./git_diff.bend as Diff
 import ./repo_scope.bend as Scope
+import ./recorded_commit_store.bend as RecordedCommit
 
 type HunkResult is Data:
   HunkResult{start: U32,count: U32,result: P.Attribution}
@@ -499,7 +500,7 @@ def commit_text(sha: String,message: String,link: P.Attribution,excerpts: String
     "\nCoverage: unique eligible trailer/body associations only; no time-based guess or generated rationale. File content matching requires a selected file range.\n\n" ++
     excerpts ++ "Read-only Git commit message:\n" ++ String.take(message,8192n) ++ "\n"
 
-def commit_why_message(result: Result<&2,&2,String,String>,+db: U32,+scope: Scope.Scope,sha: String) -> IO(String):
+def commit_why_message(result: Result<&2,&2,String,String>,+db: U32,+scope: Scope.Scope,+sha: String) -> IO(String):
   match result:
     case Fail{error}:
       IO.pure(String,"Why unavailable: " ++ error)
@@ -511,7 +512,8 @@ def commit_why_message(result: Result<&2,&2,String,String>,+db: U32,+scope: Scop
         +link : P.Attribution = commit_attribution(commit_identity(repo,message,actors),commit_body(repo,message,actors),[],0)
         excerpts : String <- quote_keys(Bool.pick(List<&2,String>,String.is_empty(attribution_key(link)),[],[attribution_key(link)]),
           db,actors,repo)
-        return commit_text(sha,message,link,excerpts)
+        recorded : String <- RecordedCommit.read(db,scope,sha)
+        return commit_text(sha,message,link,excerpts) ++ "\nRecorded commit-command evidence:\n" ++ recorded
 
 def commit_scope(result: Result<&2,&2,String,Scope.Scope>,+db: U32,+sha: String) -> IO(String):
   match result:

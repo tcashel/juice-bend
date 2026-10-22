@@ -157,8 +157,11 @@ def transitions() -> IO(Unit):
   +loaded = loaded()
   do IO<Unit>:
     require(String.eq(wanted(Gui.why(loaded)),"why-scope|7|500|20|codex|/synthetic/repository|assistant|2026-10-01"),"Why from Tools preserves snapshot start and frozen scope")
-    require(String.eq(wanted(Gui.usage(loaded)),"none") && String.contains(status(Gui.usage(loaded)),"unfiltered"),"Usage from scoped Tools retains existing scope restriction")
-    require(String.eq(wanted(Gui.usage(with_filters(loaded,Gui.empty_filters()))),"usage|7|500|40"),"Usage from unfiltered Tools keeps physical range")
+    require(String.eq(wanted(Gui.usage(loaded)),"none") && String.contains(status(Gui.usage(loaded)),"would widen this repository, role or date scope") &&
+      String.eq(UI.reader(ui(Gui.usage(loaded))),UI.reader(ui(loaded))),"Usage from scoped Tools refuses widening and retains displayed evidence")
+    require(String.eq(wanted(Gui.usage(with_filters(loaded,Gui.empty_filters()))),"session-usage|7") &&
+      String.eq(capture(Gui.usage_restore(Gui.usage(with_filters(loaded,Gui.empty_filters())))),capture(with_filters(loaded,Gui.empty_filters()))),
+      "Usage from unfiltered Tools requests whole capture and restores its original physical range")
     require(String.eq(String.join(Gui.export_args(24,"7",500,filters(),UI.reader(ui(loaded)),"/synthetic/evidence.md"),"|"),
       "export-displayed|/synthetic/evidence.md|" ++ UI.reader(ui(loaded))),"Tools export copies exact displayed Unicode evidence without rereading")
 
