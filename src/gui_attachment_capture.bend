@@ -164,8 +164,9 @@ def retained_text(value: Retained) -> String:
     case Capturing{}: "Capturing the selected local file…"
     case Failed{message}: "Availability could not be confirmed. " ++ G.shown(message)
     case RetainedReady{T.Receipt{_,_,time,count,_,digest,_}}:
-      "Retained asset · " ++ U32.show(count) ++ " bytes\nObserved at Unix millisecond " ++ time ++
-        "\nSHA256: " ++ digest ++ "\nThese are bytes observed at capture time; they do not prove the file's earlier contents."
+      "Retained asset · " ++ U32.show(count) ++ " bytes\nSaved in this library. Open or export without the original file.\n" ++
+        "These are bytes observed at capture time; they do not prove the file's earlier contents.\n\n" ++
+        "Saved-byte evidence\nObserved at Unix millisecond " ++ time ++ "\nSHA256: " ++ digest
 def text(model: Model) -> String:
   Model{_,_,root,state,_,message} = model
   retained_text(state) ++ "\n\n" ++ root_text(root) ++ "\n\n" ++ G.shown(message)

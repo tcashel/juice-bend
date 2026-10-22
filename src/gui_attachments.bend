@@ -300,15 +300,26 @@ def coverage_text(+value: J.Json) -> String:
 def available(+descriptor: J.Json) -> Bool:
   Shape.text_is(J.field(descriptor,"type"),"inline") && same_bool(J.field(descriptor,"valid_base64"),True{})
 
+def availability(kind: String,+descriptor: J.Json) -> String:
+  match kind:
+    case "inline": Bool.pick(String,available(descriptor),
+      "Saved inline attachment · " ++ J.get(descriptor,"decoded_bytes") ++ " bytes",
+      "Inline attachment cannot be decoded")
+    case "remote_url": "Remote attachment · not downloaded"
+    case "local_path": "Local file reference · not captured"
+    case "local_file_url": "Local file reference · not captured"
+    case _: "Unsupported attachment reference"
+
 def occurrence_item(+raw: J.Json,+value: J.Json) -> Item:
   +descriptor = J.field(value,"descriptor")
   +ready = available(descriptor)
   Item{"  " ++ shown(J.get(value,"kind")) ++ " " ++ J.get(value,"reference") ++ " | " ++ String.take(shown(J.get(descriptor,"name")),40n),
-    byte_range(raw) ++ "Reference " ++ J.get(value,"reference") ++ "\nStructural path: " ++ shown(J.get(value,"path")) ++
-    "\n\n" ++ shown(J.get(descriptor,"summary")) ++
+    availability(J.get(descriptor,"type"),descriptor) ++
     Bool.pick(String,ready,"\nExport original bytes saves the retained inline representation as a new private file.",
       "\nByte export is unavailable for this reference. No external file is read and no URL is fetched.") ++
-    "\n\n" ++ coverage_text(J.field(raw,"coverage")),
+    "\n\n" ++ coverage_text(J.field(raw,"coverage")) ++
+    "\n\nEvidence details\n" ++ byte_range(raw) ++ "Reference " ++ J.get(value,"reference") ++
+    "\nStructural path: " ++ shown(J.get(value,"path")) ++ "\n\n" ++ shown(J.get(descriptor,"summary")),
     [OccurrenceKey{number(J.field(raw,"record")),number(J.field(value,"reference")),J.get(value,"path"),number(J.field(raw,"offset")),number(J.field(raw,"length")),J.get(raw,"digest"),
       J.get(descriptor,"media_type"),number(J.field(descriptor,"decoded_bytes")),ready}]}
 
@@ -321,8 +332,8 @@ def record_items(+value: J.Json) -> List<&2,Item>:
   +count = size(J.field(value,"occurrences"))
   Item{"Record " ++ J.get(value,"record") ++ " | " ++ U32.show(count) ++ " references" ++
       Bool.pick(String,true(J.field(J.field(value,"coverage"),"complete")),""," | partial"),
-    byte_range(value) ++ "\n" ++ coverage_text(J.field(value,"coverage")) ++
-    "\nRecognized references in this record: " ++ U32.show(count) ++ ".",[]} <>
+    "Recognized references in this record: " ++ U32.show(count) ++ ".\n" ++ coverage_text(J.field(value,"coverage")) ++
+    "\n\nEvidence details\n" ++ byte_range(value),[]} <>
     occurrence_items(J.items(J.field(value,"occurrences")),value)
 
 def items(records: List<&2,J.Json>) -> List<&2,Item>:
@@ -418,11 +429,16 @@ def capture_details(pages: List<&2,Page>) -> String:
     case [Page{capture,_,_,_,_,_,_}]: "\n\n" ++ capture_text(capture)
     case _: ""
 
+def page_summary(+pages: List<&2,Page>) -> String:
+  match pages:
+    case []: ""
+    case _: "\n\nPage coverage\n" ++ summary(pages)
+
 def text(+model: Model) -> String:
   Model{+anchor,_,_,+phase,+page,_,_,+message} = model
   scope_text(anchor) ++ Bool.pick(String,U32.is_eq(phase,1),"Reading verified retained records...\n\n","") ++
     Bool.pick(String,U32.is_eq(phase,3),"Exporting the explicitly selected retained inline bytes...\n\n","") ++
-    summary(page) ++ detail(selected(model)) ++ capture_details(page) ++ Bool.pick(String,String.is_empty(message),"","\n\n" ++ shown(message))
+    detail(selected(model)) ++ page_summary(page) ++ capture_details(page) ++ Bool.pick(String,String.is_empty(message),"","\n\n" ++ shown(message))
 
 def previous(+model: Model) -> Bool:
   start = anchor_start(anchor(model))

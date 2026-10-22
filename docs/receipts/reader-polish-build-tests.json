@@ -1,0 +1,182 @@
+{
+  "scope": "Initial Bend reader hierarchy and attachment-control cleanup; not visual parity with Swift Juice. Native external and JPEG journeys have separate receipts.",
+  "changes": [
+    "Conversation body precedes exact-reference appendix; full canonical selection/copy remains available.",
+    "Typed warm palette and selected rows; shortened title chrome.",
+    "Duplicate attachment/sidebar controls removed while unique capture/reload controls remain."
+  ],
+  "application_language": "Bend 2",
+  "source_files": [
+    {
+      "path": "benchmarks/native_transcript_oracle.bend",
+      "before_sha256": "3e6e72b703b3dbbd40404db06d7eeb64c6e7c1e75135e45a4a8d3e6cadc0566c",
+      "after_sha256": "075f3d4aec8e906aa377f2e9d09b4f6543f596d5d726f9cb5e0ef9383324b0e6"
+    },
+    {
+      "path": "src/gui_attachment_capture.bend",
+      "before_sha256": "8b46d56c223213623b1e0f376b6c754c0d4a602213b374f66fadbea97941bfe5",
+      "after_sha256": "e5e7c92ba7750df7c409f40dddfb17c185aaeef828b32a6880dc62e5cb0d3133"
+    },
+    {
+      "path": "src/gui_attachments.bend",
+      "before_sha256": "c8be13971af1cd9749fc576f946f1cbf9c4fdfd7fa17a6b57908e46460adad45",
+      "after_sha256": "2b11536232ef41b48058f630b39b42882aa44b32a0890acf84d48b9cc39a94d8"
+    },
+    {
+      "path": "src/transcript_format.bend",
+      "before_sha256": "485c698c5baf957ba208319501f0a2dd4f66fae6b1ebd7ad155b30231ad5df65",
+      "after_sha256": "351654f33db2a4d73f4b4f2ab34790b09ef29d452345f8027ead36663d37178e"
+    },
+    {
+      "path": "src/ui.bend",
+      "before_sha256": "a6fdc03e5893d0bf6b113e2d266d9927d678a4570980dc7943165e1ba20c5715",
+      "after_sha256": "530d70cac8b993be1a56661e3587c2613b66c6d46db447585242664665fdf634"
+    },
+    {
+      "path": "src/ui_palette.bend",
+      "before_sha256": null,
+      "after_sha256": "8e7bcdf44340f439a48fffb4ab2bc0c0d4c85bdeac73184837118d0f2279d8b3"
+    },
+    {
+      "path": "tests/attachment_presentation.bend",
+      "before_sha256": null,
+      "after_sha256": "18c6c6b74e94bd6194faa0f6b65aaae6cdbcd90c0f9ad5c073e52e43c60bd5a6"
+    },
+    {
+      "path": "tests/gui_attachment_capture_app.bend",
+      "before_sha256": "ccdd2b12eb5f77740932fbd14da254e6163734eb5d410b32a6cc5cc40736eab6",
+      "after_sha256": "0faad90a11b7470041257c914dffee20ba23cb54b6794c7d23f6fcc1d160e208"
+    },
+    {
+      "path": "tests/reader_polish.bend",
+      "before_sha256": "6db63dea22ffbc9cc1124cf2b63993a75984ea71a38b8b42c85836b1e6608ce4",
+      "after_sha256": "016d6f3b482edd52f875f4ab950d0b96a4b4d8b8c4f8e7236fe419228c4977ef"
+    },
+    {
+      "path": "tests/scoped_reader.bend",
+      "before_sha256": "82af8fbd1967faab32fa9ee7cd929a28dbdfb4b86573c831a8803cd17ccfce14",
+      "after_sha256": "c07680655f08936b2e8baa24f910517f3cf71d473b7143b7fc7eb534368550f9"
+    },
+    {
+      "path": "tests/transcript_format.bend",
+      "before_sha256": "4e4ea4d1e34dc3373cd7b4f9bdd2ba36e04e85425b996c78a62d001b4a6a55be",
+      "after_sha256": "2f8eb298b8706bc3238d716d3bdc9fbf389e4e60976c2d613ef32508b7356777"
+    },
+    {
+      "path": "tests/transcript_oracle.bend",
+      "before_sha256": null,
+      "after_sha256": "871cbf9b22e638e82ca8005b9c70a92aeae53e3417d097b7d2c248dde638614b"
+    },
+    {
+      "path": "tests/transcript_storage.bend",
+      "before_sha256": "797c296bb60c89e4f56dc00384f38b2029d6625df15123dd6748b08f9deea36b",
+      "after_sha256": "3ba4fb0dacbc86e67dd9fb339c24cb73e841b2cb6a0e3fe98df75314f6919c6c"
+    },
+    {
+      "path": "tests/ui_attachments.bend",
+      "before_sha256": "7cb12671c6515b26d3b75f45b024936f711c89cf5567892acdaa35491a6bb61b",
+      "after_sha256": "d4b55aab86089a4b272b2a7017e46ebf6ae6b3e90f8d11f6a941b2c756fd957f"
+    },
+    {
+      "path": "tests/ui_hierarchy.bend",
+      "before_sha256": null,
+      "after_sha256": "559b6fbd1437e8636a41cf2837c79225bb8b1e4064e1be1e34beaad643662442"
+    }
+  ],
+  "candidate_manifest_sha256": "93cd7ed1adbc0f1efe0d73033faff3e7cf531357c8d2b825dd58c1ebb534ecce",
+  "native_binary_sha256": "5d67eba5de1ffa2490771e98e8294eba22192b59ed1b961130e8335e966351dc",
+  "native_build": {
+    "host": "macOS Apple Silicon",
+    "compiler": "LLVM 23.1.4 -O1, Bend 2.0.37",
+    "elapsed_seconds": 876.669,
+    "receipt_sha256": "b243fcc2dad9375a2902f01316d2f395e7577b98d6f61d9cfa48d3e035f3579d",
+    "all_input_tool_and_compiler_checks_passed": true
+  },
+  "focused_tests": {
+    "platform": "Linux x86_64 native",
+    "suites": 10,
+    "pass_lines": 364,
+    "tests": [
+      {
+        "candidate": "v2",
+        "entry": "tests/transcript_format.bend",
+        "pass_lines": 20,
+        "exit": 0,
+        "stderr_bytes": 0
+      },
+      {
+        "candidate": "v2",
+        "entry": "tests/transcript_storage.bend",
+        "pass_lines": 13,
+        "exit": 0,
+        "stderr_bytes": 0
+      },
+      {
+        "candidate": "v2",
+        "entry": "tests/transcript_oracle.bend",
+        "pass_lines": 4,
+        "exit": 0,
+        "stderr_bytes": 0
+      },
+      {
+        "candidate": "v2",
+        "entry": "tests/ui_attachments.bend",
+        "pass_lines": 76,
+        "exit": 0,
+        "stderr_bytes": 0
+      },
+      {
+        "candidate": "v2",
+        "entry": "tests/attachment_presentation.bend",
+        "pass_lines": 15,
+        "exit": 0,
+        "stderr_bytes": 0
+      },
+      {
+        "candidate": "v2",
+        "entry": "tests/gui_attachments_model.bend",
+        "pass_lines": 32,
+        "exit": 0,
+        "stderr_bytes": 0
+      },
+      {
+        "candidate": "v2",
+        "entry": "tests/reader_polish.bend",
+        "pass_lines": 44,
+        "exit": 0,
+        "stderr_bytes": 0
+      },
+      {
+        "candidate": "v2",
+        "entry": "tests/polish.bend",
+        "pass_lines": 109,
+        "exit": 0,
+        "stderr_bytes": 0
+      },
+      {
+        "candidate": "v2",
+        "entry": "tests/gui_attachment_capture_app.bend",
+        "pass_lines": 38,
+        "exit": 0,
+        "stderr_bytes": 0
+      },
+      {
+        "candidate": "v3",
+        "entry": "tests/ui_hierarchy.bend",
+        "pass_lines": 13,
+        "exit": 0,
+        "stderr_bytes": 0
+      }
+    ],
+    "summary_sha256": "189f41c432ec62407bbfbe2f85b181f02025b0e6a6040ea1e70d942c92b68bed",
+    "source_and_tool_hashes_verified": true,
+    "processes_remaining": []
+  },
+  "limitations": [
+    "Scoped-reader frontend exceeded its 12GiB guard; it is not a test pass.",
+    "An earlier affine test binding failure is preserved, then corrected and re-tested.",
+    "These focused results are not a new complete suite or proof run.",
+    "Missing glyphs, IME, accessibility and larger visual parity remain open.",
+    "The accepted default executable is preserved separately."
+  ]
+}

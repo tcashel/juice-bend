@@ -33,12 +33,15 @@ def fields() -> IO(Unit):
     "{\"input_tokens\":9007199254740993}","parent-1","partial_content"} : Providers.Record}
   +body = Format.body("[r7:e2]",event)
   +details = Format.details("[r7:e2]",event,"Citation: {\"snapshot\":\"9007199254740993\"}")
-  expected = "[assistant] 2026-10-20T12:00:00Z · [r7:e2] · coverage: partial_content\n" ++
+  expected = "[assistant] · [r7:e2] · coverage: partial_content\n" ++
     payload ++ "\nTool: Write\nCall ID: call-1\nArguments: " ++ arguments ++ "\nResult: " ++ result ++ "\n\n"
   do IO<Unit>:
     check(String.eq(body,expected),"complete Unicode body, long arguments and long result remain unchanged and selectable")
-    check(String.starts_with(body,"[assistant] 2026-10-20T12:00:00Z · [r7:e2] · coverage: partial_content\n"),
+    check(String.starts_with(body,"[assistant] · [r7:e2] · coverage: partial_content\n"),
       "incomplete coverage is adjacent to the event before its content")
+    check(Bool.not(String.contains(body,"2026-10-20T12:00:00Z")) &&
+      String.contains(details,"Recorded time: 2026-10-20T12:00:00Z\n"),
+      "repeated time metadata leaves the conversation but its exact source text remains in details")
     check(Bool.not(String.contains(body,"Recorded model:")) && Bool.not(String.contains(body,"Citation:")),
       "technical metadata does not interrupt the conversation")
     check(String.contains(details,"Captured repository: /synthetic/quoted\"café 中文 🙂\n") &&
@@ -58,7 +61,7 @@ def missing() -> IO(Unit):
   +body = Format.body("[r0:e0]",unknown)
   +details = Format.details("[r0:e0]",unknown,"Record 0 · bytes 0..7")
   do IO<Unit>:
-    check(String.eq(body,"[user] time not captured · [r0:e0] · coverage unavailable\nrequest\n\n"),
+    check(String.eq(body,"[user] · [r0:e0] · time not captured · coverage unavailable\nrequest\n\n"),
       "missing time and unknown coverage remain visible without invented values")
     check(String.contains(details,"Coverage: unavailable\nRecord 0 · bytes 0..7\n\n") &&
       Bool.not(String.contains(details,"tokens")),"missing usage is not shown as zero")
@@ -82,13 +85,13 @@ def viewport_and_copy() -> IO(Unit):
   +state = UI.set_edit(UI.set_reader(UI.init(),"Transcript",text),UI.Edit{2,0,0,False{},0})
   +selection = UI.select_all(state)
   do IO<Unit>:
-    check(String.starts_with(text,"Transcript · snapshot 9007199254740993 · 6 events\n" ++
-      "Bounded captured page; details and references follow.\n\n" ++
-      "[user] 2026-10-20T12:00:00Z · [r7:e0]\nfirst visible request\n\n" ++
-      "[assistant] 2026-10-20T12:00:00Z · [r7:e1]\nsecond visible reply\n\n"),
-      "conversation order and compact references appear immediately after the bounded-page notice")
+    check(String.starts_with(text,"Captured page · 6 events · snapshot 9007199254740993\n\n" ++
+      "[user] · [r7:e0]\nfirst visible request\n\n" ++
+      "[assistant] · [r7:e1]\nsecond visible reply\n\n"),
+      "conversation order and exact references appear immediately after the captured-page heading")
     check(String.contains(first,"first visible request") && String.contains(first,"third visible request") &&
-      String.contains(first,"fifth visible request"),"actual native wrapping shows five short event bodies in the first viewport")
+      String.contains(first,"fifth visible request") && String.contains(first,"sixth visible reply"),
+      "existing 19-row wrapping fits six short event bodies in the first viewport")
     check(Bool.not(String.contains(first,"Page details")) && Bool.not(String.contains(first,"Recorded model")),
       "first native viewport is not occupied by repeated metadata")
     check(String.contains(text,"Page details & exact references\nProvider: claude\n") &&
@@ -101,7 +104,7 @@ def viewport_and_copy() -> IO(Unit):
 def empty_page() -> IO(Unit):
   +text = Format.render(Format.Page{0,"",""},"5","Visible events in this captured range: 0")
   do IO<Unit>:
-    check(String.contains(text,"0 events\n") && String.contains(text,"No transcript events in this captured page.\n\n"),
+    check(String.starts_with(text,"Captured page · 0 events · snapshot 5\n\n") && String.contains(text,"No transcript events in this captured page.\n\n"),
       "empty selected page states that it has no transcript events")
     check(String.contains(text,"Page details & exact references\nVisible events in this captured range: 0"),
       "empty page retains its explicit scope and range appendix")

@@ -91,7 +91,7 @@ def context_checks(states: List<&2,UI.State>,+index: U32) -> IO(Unit):
         require(Bool.not(UI.attachment_entry_visible(state)) && U32.is_eq(UI.reader_title_columns(state),33),label ++ " reclaims title space")
         require(U32.is_eq(A.action(UI.event(Mouse{696,120,0,True{}},state)),0) && U32.is_eq(A.action(UI.event(Mouse{799,151,0,True{}},state)),0),label ++ " entry rectangle is inert at both edges")
         require(Tiles.tile.empty(Tiles.tile.at(8n,short,88,16),UI.paper()) && Tiles.tile.empty(Tiles.tile.at(8n,short,98,16),UI.paper()),label ++ " actual painter omits the entry label")
-        require(A.glyph(long,792,128,87,UI.accent(),UI.paper()) && Tiles.tile.empty(Tiles.tile.at(8n,long,100,16),UI.paper()) && A.glyph(long,816,128,67,UI.accent(),UI.paper()),label ++ " title uses reclaimed columns and stops before Copy")
+        require(A.glyph(long,792,128,87,UI.heading_ink(),UI.paper()) && Tiles.tile.empty(Tiles.tile.at(8n,long,100,16),UI.paper()) && A.glyph(long,816,128,67,UI.accent(),UI.paper()),label ++ " title uses reclaimed columns and stops before Copy")
         context_checks(rest,U32.inc(index))
 
 def attachment_contexts() -> IO(Unit):

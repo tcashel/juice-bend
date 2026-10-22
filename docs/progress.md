@@ -20,11 +20,11 @@ Agentbox Clang 22 passed an ABI/cross-target probe; GCC lacks required
 
 ## Published and working source
 
-Latest verified published head: `1a9ca8b8d7809300748c4cc7aae1f8ae951434fd`,
-retained attachments/images/ATIF/discovery, tree `1802a6901d4d3815b0606730750430c0b496f027`.
-PR #1 was verified open, draft and unmerged. Publication record:
-`build/llvm-pin-publication.json`; exact remote object
-`build/llvm-pin-remote.json`; bare ref `codex/published-llvm-pin`.
+Latest verified published head: `6caadb0fd1a4dfa0ba99f9c849460da60fb1c8ec`,
+sanitized native evidence, tree `90dcc5bde3d491cf771f8ceb4707419faf55b7c2`.
+PR #1 was verified open, draft and unmerged at this head. Publication record:
+`build/native-image-evidence-publication.json`; exact remote object
+`build/native-image-evidence-remote-commit.json`; bare ref `codex/published-image-evidence`.
 Do not reset the protected checkout to it.
 
 Combined capture/PNG/JPEG/ATIF/discovery and the JPEG DC shortcut are adopted in
@@ -146,28 +146,66 @@ original algorithm. Sanitized sampled-stack SVG and scoped evidence are in
    delta paths remain exact except the repaired affine test binding. The earlier
    scoped-reader 12GiB frontend guard remains unrun, not a test pass.
    `build/reader-ui-polish-v3-integration/HANDOFF.md` binds manifest `93cd7ed1…`
-   and patch `07868916…`. Root has not adopted it. The Mac frontend passed;
-   reader_release_diagnostic owns maintained LLVM23-O1 build session32371 at
-   `build/reader-ui-polish-v3-mac/runs/2a7a7feb-49da-4f39-a1f6-204550afacc6`.
-   Do not mutate root/polish closure or start a second Mac compiler before collection.
-2. Prefer one polished-app native journey rather than repeating the full e6
-   acceptance for the intermediate455 build. Attachment owner is adapting the
-   existing exact bytes/pixel/coverage tests to the tested new toolbar mappings
-   and shorter canonical reader text. Required helpers are prepared at
-   `build/polished-native-acceptance-helpers-v2`; build after the app slot releases.
-   Include a correctly bracketed live parent sample after Open/child absence.
-3. Archive decoder owns a small same-host Linux production raster-admission A/B
-   with 128 versus 512-element chunks and concurrent heartbeat. This cannot prove
-   native Metal/UI latency. A separate minimal native Close discriminator is
-   prepared without changing production/runtime code. Preserve the actual 39.984s
-   native window-close failure and fix future harness threshold enforcement.
+   and patch `07868916…`. The maintained LLVM23-O1 Mac build passed in876.669s (frontend323.483s),
+   binary `5d67eba5de1ffa2490771e98e8294eba22192b59ed1b961130e8335e966351dc`,
+   run `build/reader-ui-polish-v3-mac/runs/2a7a7feb-49da-4f39-a1f6-204550afacc6`.
+   Root adopted these exact15paths after collection, receipt
+   `build/root-polish-adoption/receipt.json` (`a7346cbb…`). Default fcbbb stays
+   unchanged. Both matching helpers built successfully; exact bindings are in
+   `build/polished-native-acceptance-helpers-v2/BUILT.json`.
+2. Corrected polished external run passed actual transcript copy, folder approval,
+   capture, preview/pan, source removal, different-process restart, two exact0600
+   exports and complete ATIF export. All7,595 exact pixels and37 ATIF content
+   checks passed; both ATIF copies pass the pinned official schema. Guest cleanup,
+   fixture preservation and display restoration passed. Root inspected the native
+   screenshots. VM stopped and lease released. Receipt:
+   `docs/receipts/polished-external-native.json` (`0ef11a68…`).
+   JPEG run is active at `build/polished-native-acceptance-v2-plan/run-jpeg-01`,
+   wrapper66943, driver19351; root owns it. Same app5d67 and exact matching helper.
+   The earlier first polished native run passed initial transcript copy and exact local
+   attachment capture, then a harness `/usr/bin/date` path failed after Open.
+   Original capture2/cleanup1/display-holder1 remain failures. Later independent
+   recovery verified app/child/window absence and preserved the marker-owned
+   fixture. VM stopped and lease released. Corrected external/JPEG runs
+   are in `build/polished-native-acceptance-v2-plan`; `/bin/date` now has
+   an early preflight. Same binaries, source, pixel oracles and limits. Run these
+   sequentially; include the correctly bracketed parent sample after child exit.
+3. Same-host Linux admission A/B completed: 128/512-element chunks took
+   5.799/5.773s, heartbeat gaps3/5ms, all exact pixels/padding checks passed.
+   No meaningful improvement; retain128. This does not explain native latency.
+   The Base-only native Close discriminator actually ran: idle window714ms,
+   forked window9660ms after click. The forked App.run returned immediately after
+   handling Close, but the visible window persisted until the ten-second child
+   completed. Both process/window5s checks failed; all processes gone by20s.
+   Exact traces are in `build/native-close-discriminator-plan/artifacts`;
+   public receipt `docs/receipts/native-close-discriminator.json`. Inspected
+   upstream main has no compatible fix; no new native patch is authorized.
+   Separately, the correctly bracketed image-admission sample shows895/997
+   main-thread observations in Window.frame,879 in its Cocoa run-loop wait.
+   `docs/receipts/image-admission-profile/` contains the weighted flame graph.
+   Archive decoder now owns a small same-VM1/80ms redraw-pacing diagnostic;
+   root will run it after JPEG. Keep128-pixel admission chunks unchanged.
 4. The 129-path image/capture/ATIF/discovery/DC slice and corrected export target
    test are published in `1a9ca8b8…`; update remaining sanitized receipts and PR
    after each concrete result. Accepted default executable remains unchanged.
-5. remaining_parity_audit is reconciling existing recorded successful-commit
-   evidence (`build/recorded-commit-integration`, 106 prior Linux checks) onto
-   polished v3 in a new isolated candidate. Actual Mac Why remains open.
+5. Recorded successful-commit evidence is reconciled onto polished v3 in
+   `build/recorded-commit-polish-integration`; four affected suites passed56
+   native Linux assertions. Full maintained Mac build run1ef71a55 passed,
+   unified session57010 exit0,907.098s, binaryf1713174…7952. No native Why run yet.
+   remaining_parity_audit is preparing its matching helper; archive decoder has
+   the next Mac compile slot. Root source/default remain unchanged by G15.
    Child-result navigation remains at `build/result-link-ui-integration`.
+
+Owner's actual Swift-app screenshots are the visual baseline: persistent dark
+green navigation with yellow selection, clear proportional type hierarchy,
+spacious dated session rows, readable message groups, collapsible evidence
+details and useful usage charts/controls. Current Bend chrome is only an initial
+improvement, not visual parity. Inspect the Swift app read-only and use synthetic
+content for shared comparisons. Never publish the owner's reference screenshots.
+An isolated first History-workspace implementation now owns navigation hierarchy,
+static licensed sans chrome/list titles and reachable grouped actions; its source
+is under `build/history-workspace-integration`. It preserves canonical reader
+text, scalar offsets and existing body geometry. Not adopted or native-tested yet.
 
 ## Remaining parity and measured limits
 

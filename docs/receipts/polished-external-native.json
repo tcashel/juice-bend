@@ -1,0 +1,165 @@
+{
+  "schema": "juice-bend-native-external-polished-v2-receipt-v1",
+  "status": "PASS: scripted native journey, independent retained-data/export validation, and root visual review",
+  "scope": "Synthetic selected local PNG capture in native macOS Tart; exact polished candidate only.",
+  "application": {
+    "sha256": "5d67eba5de1ffa2490771e98e8294eba22192b59ed1b961130e8335e966351dc",
+    "source_files": 160,
+    "pinned_inputs": 96,
+    "manifest_sha256": "cc66cf5621845b9beb1b637aebce6bbb6d1c431c216024226351979c1c674eb8",
+    "build_receipt_sha256": "b243fcc2dad9375a2902f01316d2f395e7577b98d6f61d9cfa48d3e035f3579d"
+  },
+  "helper": {
+    "sha256": "1d389af43d348b7d2154c8d53d599f651248b6c7939eca443c939dcbff1850c7",
+    "source_files": 81,
+    "pinned_inputs": 96,
+    "shared_application_paths_exact": 70,
+    "manifest_sha256": "0fcb8b85a5406fb21ee4aebfe0d848f284b208680d13c43fac04517e5c01a46d",
+    "build_receipt_sha256": "e21e8d75519fdb7feea45229e754c6c5327f1a3f26c125d9369c220ec57979f2"
+  },
+  "step_exits": {
+    "prepare": 0,
+    "capture": 0,
+    "retained": 0,
+    "atif": 0,
+    "cleanup": 0,
+    "cleanup-shot": 0,
+    "fixture-copy": 0,
+    "guest-run": 0,
+    "display-holder": 0,
+    "display-restored": 0
+  },
+  "capture": {
+    "snapshot": "1",
+    "source": "1",
+    "generation": "1",
+    "provider": "claude",
+    "records": 3,
+    "events": 10,
+    "logical_bytes": 1656,
+    "logical_sha256": "48d45ac2934c3fa7f3a9438653457272b71709d82efdc0dd08a6e2c7a0dea17f",
+    "compressed_bytes": 1665,
+    "compressed_sha256": "ef753ec0be8c85a0a7af9e5a3c12eb519ba8b2f6b2763026c3ddcf34109a71b8",
+    "complete_verify_before_after": true,
+    "status_before_after_exact": true
+  },
+  "preservation": {
+    "synthetic_source_png_and_archive_absent": true,
+    "restart_used_different_parent_pid": true,
+    "same_application_capture_children_verified": true,
+    "original_receipt_exact_before_restart_and_final": true,
+    "captured_root_revision": "1",
+    "current_disabled_root_revision": "2",
+    "sqlite_quick_check": "ok",
+    "foreign_key_violations": 0,
+    "raw_archive_and_asset_commitments_verified": true
+  },
+  "image_exports": [
+    {
+      "filename": "attachment-1-0-0-388640-2.bin",
+      "bytes": 6555,
+      "sha256": "2fadba069c92c7b9981c87e6d05b7251de6e6ec8c72afc571eaadad49578d64f",
+      "mode": "0600"
+    },
+    {
+      "filename": "attachment-1-0-0-392848-3.bin",
+      "bytes": 6555,
+      "sha256": "2fadba069c92c7b9981c87e6d05b7251de6e6ec8c72afc571eaadad49578d64f",
+      "mode": "0600"
+    }
+  ],
+  "reader": {
+    "back_and_escape_bookmark_copy_exact": true,
+    "filtered_reader_unchanged_by_full_capture_export": true
+  },
+  "native_pixels": {
+    "checks": {
+      "captured-fit": {
+        "samples": 1085,
+        "pixel_receipt_sha256": "96b73ad601aef1d875aa3738d74041ff3f0b1fbe4ca7086d7da5fde93dd57851",
+        "display_png_sha256": "9696db6d81d6939f22b91bce38151c056095e9c3fc8cfdcde5aba81bfb9190dd"
+      },
+      "captured-actual": {
+        "samples": 1085,
+        "pixel_receipt_sha256": "a95a1e5cf67672e5f7c7ba7f0fb83647b2d1b1c8ed66bc189f5f260c067f7f35",
+        "display_png_sha256": "d5c30c7372886d39b289c0dc802df79abb27a3d3052996ce975a6c91a3d9a29d"
+      },
+      "captured-pan": {
+        "samples": 1085,
+        "pixel_receipt_sha256": "daccc72eca7c986a516258c98e3ee2ba62d426e55351844c6f19a3d41a9c4d71",
+        "display_png_sha256": "757d73e456d419b4ea167d74daa7770d215035e33aef54aca2b8d8d0ea59adf7"
+      },
+      "captured-wheel": {
+        "samples": 1085,
+        "pixel_receipt_sha256": "38fbcb104139c7a4ae47a0d89b26bcda69e870f6197fa2923862ba90d3de4bb7",
+        "display_png_sha256": "97852f9ab69e262330387d8b999682989862f6a2ff3fce4a53aacfaf6b3450e8"
+      },
+      "retained-fit": {
+        "samples": 1085,
+        "pixel_receipt_sha256": "4524427f3e33dc62ac0c974a0466d8a72ebd03320e6202118c40f6bbb162012e",
+        "display_png_sha256": "ebba7beb82b957a7201f1580ca40f14f24ee0e4e8cc797d81beafa162d66f43f"
+      },
+      "retained-actual": {
+        "samples": 1085,
+        "pixel_receipt_sha256": "a9ff25bf1bcbc663a0562c660e9b0b844170758bb517870b8702dd1c8abd955e",
+        "display_png_sha256": "10f61f011bf2e4d0ca1b2d9477ab0d748878be50f62cfc3c137870b0cb482db7"
+      },
+      "retained-right": {
+        "samples": 1085,
+        "pixel_receipt_sha256": "e19e4f1dbd0c2fb87fe10f22e141d7d52de9fea33a3476d1b515ded0419bc8da",
+        "display_png_sha256": "62f1e7b9f503ab617c9c2eee7b6a4302f278d22fd0f7b29395f86584e8ba2a0c"
+      }
+    },
+    "samples_total": 7595,
+    "exact_icc_profile_zero_channel_tolerance": true
+  },
+  "atif": {
+    "sha256": "aa9298557fcefb66b342516990091ea29666ce3c52802d4915f883f37c6541a3",
+    "bytes": 16310,
+    "mode": "0600",
+    "steps": 10,
+    "source_records": 3,
+    "independent_checks": 37,
+    "official_checker_accepts_both_actual_copies": true,
+    "official_commit": "09f5b964f8e5075f7e52fd08c9994dfc80ad5d24",
+    "official_checker_sha256": "f09046f86b900e0cca45c0fdd39f2e3d0cd67c390ed8513432ce6e80220ff4e1",
+    "known_validator_warnings": "Two Pydantic protected model_ namespace warnings retained; no schema errors."
+  },
+  "visual_review": {
+    "reviewer": "coordinating root agent",
+    "views": [
+      "captured Fit",
+      "retained actual-size right pan",
+      "disabled source folder",
+      "expanded ATIF export status and filtered reader"
+    ],
+    "observed": "Expected display states visible; existing glyph limitations remain."
+  },
+  "cleanup": {
+    "candidate_parent_children_and_windows_absent": true,
+    "default_application_data_absent": true,
+    "display_and_dock_restored": true,
+    "vm_stopped": true,
+    "lease_released": true,
+    "wrapper_exit": 143,
+    "wrapper_exit_reason": "Root explicitly stopped owned wrapper after successful guest workflow; not guest failure"
+  },
+  "evidence": {
+    "artifacts_unchanged_after_final_validation": 981,
+    "payload_files_unchanged": 24,
+    "build_evidence_files_unchanged": 284,
+    "artifact_manifest_sha256": "b4f5a3b85fcb160645d42b4cd3a7a715cfffc4f9dfcc29e26a618a74d17b3b33",
+    "data_postflight_sha256": "11288f738c7e0262328618359669895238af1afd927201dcab9561ea42896f09",
+    "atif_postflight_sha256": "2c694431861ea4731f7053b745c34faaae5f67d1a5b7689da44dfbd6551b039a"
+  },
+  "limitations": [
+    "This result binds only the exact polished v3 binary 5d67eba5 and matching helper; no result applies to later changes.",
+    "Missing glyphs remain visible; Unicode clipboard checks pass independently.",
+    "Existing process samples are diagnostic only; no latency/performance/input-responsiveness claim.",
+    "Only selected local PNG capture is exercised here; no general attachment/JPEG/full-parity claim.",
+    "Pixel checks compare unmanaged display components under one exact ICC profile, not general sRGB fidelity.",
+    "This run does not validate pending-Close responsiveness or later candidate changes.",
+    "Compilation and retained-data checks are distinct from the observed native journey."
+  ],
+  "collected_utc": "2026-10-22T14:09:41.655986+00:00"
+}

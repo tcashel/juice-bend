@@ -128,7 +128,7 @@ def kind_assertions(+kind: String,+text: String,+source: String,+extent: String)
         checked(String.contains(text,first_body()) && String.contains(text,"Tool: Write\nCall ID: synthetic-write-9\n" ++ tool_argument()),"complete user body or tool payload lost")
         checked(String.contains(text,"Call ID: synthetic-nested\nResult: Nested retained attachment follows\n") &&
           String.contains(text,"Call ID: synthetic-write-9\nResult: Saved synthetic-only.txt; result marker attachment-tool-result café 中文 🙂.\nThis is recorded synthetic evidence; no tool command was executed.\n"),"exact tool results lost")
-        checked(String.contains(text,"[attachment] 2026-10-20T12:00:00.000000000Z · [r0:e0] · coverage: unsupported_attachment\n") &&
+        checked(String.contains(text,"[attachment] · [r0:e0] · coverage: unsupported_attachment\n") &&
           String.contains(text,"[Unsupported Claude content block]") && String.contains(text,"[Claude record has no supported message content]"),"partial or unsupported evidence hidden")
         checked(citations(40n,0,text,source,extent) && U32.is_eq(citation_count(String.lines(text)),38),"first page citation set differs from independent event positions")
         checked(Bool.not(String.contains(text,late_body())) && Bool.not(String.contains(text,"[r11:e0]")) &&
@@ -146,8 +146,7 @@ def kind_assertions(+kind: String,+text: String,+source: String,+extent: String)
 
 def page_assertions(+kind: String,+text: String,+source: String,+extent: String) -> IO(Unit):
   do IO<Unit>:
-    checked(String.starts_with(text,"Transcript · snapshot 1 · " ++ event_count(kind) ++ " events\n" ++
-      "Bounded captured page; details and references follow.\n\n"),"compact header or independent visible event count differs")
+    checked(String.starts_with(text,"Captured page · " ++ event_count(kind) ++ " events · snapshot 1\n\n"),"compact header or independent visible event count differs")
     checked(String.contains(text,"Page details & exact references\nJuice Bend · scoped captured transcript\n") &&
       String.contains(text,scope(kind)) &&
       String.contains(text,"Byte offsets: logical source bytes (decompressed for archives)."),"scope or logical byte-space disclosure missing")

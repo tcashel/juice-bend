@@ -66,12 +66,14 @@ def main() -> IO(Unit):
     +filtered : String <- Scoped.page(db,snapshot,0,40,scope(),False{})
     check(payloads(all) && payloads(filtered),"both captured readers preserve every long Unicode body, tool argument and result")
     check(metadata(all) && metadata(filtered),"both captured readers retain all recorded metadata without rounding wide usage")
-    check(String.starts_with(all,"Transcript · snapshot " ++ snapshot ++ " · 3 events\n") &&
-      String.starts_with(filtered,"Transcript · snapshot " ++ snapshot ++ " · 3 events\n"),
+    check(String.starts_with(all,"Captured page · 3 events · snapshot " ++ snapshot ++ "\n") &&
+      String.starts_with(filtered,"Captured page · 3 events · snapshot " ++ snapshot ++ "\n"),
       "All providers and repository-filtered pages share content-first presentation")
-    check(String.contains(all,"[assistant] 2026-10-20T12:00:00Z · [r0:e0]\n" ++ body()) &&
-      String.contains(filtered,"[assistant] 2026-10-20T12:00:00.000000000Z · [r0:e0]\n" ++ body()),
-      "captured first event follows compact reference with unchanged raw or normalized timestamp behavior")
+    check(String.contains(all,"[assistant] · [r0:e0]\n" ++ body()) &&
+      String.contains(filtered,"[assistant] · [r0:e0]\n" ++ body()) &&
+      String.contains(all,"Recorded time: 2026-10-20T12:00:00Z\n") &&
+      String.contains(filtered,"Recorded time: 2026-10-20T12:00:00.000000000Z\n"),
+      "captured first event keeps a compact reference; appendix preserves raw or normalized timestamp behavior")
     +record : Evidence.Verified <- Evidence.read_record(db,snapshot,0)
     check(String.contains(filtered,"Citation: " ++ Evidence.citation(record,0) ++ "\n") &&
       String.contains(filtered,"Citation: " ++ Evidence.citation(record,1) ++ "\n") &&
@@ -103,7 +105,7 @@ def main() -> IO(Unit):
     Store.write_text("polish-empty.jsonl","w",empty_record())
     +empty_snapshot : String <- Store.import_file(db,"claude","polish-empty.jsonl")
     +empty_page : String <- Store.page(db,empty_snapshot,0,40)
-    check(String.starts_with(empty_page,"Transcript · snapshot " ++ empty_snapshot ++ " · 0 events\n") &&
+    check(String.starts_with(empty_page,"Captured page · 0 events · snapshot " ++ empty_snapshot ++ "\n") &&
       String.contains(empty_page,"No transcript events in this captured page.\n") &&
       String.contains(empty_page,"Record 0 · bytes 0.." ++ U32.show(bytes(empty_record())) ++ "\n"),
       "all-zero-event page keeps selected physical record coverage without inventing an event")

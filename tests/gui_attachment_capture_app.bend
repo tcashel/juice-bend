@@ -130,13 +130,13 @@ def controls() -> IO(Unit):
   +s = UI.set_results(UI.init(),UI.AttachmentCaptureResults{2,True{},False{},False{},True{},True{}})
   +f = UI.set_results(UI.init(),UI.AttachmentFoldersResults{2,True{},False{},True{},False{},False{}})
   do IO<Unit>:
-    require(U32.is_eq(action(UI.event(Mouse{16,280,0,True{}},s)),51),"Folders sidebar target dispatches explicit policy view")
+    require(U32.is_eq(action(UI.event(Mouse{552,88,0,True{}},s)),51),"Folders toolbar target dispatches explicit policy view")
     require(U32.is_eq(action(UI.event(Mouse{16,312,0,True{}},s)),52),"Capture file target dispatches exact selected occurrence action")
-    require(U32.is_eq(action(UI.event(Mouse{16,344,0,True{}},s)),50),"Open image target shares preview action")
-    require(U32.is_eq(action(UI.event(Mouse{16,152,0,True{}},f)),56),"Use folder target dispatches selection only")
-    require(U32.is_eq(action(UI.event(Mouse{16,184,0,True{}},f)),53),"Add folder target dispatches explicit path registration")
-    require(U32.is_eq(action(UI.event(Mouse{16,216,0,True{}},f)),0),"already enabled root cannot dispatch hidden Enable")
-    require(U32.is_eq(action(UI.event(Mouse{16,248,0,True{}},f)),55),"Disable folder target is distinct from Use and Add")
+    require(U32.is_eq(action(UI.event(Mouse{432,88,0,True{}},s)),50),"Open image toolbar target shares preview action")
+    require(U32.is_eq(action(UI.event(Mouse{168,88,0,True{}},f)),56),"Use folder toolbar target dispatches selection only")
+    require(U32.is_eq(action(UI.event(Mouse{312,88,0,True{}},f)),53),"Add folder toolbar target dispatches explicit path registration")
+    require(U32.is_eq(action(UI.event(Mouse{432,88,0,True{}},f)),0),"already enabled root cannot dispatch hidden Enable")
+    require(U32.is_eq(action(UI.event(Mouse{552,88,0,True{}},f)),55),"Disable folder toolbar target is distinct from Use and Add")
 
 def discovery_report(value: J.Json) -> String:
   Settings.last(G.settings_model(G.write_capture_ok(S.ready(),0,value,"",True{})))

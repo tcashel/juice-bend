@@ -1,0 +1,3 @@
+This weighted call-tree graph samples the optimized native parent after its image decoder exited, while the pending UI was still visible. The same parent identity and 4,096 pending-status pixels bracketed the sample. Window.frame accounts for 895 of 997 main-thread observations; its Cocoa run-loop wait accounts for 879 within that count. No process-output conversion frame appeared in this sample.
+
+Widths are stack observations, not CPU usage or elapsed milliseconds. A host compiler was active; this is one diagnostic sample, not a controlled timing comparison. The next experiment compares redraw pacing on the same VM. Helper-thread weights are excluded. No runtime patch or performance fix is claimed.

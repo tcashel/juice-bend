@@ -35,7 +35,7 @@ def presentation() -> IO(Unit):
       "parent-session","partial_content"} : Providers.Record}
   shown = Scoped.event_text(False{},record,2,event)
   details = Scoped.event_details(False{},record,2,event)
-  expected = "[assistant] 2026-10-20T00:00:00Z · [r7:e2] · coverage: partial_content\n" ++
+  expected = "[assistant] · [r7:e2] · coverage: partial_content\n" ++
     "Café é 中文 🙂\nsecond line\nTool: Write\nCall ID: call-1\nArguments: {\"path\":\"x\"}\n" ++
     "Result: recorded result\n\n"
   expected_details = "[r7:e2]\nRole: assistant\nRecorded time: 2026-10-20T00:00:00Z\n" ++
@@ -118,8 +118,8 @@ def suite(+self: String) -> IO(Unit):
       "scoped transcript retains the complete payload beyond 4096 characters and its Unicode tail")
     assert(String.contains(page,"Visible events in this captured range: 2"),
       "scoped count includes only visible events in selected physical range")
-    assert(String.starts_with(page,"Transcript · snapshot " ++ snapshot) &&
-      String.starts_with(unfiltered,"Transcript · snapshot " ++ snapshot),
+    assert(String.starts_with(page,"Captured page · 2 events · snapshot " ++ snapshot ++ "\n") &&
+      String.starts_with(unfiltered,"Captured page · 7 events · snapshot " ++ snapshot ++ "\n"),
       "filtered and All providers pages use the same content-first presentation")
     assert(String.contains(unfiltered,long_body()) && String.contains(unfiltered,"excluded-assistant") &&
       String.contains(unfiltered,"excluded-other-repo"),"unfiltered presentation preserves complete bodies outside filtered scope")

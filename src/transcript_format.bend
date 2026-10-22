@@ -25,10 +25,17 @@ def warning(coverage: String) -> String:
 def reference(ordinal: String,index: U32) -> String:
   "[r" ++ ordinal ++ ":e" ++ U32.show(index) ++ "]"
 
+# Exact captured timestamps remain in the details appendix. Keep missing-time
+# and incomplete-coverage notices beside each event; neither is a zero/default.
+def time_notice(time: String) -> String:
+  match time:
+    case "": " · time not captured"
+    case _: ""
+
 def body(reference: String,event: Providers.Record) -> String:
   Providers.ProviderEvent{role,text,tool,callid,args,result,_,_,time,_,_,_,coverage} = event
-  "[" ++ nonempty(role,"event") ++ "] " ++ nonempty(time,"time not captured") ++
-    " · " ++ reference ++ warning(coverage) ++ "\n" ++ text ++ "\n" ++
+  "[" ++ nonempty(role,"event") ++ "] · " ++ reference ++
+    time_notice(time) ++ warning(coverage) ++ "\n" ++ text ++ "\n" ++
     field("Tool",tool) ++ field("Call ID",callid) ++ field("Arguments",args) ++
     field("Result",result) ++ "\n"
 
@@ -70,7 +77,6 @@ def conversation(visible: U32,text: String) -> String:
 
 def render(page: Page,snapshot: String,page_details: String) -> String:
   Page{+visible,text,details} = page
-  "Transcript · snapshot " ++ snapshot ++ " · " ++ U32.show(visible) ++ " events\n" ++
-    "Bounded captured page; details and references follow.\n\n" ++
+  "Captured page · " ++ U32.show(visible) ++ " events · snapshot " ++ snapshot ++ "\n\n" ++
     conversation(visible,text) ++ "Page details & exact references\n" ++
     page_details ++ "\n\n" ++ details

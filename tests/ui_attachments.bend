@@ -82,16 +82,16 @@ def entry() -> IO(Unit):
 
 def controls() -> IO(Unit):
   do IO<Unit>:
-    click(ready(),16,120,3,"attachment sidebar Back returns to captured reader")
-    click(ready(),16,152,4,"attachment sidebar Previous pages raw records")
-    click(ready(),16,184,5,"attachment sidebar Next pages raw records")
-    click(ready(),16,208,2,"attachment Export bytes includes its first target pixel")
-    click(ready(),167,239,2,"attachment Export bytes includes its final painted target pixel")
-    click(ready(),16,240,6,"next sidebar row copies details instead of exporting")
-    click(ready(),16,280,14,"attachment sidebar exposes explicit capture folder policy")
+    click(ready(),16,120,0,"duplicate sidebar Back is removed and inert")
+    click(ready(),16,152,0,"duplicate sidebar Previous is removed and inert")
+    click(ready(),16,184,0,"duplicate sidebar Next is removed and inert")
+    click(ready(),16,208,0,"former sidebar Export first pixel is inert")
+    click(ready(),167,239,0,"former sidebar Export last pixel is inert")
+    click(ready(),16,240,0,"duplicate sidebar Copy details is removed and inert")
+    click(ready(),16,280,0,"duplicate sidebar Folders is removed and inert")
     click(ready(),16,472,0,"attachment sidebar cannot reach hidden History Storage")
     click(ready(),16,600,0,"attachment sidebar cannot dispatch old bottom-row Back")
-    click(ready(),16,88,3,"attachment header Back shares sidebar behavior")
+    click(ready(),16,88,3,"attachment toolbar Back returns to the original captured reader")
     click(ready(),152,80,2,"attachment header Export includes top-left pixel")
     click(ready(),287,111,2,"attachment header Export includes bottom-right pixel")
     click(ready(),288,88,0,"gap after attachment header Export is inert")
@@ -100,15 +100,15 @@ def controls() -> IO(Unit):
     click(ready(),552,88,14,"attachment header Folders cannot dispatch a transcript export")
     click(ready(),864,88,4,"attachment header Previous uses raw-record page action")
     click(ready(),1040,88,5,"attachment header Next uses raw-record page action")
-    click(ready(),200,600,4,"attachment list Previous shares exact page availability")
-    click(ready(),400,600,5,"attachment list Next shares exact page availability")
+    click(ready(),200,600,0,"duplicate list Previous is removed and inert")
+    click(ready(),400,600,0,"duplicate list Next is removed and inert")
     require(U32.is_eq(opened(UI.event(Mouse{200,256,0,True{}},ready())),1),"attachment second row opens exact local row index")
     require(String.eq(copied(UI.event(Mouse{312,88,0,True{}},ready())),UI.reader(content())),"Copy details returns full canonical metadata including Unicode and tabs")
     require(String.eq(copied(UI.event(Mouse{824,136,0,True{}},ready())),"🙂B\t"),"reader Copy remains distinct from Copy details")
 
 def blocked(+s: UI.State) -> Bool:
-  U32.is_eq(action(UI.event(Mouse{16,152,0,True{}},s)),0) &&
-    U32.is_eq(action(UI.event(Mouse{16,184,0,True{}},s)),0) &&
+  U32.is_eq(action(UI.event(Mouse{864,88,0,True{}},s)),0) &&
+    U32.is_eq(action(UI.event(Mouse{1040,88,0,True{}},s)),0) &&
     U32.is_eq(action(UI.event(Mouse{16,216,0,True{}},s)),0) &&
     U32.is_eq(action(UI.event(Mouse{168,88,0,True{}},s)),0) &&
     U32.is_eq(action(UI.event(Mouse{400,600,0,True{}},s)),0) &&
@@ -120,10 +120,10 @@ def phases() -> IO(Unit):
     require(blocked(panel(1,True{},True{},True{})),"pending attachment state disables export and page requests")
     require(blocked(panel(3,True{},True{},True{})),"exporting attachment state cannot submit another export or page")
     require(blocked(panel(99,True{},True{},True{})),"unknown attachment phase cannot grant export")
-    click(panel(2,False{},True{},True{}),16,216,0,"unsupported or remote selected occurrence cannot export bytes")
-    click(panel(2,True{},False{},True{}),200,600,0,"first record page has no Previous")
-    click(panel(2,True{},True{},False{}),400,600,0,"last record page has no Next")
-    click(panel(1,False{},False{},False{}),16,120,3,"Back remains usable during attachment work")
+    click(panel(2,False{},True{},True{}),168,88,0,"unsupported or remote selected occurrence cannot export bytes")
+    click(panel(2,True{},False{},True{}),864,88,0,"first record page has no Previous")
+    click(panel(2,True{},True{},False{}),1040,88,0,"last record page has no Next")
+    click(panel(1,False{},False{},False{}),16,88,3,"Back remains usable during attachment work")
     click(panel(3,False{},False{},False{}),312,88,6,"exporting occurrence details can still be copied")
     require(U32.is_eq(action(UI.event(Key{101,True{}},UI.set_modifiers(ready(),True{},False{}))),2),"Command-E uses eligible attachment export rather than transcript export")
 
@@ -180,16 +180,16 @@ def painting() -> IO(Unit):
     require(String.eq(UI.result_label(UI.AttachmentResults{3,False{},False{},False{}}),"Exporting selected inline bytes"),"exporting phase is labeled as pending publication rather than a read failure")
     require(String.eq(UI.list_heading(UI.AttachmentResults{2,False{},False{},False{}},False{}),"Captured attachments") &&
       String.eq(UI.result_label(UI.AttachmentResults{2,False{},False{},False{}}),"See record coverage in details"),"attachment list names captured metadata without claiming total extraction completeness")
-    require(glyph(canvas,16,216,69,UI.ink(),UI.rail()) && glyph(canvas,160,88,69,UI.accent(),UI.panel()),"eligible Export bytes paints at sidebar and header hit locations")
-    require(glyph(pending,16,216,69,UI.muted(),UI.rail()) && glyph(pending,160,88,69,UI.muted(),UI.panel()),"pending Export bytes is muted in actual production painter")
-    require(glyph(pending,16,152,80,UI.muted(),UI.rail()) && glyph(pending,856,88,80,UI.muted(),UI.panel()),"pending Previous records is muted in both control groups")
-    require(glyph(canvas,704,128,97,UI.accent(),UI.paper()) && glyph(normal,704,128,65,UI.accent(),UI.paper()),"attachment panel reclaims its title while captured reader paints the entry")
+    require(Tiles.tile.empty(Tiles.tile.at(8n,canvas,2,27),UI.rail()) && glyph(canvas,160,88,69,UI.accent(),UI.panel()),"eligible Export bytes paints once at its toolbar target")
+    require(Tiles.tile.empty(Tiles.tile.at(8n,pending,2,27),UI.rail()) && glyph(pending,160,88,69,UI.muted(),UI.panel()),"pending Export bytes remains muted at its sole toolbar target")
+    require(glyph(pending,856,88,80,UI.muted(),UI.panel()) && Tiles.tile.empty(Tiles.tile.at(8n,pending,24,74),UI.panel()) && Tiles.tile.empty(Tiles.tile.at(8n,pending,45,74),UI.panel()),"pending toolbar Previous remains muted while duplicate list paging is absent")
+    require(glyph(canvas,704,128,97,UI.heading_ink(),UI.paper()) && glyph(normal,704,128,65,UI.accent(),UI.paper()),"attachment panel reclaims its title while captured reader paints the entry")
     require(glyph(normal,784,128,115,UI.accent(),UI.paper()) &&
       Tiles.tile.empty(Tiles.tile.at(8n,normal,99,16),UI.paper()) &&
       Tiles.tile.empty(Tiles.tile.at(8n,normal,100,16),UI.paper()),"complete Attachments label ends before its trailing padding and Copy gap")
     require(glyph(normal,816,128,67,UI.accent(),UI.paper()) && glyph(normal,1104,128,83,UI.accent(),UI.paper()),"long reader title leaves Copy and Select all unobscured")
-    require(glyph(canvas,912,128,80,UI.muted(),UI.paper()) && glyph(canvas,1008,128,67,UI.muted(),UI.paper()),"read-only scope Paste and Clear are visibly muted")
-    require(glyph(canvas,208,32,83,UI.muted(),UI.paper()),"attachment scope paints instructions without an editable caret")
+    require(Tiles.tile.empty(Tiles.tile.at(8n,canvas,114,16),UI.paper()) && Tiles.tile.empty(Tiles.tile.at(8n,canvas,126,16),UI.paper()),"inapplicable Paste and Clear are absent from the read-only attachment toolbar")
+    require(glyph(canvas,208,32,65,UI.muted(),UI.paper()),"attachment scope paints instructions without an editable caret")
     require(Tiles.tile.empty(Tiles.tile.at(8n,canvas,2,47),UI.rail()),"unused attachment sidebar rows below new controls contain no hidden old controls")
     require(U32.is_eq(G.width(),1200) && U32.is_eq(G.height(),664),"attachment mode preserves accepted compact native dimensions")
 

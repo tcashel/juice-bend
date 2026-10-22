@@ -1,0 +1,14 @@
+{
+  "raw_sha256": "61245fcf37d83c1d822801faed51ecb9cc05f89ebf37935706b63237ec3455f1",
+  "main_observations": 997,
+  "window_frame": 895,
+  "cocoa_runloop_wait": 879,
+  "phase": "After decoder child absence; exact same parent and pending-status pixels bracketed the sample.",
+  "top_of_stack_reconciled": true,
+  "source_unchanged": true,
+  "limits": "Width is sampled stack weight, not CPU usage or a timeline. Concurrent host compilation; one diagnostic sample.",
+  "artifacts": {
+    "main-flame.svg": "992e03e28e3c543f42bfab5e34fb41d67216a03df179631aa9680c9fd559692c"
+  },
+  "local_png_preview_sha256": "471b2a79f7d646a224183f89981992c96530b7cfdd50b45d23a265cbd85bde58"
+}

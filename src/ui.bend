@@ -3,6 +3,7 @@
 import Base
 import ./font.bend as Font
 import ./ui_geometry.bend as G
+import ./ui_palette.bend as Palette
 
 type Line is Data:
   Line{start: U32, text: String}
@@ -317,7 +318,7 @@ def ordinary_result_label(+offset: U32,+count: U32,more: Bool,ready: Bool) -> St
 
 def result_label(results: Results) -> String:
   match results:
-    case AttachmentCaptureResults{phase,_,_,_,_,_}: Bool.pick(String,U32.is_eq(phase,2),"Select a reference to inspect saved bytes","Checking attachment evidence")
+    case AttachmentCaptureResults{phase,_,_,_,_,_}: Bool.pick(String,U32.is_eq(phase,2),"Choose a reference for details","Checking attachment evidence")
     case AttachmentFoldersResults{phase,_,_,_,_,_}: Bool.pick(String,U32.is_eq(phase,2),"Explicit capture folder policy","Updating folder policy")
     case AttachmentResults{phase,_,_,_}:
       match phase:
@@ -773,12 +774,12 @@ def sidebar_quota(+s: State,row: U32,quota: Bool) -> State & Action:
 
 def sidebar_attachment(+s: State,row: U32,attachments: Bool) -> State & Action:
   match attachments:
-    case True{}: attachment_action(s,row)
+    case True{}: attachment_action(s,Bool.pick(U32,U32.is_eq(row,6),6,99))
     case False{}: sidebar_quota(s,row,is_quota(s))
 
 def sidebar_folders(+s: State,row: U32,folders: Bool) -> State & Action:
   match folders:
-    case True{}: folder_action(s,row)
+    case True{}: folder_action(s,Bool.pick(U32,U32.is_eq(row,5),5,99))
     case False{}: sidebar_attachment(s,row,is_attachments(s))
 def atif_left() -> U32: 8
 def atif_right() -> U32: 88
@@ -821,9 +822,14 @@ def list_click.body(+s: State,+x: U32,+y: U32,rows: List<&2,String>,parent: Bool
       +index = U32.add(minus(selected(s),U32.sub(G.list_rows(),1)),U32.div(minus(y,G.list_y()),G.list_pitch()))
       list_row_click(s,index,U32.is_ge(y,G.list_y()) && U32.is_lt(y,U32.add(G.list_y(),U32.mul(G.list_rows(),G.list_pitch()))) && U32.is_lt(index,U32.from_nat(List.length(&2,String,rows))))
 
+def list_pager_action(+s: State,x: U32,hidden: Bool) -> State & Action:
+  match hidden:
+    case True{}: (s,NoAction{})
+    case False{}: result_action(s,U32.is_ge(x,344))
+
 def list_click.zone(+s: State,+x: U32,+y: U32,rows: List<&2,String>,files: Bool,pager: Bool) -> State & Action:
   match pager:
-    case True{}: result_action(s,U32.is_ge(x,344))
+    case True{}: list_pager_action(s,x,is_attachments(s) || is_attachment_folders(s))
     case False{}: list_click.body(s,x,y,rows,G.rect(x,y,G.sidebar_end(),120,G.list_end(),152) && files)
 
 def list_click(+s: State,+col: U32,+row: U32) -> State & Action:
@@ -1167,14 +1173,15 @@ def canvas.set(+d: Nat, +c: Canvas, +x: U32, +y: U32, +tile: Canvas) -> Canvas:
       +quad = U32.add(Bool.to_u32(U32.is_ge(x, half)), U32.mul(2, Bool.to_u32(U32.is_ge(y, half))))
       canvas.update(c, quad, sub => canvas.set(p, sub, U32.mod(x, half), U32.mod(y, half), tile))
 
-def ink() -> U32: 2434867
-def muted() -> U32: 6448740
-def accent() -> U32: 3762751
-def paper() -> U32: 16777215
-def rail() -> U32: 16054255
-def panel() -> U32: 16317176
-def selected_bg() -> U32: 14872027
-def selection_bg() -> U32: 12444155
+def ink() -> U32: Palette.ink(Palette.Body{})
+def muted() -> U32: Palette.ink(Palette.Secondary{})
+def heading_ink() -> U32: Palette.ink(Palette.Heading{})
+def accent() -> U32: Palette.ink(Palette.Action{})
+def paper() -> U32: Palette.surface(Palette.Paper{})
+def rail() -> U32: Palette.surface(Palette.Navigation{})
+def panel() -> U32: Palette.surface(Palette.List{})
+def selected_bg() -> U32: Palette.surface(Palette.Current{})
+def selection_bg() -> U32: Palette.surface(Palette.Selection{})
 
 def glyph.put(+c: Canvas,+bits: Font.Glyph,+x: U32,+y: U32,+foreground: U32,+background: U32) -> Canvas:
   top = canvas.set(8n,c,x,y,Tile{Font.half(bits,True{}),foreground,background})
@@ -1205,6 +1212,11 @@ def fill(+rows: Nat,+c: Canvas,+x: U32,+y: U32,+width: Nat,+color: U32) -> Canva
 
 def box(c: Canvas,x: U32,y: U32,width: U32,height: U32,color: U32) -> Canvas:
   fill(U32.to_nat(U32.div(height,G.cell())),c,U32.div(x,G.cell()),U32.div(y,G.cell()),U32.to_nat(U32.div(width,G.cell())),color)
+
+def selected_mark(c: Canvas,selected: Bool,x: U32,y: U32,height: U32) -> Canvas:
+  match selected:
+    case False{}: c
+    case True{}: box(c,x,y,8,height,accent())
 
 def text(c: Canvas,label: String,x: U32,y: U32,count: U32,fg: U32,bg: U32) -> Canvas:
   write(U32.to_nat(count),c,label,U32.div(x,G.cell()),U32.div(y,G.cell()),fg,bg)
@@ -1291,7 +1303,8 @@ def draw_rows(+fuel: Nat,+c: Canvas,rows: List<&2,String>,+at: U32,+selected: U3
       +y = U32.add(G.list_y(),U32.mul(at,G.list_pitch()))
       +bg = Bool.pick(U32,U32.is_eq(at,selected),selected_bg(),panel())
       base = box(c,184,y,320,56,bg)
-      second = card_draw(base,card(row),y,bg)
+      marked = selected_mark(base,U32.is_eq(at,selected),184,y,56)
+      second = card_draw(marked,card(row),y,bg)
       draw_rows(n,second,rest,U32.add(at,1),selected)
     case _ _: c
 
@@ -1390,10 +1403,11 @@ def draw_side(fuel: Nat,c: Canvas,+index: U32,+files: Bool,+settings: Bool,+scop
     case 1n+n:
       +y = G.sidebar_y(index)
       +logical = G.sidebar_action_index(index,settings,brief)
-      +bg = Bool.pick(U32,Bool.not(brief) && side_active(logical,scope) && (Bool.not(settings) || U32.is_ne(logical,1)),selected_bg(),rail())
+      +active = Bool.not(brief) && side_active(logical,scope) && (Bool.not(settings) || U32.is_ne(logical,1))
+      +bg = Bool.pick(U32,active,selected_bg(),rail())
       label = side_row(c,y,Bool.pick(String,brief,brief_side_label(logical),side_label(settings,logical,files)),bg,
         U32.is_eq(logical,16) && Bool.not(settings || brief))
-      draw_side(n,label,U32.add(index,1),files,settings,scope,brief)
+      draw_side(n,selected_mark(label,active,8,y,32),U32.add(index,1),files,settings,scope,brief)
 
 def whole_usage(s: State) -> Bool:
   String.starts_with(title(s),"Usage | whole captured session")
@@ -1535,14 +1549,19 @@ def attachment_top_label(index: U32) -> String:
 def attachment_top_color(+results: Results,index: U32) -> U32:
   Bool.pick(U32,attachment_available(results,attachment_top_result_index(results,index)),accent(),muted())
 
-def draw_attachment_side(fuel: Nat,c: Canvas,+index: U32,+results: Results) -> Canvas:
-  match fuel:
-    case 0n: c
-    case 1n+n:
-      +y = G.sidebar_y(index)
-      base = box(c,8,y,160,32,rail())
-      label = text(base,attachment_label(results,index),16,U32.add(y,8),18,attachment_side_color(results,index),rail())
-      draw_attachment_side(n,label,U32.add(index,1),results)
+# The toolbar owns repeated actions. The sidebar retains only the one action
+# absent there, with the same existing target and availability gate.
+def draw_attachment_side(c: Canvas,+results: Results) -> Canvas:
+  +folders = folder_results(results)
+  +index = Bool.pick(U32,folders,5,6)
+  +y = G.sidebar_y(index)
+  heading = text(c,Bool.pick(String,folders,"Capture folders","Attachments"),16,128,18,heading_ink(),rail())
+  first = text(heading,Bool.pick(String,folders,"Choose which local","All references"),16,160,18,muted(),rail())
+  second = text(first,Bool.pick(String,folders,"files can be saved","in these records."),16,184,18,muted(),rail())
+  third = text(second,Bool.pick(String,folders,"Saved copies stay","No URLs are"),16,224,18,muted(),rail())
+  fourth = text(third,Bool.pick(String,folders,"after disabling.","downloaded."),16,248,18,muted(),rail())
+  base = box(fourth,8,y,160,32,rail())
+  text(base,attachment_label(results,index),16,U32.add(y,8),18,attachment_side_color(results,index),rail())
 
 def draw_attachment_top(fuel: Nat,c: Canvas,+index: U32,+results: Results) -> Canvas:
   match fuel:
@@ -1556,7 +1575,7 @@ def draw_attachment_top(fuel: Nat,c: Canvas,+index: U32,+results: Results) -> Ca
 
 def draw_attachment_side_context(attachments: Bool,quota: Bool,c: Canvas,results: Results,files: Bool,settings: Bool,scope: String,brief: Bool) -> Canvas:
   match attachments:
-    case True{}: draw_attachment_side(8n,c,0,results)
+    case True{}: draw_attachment_side(c,results)
     case False{}: draw_side_context(quota,c,results,files,settings,scope,brief)
 
 def draw_attachment_top_context(attachments: Bool,quota: Bool,c: Canvas,results: Results,files: Bool,settings: Bool,whole: Bool,automatic: String,brief: Bool) -> Canvas:
@@ -1604,10 +1623,24 @@ def draw_capture_context(quota: Bool,c: Canvas,+suspended: Bool) -> Canvas:
 
 def draw_scope_field(attachments: Bool,c: Canvas,s: State,q: String,+focus: U32,+caret: U32,+anchor: U32) -> Canvas:
   match attachments:
-    case True{}: text(c,"Select a reference below; exact capture and coverage appear in details",G.query_x(),G.query_y(),G.query_columns(),muted(),paper())
+    case True{}: text(c,"All attachment references in these captured records · repository, role and time filters do not apply",G.query_x(),G.query_y(),G.query_columns(),muted(),paper())
     case False{}:
       +offset = query_offset(s)
       draw_line(U32.to_nat(G.query_columns()),c,String.append(String.drop(q,U32.to_nat(offset))," "),U32.div(G.query_x(),G.cell()),U32.div(G.query_y(),G.cell()),offset,Bool.pick(U32,U32.is_eq(focus,0),U32.min(caret,anchor),0),Bool.pick(U32,U32.is_eq(focus,0),Bool.pick(U32,U32.is_eq(caret,anchor),U32.add(caret,1),U32.max(caret,anchor)),0))
+
+def draw_list_pager(hidden: Bool,c: Canvas,+results: Results) -> Canvas:
+  match hidden:
+    case True{}: c
+    case False{}:
+      prev = text(c,"Previous",192,G.list_pager_y(),16,Bool.pick(U32,result_available(results,False{}),accent(),muted()),panel())
+      text(prev,"Next",360,G.list_pager_y(),16,Bool.pick(U32,result_available(results,True{}),accent(),muted()),panel())
+
+def draw_query_actions(attachments: Bool,c: Canvas) -> Canvas:
+  match attachments:
+    case True{}: c
+    case False{}:
+      paste = text(c,"Paste",U32.add(G.text_action_x(1),8),U32.add(G.text_actions_y(),8),10,accent(),paper())
+      text(paste,"Clear",U32.add(G.text_action_x(2),8),U32.add(G.text_actions_y(),8),10,accent(),paper())
 
 def draw_canvas_capture(+s: State,automatic: String,suspended: Bool) -> Canvas:
   State{Content{+q,rows,reader,lines,title,status,+scope,+results,+files},Input{+selected,scroll,Edit{+focus,+caret,+anchor,drag,viewport},command,shift},image,dirty} = s
@@ -1615,7 +1648,8 @@ def draw_canvas_capture(+s: State,automatic: String,suspended: Bool) -> Canvas:
   side = box(base,0,G.header_height(),G.sidebar_end(),G.body_height(),rail())
   list = box(side,G.sidebar_end(),G.header_height(),U32.sub(G.list_end(),G.sidebar_end()),G.body_height(),panel())
   foot = box(list,0,G.footer_y(),G.width(),40,rail())
-  brand = text(foot,"JUICE BEND",16,24,18,accent(),rail())
+  brand_mark = box(foot,16,24,8,16,Palette.ink(Palette.Brand{}))
+  brand = text(brand_mark,"Juice Bend",32,24,16,heading_ink(),rail())
   tagline = text(brand,"Your captured work",16,48,18,muted(),rail())
   input_label = text(tagline,query_label(s),192,8,60,muted(),rail())
   query_bg = box(input_label,G.query_left(),24,U32.sub(G.query_right(),G.query_left()),40,paper())
@@ -1623,22 +1657,20 @@ def draw_canvas_capture(+s: State,automatic: String,suspended: Bool) -> Canvas:
   top = draw_attachment_top_context(is_attachments(s) || is_attachment_folders(s),is_quota(s),query,results,files,is_settings(s),whole_usage(s),automatic_label(results,automatic),is_brief(s))
   capture = draw_capture_context(is_quota(s),top,suspended)
   navigation = draw_attachment_side_context(is_attachments(s) || is_attachment_folders(s),is_quota(s),capture,results,files,is_settings(s),scope,is_brief(s))
-  heading = text(navigation,list_heading(results,files),192,128,38,ink(),panel())
+  heading = text(navigation,list_heading(results,files),192,128,38,heading_ink(),panel())
   range = text(heading,result_label(results),192,152,38,muted(),panel())
-  prev = text(range,"Previous",192,G.list_pager_y(),16,Bool.pick(U32,result_available(results,False{}),accent(),muted()),panel())
-  next = text(prev,"Next",360,G.list_pager_y(),16,Bool.pick(U32,result_available(results,True{}),accent(),muted()),panel())
-  title = text(next,title,G.reader_x(),128,reader_title_columns(s),accent(),paper())
+  next = draw_list_pager(is_attachments(s) || is_attachment_folders(s),range,results)
+  title = text(next,Palette.fit_heading(Palette.heading(title),reader_title_columns(s)),G.reader_x(),128,reader_title_columns(s),heading_ink(),paper())
   entry = draw_attachment_entry(title,attachment_entry_visible(s))
   copy = text(entry,"Copy",U32.add(G.text_action_x(0),8),U32.add(G.text_actions_y(),8),10,accent(),paper())
-  paste = text(copy,"Paste",U32.add(G.text_action_x(1),8),U32.add(G.text_actions_y(),8),10,Bool.pick(U32,is_attachments(s),muted(),accent()),paper())
-  clear = text(paste,"Clear",U32.add(G.text_action_x(2),8),U32.add(G.text_actions_y(),8),10,Bool.pick(U32,is_attachments(s),muted(),accent()),paper())
+  clear = draw_query_actions(is_attachments(s),copy)
   all = text(clear,"Select all",U32.add(G.text_action_x(3),8),U32.add(G.text_actions_y(),8),11,accent(),paper())
   +offset = minus(selected,U32.sub(G.list_rows(),1))
   items = draw_rows(U32.to_nat(G.list_rows()),all,List.drop(&2,String,rows,U32.to_nat(offset)),0,minus(selected,offset))
   body = draw_reader(U32.to_nat(G.reader_rows()),items,List.drop(&2,Line,lines,U32.to_nat(scroll)),U32.div(G.reader_y(),G.cell()),Bool.pick(U32,U32.is_eq(focus,2),U32.min(caret,anchor),0),Bool.pick(U32,U32.is_eq(focus,2),U32.max(caret,anchor),0))
   +summary = String.join(String.lines(status)," ")
-  status1 = text(body,String.take(summary,U32.to_nat(G.footer_columns())),8,G.footer_y(),G.footer_columns(),ink(),rail())
-  status2 = text(status1,String.take(String.drop(summary,U32.to_nat(G.footer_columns())),U32.to_nat(G.footer_second_columns())),8,U32.add(G.footer_y(),16),G.footer_second_columns(),ink(),rail())
+  status1 = text(body,String.take(summary,U32.to_nat(G.footer_columns())),8,G.footer_y(),G.footer_columns(),muted(),rail())
+  status2 = text(status1,String.take(String.drop(summary,U32.to_nat(G.footer_columns())),U32.to_nat(G.footer_second_columns())),8,U32.add(G.footer_y(),16),G.footer_second_columns(),muted(),rail())
   hint = text(status2,"Click status for details",G.footer_hint_x(),U32.add(G.footer_y(),16),25,accent(),rail())
   draw_status(U32.is_ge(focus,3),s,hint)
 
