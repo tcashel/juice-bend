@@ -6,13 +6,16 @@ import ./ui_geometry.bend as G
 import ./ui_palette.bend as Palette
 import ./bend_ui/canvas.bend as C
 import ./bend_ui/label.bend as Chrome
+import ./reader_document.bend as ReaderDoc
+import ./reader_projection.bend as Projection
+import ./reader_cards.bend as ReaderCards
 
 type Line is Data:
   Line{start: U32, text: String}
 
 type Content is Data:
   Content{query: String, rows: List<&2, String>, reader: String,
-    lines: List<&2, Line>, title: String, status: String, scope: String, results: Results, files: Bool}
+    lines: List<&2, Line>, title: String, status: String, scope: String, results: Results, files: Bool, cards: List<&2,ReaderCards.Model>}
 
 type Results is Data:
   Results{offset: U32, count: U32, has_more: Bool, ready: Bool}
@@ -138,57 +141,66 @@ def wrap(+s: String) -> List<&2, Line>:
 def init() -> State:
   State{Content{"", [], "Choose a captured session to read its owned evidence.",
     wrap("Choose a captured session to read its owned evidence."),
-    "Transcript", "Ready. Only explicitly enabled sources are scanned.", "all",Results{0,0,False{},False{}},False{}},
+    "Transcript", "Ready. Only explicitly enabled sources are scanned.", "all",Results{0,0,False{},False{}},False{}, []},
     Input{0, 0, Edit{0, 0, 0, False{}, 0}, False{}, False{}}, Pix{16777215}, True{}}
 
 def bookmark(state: State) -> Bookmark:
   State{content,input,image,dirty} = state
   Bookmark{content,input}
 
+def bookmark_cards(cards: List<&2,ReaderCards.Model>) -> List<&2,ReaderCards.Model>:
+  match cards:
+    case model <> []: [ReaderCards.stop_drag(model)]
+    case _: []
+
+def bookmark_content(content: Content) -> Content:
+  Content{q,rows,reader,lines,title,status,scope,results,files,cards} = content
+  Content{q,rows,reader,lines,title,status,scope,results,files,bookmark_cards(cards)}
+
 def restore(state: State,bookmark: Bookmark) -> State:
   State{old,oldinput,image,dirty} = state
   Bookmark{content,Input{selected,scroll,Edit{focus,caret,anchor,drag,viewport},command,shift}} = bookmark
-  State{content,Input{selected,scroll,Edit{focus,caret,anchor,False{},viewport},False{},False{}},image,True{}}
+  State{bookmark_content(content),Input{selected,scroll,Edit{focus,caret,anchor,False{},viewport},False{},False{}},image,True{}}
 
 def bookmark_selected(bookmark: Bookmark,selected: U32) -> Bookmark:
   Bookmark{content,Input{old,scroll,edit,command,shift}} = bookmark
   Bookmark{content,Input{selected,scroll,edit,command,shift}}
 
 def is_files(s: State) -> Bool:
-  State{Content{q,rows,reader,lines,title,status,scope,results,+files},input,image,dirty} = s
+  State{Content{q,rows,reader,lines,title,status,scope,results,+files,cards},input,image,dirty} = s
   files
 
 def set_files(s: State,files: Bool) -> State:
-  State{Content{q,rows,reader,lines,title,status,scope,results,old},input,image,dirty} = s
-  State{Content{q,rows,reader,lines,title,status,scope,results,files},input,image,True{}}
+  State{Content{q,rows,reader,lines,title,status,scope,results,old,cards},input,image,dirty} = s
+  State{Content{q,rows,reader,lines,title,status,scope,results,files,cards},input,image,True{}}
 
 def is_settings(s: State) -> Bool:
-  State{Content{q,rows,reader,lines,title,status,scope,results,files},input,image,dirty} = s
+  State{Content{q,rows,reader,lines,title,status,scope,results,files,cards},input,image,dirty} = s
   match results:
     case SettingsResults{+offset,+total,automatic,ready}: True{}
     case _: False{}
 
 def is_brief(+s: State) -> Bool:
-  State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
+  State{Content{_,_,_,_,_,_,_,results,_,_},_,_,_} = s
   match results:
     case BriefResults{_}: True{}
     case _: False{}
 
 def is_quota(s: State) -> Bool:
-  State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
+  State{Content{_,_,_,_,_,_,_,results,_,_},_,_,_} = s
   match results:
     case QuotaResults{_,_,_,_,_,_,_}: True{}
     case _: False{}
 
 def is_attachments(s: State) -> Bool:
-  State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
+  State{Content{_,_,_,_,_,_,_,results,_,_},_,_,_} = s
   match results:
     case AttachmentResults{_,_,_,_}: True{}
     case AttachmentCaptureResults{_,_,_,_,_,_}: True{}
     case _: False{}
 
 def is_attachment_folders(s: State) -> Bool:
-  State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
+  State{Content{_,_,_,_,_,_,_,results,_,_},_,_,_} = s
   match results:
     case AttachmentFoldersResults{_,_,_,_,_,_}: True{}
     case _: False{}
@@ -261,7 +273,7 @@ def quota_available(results: Results,index: U32) -> Bool:
     case _: False{}
 
 def title(s: State) -> String:
-  State{Content{q,rows,reader,lines,title,status,scope,results,+files},input,image,dirty} = s
+  State{Content{q,rows,reader,lines,title,status,scope,results,+files,cards},input,image,dirty} = s
   title
 
 def focus(s: State) -> U32:
@@ -273,7 +285,7 @@ def scroll(s: State) -> U32:
   scroll
 
 def query(+s: State) -> String:
-  State{Content{q, rows, reader, lines, title, status, scope,+results,+files}, input, image, dirty} = s
+  State{Content{q, rows, reader, lines, title, status, scope,+results,+files,cards}, input, image, dirty} = s
   q
 
 def selected(+s: State) -> U32:
@@ -281,26 +293,84 @@ def selected(+s: State) -> U32:
   n
 
 def scope(+s: State) -> String:
-  State{Content{q, rows, reader, lines, title, status, scope,+results,+files}, input, image, dirty} = s
+  State{Content{q, rows, reader, lines, title, status, scope,+results,+files,cards}, input, image, dirty} = s
   scope
 
 def reader(+s: State) -> String:
-  State{Content{q, rows, reader, lines, title, status, scope,+results,+files}, input, image, dirty} = s
+  State{Content{q, rows, reader, lines, title, status, scope,+results,+files,cards}, input, image, dirty} = s
   reader
 
+# Structured reader state is boxed in Content so navigation bookmarks carry
+# immutable source, folds, visible mapping and selection as one accepted view.
+def card_model(s: State) -> Maybe<&2,ReaderCards.Model>:
+  State{Content{_,_,_,_,_,_,_,_,_,cards},_,_,_} = s
+  match cards:
+    case model <> []: Some{model}
+    case _: None{}
+
+def card_models_sync(edit: Edit,cards: List<&2,ReaderCards.Model>) -> List<&2,ReaderCards.Model>:
+  Edit{focus,caret,anchor,drag,_} = edit
+  match cards:
+    case +model <> []:
+      [Bool.pick(ReaderCards.Model,U32.is_eq(focus,2),ReaderCards.sync(model,anchor,caret,drag),ReaderCards.clear_focus(model))]
+    case _: []
+
+def content_sync(content: Content,edit: Edit) -> Content:
+  Content{q,rows,reader,lines,title,status,scope,results,files,cards} = content
+  Content{q,rows,reader,lines,title,status,scope,results,files,card_models_sync(edit,cards)}
+
+def card_replace(s: State,+model: ReaderCards.Model) -> State:
+  State{Content{q,rows,_,_,title,status,scope,results,files,_},input,image,_} = s
+  +body = ReaderCards.text(model)
+  State{Content{q,rows,body,wrap(body),title,status,scope,results,files,[model]},input,image,True{}}
+
+def card_models_clear(cards: List<&2,ReaderCards.Model>) -> List<&2,ReaderCards.Model>:
+  match cards:
+    case model <> []: [ReaderCards.clear_focus(model)]
+    case _: []
+
+def card_clear(s: State) -> State:
+  State{Content{q,rows,reader,lines,title,status,scope,results,files,cards},input,image,dirty} = s
+  State{Content{q,rows,reader,lines,title,status,scope,results,files,card_models_clear(cards)},input,image,dirty}
+
+def reader_count_mode(value: Maybe<&2,ReaderCards.Model>,fallback: String) -> U32:
+  match value:
+    case Some{model}: ReaderCards.count(model)
+    case None{}: length(fallback)
+
+def reader_count(+s: State) -> U32:
+  reader_count_mode(card_model(s),reader(s))
+
+def reader_row_count_mode(value: Maybe<&2,ReaderCards.Model>,fallback: List<&2,Line>) -> U32:
+  match value:
+    case Some{model}: ReaderCards.row_count(model)
+    case None{}: U32.from_nat(List.length(&2,Line,fallback))
+
+def reader_row_count(+s: State) -> U32:
+  State{Content{_,_,_,lines,_,_,_,_,_,_},_,_,_} = s
+  reader_row_count_mode(card_model(s),lines)
+
+def card_selection_value(value: Maybe<&2,ReaderCards.Model>,expected: ReaderCards.Token) -> Maybe<&2,Projection.Selection>:
+  match value:
+    case Some{model}: ReaderCards.selection(model,expected)
+    case None{}: None{}
+
+def card_visible_selection(s: State,expected: ReaderCards.Token) -> Maybe<&2,Projection.Selection>:
+  card_selection_value(card_model(s),expected)
+
 def set_status(+s: State, +status: String) -> State:
-  State{Content{q, rows, reader, lines, title, old, scope,+results,+files}, input, image, dirty} = s
-  State{Content{q, rows, reader, lines, title, status, scope,results,files}, input, image, True{}}
+  State{Content{q, rows, reader, lines, title, old, scope,+results,+files,cards}, input, image, dirty} = s
+  State{Content{q, rows, reader, lines, title, status, scope,results,files,cards}, input, image, True{}}
 
 def set_rows(+s: State, rows: List<&2, String>) -> State:
-  State{Content{q, old, reader, lines, title, status, scope,results,files},
+  State{Content{q, old, reader, lines, title, status, scope,results,files,cards},
     Input{selected, scroll, edit, command, shift}, image, dirty} = s
-  State{Content{q, rows, reader, lines, title, status, scope,results,files},
+  State{Content{q, rows, reader, lines, title, status, scope,results,files,cards},
     Input{0, scroll, edit, command, shift}, image, True{}}
 
 def set_results(+s: State, results: Results) -> State:
-  State{Content{q,rows,reader,lines,title,status,scope,old,+files},input,image,dirty} = s
-  State{Content{q,rows,reader,lines,title,status,scope,results,files},input,image,True{}}
+  State{Content{q,rows,reader,lines,title,status,scope,old,+files,cards},input,image,dirty} = s
+  State{Content{q,rows,reader,lines,title,status,scope,results,files,cards},input,image,True{}}
 
 def ordinary_result_label(+offset: U32,+count: U32,more: Bool,ready: Bool) -> String:
   match count ready:
@@ -357,31 +427,31 @@ def result_action_if(+s: State,+forward: Bool,available: Bool) -> State & Action
       (s,NoAction{})
 
 def result_action(+s: State,+forward: Bool) -> State & Action:
-  State{Content{q,rows,reader,lines,title,status,scope,results,+files},input,image,dirty} = s
+  State{Content{q,rows,reader,lines,title,status,scope,results,+files,cards},input,image,dirty} = s
   result_action_if(s,forward,result_available(results,forward))
 
 def set_reader(+s: State, +title: String, +reader: String) -> State:
-  State{Content{q, rows, old, oldlines, oldtitle, status, scope,results,files},
+  State{Content{q, rows, old, oldlines, oldtitle, status, scope,results,files,cards},
     Input{selected, scroll, Edit{+focus, caret, anchor, drag, viewport}, command, shift}, image, dirty} = s
-  State{Content{q, rows, reader, wrap(reader), title, status, scope,results,files},
+  State{Content{q, rows, reader, wrap(reader), title, status, scope,results,files,[]},
     Input{selected, 0, Edit{focus, Bool.pick(U32,(U32.is_eq(focus,0) || U32.is_eq(focus,3)),caret,0),
       Bool.pick(U32,(U32.is_eq(focus,0) || U32.is_eq(focus,3)),anchor,0),
       Bool.pick(Bool,(U32.is_eq(focus,0) || U32.is_eq(focus,3)),drag,False{}),Bool.pick(U32,(U32.is_eq(focus,0) || U32.is_eq(focus,3)),viewport,0)}, command, shift}, image, True{}}
 
 def set_scope(+s: State, +scope: String) -> State:
-  State{Content{q, rows, reader, lines, title, status, old,+results,+files}, input, image, dirty} = s
-  State{Content{q, rows, reader, lines, title, status, scope,results,files}, input, image, True{}}
+  State{Content{q, rows, reader, lines, title, status, old,+results,+files,cards}, input, image, dirty} = s
+  State{Content{q, rows, reader, lines, title, status, scope,results,files,cards}, input, image, True{}}
 
 def set_query(+s: State, +q: String) -> State:
-  State{Content{old, rows, reader, lines, title, status, scope,results,files},
+  State{Content{old, rows, reader, lines, title, status, scope,results,files,cards},
     Input{selected, scroll, edit, command, shift}, image, dirty} = s
   +n = length(q)
-  State{Content{q, rows, reader, lines, title, status, scope,results,files},
+  State{Content{q, rows, reader, lines, title, status, scope,results,files,cards},
     Input{selected, scroll, Edit{0, n, n, False{}, 0}, command, shift}, image, True{}}
 
 def set_edit(+s: State, +edit: Edit) -> State:
   State{content, Input{selected, scroll, old, command, shift}, image, dirty} = s
-  State{content, Input{selected, scroll, edit, command, shift}, image, True{}}
+  State{content_sync(content,edit), Input{selected, scroll, edit, command, shift}, image, True{}}
 
 def set_position(+s: State, +selected: U32, +scroll: U32) -> State:
   State{content, Input{old, oldscroll, edit, command, shift}, image, dirty} = s
@@ -391,10 +461,107 @@ def set_modifiers(+s: State, +command: Bool, +shift: Bool) -> State:
   State{content, Input{selected, scroll, edit, oldcmd, oldshift}, image, dirty} = s
   State{content, Input{selected, scroll, edit, command, shift}, image, dirty}
 
+def card_update(s: State,model: ReaderCards.Model) -> State:
+  State{Content{q,rows,reader,lines,title,status,scope,results,files,_},input,image,_} = s
+  State{Content{q,rows,reader,lines,title,status,scope,results,files,[model]},input,image,True{}}
+
+def card_attach(+s: State,model: ReaderCards.Model) -> State:
+  State{_,Input{_,_,edit,_,_},_,_} = s
+  set_edit(card_replace(s,model),edit)
+
+def document_mode(s: State,title: String,+document: ReaderDoc.Document,page: String,structured: Bool) -> State:
+  match structured:
+    case False{}: set_reader(s,title,ReaderDoc.text(document))
+    case True{}: card_attach(set_reader(s,title,ReaderDoc.text(document)),ReaderCards.open(document,page))
+
+def set_document(s: State,title: String,+document: ReaderDoc.Document,page: String) -> State:
+  document_mode(s,title,document,page,ReaderDoc.structured(document))
+
+def card_keep_row(+s: State,row: Maybe<&2,U32>) -> State:
+  State{_,Input{selected,+scroll,_,_,_},_,_} = s
+  match row:
+    case None{}: s
+    case Some{+row}: set_position(s,selected,
+      Bool.pick(U32,U32.is_lt(row,scroll),row,Bool.pick(U32,U32.is_ge(row,U32.add(scroll,G.reader_rows())),
+        minus(U32.inc(row),G.reader_rows()),scroll)))
+
+def card_keep_visible(s: State,model: ReaderCards.Model) -> State:
+  card_keep_row(s,ReaderCards.focused_row(model))
+
+def card_fold_changed(+s: State,+next: ReaderCards.Model,changed: Bool) -> State:
+  match changed:
+    case False{}: s
+    case True{}:
+      card_keep_visible(set_status(set_edit(card_replace(s,next),Edit{2,0,0,False{},0}),
+        "Visible text updated. Selection cleared. Export captured page includes collapsed details."),next)
+
+def card_fold_valid(+s: State,+model: ReaderCards.Model,expected: ReaderCards.Token,key: ReaderDoc.PartKey,valid: Bool) -> State:
+  match valid:
+    case False{}: s
+    case True{}:
+      +next = ReaderCards.toggle(model,expected,key)
+      card_fold_changed(s,next,U32.is_ne(ReaderCards.revision(next),ReaderCards.revision(model)))
+
+def card_fold_value(+s: State,+expected: ReaderCards.Token,key: ReaderDoc.PartKey,value: Maybe<&2,ReaderCards.Model>) -> State:
+  match value:
+    case None{}: s
+    case Some{+model}: card_fold_valid(s,model,expected,key,ReaderCards.accepts(model,expected))
+
+def card_fold(+s: State,expected: ReaderCards.Token,key: ReaderDoc.PartKey) -> State:
+  card_fold_value(s,expected,key,card_model(s))
+
+def card_focus_set(+s: State,+model: ReaderCards.Model,key: ReaderDoc.PartKey) -> State:
+  +next = ReaderCards.with_focus(ReaderCards.sync(model,0,0,False{}),Some{key})
+  card_keep_visible(set_edit(card_update(s,next),Edit{2,0,0,False{},0}),next)
+
+def card_focus_value(+s: State,model: ReaderCards.Model,backward: Bool,key: Maybe<&2,ReaderDoc.PartKey>) -> State & Action:
+  match key:
+    case Some{key}: (card_focus_set(s,model,key),NoAction{})
+    case None{}: (set_edit(card_clear(s),Edit{Bool.pick(U32,backward,2,0),0,0,False{},0}),NoAction{})
+
+def card_focus_step(s: State,+model: ReaderCards.Model,+backward: Bool) -> State & Action:
+  card_focus_value(s,model,backward,ReaderCards.focus_next(model,backward))
+
+def card_tab_back(+s: State,model: ReaderCards.Model,focused: Maybe<&2,ReaderDoc.PartKey>) -> State & Action:
+  match focused:
+    case Some{_}: card_focus_step(s,model,True{})
+    case None{}: (set_edit(s,Edit{1,0,0,False{},0}),NoAction{})
+
+def card_tab_mode(+s: State,+model: ReaderCards.Model,+focus: U32,+backward: Bool) -> State & Action:
+  match focus backward:
+    case 2 False{}: card_focus_step(s,model,False{})
+    case 2 True{}: card_tab_back(s,model,ReaderCards.focus(model))
+    case 0 True{}: card_focus_step(s,ReaderCards.clear_focus(model),True{})
+    case _ _:
+      (set_edit(s,Edit{Bool.pick(U32,backward,minus(focus,1),U32.inc(focus)),0,0,False{},0}),NoAction{})
+
+def card_key_focus(+s: State,+model: ReaderCards.Model,code: U32,command: Bool,key: Maybe<&2,ReaderDoc.PartKey>) -> Maybe<&1,State & Action>:
+  match code command key:
+    case 13 False{} Some{key}: Some{(card_fold(s,ReaderCards.token(model),key),NoAction{})}
+    case 32 False{} Some{key}: Some{(card_fold(s,ReaderCards.token(model),key),NoAction{})}
+    case 27 False{} Some{_}: Some{(card_clear(s),NoAction{})}
+    case _ _ _: None{}
+
+def card_key_code(+s: State,+model: ReaderCards.Model,+focus: U32,shift: Bool,code: U32,command: Bool) -> Maybe<&1,State & Action>:
+  match code:
+    case 9: Some{card_tab_mode(s,model,focus,shift)}
+    case 25: Some{card_tab_mode(s,model,focus,True{})}
+    case _: card_key_focus(s,model,code,command,Bool.pick(Maybe<&2,ReaderDoc.PartKey>,U32.is_eq(focus,2),ReaderCards.focus(model),None{}))
+
+def card_key_value(+s: State,code: U32,command: Bool,value: Maybe<&2,ReaderCards.Model>) -> Maybe<&1,State & Action>:
+  State{_,Input{_,_,Edit{focus,_,_,_,_},_,shift},_,_} = s
+  match value:
+    case None{}: None{}
+    case Some{model}: card_key_code(s,model,focus,shift,code,command)
+
+def card_key(+s: State,code: U32,command: Bool) -> Maybe<&1,State & Action>:
+  card_key_value(s,code,command,card_model(s))
+
+
 # Search edits are bounded to 512 committed Unicode characters.
 
 def insert(+s: State, +text: String) -> State:
-  State{Content{+q, rows, reader, lines, title, status, scope,results,files},
+  State{Content{+q, rows, reader, lines, title, status, scope,results,files,cards},
     Input{selected, scroll, Edit{focus, +caret, +anchor, drag, viewport}, command, shift}, image, dirty} = s
   +start = U32.min(caret, anchor)
   +ins = String.take(text, U32.to_nat(minus(512, minus(length(q),
@@ -410,30 +577,30 @@ def backspace(+s: State) -> State:
   insert(set_edit(s, Edit{0, start, U32.max(caret, anchor), False{}, 0}), "")
 
 def select_all(+s: State) -> State:
-  State{Content{q, rows, reader, lines, title, status, scope,results,files},
+  State{Content{q, rows, reader, lines, title, status, scope,results,files,cards},
     Input{selected, scroll, Edit{+focus, caret, anchor, drag, viewport}, command, shift}, image, dirty} = s
-  +n = Bool.pick(U32, U32.is_eq(focus, 0), length(q), length(reader))
-  set_edit(s, Edit{Bool.pick(U32, U32.is_eq(focus, 0), 0, 2), n, 0, False{}, 0})
+  +n = Bool.pick(U32, U32.is_eq(focus, 0), length(q), reader_count(s))
+  set_edit(card_clear(s), Edit{Bool.pick(U32, U32.is_eq(focus, 0), 0, 2), n, 0, False{}, 0})
 
 def selection(+s: State) -> String:
-  State{Content{q, rows, reader, lines, title, status, scope,results,files},
+  State{Content{q, rows, reader, lines, title, status, scope,results,files,cards},
     Input{selected, scroll, Edit{+focus, caret, anchor, drag, viewport}, command, shift}, image, dirty} = s
   span(Bool.pick(String, U32.is_eq(focus, 0), q, reader), caret, anchor)
 
 def move_caret(+s: State, +right: Bool) -> State:
-  State{Content{q, rows, reader, lines, title, status, scope,results,files},
+  State{Content{q, rows, reader, lines, title, status, scope,results,files,cards},
     Input{selected, scroll, Edit{+focus, +caret, +anchor, drag, viewport}, command, +shift}, image, dirty} = s
-  +n = Bool.pick(U32, U32.is_eq(focus, 0), length(q), length(reader))
+  +n = Bool.pick(U32, U32.is_eq(focus, 0), length(q), reader_count(s))
   +step = Bool.pick(U32, right, U32.min(n, U32.add(caret, 1)), minus(caret, 1))
   +edge = Bool.pick(U32, right, U32.max(caret, anchor), U32.min(caret, anchor))
   # An unshifted arrow collapses a selection without taking an additional step.
   +pos = Bool.pick(U32, shift || U32.is_eq(caret, anchor), step, edge)
-  set_edit(s, Edit{focus, pos, Bool.pick(U32, shift, anchor, pos), False{}, 0})
+  set_edit(card_clear(s), Edit{focus, pos, Bool.pick(U32, shift, anchor, pos), False{}, 0})
 
 def scroll_by(+s: State, +down: Bool, +amount: U32) -> State:
-  State{Content{q, rows, reader, +lines, title, status, scope,results,files},
+  State{Content{q, rows, reader, +lines, title, status, scope,results,files,cards},
     Input{selected, +scroll, edit, command, shift}, image, dirty} = s
-  +limit = minus(U32.from_nat(List.length(&2, Line, lines)), G.reader_rows())
+  +limit = minus(reader_row_count(s), G.reader_rows())
   +next = Bool.pick(U32, down, U32.min(limit, U32.add(scroll, amount)), minus(scroll, amount))
   set_position(s, selected, next)
 
@@ -453,9 +620,50 @@ def reader_at_line(+line: Line,+x: U32) -> U32:
   Line{start,text} = line
   U32.add(start,U32.min(length(text),U32.div(minus(x,G.reader_x()),G.cell())))
 
-def reader_at(+s: State,+x: U32,+y: U32) -> U32:
-  State{Content{q,rows,reader,+lines,title,status,scope,results,files},Input{selected,scroll,edit,command,shift},image,dirty} = s
+def plain_reader_at(+s: State,+x: U32,+y: U32) -> U32:
+  State{Content{q,rows,reader,+lines,title,status,scope,results,files,cards},Input{selected,scroll,edit,command,shift},image,dirty} = s
   reader_at_line(line_at(lines,U32.min(minus(U32.from_nat(List.length(&2,Line,lines)),1),U32.add(scroll,U32.min(U32.sub(G.reader_rows(),1),U32.div(minus(y,G.reader_y()),G.line_pitch()))))),x)
+
+def card_hit(+model: ReaderCards.Model,scroll: U32,+x: U32,+y: U32) -> ReaderCards.Hit:
+  Bool.pick(ReaderCards.Hit,G.rect(x,y,G.reader_x(),G.reader_y(),U32.add(G.reader_x(),U32.mul(G.reader_columns(),G.cell())),G.footer_y()),
+    ReaderCards.hit(model,U32.add(scroll,U32.div(minus(y,G.reader_y()),G.line_pitch())),U32.div(minus(x,G.reader_x()),G.cell())),ReaderCards.NoHit{})
+
+def reader_at_hit(hit: ReaderCards.Hit,fallback: U32) -> U32:
+  match hit:
+    case ReaderCards.TextHit{position}: position
+    case _: fallback
+
+def reader_at_mode(+s: State,x: U32,y: U32,value: Maybe<&2,ReaderCards.Model>) -> U32:
+  State{_,Input{_,scroll,Edit{_,caret,_,_,_},_,_},_,_} = s
+  match value:
+    case None{}: plain_reader_at(s,x,y)
+    case Some{model}: reader_at_hit(card_hit(model,scroll,x,y),caret)
+
+def reader_at(+s: State,x: U32,y: U32) -> U32:
+  reader_at_mode(s,x,y,card_model(s))
+
+def card_pointer_hit(+s: State,token: ReaderCards.Token,extend: Bool,press: Bool,hit: ReaderCards.Hit) -> State & Action:
+  State{_,Input{_,_,Edit{_,_,anchor,_,_},_,_},_,_} = s
+  match hit:
+    case ReaderCards.TextHit{+position}:
+      (set_edit(card_clear(s),Edit{2,position,Bool.pick(U32,extend,anchor,position),True{},0}),NoAction{})
+    case ReaderCards.FoldHit{key}:
+      (Bool.pick(State,press,card_fold(s,token,key),s),NoAction{})
+    case _: (s,NoAction{})
+
+def card_pointer_valid(+s: State,model: ReaderCards.Model,token: ReaderCards.Token,x: U32,y: U32,extend: Bool,press: Bool,valid: Bool) -> State & Action:
+  State{_,Input{_,scroll,_,_,_},_,_} = s
+  match valid:
+    case False{}: (s,NoAction{})
+    case True{}: card_pointer_hit(s,token,extend,press,card_hit(model,scroll,x,y))
+
+def card_pointer_value(+s: State,+token: ReaderCards.Token,x: U32,y: U32,extend: Bool,press: Bool,value: Maybe<&2,ReaderCards.Model>) -> State & Action:
+  match value:
+    case None{}: (s,NoAction{})
+    case Some{+model}: card_pointer_valid(s,model,token,x,y,extend,press,ReaderCards.accepts(model,token))
+
+def card_pointer(+s: State,token: ReaderCards.Token,x: U32,y: U32,extend: Bool,press: Bool) -> State & Action:
+  card_pointer_value(s,token,x,y,extend,press,card_model(s))
 
 def query_offset(s: State) -> U32:
   State{content, Input{selected, scroll, Edit{focus, caret, anchor, drag, viewport}, command, shift}, image, dirty} = s
@@ -464,12 +672,18 @@ def query_offset(s: State) -> U32:
 def query_at(+s: State,col: U32) -> U32:
   U32.min(length(query(s)),U32.add(query_offset(s),U32.min(G.query_columns(),minus(col,U32.div(G.query_x(),G.cell())))))
 
+def drag_plain(+s: State,+x: U32,+y: U32,+focus: U32,+anchor: U32) -> State & Action:
+  (set_edit(s, Edit{focus, Bool.pick(U32, U32.is_eq(focus, 0), query_at(s, U32.div(x, G.cell())), reader_at(s, x, y)), anchor, True{}, query_offset(s)}), NoAction{})
+
+def drag_card(+s: State,+x: U32,+y: U32,+focus: U32,+anchor: U32,value: Maybe<&2,ReaderCards.Model>) -> State & Action:
+  match focus value:
+    case 2 Some{+model}: card_pointer(s,ReaderCards.token(model),x,y,True{},False{})
+    case _ _: drag_plain(s,x,y,focus,anchor)
+
 def drag_if(+s: State, +x: U32, +y: U32, +focus: U32, +anchor: U32, +dragging: Bool) -> State & Action:
   match dragging:
-    case True{}:
-      (set_edit(s, Edit{focus, Bool.pick(U32, U32.is_eq(focus, 0), query_at(s, U32.div(x, G.cell())), reader_at(s, x, y)), anchor, True{}, query_offset(s)}), NoAction{})
-    case False{}:
-      (s, NoAction{})
+    case True{}: drag_card(s,x,y,focus,anchor,card_model(s))
+    case False{}: (s, NoAction{})
 
 # OS clipboard transport only. No shell, no interpolated command, bounded IO.
 
@@ -487,7 +701,7 @@ def arrow_focus(+s: State, +down: Bool, +focus: U32, +count: U32) -> State & Act
       (set_position(set_edit(s, Edit{1, 0, 0, False{}, 0}), next, scroll), Open{next})
 
 def arrow(+s: State, +down: Bool) -> State & Action:
-  State{Content{q, rows, reader, lines, title, status, scope,results,files},
+  State{Content{q, rows, reader, lines, title, status, scope,results,files,cards},
     Input{selected, scroll, Edit{focus, caret, anchor, drag, viewport}, command, shift}, image, dirty} = s
   arrow_focus(s, down, focus, U32.from_nat(List.length(&2, String, rows)))
 
@@ -564,11 +778,11 @@ def folder_action_ready(available: Bool,+s: State,index: U32) -> State & Action:
         case 7: (s,ListNext{})
         case _: (s,NoAction{})
 def folder_action(+s: State,+index: U32) -> State & Action:
-  State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
+  State{Content{_,_,_,_,_,_,_,results,_,_},_,_,_} = s
   folder_action_ready(attachment_available(results,index),s,index)
 
 def attachment_action(+s: State,+index: U32) -> State & Action:
-  State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
+  State{Content{_,_,_,_,_,_,_,results,_,_},_,_,_} = s
   attachment_action_ready(attachment_available(results,index),s,index)
 
 def attachment_copy_selection(+s: State) -> State & Action:
@@ -650,8 +864,13 @@ def key_down_mode(s: State,code: U32,command: Bool,attachments: Bool) -> State &
     case True{}: attachment_key(s,code,command)
     case False{}: key_down_editable(s,code,command)
 
-def key_down(+s: State,code: U32,command: Bool) -> State & Action:
-  key_down_mode(s,code,command,is_attachments(s))
+def key_down_card(+s: State,code: U32,command: Bool,card: Maybe<&1,State & Action>) -> State & Action:
+  match card:
+    case Some{result}: result
+    case None{}: key_down_mode(s,code,command,is_attachments(s))
+
+def key_down(+s: State,+code: U32,+command: Bool) -> State & Action:
+  key_down_card(s,code,command,card_key(s,code,command))
 
 def key(+s: State, +code: U32, +down: Bool) -> State & Action:
   State{content, Input{selected, scroll, edit, +command, +shift}, image, dirty} = s
@@ -691,7 +910,7 @@ def history_action_mode(+s: State,+files: Bool,+usage: Bool) -> State & Action:
     case False{} False{}: (focus_list(s),NoAction{})
 
 def history_has_origin(+s: State) -> Bool:
-  State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
+  State{Content{_,_,_,_,_,_,_,results,_,_},_,_,_} = s
   match results:
     case RelatedResults{_,_,_,_}: True{}
     case _: String.starts_with(title(s),"Usage |")
@@ -788,7 +1007,7 @@ def quota_action_ready(available: Bool,s: State,index: U32) -> State & Action:
         case _: (s,NoAction{})
 
 def quota_action(+s: State,+index: U32) -> State & Action:
-  State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
+  State{Content{_,_,_,_,_,_,_,results,_,_},_,_,_} = s
   quota_action_ready(quota_available(results,index),s,index)
 
 def sidebar_quota(+s: State,row: U32,quota: Bool) -> State & Action:
@@ -857,7 +1076,7 @@ def list_click.zone(+s: State,+x: U32,+y: U32,rows: List<&2,String>,files: Bool,
     case False{}: list_click.body(s,x,y,rows,G.rect(x,y,G.sidebar_end(),120,G.list_end(),152) && files)
 
 def list_click(+s: State,+col: U32,+row: U32) -> State & Action:
-  State{Content{q,rows,reader,lines,title,status,scope,results,+files},input,image,dirty} = s
+  State{Content{q,rows,reader,lines,title,status,scope,results,+files,cards},input,image,dirty} = s
   +x = U32.mul(col,G.cell())
   +y = U32.mul(row,G.cell())
   list_click.zone(s,x,y,rows,files,U32.is_ge(y,G.list_pager_y()))
@@ -882,11 +1101,17 @@ def text_action_attachment(attachments: Bool,+s: State,index: U32) -> State & Ac
 def text_action(+s: State,index: U32) -> State & Action:
   text_action_attachment(is_attachments(s),s,index)
 
-def mouse_reader(+s: State,+x: U32,+y: U32,inside: Bool) -> State & Action:
-  match inside:
-    case True{}:
+def mouse_reader_mode(+s: State,+x: U32,+y: U32,value: Maybe<&2,ReaderCards.Model>) -> State & Action:
+  State{_,Input{_,_,_,_,shift},_,_} = s
+  match value:
+    case Some{+model}: card_pointer(s,ReaderCards.token(model),x,y,shift,True{})
+    case None{}:
       +pos = reader_at(s,x,y)
       (set_edit(s,Edit{2,pos,pos,True{},0}),NoAction{})
+
+def mouse_reader(+s: State,+x: U32,+y: U32,inside: Bool) -> State & Action:
+  match inside:
+    case True{}: mouse_reader_mode(s,x,y,card_model(s))
     case False{}: (s,NoAction{})
 
 def mouse_text(+s: State,+x: U32,+y: U32,actions: Bool) -> State & Action:
@@ -903,7 +1128,7 @@ def history_workspace(+s: State) -> Bool:
   Bool.not(is_settings(s) || is_brief(s) || is_quota(s) || is_attachments(s) || is_attachment_folders(s))
 
 def provider_chips_visible(+s: State) -> Bool:
-  State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
+  State{Content{_,_,_,_,_,_,_,results,_,_},_,_,_} = s
   match results:
     case Results{_,_,_,_}: history_workspace(s) && Bool.not(is_files(s))
     case _: False{}
@@ -1054,7 +1279,7 @@ def mouse_top(+s: State,+col: U32,+row: U32) -> State & Action:
 
 # A UI-only inspector. Canonical evidence and its reader scroll stay untouched.
 def status_text(s: State) -> String:
-  State{Content{q,rows,reader,lines,title,status,scope,results,files},input,image,dirty} = s
+  State{Content{q,rows,reader,lines,title,status,scope,results,files,cards},input,image,dirty} = s
   status
 
 # Focus 3/4/5 means status over query/list/reader. The evidence selection
@@ -1248,6 +1473,55 @@ def draw_reader(+fuel: Nat,+c: C.Canvas,lines: List<&2,Line>,+y: U32,+low: U32,+
     case 1n+n Line{start,text} <> rest:
       draw_reader(n,draw_line(U32.to_nat(G.reader_columns()),c,text,U32.div(G.reader_x(),G.cell()),y,start,low,high),rest,U32.add(y,U32.div(G.line_pitch(),G.cell())),low,high)
     case _ _: c
+
+# Transcript card chrome is typed presentation. Source text keeps the existing
+# 8px scalar grid; proportional section labels are separate, inert copy space.
+def card_background(style: U32) -> U32:
+  match style:
+    case 2: 15922675
+    case _: paper()
+
+def card_foreground(style: U32) -> U32:
+  match style:
+    case 1: muted()
+    case _: ink()
+
+def draw_card_line(+fuel: Nat,+c: C.Canvas,text: String,+x: U32,+y: U32,+at: U32,+low: U32,+high: U32,+fg: U32,+bg: U32) -> C.Canvas:
+  match fuel text:
+    case 1n+n SCon{Chr{code},rest}:
+      next = glyph.put(c,display_glyph(code),x,y,fg,Bool.pick(U32,(at >= low && at < high : U32),selection_bg(),bg))
+      draw_card_line(n,next,rest,U32.inc(x),y,U32.inc(at),low,high,fg,bg)
+    case _ _: c
+
+def draw_card_section(c: C.Canvas,label: String,+y: U32,+key: Maybe<&2,ReaderDoc.PartKey>,closed: Bool,focused: Maybe<&2,ReaderDoc.PartKey>) -> C.Canvas:
+  +selected = ReaderCards.is_focused(focused,key)
+  +bg = Bool.pick(U32,selected,selected_bg(),15529703)
+  base = box(c,528,y,656,G.line_pitch(),bg)
+  +control = Maybe.is_some(&2,ReaderDoc.PartKey,key)
+  labeled = chrome_text(base,label,536,y,Bool.pick(U32,control,536,640),Bool.pick(U32,control,0,1),heading_ink(),bg)
+  chrome_text(labeled,Bool.pick(String,control,Bool.pick(String,closed,"Show +","Hide -"),""),1088,y,88,0,accent(),bg)
+
+def draw_card_row(c: C.Canvas,row: ReaderCards.Row,+y: U32,low: U32,high: U32,focused: Maybe<&2,ReaderDoc.PartKey>) -> C.Canvas:
+  match row:
+    case ReaderCards.SectionRow{label,key,closed}: draw_card_section(c,label,y,key,closed,focused)
+    case ReaderCards.TextRow{start,text,count,+style}:
+      +bg = card_background(style)
+      base = box(c,528,y,656,G.line_pitch(),bg)
+      draw_card_line(U32.to_nat(G.reader_columns()),base,text,U32.div(G.reader_x(),G.cell()),U32.div(y,G.cell()),start,low,high,card_foreground(style),bg)
+
+def draw_card_rows(fuel: Nat,c: C.Canvas,rows: List<&2,ReaderCards.Row>,+y: U32,+low: U32,+high: U32,+focused: Maybe<&2,ReaderDoc.PartKey>) -> C.Canvas:
+  match fuel rows:
+    case 1n+n Con{row,rest}:
+      draw_card_rows(n,draw_card_row(c,row,y,low,high,focused),rest,U32.add(y,G.line_pitch()),low,high,focused)
+    case _ _: c
+
+def draw_reader_value(c: C.Canvas,lines: List<&2,Line>,scroll: U32,low: U32,high: U32,value: Maybe<&2,ReaderCards.Model>) -> C.Canvas:
+  match value:
+    case None{}: draw_reader(U32.to_nat(G.reader_rows()),c,List.drop(&2,Line,lines,U32.to_nat(scroll)),U32.div(G.reader_y(),G.cell()),low,high)
+    case Some{+model}: draw_card_rows(U32.to_nat(G.reader_rows()),c,List.drop(&2,ReaderCards.Row,ReaderCards.rows(model),U32.to_nat(scroll)),G.reader_y(),low,high,ReaderCards.focus(model))
+
+def draw_reader_context(+s: State,c: C.Canvas,lines: List<&2,Line>,scroll: U32,low: U32,high: U32) -> C.Canvas:
+  draw_reader_value(c,lines,scroll,low,high,card_model(s))
 
 # Result cards are a display projection. The original row and transcript remain
 # unchanged. Keep a short trailing token with its preceding word when possible.
@@ -1496,7 +1770,7 @@ def top_label(index: U32,files: Bool,settings: Bool,whole: Bool,automatic: Strin
     case 1: automatic
     case 2: Bool.pick(String,settings,"Add folder","Blame")
     case 3: Bool.pick(String,settings,"Import file","Why")
-    case 4: Bool.pick(String,settings,"Enable selected","Export evidence")
+    case 4: Bool.pick(String,settings,"Enable selected",Bool.pick(String,files || whole,"Export evidence","Export captured page"))
     case 5: Bool.pick(String,settings,"Disable selected",Bool.pick(String,whole,"Whole session","Previous page"))
     case _: Bool.pick(String,settings,"Reload settings",Bool.pick(String,whole,"All records","Next page"))
 
@@ -1733,7 +2007,7 @@ def draw_query_actions(+attachments: Bool,+c: C.Canvas,+s: State) -> C.Canvas:
       chrome_text(paste,query_action_label(s,False{}),U32.add(G.text_action_x(2),8),G.text_actions_y(),88,0,accent(),paper())
 
 def draw_canvas_capture(+s: State,automatic: String,suspended: Bool) -> C.Canvas:
-  State{Content{+q,rows,reader,lines,title,status,+scope,+results,+files},Input{+selected,scroll,Edit{+focus,+caret,+anchor,drag,viewport},command,shift},image,dirty} = s
+  State{Content{+q,rows,reader,lines,title,status,+scope,+results,+files,cards},Input{+selected,scroll,Edit{+focus,+caret,+anchor,drag,viewport},command,shift},image,dirty} = s
   base = box(C.Flat{paper()},0,0,G.width(),G.header_height(),rail())
   side = box(base,0,0,G.sidebar_end(),G.footer_y(),Bool.pick(U32,history_workspace(s),Palette.navigation_paper(),rail()))
   list = box(side,G.sidebar_end(),G.header_height(),U32.sub(G.list_end(),G.sidebar_end()),G.body_height(),panel())
@@ -1757,7 +2031,7 @@ def draw_canvas_capture(+s: State,automatic: String,suspended: Bool) -> C.Canvas
   all = chrome_text(clear,"Select all",U32.add(G.text_action_x(3),8),G.text_actions_y(),88,0,accent(),paper())
   +offset = minus(selected,U32.sub(G.list_rows(),1))
   items = draw_rows(U32.to_nat(G.list_rows()),all,List.drop(&2,String,rows,U32.to_nat(offset)),0,minus(selected,offset),provider_chips_visible(s))
-  body = draw_reader(U32.to_nat(G.reader_rows()),items,List.drop(&2,Line,lines,U32.to_nat(scroll)),U32.div(G.reader_y(),G.cell()),Bool.pick(U32,U32.is_eq(focus,2),U32.min(caret,anchor),0),Bool.pick(U32,U32.is_eq(focus,2),U32.max(caret,anchor),0))
+  body = draw_reader_context(s,items,lines,scroll,Bool.pick(U32,U32.is_eq(focus,2),U32.min(caret,anchor),0),Bool.pick(U32,U32.is_eq(focus,2),U32.max(caret,anchor),0))
   +summary = String.join(String.lines(status)," ")
   status1 = text(body,String.take(summary,U32.to_nat(G.footer_columns())),8,G.footer_y(),G.footer_columns(),muted(),rail())
   status2 = text(status1,String.take(String.drop(summary,U32.to_nat(G.footer_columns())),U32.to_nat(G.footer_second_columns())),8,U32.add(G.footer_y(),16),G.footer_second_columns(),muted(),rail())

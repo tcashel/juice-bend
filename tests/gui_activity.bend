@@ -64,7 +64,7 @@ def ui(state: Gui.State) -> UI.State:
   ui
 
 def ui_status(ui: UI.State) -> String:
-  UI.State{UI.Content{query,rows,reader,lines,title,status,scope,results,files},input,image,dirty} = ui
+  UI.State{UI.Content{query,rows,reader,lines,title,status,scope,results,files,_},input,image,dirty} = ui
   status
 
 def status(state: Gui.State) -> String:

@@ -496,8 +496,8 @@ def why(db: U32,repo: String,path: String,start: U32,count: U32) -> IO(String):
   file(db,repo,path,start,count,True{})
 
 def commit_text(sha: String,message: String,link: P.Attribution,excerpts: String) -> String:
-  "Juice Bend · commit Why\nRead-only Git commit " ++ sha ++ "\n" ++ Evidence.attribution_text(link) ++
-    "\nCoverage: unique eligible trailer/body associations only; no time-based guess or generated rationale. File content matching requires a selected file range.\n\n" ++
+  "Juice Bend · commit Why\nRead-only Git commit " ++ sha ++ "\nTrailer/body associations: " ++ Evidence.attribution_text(link) ++
+    "\nTrailer/body coverage: unique eligible trailer/body associations only; no time-based guess or generated rationale. File content matching requires a selected file range.\n\n" ++
     excerpts ++ "Read-only Git commit message:\n" ++ String.take(message,8192n) ++ "\n"
 
 def commit_why_message(result: Result<&2,&2,String,String>,+db: U32,+scope: Scope.Scope,+sha: String) -> IO(String):

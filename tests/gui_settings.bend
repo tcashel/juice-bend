@@ -64,7 +64,7 @@ def deadline(state: Gui.State) -> Nat:
   deadline
 
 def observation(state: Gui.State) -> String:
-  Gui.State{db,dir,program,UI.State{UI.Content{query,rows,reader,lines,title,status,scope,results,files},
+  Gui.State{db,dir,program,UI.State{UI.Content{query,rows,reader,lines,title,status,scope,results,files,_},
     UI.Input{selected,scroll,UI.Edit{focus,caret,anchor,drag,viewport},command,shift},image,dirty},
     Gui.Selection{items,snapshot,start,kind,args,Query.Filters{query2,provider,repo,role,after},
       Gui.Listing{listkind,Query.Filters{terms,lp,lr,lo,la},offset,more,loaded,listanchor}},
@@ -187,7 +187,7 @@ def paged() -> Gui.State:
   Gui.settings_update(panel(),Settings.with_sources(Gui.settings_model(panel()),rows(32n)))
 
 def ui_row_count(state: UI.State) -> U32:
-  UI.State{UI.Content{query,rows,reader,lines,title,status,scope,results,files},input,image,dirty} = state
+  UI.State{UI.Content{query,rows,reader,lines,title,status,scope,results,files,_},input,image,dirty} = state
   U32.from_nat(List.length(&2,String,rows))
 
 def row_count(state: Gui.State) -> U32:

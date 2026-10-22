@@ -173,7 +173,7 @@ def input(state: UI.State) -> String:
     Bool.pick(String,drag,"drag","idle"),Bool.pick(String,command,"command","up"),Bool.pick(String,shift,"shift","up")],"|")
 
 def chrome(state: UI.State) -> String:
-  UI.State{UI.Content{query,rows,reader,lines,title,status,scope,+results,files},input,image,dirty} = state
+  UI.State{UI.Content{query,rows,reader,lines,title,status,scope,+results,files,_},input,image,dirty} = state
   String.join([String.join(rows,"|"),status,UI.result_label(results),
     Bool.pick(String,UI.result_available(results,True{}),"next","end"),
     Bool.pick(String,UI.result_available(results,False{}),"previous","first"),Bool.pick(String,files,"files","capture")],";")

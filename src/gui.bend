@@ -2,6 +2,7 @@ import Base
 import ./gui_command_route.bend as CommandRoute
 import ./atif_command.bend as AtifCommand
 import ./ui.bend as UI
+import ./reader_wire.bend as ReaderWire
 import ./ui_geometry.bend as Geometry
 import ./store.bend as Store
 import ./sql.bend as Sql
@@ -2510,7 +2511,7 @@ def text_done(+state: State,+request: Request,result: Result<&2,&2,String,String
       status(State{db,dir,program,ui,Selection{items,old,oldstart,displayed,blame,filters,listing},Form{mode,search,source,form,files,navigation,settings},jobs,refresh_at,serial},message)
     case Done{text}:
       State{db,dir,program,UI.set_status(UI.set_reader(Bool.pick(UI.State,file_kind(kind) || U32.is_eq(mode,0),ui,UI.set_query(ui,search)),title,text),Bool.pick(String,U32.is_eq(kind,3),
-        "Transcript loaded. Export evidence keeps this range; full JSONL/archive exports include ALL captured records outside current filters.",
+        "Transcript loaded. Show/Hide opens captured tool and evidence details. Copy uses visible selection; Export captured page includes collapsed details. Full exports include ALL captured records outside filters.",
         "Captured evidence loaded. Scroll or drag to select; Cmd+C copies.")),
         Selection{items,Bool.pick(String,file_kind(kind),old,snap),start,kind,
           text_view_args(kind,args,blame,old,snap),
@@ -3355,11 +3356,19 @@ def brief_selection_value(+state: State,+value: Maybe<&2,Brief.Model>) -> State:
     case Some{+model}: brief_selection_invalidated(state,model,U32.is_eq(Brief.phase(model),3) && Bool.not(brief_choice_current(ui,Brief.choice(model))))
     case _: state
 
+# Immutable request identity and load epoch are separate from local fold revision.
+# The descriptor table can only enhance a response admitted for this exact page.
+def transcript_document_ui(ui: UI.State,request: Request,+value: Json.Json,revision: U32) -> UI.State:
+  Request{kind,args,snapshot,start,title} = request
+  UI.set_document(ui,title,ReaderWire.decode_for(Json.get(value,"text"),Json.field(value,"reader_view"),revision,snapshot),
+    U32.show(kind) ++ "\0" ++ String.join(args,"\0"))
+
 def transcript_apply_metadata(+state: State,+request: Request,+value: Json.Json,+valid: Bool) -> State:
-  State{db,dir,program,ui,Selection{items,snap,start,displayed,args,filters,listing},form,jobs,deadline,serial} = state
+  State{db,dir,program,ui,Selection{items,snap,start,displayed,args,filters,listing},form,+jobs,deadline,serial} = state
+  Jobs{revision,_,_,_,_} = jobs
   Request{_,_,snapshot,first,_} = request
   match valid:
-    case True{}: State{db,dir,program,ui,Selection{items,snap,start,displayed,Brief.range_args(value,snapshot,first,args),filters,listing},form,jobs,deadline,serial}
+    case True{}: State{db,dir,program,transcript_document_ui(ui,request,value,revision),Selection{items,snap,start,displayed,Brief.range_args(value,snapshot,first,args),filters,listing},form,jobs,deadline,serial}
     case False{}: state
 
 def transcript_done(+state: State,+request: Request,+result: Result<&2,&2,String,Json.Json>) -> State:

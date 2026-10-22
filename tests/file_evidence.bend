@@ -124,7 +124,7 @@ def child_navigation(+db: U32,+root: String,+repo: String) -> IO(Unit):
     Store.write_text(repo ++ "/a.bend","w",contents("let alpha = 46","let omega = 99"))
     sha : String <- commit(repo,"child identity\n\nCodex-Session: codex-child-0001")
     +why : String <- F.commit_why(db,repo,sha)
-    assert(String.contains(why,"\nexact\nCitation:") && String.contains(why,"\"snapshot\":\"" ++ child ++ "\""),
+    assert(String.contains(why,"\nTrailer/body associations: exact\nCitation:") && String.contains(why,"\"snapshot\":\"" ++ child ++ "\""),
       "child exact association retains child capture identity")
     assert(String.contains(why,"Parent request for navigation only") &&
       String.contains(why,"Please coordinate the captured child."),"child Why provides a separately cited parent request")
@@ -188,7 +188,7 @@ def run_fixture(+root: String) -> IO(Unit):
     Store.write_text(repo ++ "/a.bend","w",contents("let alpha = 43","let omega = 99"))
     +exact_sha : String <- commit(repo,"explicit identity\n\nClaude-Session: session-alpha-0001")
     +exact : String <- F.commit_why(db,repo,exact_sha)
-    assert(String.contains(exact,"\nexact\nCitation:") &&
+    assert(String.contains(exact,"\nTrailer/body associations: exact\nCitation:") &&
       String.contains(exact,"Please change the first calculation."),"exact commit Why uses unique eligible explicit trailer")
     linked : String <- git(repo,["worktree","add","--quiet","--detach",root ++ "/linked-checkout",exact_sha])
     +linked_why : String <- F.why(db,root ++ "/linked-checkout","a.bend",1,1)
@@ -197,7 +197,7 @@ def run_fixture(+root: String) -> IO(Unit):
     Store.write_text(root ++ "/foreign.jsonl","w",request("/synthetic/foreign","session-alpha-0001","Different repository"))
     foreign : String <- Store.import_file(db,"claude",root ++ "/foreign.jsonl")
     scoped : String <- F.commit_why(db,repo,exact_sha)
-    assert(String.contains(scoped,"\nexact\nCitation:"),"cross-repository session collision cannot steal exact commit")
+    assert(String.contains(scoped,"\nTrailer/body associations: exact\nCitation:"),"cross-repository session collision cannot steal exact commit")
     Store.write_text(repo ++ "/a.bend","w",contents("let alpha = 44","let omega = 99"))
     probable_sha : String <- commit(repo,"Discussed with session-alpha-0001.")
     probable : String <- F.commit_why(db,repo,probable_sha)
@@ -207,7 +207,7 @@ def run_fixture(+root: String) -> IO(Unit):
     Store.write_text(root ++ "/collision.jsonl","w",request(repo,"session-alpha-0001","Different captured source with colliding ID"))
     collision : String <- Store.import_file(db,"claude",root ++ "/collision.jsonl")
     +ambiguous : String <- F.commit_why(db,repo,exact_sha)
-    assert(String.contains(ambiguous,"ambiguous ·") && Bool.not(String.contains(ambiguous,"\nexact\n")),
+    assert(String.contains(ambiguous,"ambiguous ·") && Bool.not(String.contains(ambiguous,"\nTrailer/body associations: exact\n")),
       "same-repository source collision downgrades actual commit identity")
     Store.write_text(repo ++ "/a.bend","w",contents("let alpha = 45","let omega = 99"))
     dirty : String <- F.blame(db,repo,"a.bend",1,1)

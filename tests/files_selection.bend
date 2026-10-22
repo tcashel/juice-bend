@@ -59,7 +59,7 @@ def no_transients(state: UI.State) -> Bool:
   Bool.not(drag || command || shift)
 
 def visible(state: UI.State) -> String:
-  UI.State{UI.Content{query,rows,reader,lines,title,status,scope,results,files},_,_,_} = state
+  UI.State{UI.Content{query,rows,reader,lines,title,status,scope,results,files,_},_,_,_} = state
   String.join([query,String.join(rows,"/"),reader,title,scope,UI.result_label(results)],"|")
 
 def image_is(image: Image,color: U32) -> Bool:

@@ -182,7 +182,7 @@ def position(state: UI.State) -> String:
   String.join([U32.show(selected),U32.show(scroll),U32.show(focus),U32.show(caret),U32.show(anchor),U32.show(viewport)],";")
 
 def ui_status(state: UI.State) -> String:
-  UI.State{UI.Content{_,_,_,_,_,status,_,_,_},_,_,_} = state
+  UI.State{UI.Content{_,_,_,_,_,status,_,_,_,_},_,_,_} = state
   status
 
 def state_status(state: Gui.State) -> String:

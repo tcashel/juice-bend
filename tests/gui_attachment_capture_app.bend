@@ -76,7 +76,7 @@ def wrong_args(value: G.Request) -> G.Request:
   G.Request{kind,_,nonce,start,title} = value
   G.Request{kind,["captured-attachment","1","1","1",F.path()],nonce,start,title}
 def capture_enabled(ui: UI.State) -> Bool:
-  UI.State{UI.Content{_,_,_,_,_,_,_,results,_},_,_,_} = ui
+  UI.State{UI.Content{_,_,_,_,_,_,_,results,_,_},_,_,_} = ui
   UI.attachment_available(results,6)
 def root_disabled() -> J.Json:
   complete(O.root_ack("disable",T.RootEvidence{"1","/synthetic/one","2",False{}}))

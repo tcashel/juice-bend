@@ -15,6 +15,8 @@ import ./maintenance.bend as Maintenance
 import ./sources.bend as Sources
 import ./domain.bend as Domain
 import ./scoped_reader.bend as Scoped
+import ./reader_document.bend as Reader
+import ./reader_wire.bend as ReaderWire
 import ./file_evidence.bend as FileEvidence
 import ./usage.bend as Usage
 import ./query.bend as Query
@@ -248,22 +250,53 @@ def page_content(db: U32,snapshot: String,start: U32,count: U32,why: Bool) -> IO
     case False{}:
       Store.page(db,snapshot,start,count)
 
+def page_document_content(why: Bool,db: U32,snapshot: String,start: U32,count: U32) -> IO(Reader.Document):
+  match why:
+    case True{}:
+      do IO<Reader.Document>:
+        text : String <- Evidence.why(db,snapshot,start,count)
+        return Reader.Plain{text,0}
+    case False{}: Store.page_document(db,snapshot,start,count)
+
+def reader_metadata(why: Bool,document: Reader.Document) -> String:
+  match why:
+    case True{}: ""
+    case False{}: ",\"reader_view\":" ++ ReaderWire.encode(document)
+
+def response_admitted(prefix: String,full: String,fits: Bool) -> String:
+  match fits:
+    case True{}: full
+    case False{}: prefix ++ "}"
+
+# The existing subprocess cap includes IO.print's trailing LF. Measure the
+# fully escaped JSON UTF8 once; optional cards must never crowd out old text.
+def optional_response(+prefix: String,+metadata: String) -> String:
+  match metadata:
+    case "": prefix ++ "}"
+    case _:
+      +full = prefix ++ metadata ++ "}"
+      response_admitted(prefix,full,Nat.is_le(Nat.add(List.length(&2,U32,Domain.encode(full)),1n),1048576n))
+
+def page_response(snapshot: String,start: U32,count: U32,+why: Bool,+document: Reader.Document) -> String:
+  optional_response("{\"snapshot\":" ++ Json.quote(snapshot) ++
+    ",\"start\":" ++ U32.show(start) ++ ",\"requested_records\":" ++ U32.show(count) ++
+    ",\"maximum_records\":" ++ Bool.pick(String,why,"20","100") ++
+    ",\"verification\":\"selected_records_only\",\"byte_space\":\"logical_source_bytes\",\"complete_export\":false,\"kind\":" ++
+    Json.quote(Bool.pick(String,why,"recorded_evidence","transcript_page")) ++
+    ",\"rationale\":" ++ Bool.pick(String,why,
+      "\"Captured statements only; no generated or inferred rationale.\"", "null") ++
+    ",\"text\":" ++ Json.quote(Reader.text(document)),reader_metadata(why,document))
+
 def read_page(+db: U32,+snapshot: String,start: String,count: String,+why: Bool) -> IO(Unit):
   do IO<Unit>:
     checked(snapshot_valid(snapshot),"snapshot must be a positive canonical SQLite integer")
     +from : U32 <- quantity(Provenance.parse_u32(start),"start")
     +size : U32 <- quantity(Provenance.parse_u32(count),"count")
     checked(Bool.and(U32.is_gt(size,0),U32.is_le(size,100)),"count must be from 1 to 100")
-    +content : String <- page_content(db,snapshot,from,size,why)
+    +document : Reader.Document <- page_document_content(why,db,snapshot,from,size)
+    +content : String <- IO.pure(String,Reader.text(document))
     checked(Bool.not(String.starts_with(content,"Why unavailable:")),content)
-    IO.print("{\"snapshot\":" ++ Json.quote(snapshot) ++
-      ",\"start\":" ++ U32.show(from) ++ ",\"requested_records\":" ++ U32.show(size) ++
-      ",\"maximum_records\":" ++ Bool.pick(String,why,"20","100") ++
-      ",\"verification\":\"selected_records_only\",\"byte_space\":\"logical_source_bytes\",\"complete_export\":false,\"kind\":" ++
-      Json.quote(Bool.pick(String,why,"recorded_evidence","transcript_page")) ++
-      ",\"rationale\":" ++ Bool.pick(String,why,
-        "\"Captured statements only; no generated or inferred rationale.\"", "null") ++
-      ",\"text\":" ++ Json.quote(content) ++ "}")
+    IO.print(page_response(snapshot,from,size,why,document))
 
 def session(db: U32,args: List<String>,why: Bool) -> IO(Unit):
   match args:
@@ -281,22 +314,47 @@ def scoped_content(db: U32,+snapshot: String,start: String,count: String,
     checked(U32.is_gt(size,0) && U32.is_le(size,100),"count must be from 1 to 100")
     Scoped.page(db,snapshot,from,size,scope,why)
 
-def scoped_response(header: Maintenance.Header,+snapshot: String,+start: String,+count: String,+why: Bool,text: String) -> String:
+def scoped_envelope(header: Maintenance.Header,+snapshot: String,+start: String,+count: String,+why: Bool,text: String,metadata: String) -> String:
   Maintenance.Header{_,_,records,_} = header
   +selected = Domain.bounded_count(Store.number(start),U32.min(Store.number(count),Bool.pick(U32,why,20,100)),records)
-  "{\"snapshot\":" ++ Json.quote(snapshot) ++ ",\"start\":" ++ U32.show(Store.number(start)) ++
+  optional_response("{\"snapshot\":" ++ Json.quote(snapshot) ++ ",\"start\":" ++ U32.show(Store.number(start)) ++
     ",\"requested_records\":" ++ U32.show(Store.number(count)) ++ ",\"selected_records\":" ++ U32.show(selected) ++ ",\"kind\":" ++
     Json.quote(Bool.pick(String,why,"scoped_recorded_evidence","scoped_transcript_page")) ++
-    ",\"byte_space\":\"logical_source_bytes\",\"complete_export\":false,\"text\":" ++ Json.quote(text) ++ "}"
+    ",\"byte_space\":\"logical_source_bytes\",\"complete_export\":false,\"text\":" ++ Json.quote(text),metadata)
+
+# Preserve text-only callers while production transcript responses attach the
+# descriptor table produced in the same verified walk as their canonical text.
+def scoped_response(header: Maintenance.Header,snapshot: String,start: String,count: String,why: Bool,text: String) -> String:
+  scoped_envelope(header,snapshot,start,count,why,text,"")
+
+def scoped_document_response(header: Maintenance.Header,snapshot: String,start: String,count: String,+why: Bool,+document: Reader.Document) -> String:
+  scoped_envelope(header,snapshot,start,count,why,Reader.text(document),reader_metadata(why,document))
+
+def scoped_page_document(why: Bool,db: U32,snapshot: String,start: U32,count: U32,scope: Scoped.Scope) -> IO(Reader.Document):
+  match why:
+    case True{}:
+      do IO<Reader.Document>:
+        text : String <- Scoped.page(db,snapshot,start,count,scope,True{})
+        return Reader.Plain{text,0}
+    case False{}: Scoped.page_document(db,snapshot,start,count,scope)
+
+def scoped_document_content(db: U32,+snapshot: String,start: String,count: String,scope: Scoped.Scope,why: Bool) -> IO(Reader.Document):
+  do IO<Reader.Document>:
+    checked(snapshot_valid(snapshot),"snapshot must be a positive canonical SQLite integer")
+    from : U32 <- quantity(Provenance.parse_u32(start),"start")
+    +size : U32 <- quantity(Provenance.parse_u32(count),"count")
+    checked(U32.is_gt(size,0) && U32.is_le(size,100),"count must be from 1 to 100")
+    scoped_page_document(why,db,snapshot,from,size,scope)
 
 def read_scoped(+db: U32,args: List<String>,+why: Bool) -> IO(Unit):
   match args:
     case +snapshot <> +start <> +count <> provider <> repo <> role <> after <> []:
       do IO<Unit>:
-        +text : String <- scoped_content(db,snapshot,start,count,Scoped.Scope{provider,repo,role,after},why)
+        +document : Reader.Document <- scoped_document_content(db,snapshot,start,count,Scoped.Scope{provider,repo,role,after},why)
+        +text : String <- IO.pure(String,Reader.text(document))
         checked(Bool.not(String.starts_with(text,"Why unavailable:")),text)
         header : Maintenance.Header <- Maintenance.header(db,snapshot)
-        IO.print(scoped_response(header,snapshot,start,count,why,text))
+        IO.print(scoped_document_response(header,snapshot,start,count,why,document))
     case _:
       failure(Unit,"usage: session-scope or why-scope SNAP START COUNT PROVIDER REPO ROLE AFTER")
 

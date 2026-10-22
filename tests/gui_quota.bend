@@ -145,7 +145,7 @@ def writer_identity() -> IO(Unit):
     require(Bool.not(String.contains(UI.reader(F.ui(writer_identity_failed())),"private diagnostics")),"raw child diagnostic never enters canonical quota reader")
 
 def visible_rows(state: G.State) -> String:
-  G.State{_,_,_,UI.State{UI.Content{_,rows,_,_,_,_,_,_,_},_,_,_},_,_,_,_,_} = state
+  G.State{_,_,_,UI.State{UI.Content{_,rows,_,_,_,_,_,_,_,_},_,_,_},_,_,_,_,_} = state
   String.join(rows,"\n")
 
 def background_source_panel() -> G.State:

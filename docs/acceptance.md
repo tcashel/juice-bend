@@ -1,7 +1,21 @@
 # Acceptance evidence
 
-Latest app 1b6fd416 adopts the shared Bend UI foundation. All 172 source inputs
-match the promoted executable. Full native regression passed History, JPEG/PNG,
+Latest app c51b1592 adds typed transcript cards and collapsible tool/evidence
+details. Its 178 application inputs match the promoted executable. Native Tart
+run-03 passed 13 exact clipboard comparisons, one canonical export, keyboard and
+mouse disclosure interaction, Settings/Back selection restoration, same-snapshot
+paging/filtering, plaintext fallback, source loss and different-process restart.
+Root inspected 15 window/display images. Guest/cleanup exited 0; owned wrapper
+exited 143 and recorded the VM stopped. Ready-reader Close was observed within
+845ms for the window and 1036ms for the process; these are observation bounds.
+See `receipts/reader-cards-native.json`; 461 assertions across 11 distinct focused
+entries and the full Mac build are bound in `reader-cards-build-tests.json`.
+The earlier Settings-focus harness failure and occupied-VM preflight remain
+preserved. This does not validate later proportional prose, pending-worker Close,
+full-suite/proof freshness or complete Swift parity.
+
+Earlier app 1b6fd416 adopted the shared Bend UI foundation. Its 172 source inputs
+match its retained executable. Full native regression passed History, JPEG/PNG,
 223 exact image samples, Unicode copies, four exports, pending Escape/Back,
 source-loss restart and ready Close. Root inspected 13 actual screenshots;
 all 13 guest/cleanup steps exited 0. The exact owned VM stopped and released its
@@ -25,7 +39,7 @@ removal and different-process restart; negative GUI branches remain unrun.
 also passed [external/ATIF](receipts/polished-external-native.json) and
 [JPEG](receipts/polished-jpeg-native.json) acceptance. These focused receipts do
 not close the pending-Close runtime defect or establish complete Swift parity.
-The combined reader-card follow-up is under native validation; consult
+The combined reader-card follow-up now has the scoped native acceptance above; consult
 [progress.md](progress.md) for its exact current state. Older dated sections
 below preserve historical outcomes, including failures.
 

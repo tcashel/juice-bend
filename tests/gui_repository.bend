@@ -79,7 +79,7 @@ def capture(state: Gui.State) -> String:
   snap ++ "|" ++ U32.show(start) ++ "|" ++ U32.show(kind) ++ "|" ++ provider ++ "|" ++ repo ++ "|" ++ role ++ "|" ++ after
 
 def ui_status(value: UI.State) -> String:
-  UI.State{UI.Content{q,rows,text,lines,title,status,scope,results,files},input,image,dirty} = value
+  UI.State{UI.Content{q,rows,text,lines,title,status,scope,results,files,_},input,image,dirty} = value
   status
 
 def status(state: Gui.State) -> String:

@@ -5,12 +5,16 @@ filters, static Inter labels and exact transcript selection/copy now pass in the
 combined app981e84fd. Retained JPEG/PNG, pending Escape/Back, source-loss restart,
 external capture and complete ATIF passed. See `history-workspace-jpeg-native.json`,
 `history-workspace-external-native.json` and `history-workspace-build-tests.json`.
-This is incomplete visual parity; message cards, Unicode shaping and pending Close
-remain open. The shared Bend Canvas/Label/Region layer is now adopted in app 1b6fd416 and
+This is incomplete visual parity; proportional message prose, Unicode shaping
+and pending Close remain open. The shared Bend Canvas/Label/Region layer is now adopted in app 1b6fd416 and
 its standalone controls example. Both passed native checks; see
 `bend-ui-app-native.json`, `bend-ui-controls-native.json` and
 `bend-ui-build-tests.json`. This is an early reusable foundation, not a separate
-licensed framework release. Reader cards and library Usage remain isolated work.
+licensed framework release. Reader cards are now adopted in app c51b1592: native
+mouse/keyboard folding, exact copy, Settings/Back restoration, paging/filtering,
+plaintext fallback, retained-source restart and canonical export passed. See
+`receipts/reader-cards-native.json` and `receipts/reader-cards-build-tests.json`.
+Warmer cards, proportional prose and library Usage remain isolated candidates.
 
 Current adopted source and exact continuation are in [progress.md](progress.md).
 Recorded commit-result evidence has native positive acceptance; see

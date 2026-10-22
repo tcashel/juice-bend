@@ -12,6 +12,8 @@ import ./context_binding.bend as ContextBinding
 import ./context_store.bend as ContextStore
 import ./archive_meta.bend as ArchiveMeta
 import ./transcript_format.bend as Transcript
+import ./transcript_document.bend as TranscriptDoc
+import ./reader_document.bend as Reader
 
 type Context is Data:
   Context{repository: String, session: String, model: String, parent: String}
@@ -1630,6 +1632,17 @@ def page_rows(rows: List<&2,List<&2,Sql.Cell>>, +provider: String) -> IO(Transcr
           "Record " ++ field(r,1n) ++ " · bytes " ++ U32.show(offset) ++
             ".." ++ U32.show((offset + len : U32))),tail)
 
+def page_details(+header: List<&2,Sql.Cell>,snapshot: String,start: U32,count: U32) -> String:
+  "Juice Bend · captured evidence\nSnapshot " ++ snapshot ++
+    " · generation " ++ field(header,0n) ++ " · " ++ field(header,1n) ++
+    " retained logical source bytes\nProvider: " ++ field(header,3n) ++
+    "\ncaptured record start " ++ U32.show(start) ++ " · requested records " ++ U32.show(count) ++
+    "\nByte offsets: logical source bytes (decompressed for archives)." ++
+    "\nIntegrity: selected records verified; other ranges not checked." ++
+    "\nThese references identify this snapshot, generation and captured record byte ranges." ++
+    "\nSource locator and full machine citations are not included by this unfiltered reader." ++
+    "\nEarlier inherited model and parent metadata may be unavailable."
+
 def page_header(+db: U32,+snapshot: String,+start: U32,+count: U32,
   rows: List<&2,List<&2,Sql.Cell>>) -> IO(String):
   match rows:
@@ -1643,15 +1656,7 @@ def page_header(+db: U32,+snapshot: String,+start: U32,+count: U32,
         records : List<&2,List<&2,Sql.Cell>> <- selected_records(db,snapshot,field(h,0n),
           number(field(h,1n)),number(field(h,2n)),start,n)
         content : Transcript.Page <- page_rows(records,field(h,3n))
-        return Transcript.render(content,snapshot,"Juice Bend · captured evidence\nSnapshot " ++ snapshot ++
-          " · generation " ++ field(h,0n) ++ " · " ++ field(h,1n) ++
-          " retained logical source bytes\nProvider: " ++ field(h,3n) ++
-          "\ncaptured record start " ++ U32.show(start) ++ " · requested records " ++ U32.show(count) ++
-          "\nByte offsets: logical source bytes (decompressed for archives)." ++
-          "\nIntegrity: selected records verified; other ranges not checked." ++
-          "\nThese references identify this snapshot, generation and captured record byte ranges." ++
-          "\nSource locator and full machine citations are not included by this unfiltered reader." ++
-          "\nEarlier inherited model and parent metadata may be unavailable.")
+        return Transcript.render(content,snapshot,page_details(h,snapshot,start,count))
 
 def page(+db: U32,+snapshot: String,start: U32,count: U32) -> IO(String):
   do IO<String>:
@@ -1659,3 +1664,39 @@ def page(+db: U32,+snapshot: String,start: U32,count: U32) -> IO(String):
       "SELECT p.generation,p.extent,p.records,s.provider FROM snapshots p JOIN generations g ON g.id=p.generation JOIN sources s ON s.id=g.source WHERE p.id=? AND p.accepted=1",
       [Sql.Cell.Integer{snapshot}],1)
     page_header(db,snapshot,start,count,rows)
+
+# The same selected_records verification supplies text and typed descriptors in
+# one read. Existing page/export entry points keep their canonical String API.
+def document_row(+row: List<&2,Sql.Cell>,provider: String,snapshot: String) -> TranscriptDoc.Prepared:
+  +offset = number(field(row,2n))
+  +size = number(field(row,3n))
+  TranscriptDoc.record(TranscriptDoc.record_all(field(row,1n),
+    piece_events(U32.is_ne(number(field(row,6n)),0),provider,blob(cell(row,5n))),
+    "Record " ++ field(row,1n) ++ " · bytes " ++ U32.show(offset) ++
+      ".." ++ U32.show(U32.add(offset,size))),snapshot)
+
+def page_document_rows(rows: List<&2,List<&2,Sql.Cell>>,+provider: String,+snapshot: String) -> TranscriptDoc.Prepared:
+  match rows:
+    case []: TranscriptDoc.Prepared{0,[],[]}
+    case row <> rest:
+      TranscriptDoc.join(document_row(row,provider,snapshot),page_document_rows(rest,provider,snapshot))
+
+def page_document_header(+db: U32,+snapshot: String,+start: U32,+count: U32,
+  rows: List<&2,List<&2,Sql.Cell>>) -> IO(Reader.Document):
+  match rows:
+    case []: IO.die(Reader.Document,1,"Accepted snapshot not found")
+    case +header <> rest:
+      +size = Domain.bounded_count(start,U32.min(count,100),number(field(header,2n)))
+      do IO<Reader.Document>:
+        checked(numeric(field(header,1n)) && numeric(field(header,2n)),"Snapshot numeric metadata is corrupt")
+        records : List<&2,List<&2,Sql.Cell>> <- selected_records(db,snapshot,field(header,0n),
+          number(field(header,1n)),number(field(header,2n)),start,size)
+        return TranscriptDoc.page(page_document_rows(records,field(header,3n),snapshot),
+          snapshot,page_details(header,snapshot,start,count),0)
+
+def page_document(+db: U32,+snapshot: String,start: U32,count: U32) -> IO(Reader.Document):
+  do IO<Reader.Document>:
+    rows : List<&2,List<&2,Sql.Cell>> <- q(db,
+      "SELECT p.generation,p.extent,p.records,s.provider FROM snapshots p JOIN generations g ON g.id=p.generation JOIN sources s ON s.id=g.source WHERE p.id=? AND p.accepted=1",
+      [Sql.Cell.Integer{snapshot}],1)
+    page_document_header(db,snapshot,start,count,rows)

@@ -138,7 +138,7 @@ def top_width(index: U32) -> U32:
     case 1: 136
     case 2: 112
     case 3: 112
-    case 4: 136
+    case 4: 304
     case _: 168
 
 def top_contains(+x: U32,+index: U32) -> Bool:

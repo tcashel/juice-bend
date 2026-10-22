@@ -45,7 +45,11 @@ existing bundle. Direct GUI launch needs a desktop session. Restricted shell
 agents may lack display access even on a Mac.
 
 The fixed native window uses a green History navigation rail, yellow selection,
-provider filters, proportional UI labels and a selectable monospace transcript. Click the footer status to
+provider filters, proportional UI labels and a selectable monospace transcript.
+Transcript cards group roles and expose tool/evidence details through Show/Hide.
+Tab and Shift-Tab move between disclosures; Enter or Space toggles one. Copy
+includes selected visible text; captured-page export retains collapsed evidence.
+Click the footer status to
 read or copy its full message; Escape closes it. Wheel and Page Up/Down scroll
 the reader. Usage and Related show when automatic capture is suspended until
 you return to History; the saved Pause/Resume preference remains separate.

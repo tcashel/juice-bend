@@ -20,22 +20,34 @@ resolving Apple clang's backend register error without an ABI/runtime override.
 
 ## Maintained source and executable
 
-The shared Bend UI foundation is adopted: Canvas, Label and Region are used by
-Juice Bend and the standalone native controls example. The 16-path adoption
-receipt is `build/ui-kit-root-adoption/receipt.json` (fa9b95fe…). All 172 app
-inputs match tested executable
-`1b6fd416b7e79e70ef8108ea68a6df8071eed47c02c5a01d8947cee5544ad672`.
+Typed transcript cards are adopted from the exact 34-path reader delta. The
+adoption receipt `build/reader-cards-root-adoption/receipt.json` (5fa82898…)
+checks all 178 application inputs against tested executable
+`c51b15927d5ee2ce1d4a32aaa61be6c27dd3cc27f8b032dea314a64992d77867`.
 The protected index remains 309b1cdb….
 
 That executable is promoted to `build/juice-bend`, `build/juice-bend-reader` and
-new `build/Juice Bend UI Foundation.app`. Previous 981e binaries are backed up in
-`build/ui-kit-root-adoption/executables-before`; the earlier Workspace app remains
-unchanged. `mise run demo` opens the tested default with a fresh synthetic library.
-The component API, limitations and reproducible example are in `src/bend_ui/README.md`.
-No standalone package or first-party license has been released.
+new `build/Juice Bend Reader Cards.app`. Previous 1b6fd binaries are backed up in
+`build/reader-cards-root-adoption/executables-before`; the UI Foundation and
+Workspace bundles remain unchanged. `mise run demo` opens the tested default
+with a fresh synthetic library.
+
+The shared Canvas, Label and Region foundation remains used by the app and
+standalone controls example. Its API is in `src/bend_ui/README.md`. No standalone
+package or first-party license has been released. Proportional prose and Usage
+are separate candidates awaiting a full combined Mac build/native run.
 
 ## Current validation
 
+- Reader cards: native run-03 passed 13 exact clipboard comparisons, one canonical
+  export, mouse and 24 native key pairs, selection reset/restoration, paging and
+  filtered original references, plaintext fallback, source-loss/different-PID
+  restart and ready Close. Root inspected 15 window/display images. Guest and all
+  cleanup steps exited 0; wrapper exited 143, recorded stopped VM, and final
+  collection occurred after shutdown. `receipts/reader-cards-native.json`
+  (c5e32472…) binds the run; `reader-cards-build-tests.json` binds 461 assertions
+  across 11 distinct entries plus the successful Mac build. Pending Close and
+  the later proportional prose are not covered by this reader acceptance.
 - UI foundation: component/focus/label/History checks passed with individually
   scoped results in `receipts/bend-ui-build-tests.json`. The native standalone
   example passed 12 visible states, 133,860 pixel checks, mouse/keyboard focus,
@@ -127,8 +139,10 @@ The new full-app runs establish behavior, not a controlled performance compariso
    owned wrapper 15449 exited 143, VM stopped, lease released. No process remains.
    Fresh `run-jpeg-02` passed after the Mac compiler completed. Exact kit source
    and executable are now adopted above; earlier binaries and failure evidence
-   remain preserved. The explicit 24-path publication uses parent e4a7f0b5…;
-   `build/ui-kit-publication/metadata.json` records its tree and content hashes.
+   remain preserved. The explicit 24-path publication is
+   `ba8f3c9df633d73d37b9552ff103b8c32b6f65b7`, on parent e4a7f0b5….
+   `build/ui-kit-publication/metadata.json` records its tree/content hashes and
+   non-force ref update; `pr-verified.json` records the published PR state.
 3. Typed reader foundation in `build/reader-cards-integration`: formatter24 and
    projection57 native Linux assertions passed, including exact canonical bytes,
    hidden-copy gaps, mandatory warnings and stale events. Seven-file
@@ -142,15 +156,34 @@ The new full-app runs establish behavior, not a controlled performance compariso
    owned processes absent. Failure receipt 13879e88 is preserved. A fresh retry
    passed at `build/reader-cards-ui-integration/mac-v2/6558cd4e-7000-4d37-9d66-130dafdc0510`: 888.274 seconds,
    binary c51b1592…77867; all 178 sources, 96 pins and owned-process absence
-   were verified. The default 981e binary is unchanged.
+   were verified. Reader c51b is now adopted and promoted as described above;
+   the prior UI-foundation executable 1b6fd416… remains preserved.
    Native oracle helper 7bba24bb passed its Mac build (binary 41a9ff71…4d61d7f);
-   reader native run-01 (nonce 02498a2c…88a6) is now booting in Tart; no reader
-   window/input pass is claimed yet. Native plan and
-   exact helper commands are in `build/reader-cards-native-plan/HANDOFF.md`.
+   reader native run-01 (nonce 02498a2c…88a6) failed at Settings copy: the
+   harness left the empty path input focused. Earlier mouse/keyboard disclosure
+   checks reached exact expanded-page copy, but no overall native pass is claimed.
+   Guest exit 1, cleanup/display restoration 0, owned wrapper 143 and recorded
+   VM-stopped evidence are finalized in run-01/terminal-failure.json; all 190
+   final artifacts are bound and the original failure remains preserved.
+   Fresh run-02 exited 2 in preflight because the shared VM was active, before
+   lease acquisition; no guest/app ran. Its preflight-failure.json preserves five
+   artifacts. The corrected harness adds one Settings-body focus click and keeps
+   Back copy without reselection. Fresh run-03 passed after the shared VM was
+   released. Nonce68b804f6…c5c3, seald9f363c6…fa4c and native-result728c8904…
+   bind the exact run. Root reviewed 15 actual images; guest0/wrapper143 and
+   final artifact hashes are verified. `build/reader-cards-publication/prepare.py`
+   prepares the explicit 40-path reader commit on published kit ba8f3c9d.
+   Native commands remain in `build/reader-cards-native-plan/HANDOFF.md`.
    A separate four-path follow-up at `build/reader-cards-polish-integration`
    passed 28 focused assertions and two production-rendered frames (9742d042).
    Root inspected both: warmer user cards, green assistant cards and one 24px
    nonselectable event gap. Mac acceptance and adoption are still pending.
+   Proportional MessageText is now a tested ten-path follow-up in
+   `build/reader-prose-integration`: 123 distinct Linux assertions and two
+   production-rendered frames passed. Root inspected both frames; independent
+   source review found no app blocker. Cached scalar/pixel boundaries preserve
+   exact copy; code/tools remain mono. No Mac window/input/performance pass yet.
+   Handoff, overlay710f6629 and validation2e9f74a9 bind this candidate.
 4. Library Usage core in `build/library-usage-integration`:50 native assertions
    plus2 fixture commands passed6dc2d9eb,131 inputs unchanged. Five new Bend files,
    exact alias/unknown/coverage and retained snapshot drilldown; not adopted.

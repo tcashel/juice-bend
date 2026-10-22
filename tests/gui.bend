@@ -130,7 +130,7 @@ def revision(s: Gui.State) -> U32:
   revision
 
 def ui_status(s: UI.State) -> String:
-  UI.State{UI.Content{query,rows,reader,lines,title,status,scope,+results,files},input,image,dirty} = s
+  UI.State{UI.Content{query,rows,reader,lines,title,status,scope,+results,files,_},input,image,dirty} = s
   status
 
 def state_status(s: Gui.State) -> String:

@@ -168,7 +168,8 @@ def metadata_base(+args: List<&2,String>) -> List<&2,String>:
     case +args: args
 
 def range_metadata(+value: Json.Json,+snap: String,+start: U32) -> Bool:
-  Shape.exact_object(value,["snapshot","start","requested_records","selected_records","kind","byte_space","complete_export","text"]) &&
+  (Shape.exact_object(value,["snapshot","start","requested_records","selected_records","kind","byte_space","complete_export","text"]) ||
+    Shape.exact_object(value,["snapshot","start","requested_records","selected_records","kind","byte_space","complete_export","text","reader_view"])) &&
     Shape.text_is(Json.field(value,"byte_space"),"logical_source_bytes") &&
     Shape.boolean(Json.field(value,"complete_export")) && Bool.not(String.eq(Json.get(value,"complete_export"),"true")) &&
     Files.text_valid(Json.field(value,"text")) && Shape.text_is(Json.field(value,"kind"),"scoped_transcript_page") && Shape.text_is(Json.field(value,"snapshot"),snap) &&
