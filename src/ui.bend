@@ -4,7 +4,8 @@ import Base
 import ./font.bend as Font
 import ./ui_geometry.bend as G
 import ./ui_palette.bend as Palette
-import ./ui_chrome.bend as Chrome
+import ./bend_ui/canvas.bend as C
+import ./bend_ui/label.bend as Chrome
 
 type Line is Data:
   Line{start: U32, text: String}
@@ -97,12 +98,6 @@ type Action is Data:
   ListPrevious{}
   ListNext{}
   Quit{}
-
-# A compact application-specific cell canvas. Flat areas remain one Image node.
-type Canvas is Data:
-  Flat{color: U32}
-  Tile{bits: Font.Half, foreground: U32, background: U32}
-  Four{tl: Canvas, tr: Canvas, bl: Canvas, br: Canvas}
 
 def length(+s: String) -> U32:
   U32.from_nat(String.length(s))
@@ -1193,37 +1188,20 @@ def clipboard_copy(+text: String) -> IO(Result<&1, &1, U32 & String, U32 & (Stri
 def clipboard_paste() -> IO(Result<&1, &1, U32 & String, U32 & (String & String)>):
   Process.run("/usr/bin/pbpaste", [], "", 65536, 2000)
 
-# Canvas operations.
+# Canvas operations delegate to the shared kit; no second rasterizer.
+def canvas.set(d: Nat,c: C.Canvas,x: U32,y: U32,tile: C.Canvas) -> C.Canvas:
+  C.canvas.set(d,c,x,y,tile)
+def glyph.put(c: C.Canvas,bits: Font.Glyph,x: U32,y: U32,fg: U32,bg: U32) -> C.Canvas:
+  C.glyph.put(c,bits,x,y,fg,bg)
+def box(c: C.Canvas,x: U32,y: U32,width: U32,height: U32,color: U32) -> C.Canvas:
+  C.box(c,x,y,width,height,color)
+def blend(fg: U32,bg: U32,coverage: U32) -> U32:
+  C.blend(fg,bg,coverage)
+def canvas.image(c: C.Canvas) -> Image:
+  C.canvas.image(c)
+def chrome_text(c: C.Canvas,label: String,x: U32,y: U32,width: U32,face: U32,fg: U32,bg: U32) -> C.Canvas:
+  Chrome.chrome_text(c,label,x,y,width,face,fg,bg)
 
-def canvas.children(+tl: Canvas, +tr: Canvas, +bl: Canvas, +br: Canvas,
-  +quad: U32, update: Canvas -> Canvas) -> Canvas:
-  match quad:
-    case 0:
-      Four{update(tl), tr, bl, br}
-    case 1:
-      Four{tl, update(tr), bl, br}
-    case 2:
-      Four{tl, tr, update(bl), br}
-    case _:
-      Four{tl, tr, bl, update(br)}
-
-def canvas.update(+c: Canvas, +quad: U32, update: Canvas -> Canvas) -> Canvas:
-  match c:
-    case Flat{+bg}:
-      canvas.children(Flat{bg}, Flat{bg}, Flat{bg}, Flat{bg}, quad, update)
-    case Tile{bits, fg, +bg}:
-      canvas.children(Flat{bg}, Flat{bg}, Flat{bg}, Flat{bg}, quad, update)
-    case Four{tl, tr, bl, br}:
-      canvas.children(tl, tr, bl, br, quad, update)
-
-def canvas.set(+d: Nat, +c: Canvas, +x: U32, +y: U32, +tile: Canvas) -> Canvas:
-  match d:
-    case 0n:
-      tile
-    case 1n+ +p:
-      +half = U32.shln(1, p)
-      +quad = U32.add(Bool.to_u32(U32.is_ge(x, half)), U32.mul(2, Bool.to_u32(U32.is_ge(y, half))))
-      canvas.update(c, quad, sub => canvas.set(p, sub, U32.mod(x, half), U32.mod(y, half), tile))
 
 def ink() -> U32: Palette.ink(Palette.Body{})
 def muted() -> U32: Palette.ink(Palette.Secondary{})
@@ -1235,9 +1213,6 @@ def panel() -> U32: Palette.surface(Palette.List{})
 def selected_bg() -> U32: Palette.surface(Palette.Current{})
 def selection_bg() -> U32: Palette.surface(Palette.Selection{})
 
-def glyph.put(+c: Canvas,+bits: Font.Glyph,+x: U32,+y: U32,+foreground: U32,+background: U32) -> Canvas:
-  top = canvas.set(8n,c,x,y,Tile{Font.half(bits,True{}),foreground,background})
-  canvas.set(8n,top,x,U32.add(y,1),Tile{Font.half(bits,False{}),foreground,background})
 
 # Tabs occupy one existing character cell. Only their painted glyph changes;
 # canonical text, scalar offsets, selection and export retain the original tab.
@@ -1246,76 +1221,21 @@ def display_glyph(+code: U32) -> Font.Glyph:
     case 9: Font.glyph(8594)
     case _: Font.glyph(code)
 
-def write(+count: Nat,+c: Canvas,text: String,+x: U32,+y: U32,+foreground: U32,+background: U32) -> Canvas:
+def write(+count: Nat,+c: C.Canvas,text: String,+x: U32,+y: U32,+foreground: U32,+background: U32) -> C.Canvas:
   match count text:
     case 1n+n SCon{Chr{code},rest}:
       write(n,glyph.put(c,display_glyph(code),x,y,foreground,background),rest,U32.add(x,1),y,foreground,background)
     case _ _: c
 
-def fill.row(+width: Nat,+c: Canvas,+x: U32,+y: U32,+color: U32) -> Canvas:
-  match width:
-    case 0n: c
-    case 1n+n: fill.row(n,canvas.set(8n,c,x,y,Flat{color}),U32.add(x,1),y,color)
-
-def fill(+rows: Nat,+c: Canvas,+x: U32,+y: U32,+width: Nat,+color: U32) -> Canvas:
-  match rows:
-    case 0n: c
-    case 1n+n: fill(n,fill.row(width,c,x,y,color),x,U32.add(y,1),width,color)
-
-def box(c: Canvas,x: U32,y: U32,width: U32,height: U32,color: U32) -> Canvas:
-  fill(U32.to_nat(U32.div(height,G.cell())),c,U32.div(x,G.cell()),U32.div(y,G.cell()),U32.to_nat(U32.div(width,G.cell())),color)
-
-def selected_mark(c: Canvas,selected: Bool,x: U32,y: U32,height: U32) -> Canvas:
+def selected_mark(c: C.Canvas,selected: Bool,x: U32,y: U32,height: U32) -> C.Canvas:
   match selected:
     case False{}: c
     case True{}: box(c,x,y,8,height,accent())
 
-def text(c: Canvas,label: String,x: U32,y: U32,count: U32,fg: U32,bg: U32) -> Canvas:
+def text(c: C.Canvas,label: String,x: U32,y: U32,count: U32,fg: U32,bg: U32) -> C.Canvas:
   write(U32.to_nat(count),c,label,U32.div(x,G.cell()),U32.div(y,G.cell()),fg,bg)
 
-def chrome_tiles(+fuel: Nat,+c: Canvas,+runs: List<&2,Chrome.Placed>,+column: U32,+left: U32,+top: U32,+x: U32,+y: U32,+fg: U32,+bg: U32) -> Canvas:
-  match fuel:
-    case 0n: c
-    case 1n+n:
-      nearby = Chrome.nearby(runs,left)
-      next = canvas.set(8n,c,U32.add(x,column),y,Tile{Chrome.tile(nearby,left,top),fg,bg})
-      chrome_tiles(n,next,runs,U32.add(column,1),U32.add(left,8),top,x,y,fg,bg)
-
-def chrome_rows(+fuel: Nat,+c: Canvas,+runs: List<&2,Chrome.Placed>,+columns: Nat,+top: U32,+x: U32,+y: U32,+fg: U32,+bg: U32) -> Canvas:
-  match fuel:
-    case 0n: c
-    case 1n+n:
-      next = chrome_tiles(columns,c,runs,0,0,top,x,y,fg,bg)
-      chrome_rows(n,next,runs,columns,U32.add(top,8),x,U32.add(y,1),fg,bg)
-
-def chrome_text(+c: Canvas,+label: String,+x: U32,+y: U32,+width: U32,+face: U32,+fg: U32,+bg: U32) -> Canvas:
-  runs = Chrome.layout(128n,face,label,0,width)
-  chrome_rows(Bool.pick(Nat,U32.is_eq(face,2),4n,3n),c,runs,U32.to_nat(U32.div(width,8)),0,U32.div(x,8),U32.div(y,8),fg,bg)
-
-def blend.channel(+fg: U32,+bg: U32,+coverage: U32) -> U32:
-  U32.div(U32.add(U32.mul(fg,coverage),U32.mul(bg,U32.sub(15,coverage))),15)
-
-def blend(+fg: U32,+bg: U32,+coverage: U32) -> U32:
-  r = blend.channel(U32.and(U32.shrn(fg,16n),255),U32.and(U32.shrn(bg,16n),255),coverage)
-  g = blend.channel(U32.and(U32.shrn(fg,8n),255),U32.and(U32.shrn(bg,8n),255),coverage)
-  b = blend.channel(U32.and(fg,255),U32.and(bg,255),coverage)
-  U32.add(U32.add(U32.shln(r,16n),U32.shln(g,8n)),b)
-
-def glyph.draw(+d: Nat,+x: U32,+y: U32,+bits: Font.Half,+fg: U32,+bg: U32) -> Image:
-  match d:
-    case 0n: Pix{blend(fg,bg,Font.coverage(bits,x,y))}
-    case 1n+ +p:
-      +h = U32.shln(1,p)
-      Qua{glyph.draw(p,x,y,bits,fg,bg),glyph.draw(p,U32.add(x,h),y,bits,fg,bg),
-        glyph.draw(p,x,U32.add(y,h),bits,fg,bg),glyph.draw(p,U32.add(x,h),U32.add(y,h),bits,fg,bg)}
-
-def canvas.image(c: Canvas) -> Image:
-  match c:
-    case Flat{color}: Pix{color}
-    case Tile{bits,fg,bg}: glyph.draw(3n,0,0,bits,fg,bg)
-    case Four{tl,tr,bl,br}: Qua{canvas.image(tl),canvas.image(tr),canvas.image(bl),canvas.image(br)}
-
-def draw_line(+count: Nat,+c: Canvas,text: String,+x: U32,+y: U32,+at: U32,+low: U32,+high: U32) -> Canvas:
+def draw_line(+count: Nat,+c: C.Canvas,text: String,+x: U32,+y: U32,+at: U32,+low: U32,+high: U32) -> C.Canvas:
   match count text:
     case 1n+n SCon{Chr{code},rest}:
       +bg = Bool.pick(U32,(at >= low && at < high : U32),selection_bg(),paper())
@@ -1323,7 +1243,7 @@ def draw_line(+count: Nat,+c: Canvas,text: String,+x: U32,+y: U32,+at: U32,+low:
       draw_line(n,next,rest,U32.add(x,1),y,U32.add(at,1),low,high)
     case _ _: c
 
-def draw_reader(+fuel: Nat,+c: Canvas,lines: List<&2,Line>,+y: U32,+low: U32,+high: U32) -> Canvas:
+def draw_reader(+fuel: Nat,+c: C.Canvas,lines: List<&2,Line>,+y: U32,+low: U32,+high: U32) -> C.Canvas:
   match fuel lines:
     case 1n+n Line{start,text} <> rest:
       draw_reader(n,draw_line(U32.to_nat(G.reader_columns()),c,text,U32.div(G.reader_x(),G.cell()),y,start,low,high),rest,U32.add(y,U32.div(G.line_pitch(),G.cell())),low,high)
@@ -1372,12 +1292,12 @@ def display_card(row: String,session: Bool) -> Card:
     case True{}: history_card(row)
     case False{}: card(row)
 
-def card_draw(c: Canvas,card: Card,+y: U32,+bg: U32) -> Canvas:
+def card_draw(c: C.Canvas,card: Card,+y: U32,+bg: U32) -> C.Canvas:
   Card{first,second} = card
   line1 = chrome_text(c,first,200,U32.add(y,0),296,1,ink(),bg)
   chrome_text(line1,second,200,U32.add(y,24),296,0,muted(),bg)
 
-def draw_rows(+fuel: Nat,+c: Canvas,rows: List<&2,String>,+at: U32,+selected: U32,+session: Bool) -> Canvas:
+def draw_rows(+fuel: Nat,+c: C.Canvas,rows: List<&2,String>,+at: U32,+selected: U32,+session: Bool) -> C.Canvas:
   match fuel rows:
     case 1n+n +row <> rest:
       +y = U32.add(G.list_y(),U32.mul(at,G.list_pitch()))
@@ -1466,18 +1386,18 @@ def brief_side_label(+index: U32) -> String:
     case 6: "Select all"
     case _: ""
 
-def export_split(c: Canvas,+y: U32) -> Canvas:
+def export_split(c: C.Canvas,+y: U32) -> C.Canvas:
   left = box(c,atif_left(),y,U32.sub(atif_right(),atif_left()),32,panel())
   named = text(left,"ATIF 1.8",U32.add(atif_left(),8),U32.add(y,8),8,accent(),panel())
   right = box(named,archive_left(),y,U32.sub(archive_right(),archive_left()),32,panel())
   text(right,"Archive",U32.add(archive_left(),8),U32.add(y,8),7,accent(),panel())
 
-def side_row(c: Canvas,+y: U32,label: String,+bg: U32,split: Bool) -> Canvas:
+def side_row(c: C.Canvas,+y: U32,label: String,+bg: U32,split: Bool) -> C.Canvas:
   match split:
     case True{}: export_split(c,y)
     case False{}: text(box(c,8,y,160,32,bg),label,16,U32.add(y,8),18,ink(),bg)
 
-def draw_side(fuel: Nat,c: Canvas,+index: U32,+files: Bool,+settings: Bool,+scope: String,+brief: Bool) -> Canvas:
+def draw_side(fuel: Nat,c: C.Canvas,+index: U32,+files: Bool,+settings: Bool,+scope: String,+brief: Bool) -> C.Canvas:
   match fuel:
     case 0n: c
     case 1n+n:
@@ -1510,13 +1430,13 @@ def workspace_side_active(+s: State,+index: U32) -> Bool:
   Bool.pick(Bool,is_files(s),U32.is_eq(index,0),
     Bool.pick(Bool,String.starts_with(title(s),"Usage |"),U32.is_eq(index,6),U32.is_eq(index,18)))
 
-def workspace_export(+c: Canvas,+y: U32) -> Canvas:
+def workspace_export(+c: C.Canvas,+y: U32) -> C.Canvas:
   left = box(c,atif_left(),y,U32.sub(atif_right(),atif_left()),32,Palette.navigation_paper())
   named = chrome_text(left,"ATIF 1.8",16,y,72,0,Palette.navigation_ink(),Palette.navigation_paper())
   right = box(named,archive_left(),y,U32.sub(archive_right(),archive_left()),32,Palette.navigation_paper())
   chrome_text(right,"Archive",104,y,64,0,Palette.navigation_ink(),Palette.navigation_paper())
 
-def workspace_side_item(+c: Canvas,+s: State,+index: U32,+y: U32,+logical: U32) -> Canvas:
+def workspace_side_item(+c: C.Canvas,+s: State,+index: U32,+y: U32,+logical: U32) -> C.Canvas:
   match logical:
     case 99:
       chrome_text(c,Bool.pick(String,U32.is_eq(index,4),"THIS CAPTURE","LIBRARY"),16,U32.add(y,8),144,0,Palette.navigation_muted(),Palette.navigation_paper())
@@ -1528,7 +1448,7 @@ def workspace_side_item(+c: Canvas,+s: State,+index: U32,+y: U32,+logical: U32) 
       base = box(c,8,y,160,32,bg)
       chrome_text(base,workspace_side_label(logical),16,U32.add(y,0),144,Bool.pick(U32,U32.is_lt(index,4),1,0),fg,bg)
 
-def draw_workspace_side(+fuel: Nat,+c: Canvas,+s: State,+index: U32) -> Canvas:
+def draw_workspace_side(+fuel: Nat,+c: C.Canvas,+s: State,+index: U32) -> C.Canvas:
   match fuel:
     case 0n: c
     case 1n+n:
@@ -1544,7 +1464,7 @@ def provider_label(index: U32) -> String:
 def provider_selected(+scope: String,+index: U32) -> Bool:
   String.eq(scope,Bool.pick(String,U32.is_eq(index,0),"all",Bool.pick(String,U32.is_eq(index,1),"claude","codex")))
 
-def draw_providers(+fuel: Nat,+c: Canvas,+scope: String,+index: U32) -> Canvas:
+def draw_providers(+fuel: Nat,+c: C.Canvas,+scope: String,+index: U32) -> C.Canvas:
   match fuel:
     case 0n: c
     case 1n+n:
@@ -1554,7 +1474,7 @@ def draw_providers(+fuel: Nat,+c: Canvas,+scope: String,+index: U32) -> Canvas:
       next = chrome_text(base,provider_label(index),U32.add(G.provider_x(index),8),G.provider_y(),U32.sub(G.provider_width(),16),Bool.pick(U32,active,1,0),ink(),bg)
       draw_providers(n,next,scope,U32.add(index,1))
 
-def draw_list_header_mode(+c: Canvas,+s: State,+results: Results,+files: Bool,+visible: Bool) -> Canvas:
+def draw_list_header_mode(+c: C.Canvas,+s: State,+results: Results,+files: Bool,+visible: Bool) -> C.Canvas:
   match visible:
     case True{}:
       heading = chrome_text(c,"History",192,120,144,2,heading_ink(),panel())
@@ -1564,7 +1484,7 @@ def draw_list_header_mode(+c: Canvas,+s: State,+results: Results,+files: Bool,+v
       heading = chrome_text(c,list_heading(results,files),192,120,304,1,heading_ink(),panel())
       chrome_text(heading,result_label(results),192,152,304,0,muted(),panel())
 
-def draw_list_header(+c: Canvas,+s: State,+results: Results,+files: Bool) -> Canvas:
+def draw_list_header(+c: C.Canvas,+s: State,+results: Results,+files: Bool) -> C.Canvas:
   draw_list_header_mode(c,s,results,files,provider_chips_visible(s))
 
 def whole_usage(s: State) -> Bool:
@@ -1588,7 +1508,7 @@ def brief_top_label(+index: U32) -> String:
     case 3: "Back to reader"
     case _: ""
 
-def draw_top(fuel: Nat,c: Canvas,+index: U32,+files: Bool,+settings: Bool,+whole: Bool,+automatic: String,+brief: Bool) -> Canvas:
+def draw_top(fuel: Nat,c: C.Canvas,+index: U32,+files: Bool,+settings: Bool,+whole: Bool,+automatic: String,+brief: Bool) -> C.Canvas:
   match fuel:
     case 0n: c
     case 1n+n:
@@ -1612,7 +1532,7 @@ def quota_side_label(index: U32) -> String:
 def quota_side_color(results: Results,index: U32) -> U32:
   Bool.pick(U32,quota_available(results,index),ink(),muted())
 
-def draw_quota_side(fuel: Nat,c: Canvas,+index: U32,+results: Results) -> Canvas:
+def draw_quota_side(fuel: Nat,c: C.Canvas,+index: U32,+results: Results) -> C.Canvas:
   match fuel:
     case 0n: c
     case 1n+n:
@@ -1621,7 +1541,7 @@ def draw_quota_side(fuel: Nat,c: Canvas,+index: U32,+results: Results) -> Canvas
       label = text(base,quota_side_label(index),16,U32.add(y,8),18,quota_side_color(results,index),rail())
       draw_quota_side(n,label,U32.add(index,1),results)
 
-def draw_side_context(quota: Bool,c: Canvas,results: Results,files: Bool,settings: Bool,scope: String,brief: Bool) -> Canvas:
+def draw_side_context(quota: Bool,c: C.Canvas,results: Results,files: Bool,settings: Bool,scope: String,brief: Bool) -> C.Canvas:
   match quota:
     case True{}: draw_quota_side(7n,c,0,results)
     case False{}: draw_side(U32.to_nat(G.sidebar_rows()),c,0,files,settings,scope,brief)
@@ -1651,7 +1571,7 @@ def quota_top_available(results: Results,index: U32) -> Bool:
 def quota_top_color(results: Results,index: U32) -> U32:
   Bool.pick(U32,quota_top_available(results,index),accent(),muted())
 
-def draw_quota_top(fuel: Nat,c: Canvas,+index: U32,+results: Results) -> Canvas:
+def draw_quota_top(fuel: Nat,c: C.Canvas,+index: U32,+results: Results) -> C.Canvas:
   match fuel:
     case 0n: c
     case 1n+n:
@@ -1661,7 +1581,7 @@ def draw_quota_top(fuel: Nat,c: Canvas,+index: U32,+results: Results) -> Canvas:
       label = text(base,quota_top_label(index),U32.add(x,8),88,U32.sub(U32.div(w,8),2),quota_top_color(results,index),panel())
       draw_quota_top(n,label,U32.add(index,1),results)
 
-def draw_top_context(quota: Bool,c: Canvas,results: Results,files: Bool,settings: Bool,whole: Bool,automatic: String,brief: Bool) -> Canvas:
+def draw_top_context(quota: Bool,c: C.Canvas,results: Results,files: Bool,settings: Bool,whole: Bool,automatic: String,brief: Bool) -> C.Canvas:
   match quota:
     case True{}: draw_quota_top(7n,c,0,results)
     case False{}: draw_top(7n,c,0,files,settings,whole,automatic,brief)
@@ -1709,7 +1629,7 @@ def attachment_top_color(+results: Results,index: U32) -> U32:
 
 # The toolbar owns repeated actions. The sidebar retains only the one action
 # absent there, with the same existing target and availability gate.
-def draw_attachment_side(c: Canvas,+results: Results) -> Canvas:
+def draw_attachment_side(c: C.Canvas,+results: Results) -> C.Canvas:
   +folders = folder_results(results)
   +index = Bool.pick(U32,folders,5,6)
   +y = G.sidebar_y(index)
@@ -1721,7 +1641,7 @@ def draw_attachment_side(c: Canvas,+results: Results) -> Canvas:
   base = box(fourth,8,y,160,32,rail())
   text(base,attachment_label(results,index),16,U32.add(y,8),18,attachment_side_color(results,index),rail())
 
-def draw_attachment_top(fuel: Nat,c: Canvas,+index: U32,+results: Results) -> Canvas:
+def draw_attachment_top(fuel: Nat,c: C.Canvas,+index: U32,+results: Results) -> C.Canvas:
   match fuel:
     case 0n: c
     case 1n+n:
@@ -1731,25 +1651,25 @@ def draw_attachment_top(fuel: Nat,c: Canvas,+index: U32,+results: Results) -> Ca
       label = text(base,attachment_label(results,attachment_top_result_index(results,index)),U32.add(x,8),88,U32.sub(U32.div(w,8),2),attachment_top_color(results,index),panel())
       draw_attachment_top(n,label,U32.add(index,1),results)
 
-def draw_attachment_side_context(attachments: Bool,quota: Bool,c: Canvas,results: Results,files: Bool,settings: Bool,scope: String,brief: Bool) -> Canvas:
+def draw_attachment_side_context(attachments: Bool,quota: Bool,c: C.Canvas,results: Results,files: Bool,settings: Bool,scope: String,brief: Bool) -> C.Canvas:
   match attachments:
     case True{}: draw_attachment_side(c,results)
     case False{}: draw_side_context(quota,c,results,files,settings,scope,brief)
 
-def draw_navigation_mode(+c: Canvas,+s: State,+results: Results,+files: Bool,+scope: String,+workspace: Bool) -> Canvas:
+def draw_navigation_mode(+c: C.Canvas,+s: State,+results: Results,+files: Bool,+scope: String,+workspace: Bool) -> C.Canvas:
   match workspace:
     case True{}: draw_workspace_side(U32.to_nat(G.sidebar_rows()),c,s,0)
     case False{}: draw_attachment_side_context(is_attachments(s) || is_attachment_folders(s),is_quota(s),c,results,files,is_settings(s),scope,is_brief(s))
 
-def draw_navigation(+c: Canvas,+s: State,+results: Results,+files: Bool,+scope: String) -> Canvas:
+def draw_navigation(+c: C.Canvas,+s: State,+results: Results,+files: Bool,+scope: String) -> C.Canvas:
   draw_navigation_mode(c,s,results,files,scope,history_workspace(s))
 
-def draw_attachment_top_context(attachments: Bool,quota: Bool,c: Canvas,results: Results,files: Bool,settings: Bool,whole: Bool,automatic: String,brief: Bool) -> Canvas:
+def draw_attachment_top_context(attachments: Bool,quota: Bool,c: C.Canvas,results: Results,files: Bool,settings: Bool,whole: Bool,automatic: String,brief: Bool) -> C.Canvas:
   match attachments:
     case True{}: draw_attachment_top(7n,c,0,results)
     case False{}: draw_top_context(quota,c,results,files,settings,whole,automatic,brief)
 
-def draw_attachment_entry(c: Canvas,visible: Bool) -> Canvas:
+def draw_attachment_entry(c: C.Canvas,visible: Bool) -> C.Canvas:
   match visible:
     case False{}: c
     case True{}:
@@ -1762,7 +1682,7 @@ def query_label_normal(+s: State) -> String:
 def query_label(+s: State) -> String:
   Bool.pick(String,is_attachment_folders(s),"Explicit attachment capture folder path",query_label_normal(s))
 
-def draw_status(modal: Bool,+s: State,c: Canvas) -> Canvas:
+def draw_status(modal: Bool,+s: State,c: C.Canvas) -> C.Canvas:
   match modal:
     case False{}: c
     case True{}:
@@ -1776,41 +1696,45 @@ def draw_status(modal: Bool,+s: State,c: Canvas) -> Canvas:
 def capture_hint(suspended: Bool) -> String:
   Bool.pick(String,suspended,"Capture suspended","")
 
-def draw_capture_hint(c: Canvas,+suspended: Bool) -> Canvas:
+def draw_capture_hint(c: C.Canvas,+suspended: Bool) -> C.Canvas:
   first = text(c,capture_hint(suspended),G.capture_hint_x(),80,G.capture_hint_columns(),muted(),rail())
   text(first,Bool.pick(String,suspended,"Back to History",""),G.capture_hint_x(),96,G.capture_hint_columns(),muted(),rail())
 
-def draw_capture_context(quota: Bool,c: Canvas,+suspended: Bool) -> Canvas:
+def draw_capture_context(quota: Bool,c: C.Canvas,+suspended: Bool) -> C.Canvas:
   match quota:
     case False{}: draw_capture_hint(c,suspended)
     case True{}:
       first = text(c,capture_hint(suspended),G.capture_hint_x(),80,G.capture_hint_columns(),muted(),rail())
       text(first,"Local quota only",G.capture_hint_x(),96,G.capture_hint_columns(),muted(),rail())
 
-def draw_scope_field(attachments: Bool,c: Canvas,s: State,q: String,+focus: U32,+caret: U32,+anchor: U32) -> Canvas:
+def draw_scope_field(attachments: Bool,c: C.Canvas,s: State,q: String,+focus: U32,+caret: U32,+anchor: U32) -> C.Canvas:
   match attachments:
     case True{}: text(c,"All attachment references in these captured records · repository, role and time filters do not apply",G.query_x(),G.query_y(),G.query_columns(),muted(),paper())
     case False{}:
       +offset = query_offset(s)
       draw_line(U32.to_nat(G.query_columns()),c,String.append(String.drop(q,U32.to_nat(offset))," "),U32.div(G.query_x(),G.cell()),U32.div(G.query_y(),G.cell()),offset,Bool.pick(U32,U32.is_eq(focus,0),U32.min(caret,anchor),0),Bool.pick(U32,U32.is_eq(focus,0),Bool.pick(U32,U32.is_eq(caret,anchor),U32.add(caret,1),U32.max(caret,anchor)),0))
 
-def draw_list_pager(hidden: Bool,c: Canvas,+results: Results) -> Canvas:
+def draw_list_pager(hidden: Bool,c: C.Canvas,+results: Results) -> C.Canvas:
   match hidden:
     case True{}: c
     case False{}:
       prev = text(c,"Previous",192,G.list_pager_y(),16,Bool.pick(U32,result_available(results,False{}),accent(),muted()),panel())
       text(prev,"Next",360,G.list_pager_y(),16,Bool.pick(U32,result_available(results,True{}),accent(),muted()),panel())
 
-def draw_query_actions(+attachments: Bool,+c: Canvas,+s: State) -> Canvas:
+def query_action_label(+s: State,paste: Bool) -> String:
+  +path = is_files(s) || is_settings(s) || is_brief(s) || is_attachment_folders(s)
+  Bool.pick(String,paste,Bool.pick(String,path,"Paste path","Paste query"),Bool.pick(String,path,"Clear path","Clear query"))
+
+def draw_query_actions(+attachments: Bool,+c: C.Canvas,+s: State) -> C.Canvas:
   match attachments:
     case True{}: c
     case False{}:
-      paste = chrome_text(c,Bool.pick(String,is_files(s) || is_settings(s) || is_brief(s),"Paste path","Paste query"),U32.add(G.text_action_x(1),8),G.text_actions_y(),88,0,accent(),paper())
-      chrome_text(paste,Bool.pick(String,is_files(s) || is_settings(s) || is_brief(s),"Clear path","Clear query"),U32.add(G.text_action_x(2),8),G.text_actions_y(),88,0,accent(),paper())
+      paste = chrome_text(c,query_action_label(s,True{}),U32.add(G.text_action_x(1),8),G.text_actions_y(),88,0,accent(),paper())
+      chrome_text(paste,query_action_label(s,False{}),U32.add(G.text_action_x(2),8),G.text_actions_y(),88,0,accent(),paper())
 
-def draw_canvas_capture(+s: State,automatic: String,suspended: Bool) -> Canvas:
+def draw_canvas_capture(+s: State,automatic: String,suspended: Bool) -> C.Canvas:
   State{Content{+q,rows,reader,lines,title,status,+scope,+results,+files},Input{+selected,scroll,Edit{+focus,+caret,+anchor,drag,viewport},command,shift},image,dirty} = s
-  base = box(Flat{paper()},0,0,G.width(),G.header_height(),rail())
+  base = box(C.Flat{paper()},0,0,G.width(),G.header_height(),rail())
   side = box(base,0,0,G.sidebar_end(),G.footer_y(),Bool.pick(U32,history_workspace(s),Palette.navigation_paper(),rail()))
   list = box(side,G.sidebar_end(),G.header_height(),U32.sub(G.list_end(),G.sidebar_end()),G.body_height(),panel())
   foot = box(list,0,G.footer_y(),G.width(),40,rail())

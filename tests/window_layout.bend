@@ -1,6 +1,7 @@
 # Pure production-painter and input contracts. These do not prove native Dock
 # avoidance; root must launch this exact candidate on the smaller desktop.
 import Base
+import ../src/bend_ui/canvas.bend as C
 import ../src/ui.bend as UI
 import ../src/ui_geometry.bend as G
 import ../src/font.bend as Font
@@ -18,7 +19,7 @@ def changed(value: UI.State & UI.Action) -> UI.State:
   (state,_) = value
   state
 
-def glyph(c: UI.Canvas,x: U32,y: U32,code: U32,bg: U32) -> Bool:
+def glyph(c: C.Canvas,x: U32,y: U32,code: U32,bg: U32) -> Bool:
   Tiles.tile.row(Tiles.tile.at(8n,c,U32.div(x,8),U32.div(y,8)),7,Font.row(Font.half(Font.glyph(code),True{}),7),bg)
 
 def normal() -> UI.State:

@@ -6,7 +6,11 @@ combined app981e84fd. Retained JPEG/PNG, pending Escape/Back, source-loss restar
 external capture and complete ATIF passed. See `history-workspace-jpeg-native.json`,
 `history-workspace-external-native.json` and `history-workspace-build-tests.json`.
 This is incomplete visual parity; message cards, Unicode shaping and pending Close
-remain open. Community UI components are isolated work, not an adopted framework.
+remain open. The shared Bend Canvas/Label/Region layer is now adopted in app 1b6fd416 and
+its standalone controls example. Both passed native checks; see
+`bend-ui-app-native.json`, `bend-ui-controls-native.json` and
+`bend-ui-build-tests.json`. This is an early reusable foundation, not a separate
+licensed framework release. Reader cards and library Usage remain isolated work.
 
 Current adopted source and exact continuation are in [progress.md](progress.md).
 Recorded commit-result evidence has native positive acceptance; see

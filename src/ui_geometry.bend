@@ -2,6 +2,7 @@
 # expose resizing or a display visible frame. Canonical transcript/query text
 # retains the 8px grid; proportional chrome uses the same bounded targets.
 import Base
+import ./bend_ui/region.bend as Region
 
 def width() -> U32: 1200
 def height() -> U32: 664
@@ -50,7 +51,7 @@ def capture_hint_x() -> U32: 688
 def capture_hint_columns() -> U32: 19
 
 def rect(+x: U32,+y: U32,left: U32,top: U32,right: U32,bottom: U32) -> Bool:
-  (x >= left && x < right && y >= top && y < bottom : U32)
+  Region.contains(Region.Rect{left,top,right,bottom},x,y)
 
 def attachment_entry_contains(x: U32,y: U32) -> Bool:
   rect(x,y,attachment_entry_x(),text_actions_y(),attachment_entry_right(),U32.add(text_actions_y(),control_height()))
@@ -84,10 +85,18 @@ def provider_x(index: U32) -> U32:
   U32.add(192,U32.mul(index,104))
 def provider_y() -> U32: 152
 def provider_width() -> U32: 96
-def provider_contains(x: U32,y: U32,+index: U32) -> Bool:
-  rect(x,y,provider_x(index),provider_y(),U32.add(provider_x(index),provider_width()),U32.add(provider_y(),24))
-def provider_index(+x: U32,+y: U32) -> U32:
-  Bool.pick(U32,provider_contains(x,y,0),0,Bool.pick(U32,provider_contains(x,y,1),1,Bool.pick(U32,provider_contains(x,y,2),2,99)))
+def provider_bounds(+index: U32) -> Region.Rect:
+  Region.Rect{provider_x(index),provider_y(),U32.add(provider_x(index),provider_width()),U32.add(provider_y(),24)}
+def provider_region(+index: U32) -> Region.ControlRegion:
+  Region.ControlRegion{index,provider_bounds(index),True{},False{}}
+def provider_contains(x: U32,y: U32,index: U32) -> Bool:
+  Region.contains(provider_bounds(index),x,y)
+def provider_hit(result: Maybe<&2,U32>) -> U32:
+  match result:
+    case Some{index}: index
+    case None{}: 99
+def provider_index(x: U32,y: U32) -> U32:
+  provider_hit(Region.hit(3n,[provider_region(0),provider_region(1),provider_region(2)],x,y))
 
 def sidebar_action_index.valid(+index: U32,inside: Bool,settings: Bool,brief: Bool) -> U32:
   match inside settings brief:

@@ -58,6 +58,27 @@ Offline font packing adds no application runtime. See the
 [mono](assets/fonts/jetbrains-mono/README.md) and
 [UI font](assets/fonts/inter-ui/README.md) asset records.
 
+## Reusable Bend UI foundation
+
+Juice and a small standalone example use the same pure Bend 2 drawing, label,
+hit-testing and keyboard-focus components. The component source depends on Base
+and the pinned public font modules. See [the API and examples](src/bend_ui/README.md).
+
+```sh
+mise exec -- ./scripts/build examples/ui_controls.bend build/ui-controls
+mise exec -- ./build/ui-controls
+mise exec -- ./scripts/test tests/ui_kit_regions.bend tests/ui_kit_labels.bend tests/ui_kit_example.bend
+```
+
+![The native Bend controls example, with keyboard focus on Apricot](docs/images/bend-ui-controls.png)
+
+The example has observed native mouse, Tab/Shift-Tab, Enter/Space, disabled-control,
+Escape and window-close checks. It is an early foundation: shaping, IME,
+accessibility and resizing remain open. The repository build wrapper still links
+system SQLite for all executables, including this example; the component source
+imports no Juice storage or provider code. A separately licensed community package
+has not been released. Existing font and Bend dependency notices remain required.
+
 ## Local quota observations
 
 Settings → Connections offers explicit local Claude usage collection. Enable,

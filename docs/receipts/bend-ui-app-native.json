@@ -1,0 +1,412 @@
+{
+  "schema": "juice-bend-native-ui-kit-app-jpeg-receipt-v1",
+  "status": "PASS: exact History reader copies, native image pixels/navigation/export, bracketed pending Escape/Back and ready-reader Close",
+  "scope": "Synthetic native macOS arm64 Tart; exact shared UI-kit application candidate. Pending Close remains outside this journey.",
+  "application": {
+    "sha256": "1b6fd416b7e79e70ef8108ea68a6df8071eed47c02c5a01d8947cee5544ad672",
+    "source_files": 172,
+    "pinned_inputs": 96,
+    "source_binding_sha256": "7d8cadbe2b08ae93ac9b7fb7b039c1be09593a724ee5c1363341ae62a9dd0c6a",
+    "build_receipt_sha256": "6b9d51ec9a68b8419379fba41f8bcabd18bf28dd5d83f80f6a8ce5fd207c01aa"
+  },
+  "helper": {
+    "sha256": "afeb50ed9d816d96178471dd0503594d452ff705cd436eebd71f57dab0a76bb5",
+    "source_files": 59,
+    "pinned_inputs": 96,
+    "shared_application_paths_exact": 50,
+    "shared_application_paths_compatible_exception": 1,
+    "compatibility_sha256": "996595e9d86497dbd1d390a870aebf1681c6d77ed637a1f31023aeae69c08541",
+    "exception": "Only file_evidence.commit_why_message and its import changed; frozen helper fixture/verification modes do not invoke this route. No G15 validation is claimed.",
+    "manifest_sha256": "7470704888637ddb3855945dd13891f23b9b4863e0d60148383aae45ef55eb03",
+    "build_receipt_sha256": "68fc450196083600010c4a38cf377251536350292760caad86c12b25e2a1edc5"
+  },
+  "build_pin_compatibility": {
+    "unchanged_count": 95,
+    "differences": {
+      "mise.toml": {
+        "helper": "5da6b640f2464bc27f838079dcc142697011f31a77a641aaddcfebd76f89ac53",
+        "application": "615f00a3202c21c6fa5f5820d88a278339fef8eea1d00a90c7d8e25a67eca841"
+      }
+    },
+    "reason": "Application mise.toml includes the launch-existing-build demo alias; helper was compiled before that task-only addition. Bend/runtime/toolchain/build-wrapper hashes are unchanged."
+  },
+  "step_exits": {
+    "prepare": 0,
+    "history": 0,
+    "jpeg": 0,
+    "pending": 0,
+    "variants": 0,
+    "restart": 0,
+    "finish-ready": 0,
+    "normal-close": 0,
+    "cleanup": 0,
+    "fixture-copy": 0,
+    "guest-run": 0,
+    "display-holder": 0,
+    "display-restored": 0
+  },
+  "capture": {
+    "snapshot": "1",
+    "source": "1",
+    "generation": "1",
+    "records": 6,
+    "logical_bytes": 26497,
+    "logical_sha256": "1803063e687a928c529cc8d5c72005481b237b7a260b369c8713ac184e1c6da0",
+    "compressed_bytes": 26506,
+    "compressed_sha256": "753a0b7c00b2bd905048ccec727163481374d3daa696021bf4ae4cda2f6bf660",
+    "raw_and_archive_commitments_verified": true,
+    "sqlite_quick_check": "ok",
+    "foreign_key_violations": 0
+  },
+  "preservation": {
+    "source_archive_absent_before_first_launch_and_after_restart": true,
+    "restart_used_different_parent_pid": true,
+    "fixture_verify_before_restart_and_final_exact": true,
+    "fixture_copy_files": 8,
+    "source_before_after_and_copy_hashes_equal": true
+  },
+  "exports": [
+    {
+      "filename": "attachment-1-0-0-275774-1.bin",
+      "bytes": 9277,
+      "sha256": "63e2d58cc271cfdcba0f0c8f87821c340e3a410547987934c4be778dcf50e202",
+      "mode": "0600"
+    },
+    {
+      "filename": "attachment-1-0-0-276970-2.bin",
+      "bytes": 9277,
+      "sha256": "63e2d58cc271cfdcba0f0c8f87821c340e3a410547987934c4be778dcf50e202",
+      "mode": "0600"
+    },
+    {
+      "filename": "attachment-1-0-0-1036873-1.bin",
+      "bytes": 9277,
+      "sha256": "63e2d58cc271cfdcba0f0c8f87821c340e3a410547987934c4be778dcf50e202",
+      "mode": "0600"
+    },
+    {
+      "filename": "attachment-1-1-0-853155-4.bin",
+      "bytes": 72,
+      "sha256": "abe34935a44b0714231889bd0d8768c80ec1ca4a221928956c8e5f1af914f3c9",
+      "mode": "0600"
+    }
+  ],
+  "reader": {
+    "initial_and_restarted_unicode_reader_equal_independent_template": true,
+    "visible_events": 2,
+    "reference_ids": [
+      "r0:e1",
+      "r5:e0"
+    ],
+    "selected_bookmark_equalities": 7,
+    "ready_back_escape_and_remote_inert_copy_exact": true
+  },
+  "history": {
+    "synthetic_sessions": 1,
+    "user_events": 2,
+    "history_control_and_filter_help_exercised": true,
+    "claude_provider_reader_exact": true,
+    "all_provider_restored_reader_exact": true,
+    "literal_search_result_reader_exact": true,
+    "codex_empty_state": "Screenshot only; root reported visually observed. No automated empty-list assertion."
+  },
+  "native_pixels": {
+    "views": {
+      "jpeg-fit": {
+        "samples": 30,
+        "display_png_sha256": "37099f9fbe6b854c0b1611dfb8eef5567ce4de92ffebd78280100fea78803634",
+        "pixel_receipt_sha256": "8819fb5a646c31ecfad39476fe3cfc3ab4007053a38906b1302139ad62b85091"
+      },
+      "jpeg-origin": {
+        "samples": 6,
+        "display_png_sha256": "1c6aa170d40903ffa4e04fa4ad0487f4e57546ea6d74c066c5425d39ee0ef107",
+        "pixel_receipt_sha256": "35fe9a991d6eef9bb2e85d4665a2ba9bf41ddde2e5049d9daf87d0475cdf3add"
+      },
+      "jpeg-right": {
+        "samples": 8,
+        "display_png_sha256": "e87549fd06e215f28316d122931c7c8283b4dd9afd2af90655900517d7514234",
+        "pixel_receipt_sha256": "c3f5249a0cef9d0a540b389e297c83a7a3286083978d4aefb26c0b2f9f2f9a86"
+      },
+      "jpeg-down": {
+        "samples": 8,
+        "display_png_sha256": "2a2116b801ecf4dc13f681ebb2cfc6e493d941d35dbec9b5c6fa49283d604b7d",
+        "pixel_receipt_sha256": "88ac59b282b0c6cf6528e2b7ac419516747d4671a466b706d19e8ee4dd3cd109"
+      },
+      "jpeg-wheel-down": {
+        "samples": 8,
+        "display_png_sha256": "2bde11ee8ffab9db9d6901c1c15a8726cbe66bce1edcaeab3d7c9cd4a3abe96c",
+        "pixel_receipt_sha256": "3b9e4f69c19b4ae0457626f4142b88be95a0c323bfd60eccba26bbe176ce7bcf"
+      },
+      "jpeg-wheel-up": {
+        "samples": 8,
+        "display_png_sha256": "836caed83255a68372797dc37653ce7640a88d9cb29f8a759ed13a37255db2f1",
+        "pixel_receipt_sha256": "88ac59b282b0c6cf6528e2b7ac419516747d4671a466b706d19e8ee4dd3cd109"
+      },
+      "jpeg-wheel-outside": {
+        "samples": 8,
+        "display_png_sha256": "0a0e541ceabad0e383b2e126bbe1704a4855227a059a0d263bb586747d3e203f",
+        "pixel_receipt_sha256": "88ac59b282b0c6cf6528e2b7ac419516747d4671a466b706d19e8ee4dd3cd109"
+      },
+      "jpeg-bottom-right": {
+        "samples": 8,
+        "display_png_sha256": "87638d03371a98b59a5283f82e8193d4e5fb1d3e23656468b02a33d02c03d931",
+        "pixel_receipt_sha256": "6f18c073d09183597d8b7d6c2329852440c11e183c12f7892fe7977051716831"
+      },
+      "jpeg-edge-clamped": {
+        "samples": 8,
+        "display_png_sha256": "26e2fd2ce8e1133a371e26875ffc292fb1897d6b3b673d75c3790a39412af1b6",
+        "pixel_receipt_sha256": "6f18c073d09183597d8b7d6c2329852440c11e183c12f7892fe7977051716831"
+      },
+      "jpeg-fit-return": {
+        "samples": 30,
+        "display_png_sha256": "b91d8c2ece83f44e58481fb8828602ea7a4a08a59cce60eb1981a0df199e7228",
+        "pixel_receipt_sha256": "8819fb5a646c31ecfad39476fe3cfc3ab4007053a38906b1302139ad62b85091"
+      },
+      "jpeg-reopen": {
+        "samples": 30,
+        "display_png_sha256": "b91d8c2ece83f44e58481fb8828602ea7a4a08a59cce60eb1981a0df199e7228",
+        "pixel_receipt_sha256": "8819fb5a646c31ecfad39476fe3cfc3ab4007053a38906b1302139ad62b85091"
+      },
+      "restarted-jpeg": {
+        "samples": 30,
+        "display_png_sha256": "b88774f08bc9eba6a0c112a9f9ddb140b6a2af7d87064a47633c438397d7c42b",
+        "pixel_receipt_sha256": "8819fb5a646c31ecfad39476fe3cfc3ab4007053a38906b1302139ad62b85091"
+      },
+      "after-canceled-workers": {
+        "samples": 30,
+        "display_png_sha256": "00195ceeee8e13a24f6457ead81e45d8d7ce9d06a53262ac39863191e7669e8f",
+        "pixel_receipt_sha256": "8819fb5a646c31ecfad39476fe3cfc3ab4007053a38906b1302139ad62b85091"
+      },
+      "png-fit": {
+        "samples": 8,
+        "display_png_sha256": "4936416b7986f819971e9b95d43b06c5f6075955a186856f49b5778e4b183b67",
+        "pixel_receipt_sha256": "7bab0626afe5471827941cfb2d864eecd3384abf479fac9dac8c2269c7f64456"
+      },
+      "png-actual": {
+        "samples": 3,
+        "display_png_sha256": "c0fc7da14555ba129f014f7d24037fe2d24c1996dcdfec862d68c15cf080c716",
+        "pixel_receipt_sha256": "4aaed1b4cdf856a22dc91102b81346840b27c16d9322d22835b19e741881c605"
+      }
+    },
+    "samples_total": 223,
+    "direct_png_reinspection": true,
+    "exact_icc_profile_zero_channel_tolerance": true,
+    "jpeg_size": [
+      1024,
+      640
+    ],
+    "png_size": [
+      2,
+      1
+    ],
+    "declared_mime_does_not_choose_decoder": true
+  },
+  "unsupported_variants": {
+    "progressive-unsupported": {
+      "source_bound_samples": 3030,
+      "display_png_sha256": "fb37dcb969dfd213a6a4158211b6f605a42dc3b995dd3ba99789324f032d6e44"
+    },
+    "truncated-invalid": {
+      "source_bound_samples": 2550,
+      "display_png_sha256": "26e6ecc643bfa3f360704e6c66f002607edc66f0f33e39ac9e6659ccf0ab27dc"
+    }
+  },
+  "pending_navigation": {
+    "pending-escape": {
+      "pending_pixels": {
+        "pending_observed": true,
+        "samples": 4096,
+        "png_sha256": "1abdfb9944a2bfae897b1e185ef96e6afae863ea06c62f9c93debb548c998360"
+      },
+      "same_owned_child_before_and_after_single_gesture": true,
+      "child_parent_pid": 855,
+      "child_pid": 4546,
+      "eventual_child_absence": true,
+      "bookmark_pixel_observations": 12,
+      "bookmark_samples_rechecked": 1017600,
+      "post_child_absence_input_free_observations": 10,
+      "selected_clipboard_restored_exact": true,
+      "gesture_bracket_seconds": "1.302368000",
+      "post_gesture_observation_seconds": "247.477962000",
+      "timing_limit": "Observation includes expensive screenshot/pixel checks; not cancellation latency or a performance benchmark."
+    },
+    "pending-back": {
+      "pending_pixels": {
+        "pending_observed": true,
+        "samples": 4096,
+        "png_sha256": "1abdfb9944a2bfae897b1e185ef96e6afae863ea06c62f9c93debb548c998360"
+      },
+      "same_owned_child_before_and_after_single_gesture": true,
+      "child_parent_pid": 855,
+      "child_pid": 5027,
+      "eventual_child_absence": true,
+      "bookmark_pixel_observations": 12,
+      "bookmark_samples_rechecked": 875520,
+      "post_child_absence_input_free_observations": 10,
+      "selected_clipboard_restored_exact": true,
+      "gesture_bracket_seconds": "1.169808000",
+      "post_gesture_observation_seconds": "222.308507000",
+      "timing_limit": "Observation includes expensive screenshot/pixel checks; not cancellation latency or a performance benchmark."
+    }
+  },
+  "observed_open_times": [
+    {
+      "open": "after-canceled-workers",
+      "first_verified_view": "after-canceled-workers",
+      "before_open_monotonic_seconds": "807.096170000",
+      "after_open_monotonic_seconds": "807.213103000",
+      "verified_monotonic_seconds": "816.781701000",
+      "before_open_to_verified_seconds": "9.685531000",
+      "after_post_to_verified_seconds": "9.568598000",
+      "first_observation_reported_pending": true,
+      "scope": "Observed upper bound including automation, notifications, screenshots and polling; no isolated decoder timing."
+    },
+    {
+      "open": "jpeg-initial",
+      "first_verified_view": "jpeg-fit",
+      "before_open_monotonic_seconds": "200.174470000",
+      "after_open_monotonic_seconds": "200.244936000",
+      "verified_monotonic_seconds": "209.812150000",
+      "before_open_to_verified_seconds": "9.637680000",
+      "after_post_to_verified_seconds": "9.567214000",
+      "first_observation_reported_pending": true,
+      "scope": "Observed upper bound including automation, notifications, screenshots and polling; no isolated decoder timing."
+    },
+    {
+      "open": "jpeg-reopen",
+      "first_verified_view": "jpeg-reopen",
+      "before_open_monotonic_seconds": "262.474117000",
+      "after_open_monotonic_seconds": "262.549210000",
+      "verified_monotonic_seconds": "272.094395000",
+      "before_open_to_verified_seconds": "9.620278000",
+      "after_post_to_verified_seconds": "9.545185000",
+      "first_observation_reported_pending": true,
+      "scope": "Observed upper bound including automation, notifications, screenshots and polling; no isolated decoder timing."
+    },
+    {
+      "open": "png",
+      "first_verified_view": "png-fit",
+      "before_open_monotonic_seconds": "845.004228000",
+      "after_open_monotonic_seconds": "845.072338000",
+      "verified_monotonic_seconds": "847.106938000",
+      "before_open_to_verified_seconds": "2.102710000",
+      "after_post_to_verified_seconds": "2.034600000",
+      "first_observation_reported_pending": false,
+      "scope": "Observed upper bound including automation, notifications, screenshots and polling; no isolated decoder timing."
+    },
+    {
+      "open": "restarted-jpeg",
+      "first_verified_view": "restarted-jpeg",
+      "before_open_monotonic_seconds": "1023.538585000",
+      "after_open_monotonic_seconds": "1023.637450000",
+      "verified_monotonic_seconds": "1033.152068000",
+      "before_open_to_verified_seconds": "9.613483000",
+      "after_post_to_verified_seconds": "9.514618000",
+      "first_observation_reported_pending": true,
+      "scope": "Observed upper bound including automation, notifications, screenshots and polling; no isolated decoder timing."
+    }
+  ],
+  "normal_close": {
+    "scope": "ready reader native Close only",
+    "parent_exit_observed_ms": 445,
+    "window_exit_observed_ms": 309,
+    "threshold_ms": 5000,
+    "pending_close_tested": false,
+    "times_are_observation_upper_bounds": true
+  },
+  "visual_review": {
+    "observed": true,
+    "reviewer": "coordinating root agent",
+    "screenshots": {
+      "history-selected-display.png": "c6bcad374c60cdced24c24a20c4724c8e24ee4e4470a30038f4eda140bc76437",
+      "history-codex-empty-display.png": "e2cccd68d4cfcd99e2eae45a48abcf119722bb673a5577b04fe900d7394811e0",
+      "history-claude-display.png": "52dafe7108975447f853395d3aefbd04d723351892207b40c4c68a2bbf5a9ef4",
+      "jpeg-fit-display.png": "37099f9fbe6b854c0b1611dfb8eef5567ce4de92ffebd78280100fea78803634",
+      "jpeg-bottom-right-display.png": "87638d03371a98b59a5283f82e8193d4e5fb1d3e23656468b02a33d02c03d931",
+      "pending-escape-stale-readonly-10-display.png": "cf5d6a42b20eb01def2d450e7aa23333f734b3f3bffd89032064b2493629cfbe",
+      "pending-back-readonly-2-display.png": "d81c1ab33d9e452c43d7e17018b107f89000593c00b9ac03cfa891ac0a91f763",
+      "png-fit-display.png": "4936416b7986f819971e9b95d43b06c5f6075955a186856f49b5778e4b183b67",
+      "progressive-unsupported-display.png": "fb37dcb969dfd213a6a4158211b6f605a42dc3b995dd3ba99789324f032d6e44",
+      "truncated-invalid-display.png": "26e6ecc643bfa3f360704e6c66f002607edc66f0f33e39ac9e6659ccf0ab27dc",
+      "remote-disabled-display.png": "09e898fb8b0214374fc59f591d70fb3b7d5c7a9ca62a2364c42fa8db6ffa1a99",
+      "restarted-jpeg-display.png": "b88774f08bc9eba6a0c112a9f9ddb140b6a2af7d87064a47633c438397d7c42b",
+      "normal-close-ready-display.png": "aa4ee8be430267c08fa783eee289643dd37e4779a1d59b1e14474182b750e749"
+    },
+    "notes": [
+      "Inspected actual native History selection and provider states. Codex filter shows No results while the existing reader remains pinned with explicit status. Sans controls are legible. Dense mono transcript and unsupported CJK/emoji glyphs remain known limits.",
+      "Inspected JPEG Fit and bottom-right actual-pixel views: aspect ratio, clipped viewport and readable retained-byte status match the journey. Image chrome remains mostly mono; no broad visual-parity claim.",
+      "Inspected late read-only Escape and active Back observations: attachment details and History transcript bookmarks retain visible selection, with no image overlay replacing either screen at the sampled moments. Final scripted temporal checks remain separate.",
+      "Inspected PNG Fit and explicit progressive/truncated JPEG failures. Controls remain readable and error text fits. Existing mono image chrome and machine error prefixes are later polish issues, not a claim of finished UX.",
+      "Inspected disabled remote reference, JPEG after different-process restart and selected ready-to-close screen. No clipped controls or new extraction regression observed. No general visual parity, Unicode shaping or pending-Close claim."
+    ],
+    "scope": "Actual full-display screenshots from this exact synthetic native run; visual inspection is separate from pixel/copy/temporal assertions."
+  },
+  "cleanup": {
+    "candidate_parent_children_and_windows_absent": true,
+    "default_application_data_absent": true,
+    "display_and_dock_restored": true,
+    "vm_stop": "Not inferred from guest cleanup; root owns the VM session and records its final stopped state separately."
+  },
+  "evidence": {
+    "artifact_files_unchanged_after_validation": 1000,
+    "artifact_manifest_sha256": "e925455584b06aafcf4416a680510fbeb6bd36945d5d1a7db0f0363ddeb9fac2",
+    "payload_files_unchanged": 31,
+    "build_evidence_files_unchanged": 276,
+    "staging_receipt_sha256": "90d561e09b5ce44727e1e2f8d78ee3cf202a79615809c09a6092e042db00217b",
+    "collector_sha256": "2b0a4d1ade184eaa913c2d5ec5c41af784329225f7eca81ab1307464cb13f4ce",
+    "collector_receipt_sha256": "7fcdc7325b6ff7af274a03d06e0d576b2f21030ce5d7589ae561eb2e5b6e298a"
+  },
+  "limitations": [
+    "This result binds only the named UI-kit application executable and independently frozen helper, not unfinished reader-card or library Usage candidates.",
+    "Pending Escape and Back retirement are covered; pending Close is not tested or claimed fixed.",
+    "Observed Open and gesture times include costly automation/pixel checks and are not decoder, event-handling or general responsiveness benchmarks.",
+    "The one-session synthetic History gallery does not establish large-library usability or general feature parity.",
+    "Exact display storage components under one ICC profile are checked, not general color fidelity.",
+    "Unavailable/pending chrome is source-bound evidence; it is not an independent decoder oracle.",
+    "No Swift comparison or controlled performance benchmark.",
+    "Original failed date-path run and earlier pending-Close failures remain preserved.",
+    "The prior complete-app attempt was interrupted by host ENOSPC during restart; its failure artifacts remain preserved."
+  ],
+  "collected_utc": "2026-10-22T18:08:45.176365+00:00",
+  "root_visual_review": {
+    "observed": true,
+    "reviewer": "coordinating root agent",
+    "screenshots": {
+      "history-selected-display.png": "c6bcad374c60cdced24c24a20c4724c8e24ee4e4470a30038f4eda140bc76437",
+      "history-codex-empty-display.png": "e2cccd68d4cfcd99e2eae45a48abcf119722bb673a5577b04fe900d7394811e0",
+      "history-claude-display.png": "52dafe7108975447f853395d3aefbd04d723351892207b40c4c68a2bbf5a9ef4",
+      "jpeg-fit-display.png": "37099f9fbe6b854c0b1611dfb8eef5567ce4de92ffebd78280100fea78803634",
+      "jpeg-bottom-right-display.png": "87638d03371a98b59a5283f82e8193d4e5fb1d3e23656468b02a33d02c03d931",
+      "pending-escape-stale-readonly-10-display.png": "cf5d6a42b20eb01def2d450e7aa23333f734b3f3bffd89032064b2493629cfbe",
+      "pending-back-readonly-2-display.png": "d81c1ab33d9e452c43d7e17018b107f89000593c00b9ac03cfa891ac0a91f763",
+      "png-fit-display.png": "4936416b7986f819971e9b95d43b06c5f6075955a186856f49b5778e4b183b67",
+      "progressive-unsupported-display.png": "fb37dcb969dfd213a6a4158211b6f605a42dc3b995dd3ba99789324f032d6e44",
+      "truncated-invalid-display.png": "26e6ecc643bfa3f360704e6c66f002607edc66f0f33e39ac9e6659ccf0ab27dc",
+      "remote-disabled-display.png": "09e898fb8b0214374fc59f591d70fb3b7d5c7a9ca62a2364c42fa8db6ffa1a99",
+      "restarted-jpeg-display.png": "b88774f08bc9eba6a0c112a9f9ddb140b6a2af7d87064a47633c438397d7c42b",
+      "normal-close-ready-display.png": "aa4ee8be430267c08fa783eee289643dd37e4779a1d59b1e14474182b750e749"
+    },
+    "notes": [
+      "Inspected actual native History selection and provider states. Codex filter shows No results while the existing reader remains pinned with explicit status. Sans controls are legible. Dense mono transcript and unsupported CJK/emoji glyphs remain known limits.",
+      "Inspected JPEG Fit and bottom-right actual-pixel views: aspect ratio, clipped viewport and readable retained-byte status match the journey. Image chrome remains mostly mono; no broad visual-parity claim.",
+      "Inspected late read-only Escape and active Back observations: attachment details and History transcript bookmarks retain visible selection, with no image overlay replacing either screen at the sampled moments. Final scripted temporal checks remain separate.",
+      "Inspected PNG Fit and explicit progressive/truncated JPEG failures. Controls remain readable and error text fits. Existing mono image chrome and machine error prefixes are later polish issues, not a claim of finished UX.",
+      "Inspected disabled remote reference, JPEG after different-process restart and selected ready-to-close screen. No clipped controls or new extraction regression observed. No general visual parity, Unicode shaping or pending-Close claim."
+    ],
+    "scope": "Actual full-display screenshots from this exact synthetic native run; visual inspection is separate from pixel/copy/temporal assertions."
+  },
+  "final_shutdown": {
+    "guest_exit": 0,
+    "wrapper_exit": 143,
+    "vm_state": "stopped",
+    "lease_absent": true,
+    "nonce": "10b09596-3f7b-4ac5-8b5c-029f0df306e0",
+    "owner_pid": 99383,
+    "tart_pid": 99509,
+    "request_sha256": "60d897a842e86be0c6c0cadafebdaa9f8c3a465bd18dc1a89834087ab9b270f6",
+    "vm_state_sha256": "df8a363157574c396b614e3b8c474aaf4291a9538333f2a1ce722fdf802d33ad",
+    "final_artifact_files": 1001,
+    "final_manifest_sha256": "eab9dfbcc58d7bb319fbb04d496fadc2857c7d457b44dd7718f986968296ddaa",
+    "delta": "Only wrapper child/state records changed and session-exit-code was added after collection."
+  }
+}

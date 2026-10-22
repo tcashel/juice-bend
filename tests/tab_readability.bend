@@ -1,4 +1,5 @@
 import Base
+import ../src/bend_ui/canvas.bend as C
 import ../src/ui.bend as UI
 import ../src/ui_geometry.bend as G
 import ../src/font.bend as Font
@@ -34,34 +35,34 @@ def repeat(n: Nat,+s: String) -> String:
     case 1n+p: s ++ repeat(p,s)
 
 # Inspect actual painted cells without duplicating text layout or hit testing.
-def tile.choose(tl: UI.Canvas,tr: UI.Canvas,bl: UI.Canvas,br: UI.Canvas,q: U32) -> UI.Canvas:
+def tile.choose(tl: C.Canvas,tr: C.Canvas,bl: C.Canvas,br: C.Canvas,q: U32) -> C.Canvas:
   match q:
     case 0: tl
     case 1: tr
     case 2: bl
     case _: br
 
-def tile.at(d: Nat,c: UI.Canvas,+x: U32,+y: U32) -> UI.Canvas:
+def tile.at(d: Nat,c: C.Canvas,+x: U32,+y: U32) -> C.Canvas:
   match d c:
-    case 1n+ +p UI.Four{tl,tr,bl,br}:
+    case 1n+ +p C.Four{tl,tr,bl,br}:
       +half = U32.shln(1,p)
       q = U32.add(Bool.to_u32(U32.is_ge(x,half)),U32.mul(2,Bool.to_u32(U32.is_ge(y,half))))
       tile.at(p,tile.choose(tl,tr,bl,br,q),U32.mod(x,half),U32.mod(y,half))
     case _ value: value
 
-def tile.row(c: UI.Canvas,y: U32,row: U32,background: U32) -> Bool:
+def tile.row(c: C.Canvas,y: U32,row: U32,background: U32) -> Bool:
   match c:
-    case UI.Tile{bits,fg,bg}: U32.is_eq(Font.row(bits,y),row) && U32.is_eq(bg,background)
+    case C.Tile{bits,fg,bg}: U32.is_eq(Font.row(bits,y),row) && U32.is_eq(bg,background)
     case _: False{}
 
-def tile.empty(c: UI.Canvas,color: U32) -> Bool:
+def tile.empty(c: C.Canvas,color: U32) -> Bool:
   match c:
-    case UI.Flat{actual}: U32.is_eq(actual,color)
+    case C.Flat{actual}: U32.is_eq(actual,color)
     case _: False{}
 
 def painting() -> IO(Unit):
-  +query = UI.write(2n,UI.Flat{UI.paper()},"\tA",0,0,UI.ink(),UI.paper())
-  +reader = UI.draw_line(2n,UI.Flat{UI.paper()},"\tA",0,0,7,7,8)
+  +query = UI.write(2n,C.Flat{UI.paper()},"\tA",0,0,UI.ink(),UI.paper())
+  +reader = UI.draw_line(2n,C.Flat{UI.paper()},"\tA",0,0,7,7,8)
   do IO<Unit>:
     require(tile.row(tile.at(8n,query,0,0),7,2143009720,UI.paper()),"query tab paints existing arrow shaft, not missing-glyph box")
     require(tile.row(tile.at(8n,query,0,1),0,479199232,UI.paper()),"query tab paints existing arrow lower half")

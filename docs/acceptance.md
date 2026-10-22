@@ -1,12 +1,21 @@
 # Acceptance evidence
 
-Latest combined app981e84fd passed native History/JPEG and external/ATIF journeys
-on2026-10-22. Source-bound receipts: `receipts/history-workspace-build-tests.json`,
-`receipts/history-workspace-jpeg-native.json`, and
-`receipts/history-workspace-external-native.json`. The promoted executable matches
-all171 source inputs. Pending Escape/Back passed; pending Close remains defective.
-The34-check pacing/lifecycle unit entry remains unrun after frontend memory guards.
-Historical sections below retain their original scope.
+Latest app 1b6fd416 adopts the shared Bend UI foundation. All 172 source inputs
+match the promoted executable. Full native regression passed History, JPEG/PNG,
+223 exact image samples, Unicode copies, four exports, pending Escape/Back,
+source-loss restart and ready Close. Root inspected 13 actual screenshots;
+all 13 guest/cleanup steps exited 0. The exact owned VM stopped and released its
+lease before the next run. See `receipts/bend-ui-app-native.json`.
+
+The standalone native controls example passed mouse, keyboard focus, activation,
+disabled-control behavior, Escape and Close; see
+`receipts/bend-ui-controls-native.json`. Build and focused test scopes are in
+`receipts/bend-ui-build-tests.json`. The earlier ENOSPC native attempt is a
+preserved failure, not a pass. Pending Close and the 34-check lifecycle entry
+remain open. These are focused checks, not a new full-suite or proof pass.
+
+Earlier app 981e84fd passed the separately bound History and external/ATIF
+journeys. Historical sections below retain their original scope.
 
 ## Current validation — 2026-10-22
 
@@ -16,7 +25,7 @@ removal and different-process restart; negative GUI branches remain unrun.
 also passed [external/ATIF](receipts/polished-external-native.json) and
 [JPEG](receipts/polished-jpeg-native.json) acceptance. These focused receipts do
 not close the pending-Close runtime defect or establish complete Swift parity.
-The combined History/pacing app is under native validation; consult
+The combined reader-card follow-up is under native validation; consult
 [progress.md](progress.md) for its exact current state. Older dated sections
 below preserve historical outcomes, including failures.
 

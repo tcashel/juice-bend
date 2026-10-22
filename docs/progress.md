@@ -20,22 +20,35 @@ resolving Apple clang's backend register error without an ABI/runtime override.
 
 ## Maintained source and executable
 
-History navigation and static Inter typography are now adopted on top of
-recorded-commit evidence, with settled image work using existing80ms GUI pacing.
-All171 application inputs match the tested native executable
-`981e84fd4f5a77f3e778cc98ee7d0aa65f276bb10dccd52b46fb51a96fa0c633`.
-The28-path adoption receipt is `build/history-root-adoption/receipt.json`
-(cb143dc8…). Existing index SHA309b1cdb… is preserved.
+The shared Bend UI foundation is adopted: Canvas, Label and Region are used by
+Juice Bend and the standalone native controls example. The 16-path adoption
+receipt is `build/ui-kit-root-adoption/receipt.json` (fa9b95fe…). All 172 app
+inputs match tested executable
+`1b6fd416b7e79e70ef8108ea68a6df8071eed47c02c5a01d8947cee5544ad672`.
+The protected index remains 309b1cdb….
 
 That executable is promoted to `build/juice-bend`, `build/juice-bend-reader` and
-the new `build/Juice Bend Workspace.app`. Previous fcbbbfb… binaries are preserved
-under `build/history-root-adoption/executables-before`; old app bundles remain.
-`mise run demo` opens the existing build with a fresh synthetic library, avoiding
-a second compile. `mise run run -- --demo` still rebuilds first. The demo wrapper
-passed shell syntax and argument refusal; its new alias is not a separate GUI
-acceptance run. Both native journeys below used the exact promoted binary.
+new `build/Juice Bend UI Foundation.app`. Previous 981e binaries are backed up in
+`build/ui-kit-root-adoption/executables-before`; the earlier Workspace app remains
+unchanged. `mise run demo` opens the tested default with a fresh synthetic library.
+The component API, limitations and reproducible example are in `src/bend_ui/README.md`.
+No standalone package or first-party license has been released.
 
 ## Current validation
+
+- UI foundation: component/focus/label/History checks passed with individually
+  scoped results in `receipts/bend-ui-build-tests.json`. The native standalone
+  example passed 12 visible states, 133,860 pixel checks, mouse/keyboard focus,
+  disabled controls, Escape and Close (`bend-ui-controls-native.json`).
+- Exact full app 1b6fd passed all 13 native journey/cleanup steps in fresh
+  `build/ui-kit-native-plan/run-jpeg-02`: History, 223 image samples in 15 views,
+  four exact exports, Unicode copies, pending Escape/Back, source-loss restart
+  and ready Close. Root inspected 13 actual screenshots. Guest exited 0; owned
+  wrapper exited 143, VM stopped and lease released before the next run.
+  `receipts/bend-ui-app-native.json` (d909efe5…) binds 1,001 final artifacts.
+  The prior ENOSPC interruption remains preserved as a failed run.
+
+Earlier History-source baseline evidence remains separately scoped:
 
 - Combined History/geometry/painter checks:429 PASS lines across five entries,
   with overlapping imported assertions explicitly identified. Earlier gui88 and
@@ -88,27 +101,73 @@ The new full-app runs establish behavior, not a controlled performance compariso
 
 ## Exact continuation
 
-1. Complete explicit-path publication of the adopted History/pacing source,
-   font assets/notices, demo alias and three current receipts; update draft PR1.
-   Prior published parent3c92452a41c0ebac2ef54df7bd89c581e89cece0.
+1. History/pacing, font assets/notices, demo alias and three current receipts
+   published as e4a7f0b51fb00817062c92312a8e43d7be34e520 on parent3c92452a….
+   Exact36-path tree d9e816db… is retained in `build/publication.git`.
+   PR1 body/head were verified at this commit; it remains draft/open and unmerged.
    Root index must remain309b1cdb9f1c2ba41c8f82ca21354d45d42f6ef2b3b01b8f9bb560b380a17b71.
-2. Community UI extraction is isolated in `build/ui-kit-integration`: pure Canvas,
-   Label and Region; duplicate-safe focus. Region48/Label15/example8 passed, and
-   standalone Mac example compiled. Native Shift-code mismatch was then found
-   and is being fixed/tested; use the corrected new binary for a compact native
-   example run. History121 plus2 path-label checks and corrected example13 are
-   running in Linux812e7c51. No kit adoption/native example claim yet.
+2. Community UI extraction is at `build/ui-kit-integration`:16 paths,
+   pure Canvas/Label/Region,199 native assertions and exact History raster.
+   Native example run01 exposed a2048-canvas/window scaling defect; its failed
+   receipt50d93abd… is preserved. The four-file checked viewport correction in
+   `build/ui-kit-viewport-fix` passed17 Mac assertions, including221184 actual
+   submitted-frame pixel comparisons. Native run02 then passed all12 visible
+   states and133860 exact samples, real keyboard/mouse/disabled-control behavior,
+   Escape and native Close. Root inspected five full screenshots. Guest0,
+   ownedwrapper143, VMstopped/leaseabsent;162 final artifacts remain bound.
+   `docs/receipts/bend-ui-controls-native.json` (454c6da1…) records scope.
+   Full extracted-app Mac build passed:172 inputs/96 pins, binary1b6fd416…ad672,
+   `build/ui-kit-app-integration/runs/2eaed666-4582-4e5d-a77e-55bf17611982`.
+   `docs/receipts/bend-ui-build-tests.json` (d34c905e…) binds individual gates.
+   Full-app native run `build/ui-kit-native-plan/run-jpeg-01` failed during
+   restart when host shared-result writes hit ENOSPC. Prepare, History, JPEG,
+   pending Escape/Back and variants each exited 0, but no overall pass is claimed.
+   `terminal-failure.json` preserves the pre-recovery artifacts and original
+   guest exit 1. Scoped recovery cleanup and display restoration exited 0;
+   owned wrapper 15449 exited 143, VM stopped, lease released. No process remains.
+   Fresh `run-jpeg-02` passed after the Mac compiler completed. Exact kit source
+   and executable are now adopted above; earlier binaries and failure evidence
+   remain preserved. The explicit 24-path publication uses parent e4a7f0b5…;
+   `build/ui-kit-publication/metadata.json` records its tree and content hashes.
 3. Typed reader foundation in `build/reader-cards-integration`: formatter24 and
    projection57 native Linux assertions passed, including exact canonical bytes,
-   hidden-copy gaps, mandatory warnings and stale events. Freeze the seven-file
-   handoff then integrate actual message/evidence cards with the tested UI kit.
+   hidden-copy gaps, mandatory warnings and stale events. Seven-file
+   FOUNDATION5319af69… is frozen. Real message/evidence card integration is now
+   in NEW `build/reader-cards-ui-integration` on the tested kit base.
    Keep expensive admission off pointer events and preserve the canonical grid.
    Include the scoped two-label Why fix from `build/why-association-wording-integration`.
+   Final seven-entry Linux batch 0c003aeb passed 336 assertions; exact collection
+   9363d0e6 binds 187 inputs and absent owned processes. Mac run 0e51cd96 failed
+   at 274 seconds with ENOSPC before C output; source/default unchanged, all
+   owned processes absent. Failure receipt 13879e88 is preserved. A fresh retry
+   passed at `build/reader-cards-ui-integration/mac-v2/6558cd4e-7000-4d37-9d66-130dafdc0510`: 888.274 seconds,
+   binary c51b1592…77867; all 178 sources, 96 pins and owned-process absence
+   were verified. The default 981e binary is unchanged.
+   Native oracle helper 7bba24bb passed its Mac build (binary 41a9ff71…4d61d7f);
+   reader native run-01 (nonce 02498a2c…88a6) is now booting in Tart; no reader
+   window/input pass is claimed yet. Native plan and
+   exact helper commands are in `build/reader-cards-native-plan/HANDOFF.md`.
+   A separate four-path follow-up at `build/reader-cards-polish-integration`
+   passed 28 focused assertions and two production-rendered frames (9742d042).
+   Root inspected both: warmer user cards, green assistant cards and one 24px
+   nonselectable event gap. Mac acceptance and adoption are still pending.
 4. Library Usage core in `build/library-usage-integration`:50 native assertions
    plus2 fixture commands passed6dc2d9eb,131 inputs unchanged. Five new Bend files,
    exact alias/unknown/coverage and retained snapshot drilldown; not adopted.
-   New presentation/controller seam is proceeding without shared UI mutations.
+   New presentation/controller seam passed65 native checks; actual Usage
+   integration is proceeding in a separate candidate without shared UI mutations.
    All-time first; no session-start cohort misrepresented as activity-date usage.
+   Actual integration remains isolated at `build/library-usage-ui-integration`.
+   Backend gate ea80 passed wire 37 and capture-page 23 checks; worker-only
+   960e12d2 then passed 112 assertions after correcting the positive fixture's
+   source/session identity and adding a mismatched-identity regression. Earlier
+   binder/definition-order and fixture failures remain preserved. UI actions
+   a56361d5 passed 20 assertions and controller 53bc4436 passed 31, bringing the
+   actual integration checks to 223. A v2 screen-row reuse passed all 31 controller
+   checks. On agentbox, both exact reader and Usage full frontends hit the same
+   16 GiB guard without diagnostics; no further Linux full-entry retry is queued.
+   A reconciled Mac candidate on reader + tested card spacing is prepared;
+   combined structured Usage-reader tests remain pending. No native Usage pass.
 5. Child-result navigation remains at `build/result-link-ui-integration`.
    Continue actual user-visible integration; do not finish at pure foundations.
 
@@ -136,3 +195,15 @@ Physical-Mac100k: import36.194s, unchanged3.910s, append16records23.816s;
 search/late/scoped-late p95=42/7/17ms. Separate archive100k capture139.055s and
 retained verify/read/search/dual-export44.475s are different workloads. Swift
 comparisons require equivalent work on the same host; none is claimed here.
+
+## Resource recovery
+
+After the ENOSPC interruption, all owned Mac/VM processes were collected and
+stopped. Six completed compiler diagnostics were losslessly compressed from
+1,497,515,020 to 112,250,943 bytes with round-trip SHA-256 checks; original bytes
+are recoverable using the manifest in `build/disk-recovery-diagnostics`.
+The task's experimental LLVM files now hardlink identical mise-managed files;
+all 9,929 regular files, modes and link targets were checked. No immediate APFS
+space gain is attributed to that deduplication. Sources, receipts, current tools
+and executable bytes are unchanged. Observed free space recovered to 12.3 GB.
+Run full compilers and Tart sequentially until capacity is stable.

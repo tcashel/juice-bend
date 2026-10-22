@@ -1,0 +1,23 @@
+# Bend UI foundation
+
+A small pure Bend 2 component layer used directly by Juice Bend and the standalone `examples/ui_controls.bend`. It has no database, provider, filesystem, clipboard, process, window-lifecycle or application-state dependency. The example alone uses Base's native App API.
+
+- `region.bend`: `Rect{left,top,right,bottom}` uses half-open pixel bounds. `contains` rejects empty/reversed rectangles without coordinate addition. `ControlRegion{id,bounds,enabled,focusable}` carries caller-owned stable IDs. `hit(fuel,regions,x,y)` returns the first enabled hit in the inspected prefix. `next_focus(fuel,regions,current,backward)` considers each distinct enabled, focusable ID in first-occurrence order; later duplicates still consume fuel but do not enter the focus cycle. It wraps only after inspecting the complete list. Unknown focus starts first/last. Stable unique IDs are recommended. These functions never change text selection or decide application actions.
+- `canvas.bend`: the single shared `Flat`/`Tile`/`Four` canvas, glyph coverage blend and Image conversion. `fill_rect(canvas,bounds,color)` returns `Done{canvas}` or `Fail{InvalidBounds{}}`. Checked bounds must lie within 2048×2048 and align to the 8 px tile grid; empty aligned rectangles are no-ops. Colors are 24-bit RGB. For native windows, `image_viewport(canvas,width,height)` checks positive dimensions up to 2048 and crops the image to the smallest power-of-two square enclosing that window. Pass the same width/height to Base App/Window; the runtime clips unused right/bottom pixels. Submitting the full `canvas.image` directly to a smaller window scales its coordinates. Internal `canvas.set`, `box` and glyph helpers retain Juice's existing prevalidated-grid contract; prefer the checked API in new consumers.
+- `label.bend`: `Face` is `Regular`, `Strong` or `Heading`; `Style` supplies face and foreground/background colors. `draw(canvas,text,bounds,style)` returns the same checked result. Bounds use the canvas grid and exactly the selected line height: regular/strong 24 px with baseline 16, heading 32 px with baseline 24. Layout examines at most 128 Unicode scalars; pixel overflow reserves a real ellipsis, while fuel exhaustion limits traversal. The renderer preserves every pixel outside its rectangle. `height` and `baseline` expose the metrics.
+
+These regions are intended for small control groups: duplicate detection uses a bounded list scan, with quadratic worst-case work in the caller's traversal fuel. This is static label typography, not editable text layout: no shaping, kerning, ligatures, bidirectional layout, CJK/emoji coverage, IME, font installation or runtime fallback is claimed. Unsupported scalars use a visible replacement glyph. Juice's query/transcript wrapping, canonical scalar offsets, selection, copy and MouseUp handling stay in `src/ui.bend`; proportional label advances are never used for those offsets.
+
+The shared source set is these three modules plus the existing generic `src/font.bend` and `src/sans_font.bend` and their font asset records. Juice's `ui_chrome.bend` implementation has moved into `label.bend`; its application drawing adapters delegate here. There is no separate example renderer. A future standalone package should move this source set and its notices together after application use establishes the API.
+
+From the repository root after adoption:
+
+```sh
+mise exec -- ./scripts/build examples/ui_controls.bend build/ui-controls
+mise exec -- ./build/ui-controls
+mise exec -- ./scripts/test tests/ui_kit_regions.bend tests/ui_kit_labels.bend tests/ui_kit_example.bend
+```
+
+The example has two enabled controls and one disabled control. Click, Tab, Shift-Tab, Enter and Space exercise the same region/focus functions; focus has a visible outline. Its image is cached until model state changes. Close or Escape ends the example. The focused tests use synthetic state and independent atlas pixel/metric samples; Linux tests do not establish macOS window/input acceptance. An accessibility tree, IME editing and resize-aware layout are not implemented by this foundation.
+
+Font data and derived glyphs retain their existing SIL OFL 1.1 notices: JetBrains Mono 2.304 and Inter 4.1, under `assets/fonts/`. Bend compiler/Base/runtime have their separate Apache 2.0 notice. No first-party repository license was found during this extraction, so this README does not grant or infer one from the dependency licenses. A first-party license choice remains with the owner before presenting this as a separately licensed community package. No repo-wide license is added by this candidate.

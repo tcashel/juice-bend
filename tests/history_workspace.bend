@@ -1,8 +1,9 @@
 import Base
+import ../src/bend_ui/canvas.bend as C
 import ../src/ui.bend as UI
 import ../src/ui_geometry.bend as G
 import ../src/ui_palette.bend as Palette
-import ../src/ui_chrome.bend as Chrome
+import ../src/bend_ui/label.bend as Chrome
 import ../src/sans_font.bend as Sans
 import ../src/font.bend as Mono
 import ./keyboard_selection.bend as Keyboard
@@ -98,6 +99,8 @@ def special_contexts() -> IO(Unit):
     require(U32.is_eq(UI.sidebar_index(folders,288),5),"specialized folder Reload keeps its original visual row")
     require(Bool.not(UI.provider_chips_visible(attachments)) && Bool.not(UI.provider_chips_visible(folders)) && Bool.not(UI.provider_chips_visible(settings)) && Bool.not(UI.provider_chips_visible(UI.set_files(s,True{}))),"provider chips do not reinterpret specialized or repository controls")
     require(U32.is_eq(G.reader_x(),536) && U32.is_eq(G.reader_y(),168) && U32.is_eq(G.reader_columns(),80) && U32.is_eq(G.reader_rows(),19) && U32.is_eq(G.line_pitch(),24),"reader geometry and exact scalar-to-pointer contract are unchanged")
+    require(String.eq(UI.query_action_label(folders,True{}),"Paste path") && String.eq(UI.query_action_label(folders,False{}),"Clear path"),"capture folder actions identify their path field instead of a search query")
+    require(String.eq(UI.query_action_label(s,True{}),"Paste query") && String.eq(UI.query_action_label(s,False{}),"Clear query") && String.eq(UI.query_action_label(settings,True{}),"Paste path"),"History query and Settings path labels retain their existing meanings")
 
 def runs_size(+runs: List<&2,Chrome.Placed>) -> U32:
   U32.from_nat(List.length(&2,Chrome.Placed,runs))
@@ -175,16 +178,16 @@ def sans_checks() -> IO(Unit):
     require(sans_check5(),"initial provider-open headers use complete short presentation titles")
     require(sans_check6(),"title compaction recognizes only exact application-generated prefixes")
 
-def tile_pixel(+tile: UI.Canvas,+x: U32,+y: U32) -> U32:
+def tile_pixel(+tile: C.Canvas,+x: U32,+y: U32) -> U32:
   match tile:
-    case UI.Flat{color}: color
-    case UI.Tile{bits,fg,bg}: UI.blend(fg,bg,Mono.coverage(bits,x,y))
+    case C.Flat{color}: color
+    case C.Tile{bits,fg,bg}: UI.blend(fg,bg,Mono.coverage(bits,x,y))
     case _: 0
 
-def canvas_pixel(+c: UI.Canvas,+x: U32,+y: U32) -> U32:
+def canvas_pixel(+c: C.Canvas,+x: U32,+y: U32) -> U32:
   tile_pixel(Tiles.tile.at(8n,c,U32.div(x,8),U32.div(y,8)),U32.mod(x,8),U32.mod(y,8))
 
-def pixels(+fuel: Nat,+c: UI.Canvas,+x: U32,+y: U32) -> List<&2,U32>:
+def pixels(+fuel: Nat,+c: C.Canvas,+x: U32,+y: U32) -> List<&2,U32>:
   match fuel:
     case 0n: []
     case 1n+n:
@@ -197,7 +200,7 @@ def written(got: File & Result<&1,&1,U32 & String,Unit>) -> IO(File):
     IO.try(Unit,IO.pure(Result<&1,&1,U32 & String,Unit>,result))
     return file
 
-def rows(+fuel: Nat,file: File,+canvas: UI.Canvas,+y: U32) -> IO(File):
+def rows(+fuel: Nat,file: File,+canvas: C.Canvas,+y: U32) -> IO(File):
   match fuel:
     case 0n: IO.pure(File,file)
     case 1n+n:

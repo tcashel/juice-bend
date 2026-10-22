@@ -1,6 +1,7 @@
 # Pure production painter / input checks. Native window interaction remains a
 # separate acceptance gate; these fixtures contain synthetic metadata only.
 import Base
+import ../src/bend_ui/canvas.bend as C
 import ../src/ui.bend as UI
 import ../src/ui_geometry.bend as G
 import ../src/font.bend as Font
@@ -154,33 +155,33 @@ def readonly_scope() -> IO(Unit):
     require(U32.is_eq(UI.focus(changed(UI.event(Key{9,True{}},s))),1) &&
       U32.is_eq(UI.focus(changed(UI.event(Key{9,True{}},UI.set_edit(s,UI.Edit{1,0,0,False{},0})))),2),"attachment Tab cycles only reference list and reader")
 
-def tile_glyph(c: UI.Canvas,code: U32,foreground: U32,background: U32) -> Bool:
+def tile_glyph(c: C.Canvas,code: U32,foreground: U32,background: U32) -> Bool:
   match c:
-    case UI.Tile{bits,fg,bg}:
+    case C.Tile{bits,fg,bg}:
       U32.is_eq(Font.row(bits,7),Font.row(Font.half(Font.glyph(code),True{}),7)) &&
         U32.is_eq(fg,foreground) && U32.is_eq(bg,background)
     case _: False{}
 
-def glyph(c: UI.Canvas,x: U32,y: U32,code: U32,foreground: U32,background: U32) -> Bool:
+def glyph(c: C.Canvas,x: U32,y: U32,code: U32,foreground: U32,background: U32) -> Bool:
   tile_glyph(Tiles.tile.at(8n,c,U32.div(x,8),U32.div(y,8)),code,foreground,background)
 
 # Chrome uses proportional static sans glyphs; first-cell coverage is checked
 # against the pinned atlas independently of the production label layout.
-def chrome_tile(c: UI.Canvas,+code: U32,+face: U32,foreground: U32,background: U32) -> Bool:
+def chrome_tile(c: C.Canvas,+code: U32,+face: U32,foreground: U32,background: U32) -> Bool:
   match c:
-    case UI.Tile{+bits,fg,bg}:
+    case C.Tile{+bits,fg,bg}:
       U32.is_eq(Font.row(bits,5),Sans.row_word(Sans.glyph(face,code),0,5)) &&
       U32.is_eq(Font.row(bits,7),Sans.row_word(Sans.glyph(face,code),0,7)) &&
       U32.is_eq(fg,foreground) && U32.is_eq(bg,background)
     case _: False{}
 
-def chrome_glyph(c: UI.Canvas,x: U32,y: U32,code: U32,face: U32,foreground: U32,background: U32) -> Bool:
+def chrome_glyph(c: C.Canvas,x: U32,y: U32,code: U32,face: U32,foreground: U32,background: U32) -> Bool:
   chrome_tile(Tiles.tile.at(8n,c,U32.div(x,8),U32.div(y,8)),code,face,foreground,background)
 
-def blank(c: UI.Canvas,color: U32) -> Bool:
+def blank(c: C.Canvas,color: U32) -> Bool:
   match c:
-    case UI.Flat{actual}: U32.is_eq(actual,color)
-    case UI.Tile{+bits,fg,bg}:
+    case C.Flat{actual}: U32.is_eq(actual,color)
+    case C.Tile{+bits,fg,bg}:
       U32.is_eq(bg,color) && U32.is_eq(Font.row(bits,0),0) && U32.is_eq(Font.row(bits,1),0) &&
       U32.is_eq(Font.row(bits,2),0) && U32.is_eq(Font.row(bits,3),0) && U32.is_eq(Font.row(bits,4),0) &&
       U32.is_eq(Font.row(bits,5),0) && U32.is_eq(Font.row(bits,6),0) && U32.is_eq(Font.row(bits,7),0)
