@@ -106,6 +106,15 @@ Up to four candidate records per snapshot share an 8 MiB raw/predecessor read
 budget per page. Missing context never triggers prefix replay just for a title.
 See `receipts/history-native.txt`; this does not expand request eligibility.
 
+The maintained backend now additionally prefers exact recorded Claude titles,
+with safe fallback after malformed or unreadable later metadata. It uses a
+versioned locator index and verified retained bytes/context, preserving request
+eligibility and raw identity. The six-file change passed650 focused Linux-native
+assertions across two exact runs; the earlier aggregate failure remains recorded.
+The accepted Mac reader does not yet contain it. Native title presentation and
+combined application acceptance remain pending; see
+`receipts/provider-titles-native.txt`.
+
 Continuation brief is now reachable from the pinned transcript. It narrows the
 exact opened range/filters to an explicitly chosen repository, shows bounded
 recorded facts and uncertainty, and rechecks the full preview before copying or

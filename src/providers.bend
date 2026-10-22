@@ -127,6 +127,8 @@ def claude_type(kind: String, +root: Json.Json) -> List<&2, Record>:
       [make(root, "system", Json.get(root, "summary"), "", "", "", "", "complete")]
     case "system":
       [make(root, "system", fallback(Json.get(root, "content"), Json.get(root, "subtype")), "", "", "", "", "metadata")]
+    case "ai-title":
+      [make(root, "metadata", "[Recorded session title metadata]", "", "", "", "", "recorded_title")]
     case "file-history-snapshot":
       [make(root, "metadata", "[File history metadata retained]", "", "", "", "", "metadata")]
     case "progress":

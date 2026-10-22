@@ -254,8 +254,8 @@ def forged() -> IO(Unit):
     assert(Bool.not(O.eligible(R.assess("claude",raw,0,event))),"duplicate constructed raw fields cannot establish typed request")
     assert(Bool.not(O.eligible(R.assess("claude",parsed(Json.parse(message("id","Different"))),0,event))),
       "normalized and typed raw text mismatch is ineligible")
-    assert(String.eq(Store.projection_version(),"providers-v4-utc-context-relay"),
-      "read-time request policy preserves parser and context projection version")
+    assert(String.eq(Store.projection_version(),"providers-v5-utc-context-relay-title"),
+      "read-time request policy stays independent of title-aware parser projection")
 
 def main() -> IO(Unit):
   do IO<Unit>:

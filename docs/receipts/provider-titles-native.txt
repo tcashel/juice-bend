@@ -1,0 +1,62 @@
+Recorded Claude titles — Linux native backend validation
+
+All maintained application and test changes are Bend 2. Four application files
+and two tests were adopted; no native bridge, UI/main or proof-book change.
+The accepted Mac reader executable remains fcbbbfbde90ad072c26fb20ab044522487a6ee4bbe9890f72300765a18518701.
+It does not contain this title change. Mac title presentation and the combined
+title/attachment/ATIF application have not been observed.
+
+Behavior
+The latest retained Claude ai-title is preferred in History without a role filter.
+The index supplies only a record locator; retained raw bytes, predecessor,
+context, repository/session scope and typed metadata determine the displayed
+excerpt. Malformed, empty, ambiguous or later unreadable records use the existing
+eligible-request/neutral fallback. Ordinary later unsupported events do not
+hide a valid recorded title. The title text never becomes a human request,
+capture identity or attribution. The per-page raw/predecessor budget is 8 MiB;
+fallback inspects at most four request candidates per capture.
+
+Parser projection becomes providers-v5-utc-context-relay-title. The additive
+partial index changes no raw ownership or schema number. Explicit retained-raw
+rebuild restores title locators in old captures after original source loss.
+Old projection versions cannot be reused for append context. The migration test
+simulates v4 rows/seal; it is not an execution of an old application binary.
+
+Evidence
+Bend 2.0.37 / 60ca80aedeec9d8f0629b5f10dd19457d8ad67af; Bun 1.4.2 via mise.
+Linux x86_64 native clang -O0 correctness runs; no performance inference.
+
+Final focused run: 7ac49bda-988c-4f46-8c95-c1626227741e
+Provider-title assertions: 49 PASS; exit 0; empty stderr.
+Manifest: f2c8b33b1b1f7ff36ad1b85ea8d32a0bcbc73eed915566b4cc5efe08400381f6
+Receipt: 496a38bacf0827b39b6e01e98ccf1cf3d5e0a359888dc5e53372e178f26a3b76
+
+Prior corrected-source regression run: ad3916ca-966f-4b03-acc5-0dbf45716b04
+History 28 + Providers 61 + Request origin 61 + Context binding 402 +
+Append integrity 49 = 601 PASS assertions. All five entries exited 0.
+Manifest: 1bf5fae0be3ec58a62b026269038e24e2ea2b394f9f849e7caf8fe5f88ae8d99
+Receipt: 62fe2cb3cd78346889866ba52bfd98efc5bc5e15883c3b0d651bc0ae617e58e3
+That aggregate run remains FAILED because its separate title assertion expected
+the bare parser version instead of the existing event-seal version suffix.
+Only this expected test value changed before the final 49-assertion run.
+The application source was identical across both runs. Total successful focused
+assertions: 650, not a successful fresh aggregate/full-suite run.
+
+Earlier attempts preserve a test annotation error and a real stale-title failure
+after an oversized later record. The latter led to indexed unreadable-record
+barriers and oversized/invalid-UTF8 regressions. No assertion was weakened.
+Other cases cover later revisions, 80 later unsupported events, historical
+snapshots, repository/session ambiguity, forged locators, budget limits and
+source-loss rebuild with retained raw identity.
+
+Independent review verified exact 37/45-file application/test closures, 128/136
+input manifests, receipts, logs, binaries and preserved remote postflight.
+Review: cc06411e781871b4f60a4d313c05345dd44b35e398673919181d14d3ae49b04e
+Handoff: dd9f8c2c81be7c965b020f72ebe72434f04d5c7517d8975c056c251b6606063a
+Adoption: da95d0fc2780c042fc3075a565c73b920421fbdaf48e01faed7372cd6fc2b891
+All six maintained preimages were preserved; the checkout index and accepted
+executable are unchanged. The running combined app build uses its frozen older
+title dependencies and cannot validate this separate change.
+
+Not claimed: macOS title UI, combined app, full suite, current kernel proofs,
+native input latency, performance, or full feature parity.

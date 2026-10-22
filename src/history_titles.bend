@@ -9,12 +9,15 @@ import ./request_origin.bend as Origin
 import ./evidence.bend as Evidence
 import ./domain.bend as Domain
 import ./json.bend as Json
+import ./provider_title.bend as ProviderTitle
 
 # History titles are bounded display excerpts, never actor attribution or a
 # claim to the first human intent. SQL events locate candidates only. Capture,
 # opening ordinals, Search snippets and all nine other History cells stay exact.
-# One page inspects at most 4 candidate physical records per row and 8 MiB of
-# selected raw plus predecessor bytes. No prefix replay or all-source actor scan.
+# Per row: the latest indexed Claude title/error record, then at most 4
+# user request candidates. The page shares 8 MiB of selected raw + predecessor
+# bytes. No prefix replay. The versioned projection locates titles even with
+# unrelated later events; old projections need retained-raw rebuild for titles.
 def candidate_limit() -> U32: 4
 def page_budget() -> U32: 8388608
 def neutral() -> String: "Captured source"
@@ -125,6 +128,52 @@ def frame_complete(complete: Bool,row: List<&2,Sql.Cell>,provider: String,scope:
 def frame(+row: List<&2,Sql.Cell>,provider: String,scope: Scoped.Scope,context: Store.Context) -> Choice:
   frame_complete(String.eq(Store.field(row,6n),"0"),row,provider,scope,context)
 
+def title_nonempty(yes: Bool,text: String) -> Choice:
+  match yes:
+    case True{}: Chosen{text}
+    case False{}: Unavailable{}
+
+def title_allowed(allowed: Bool,text: String) -> Choice:
+  match allowed:
+    case True{}:
+      +single = excerpt(text)
+      title_nonempty(Bool.not(String.is_empty(single)),single)
+    case False{}: Unavailable{}
+
+def title_scoped(pair: Store.Context & Providers.Record,scope: Scoped.Scope,text: String) -> Choice:
+  (_,event) = pair
+  title_allowed(Scoped.permits(scope,"claude",event),text)
+
+def title_value(value: ProviderTitle.Title,raw: Json.Json,scope: Scoped.Scope,context: Store.Context) -> Choice:
+  match value:
+    case ProviderTitle.Other{}: Continue{}
+    case ProviderTitle.Unavailable{}: Unavailable{}
+    case ProviderTitle.Recorded{text}:
+      title_scoped(Store.contextualize("claude",context,
+        Providers.make(raw,"metadata","","","","","","metadata")),scope,text)
+
+def title_parsed(result: Result<&2,&2,String,Json.Json>,scope: Scoped.Scope,+context: Store.Context) -> Choice:
+  match result:
+    case Fail{_}: Unavailable{}
+    case Done{+raw}:
+      Store.Context{_,session,_,_} = context
+      title_value(ProviderTitle.recorded(raw,session),raw,scope,context)
+
+def title_decoded(result: Result<&2,&2,String,String>,scope: Scoped.Scope,context: Store.Context) -> Choice:
+  match result:
+    case Fail{_}: Unavailable{}
+    case Done{text}: title_parsed(Json.parse(text),scope,context)
+
+def title_frame(complete: Bool,row: List<&2,Sql.Cell>,scope: Scoped.Scope,context: Store.Context) -> Choice:
+  match complete:
+    case False{}: Unavailable{}
+    case True{}: title_decoded(Domain.decode(Store.blob(Store.cell(row,5n))),scope,context)
+
+def selected_frame(title: Bool,+row: List<&2,Sql.Cell>,provider: String,scope: Scoped.Scope,context: Store.Context) -> Choice:
+  match title:
+    case True{}: title_frame(String.eq(Store.field(row,6n),"0"),row,scope,context)
+    case False{}: frame(row,provider,scope,context)
+
 def incoming(value: Maybe<&2,Store.Context>) -> Store.Context:
   match value:
     case Some{context}: context
@@ -145,9 +194,9 @@ def context_needed(needed: Bool,+db: U32,header: Header,+ordinal: U32,raw: List<
         value : Maybe<&2,Store.Context> <- Store.selected_context_rows(snapshot,generation,extent,records,ordinal,raw,rows)
         return incoming(value)
 
-def context(db: U32,header: Header,ordinal: U32,raw: List<&2,Sql.Cell>,scope: Scoped.Scope) -> IO(Store.Context):
+def context(title: Bool,db: U32,header: Header,ordinal: U32,raw: List<&2,Sql.Cell>,scope: Scoped.Scope) -> IO(Store.Context):
   Scoped.Scope{_,repo,_,_} = scope
-  context_needed(Bool.not(String.is_empty(repo)),db,header,ordinal,raw)
+  context_needed(title || Bool.not(String.is_empty(repo)),db,header,ordinal,raw)
 
 # Read SQLite byte lengths before materializing blobs. The selected verifier
 # still authenticates their digest, positions, coverage and predecessor.
@@ -173,36 +222,36 @@ def cost(+db: U32,snapshot: String,+ordinal: U32) -> IO(U32):
     costs(rows,0)
 
 def inspected(allowed: Bool,+db: U32,+header: Header,+scope: Scoped.Scope,+ordinal: U32,
-  budget: U32,bytes: U32) -> IO(Inspection):
+  budget: U32,bytes: U32,+title: Bool) -> IO(Inspection):
   match allowed:
     case False{}: IO.pure(Inspection,Inspection{Unavailable{},budget})
     case True{}:
       Header{_,provider,_,+snapshot,generation,extent,records} = header
       do IO<Inspection>:
         +raw : List<&2,Sql.Cell> <- Store.selected_record(db,snapshot,generation,extent,records,ordinal)
-        ctx : Store.Context <- context(db,header,ordinal,raw,scope)
-        return Inspection{frame(raw,provider,scope,ctx),U32.sub(budget,bytes)}
+        ctx : Store.Context <- context(title,db,header,ordinal,raw,scope)
+        return Inspection{selected_frame(title,raw,provider,scope,ctx),U32.sub(budget,bytes)}
 
-def candidate(+db: U32,+header: Header,scope: Scoped.Scope,+ordinal: U32,+budget: U32) -> IO(Inspection):
+def candidate(+db: U32,+header: Header,scope: Scoped.Scope,+ordinal: U32,+budget: U32,title: Bool) -> IO(Inspection):
   Header{_,_,_,snapshot,_,_,records} = header
   do IO<Inspection>:
     Store.checked(U32.is_lt(ordinal,records),"History title candidate ordinal integrity mismatch")
     +bytes : U32 <- cost(db,snapshot,ordinal)
-    inspected(U32.is_le(bytes,budget),db,header,scope,ordinal,budget,bytes)
+    inspected(U32.is_le(bytes,budget),db,header,scope,ordinal,budget,bytes,title)
 
 def candidates_next(result: Inspection,next: U32 -> IO(Inspection)) -> IO(Inspection):
   match result:
     case Inspection{Continue{},budget}: next(budget)
     case other: IO.pure(Inspection,other)
 
-def candidates(rows: List<&2,List<&2,Sql.Cell>>,+db: U32,+header: Header,+scope: Scoped.Scope,budget: U32) -> IO(Inspection):
+def candidates(rows: List<&2,List<&2,Sql.Cell>>,+db: U32,+header: Header,+scope: Scoped.Scope,budget: U32,+title: Bool) -> IO(Inspection):
   match rows:
     case []: IO.pure(Inspection,Inspection{Unavailable{},budget})
     case [Sql.Cell.Integer{+ordinal}] <> rest:
       do IO<Inspection>:
         Store.checked(Store.numeric(ordinal),"History title candidate ordinal integrity type mismatch")
-        result : Inspection <- candidate(db,header,scope,Store.number(ordinal),budget)
-        candidates_next(result,remaining => candidates(rest,db,header,scope,remaining))
+        result : Inspection <- candidate(db,header,scope,Store.number(ordinal),budget,title)
+        candidates_next(result,remaining => candidates(rest,db,header,scope,remaining,title))
     case _: IO.die(Inspection,1,"History title candidate integrity row mismatch")
 
 def allowed(+provider: String,scope: Scoped.Scope) -> Bool:
@@ -210,9 +259,40 @@ def allowed(+provider: String,scope: Scoped.Scope) -> Bool:
   (String.is_empty(wanted) || String.eq(provider,wanted)) &&
     (String.is_empty(role) || String.eq(role,"user"))
 
+def request_locate(+db: U32,+header: Header,+scope: Scoped.Scope,budget: U32) -> IO(Inspection):
+  Header{_,_,_,+snapshot,_,_,_} = header
+  Scoped.Scope{_,+repo,_,+after} = scope
+  do IO<Inspection>:
+    rows : List<&2,List<&2,Sql.Cell>> <- Store.q(db,
+      "SELECT DISTINCT ordinal FROM events WHERE snapshot=? AND role='user' AND body<>'' AND (?='' OR repository=?) AND (?='' OR (length(timestamp)=30 AND substr(timestamp,11,1)='T' AND substr(timestamp,30,1)='Z' AND timestamp>=?)) ORDER BY ordinal LIMIT ?",
+      [Sql.Cell.Integer{snapshot},Sql.Cell.Text{repo},Sql.Cell.Text{repo},Sql.Cell.Text{after},Sql.Cell.Text{after},
+        Sql.Cell.Integer{U32.show(candidate_limit())}],4)
+    candidates(rows,db,header,scope,budget,False{})
+
+def title_fallback(result: Inspection,db: U32,header: Header,scope: Scoped.Scope) -> IO(Inspection):
+  match result:
+    case Inspection{Chosen{text},remaining}: IO.pure(Inspection,Inspection{Chosen{text},remaining})
+    case Inspection{_,remaining}: request_locate(db,header,scope,remaining)
+
+def title_locate(yes: Bool,+db: U32,+header: Header,+scope: Scoped.Scope,budget: U32) -> IO(Inspection):
+  match yes:
+    case False{}: request_locate(db,header,scope,budget)
+    case True{}:
+      Header{_,_,_,snapshot,_,_,_} = header
+      do IO<Inspection>:
+        rows : List<&2,List<&2,Sql.Cell>> <- Store.q(db,
+          "SELECT ordinal FROM events WHERE snapshot=? AND (coverage IN ('recorded_title','recorded_title; invalid_timestamp','oversized_record_fragment') OR coverage GLOB 'invalid_utf8:*' OR role='error') ORDER BY ordinal DESC LIMIT 1",
+          [Sql.Cell.Integer{snapshot}],1)
+        result : Inspection <- candidates(rows,db,header,scope,budget,True{})
+        title_fallback(result,db,header,scope)
+
+def preferred(db: U32,+header: Header,+scope: Scoped.Scope,budget: U32) -> IO(Inspection):
+  Header{_,provider,_,_,_,_,_} = header
+  Scoped.Scope{_,_,role,_} = scope
+  title_locate(String.eq(provider,"claude") && String.is_empty(role),db,header,scope,budget)
+
 def locate(+db: U32,+header: Header,+scope: Scoped.Scope,budget: U32) -> IO(Inspection):
   Header{source,provider,locator,+snapshot,generation,extent,records} = header
-  Scoped.Scope{_,+repo,_,+after} = scope
   do IO<Inspection>:
     +identity : List<&2,List<&2,Sql.Cell>> <- Store.q(db,
       "SELECT g.source,s.provider,s.locator,p.generation,p.extent,p.records FROM snapshots p JOIN generations g ON g.id=p.generation JOIN sources s ON s.id=g.source WHERE p.id=? AND p.accepted=1",
@@ -221,11 +301,7 @@ def locate(+db: U32,+header: Header,+scope: Scoped.Scope,budget: U32) -> IO(Insp
       String.eq(Store.field(Store.first(identity),1n),provider) && String.eq(Store.field(Store.first(identity),2n),locator) &&
       String.eq(Store.field(Store.first(identity),3n),generation) && String.eq(Store.field(Store.first(identity),4n),U32.show(extent)) &&
       String.eq(Store.field(Store.first(identity),5n),U32.show(records)),"History title source or snapshot integrity mismatch")
-    rows : List<&2,List<&2,Sql.Cell>> <- Store.q(db,
-      "SELECT DISTINCT ordinal FROM events WHERE snapshot=? AND role='user' AND body<>'' AND (?='' OR repository=?) AND (?='' OR (length(timestamp)=30 AND substr(timestamp,11,1)='T' AND substr(timestamp,30,1)='Z' AND timestamp>=?)) ORDER BY ordinal LIMIT ?",
-      [Sql.Cell.Integer{snapshot},Sql.Cell.Text{repo},Sql.Cell.Text{repo},Sql.Cell.Text{after},Sql.Cell.Text{after},
-        Sql.Cell.Integer{U32.show(candidate_limit())}],4)
-    candidates(rows,db,header,scope,budget)
+    preferred(db,header,scope,budget)
 
 def inspect_allowed(yes: Bool,db: U32,header: Header,scope: Scoped.Scope,budget: U32) -> IO(Inspection):
   match yes:

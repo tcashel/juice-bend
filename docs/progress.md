@@ -31,6 +31,12 @@ All root preimages were checked/backed up; the checkout index is unchanged.
 The manual worker test is the exact successful v4 test, replacing a stale socket
 expectation without changing application behavior.
 
+Six separately reviewed recorded-title backend/test files are now adopted;
+preimages and exact hashes are in `build/provider-title-adoption/receipt.json`
+(`da95d0fc…`). They passed650 focused Linux-native assertions and are disjoint
+from the pending92-file capture/preview/ATIF/discovery adoption. The accepted
+Mac executable and current frozen main build do not include title-v5 yet.
+
 This source builds executable
 `fcbbbfbde90ad072c26fb20ab044522487a6ee4bbe9890f72300765a18518701`
 at `build/next-parity-integration/mac/296cfc88-2887-4325-83d0-d5e2459b54f6/main`.
@@ -105,10 +111,37 @@ at `build/reader-attachments-remote.json`. No combined attachment UI claim follo
    `build/attachment-capture-native-run/native-result.json` SHA `60ecdf15…`.
    Guest45035/wrapper80946 ended0; VM stopped. Asset storage has220 Mac checks;
    capture coordinator has81 Mac checks. These modules remain isolated.
-4. **Parallel integration:** `attachment_native_receipt` owns external capture
-   CLI/folder-policy UI; `archive_adoption_review` owns ATIF CLI/UI (kind41);
-   `remaining_parity_audit` owns PNG preview and affine app wrapper. Shared seams
-   are coordinated, but no combined executable or UI acceptance exists yet.
+4. **Parallel integration:** `attachment_native_receipt` owns the sole combined
+   capture/ATIF/discovery/preview main/CLI/UI assembly in
+   `build/attachment-capture-ui-integration/tree`. Its20 Ack/model native checks
+   and whole-GUI frontend check passed. The final combined GUI callback/control
+   and attachment UI suites passed114 Linux-native assertions; actual combined
+   window acceptance is still pending.
+   `remaining_parity_audit` owns PNG preview and affine app wrapper. External
+   retained-preview backend passed96 Linux-native checks, including10 actual
+   child checks after source loss and root disable. Mac wrapper gate `d7fad47b`
+   stopped before tests at an Apple clang-O3 backend crash; exact generated C
+   and reproducer are preserved. Same-C O1 correctness retry is prepared but
+   waits behind the combined app; no runtime/application patch was made.
+   Native helper `55476de6` passed prepare/guard/existing-root-refusal, producing
+   exactly3retained records/10events and the synthetic PNG without preapproved
+   folders/assets. Binary `fe486d12…`, receipt `e50531f3…`.
+   Frozen combined main Mac build `38f78e5a` timed out after1200.125seconds
+   before C output, with empty diagnostics; all142source/bridge files/93pins
+   remained unchanged. Session19754 ended1 and its owned process group is absent.
+   Its Linux frontend also exceeded300seconds without emitting C; neither
+   timeout is a semantic failure or a pass. Default reader is untouched.
+   Source-identical profiled retry `baa66041-e59b-403d-95b8-5d4dde1a2408`
+   is active under `reader_release_diagnostic`, session99836: frontend2400s,
+   then native clang-O3 up to1200s. Manifest `ef48a14d…`; final control binding
+   is `build/attachment-capture-ui-integration/final-control-binding-baa66041.json`.
+   Profiling is diagnostic only; absent profile output must remain unclaimed.
+   The reviewed integrated Tart plan is in
+   `build/integrated-assets-native-v3-plan/HANDOFF.md`; final exact main/helper
+   receipts, control hashes and retained-preview binding are required to stage.
+   V3 keeps build source/receipt evidence on the host outside VM shares; its
+   native assertions and fixture expectations are unchanged from tested v2.
+   No combined executable or UI acceptance exists yet.
    ATIF core passed69 Linux checks and six actual exports passed the pinned
    official v1.8 schema. PNG core passed96 Linux checks; preview passed79.
 5. **Physical-Mac PNG/preview gate passed:** session97576 ended0, run
@@ -133,7 +166,7 @@ at `build/reader-attachments-remote.json`. No combined attachment UI claim follo
    `44b2aa26…` from the successful Linux receipt; the original tree is unchanged.
    Run `b8e9f577-52d9-43c6-bb99-5e0f0cb659ad` passed69 native checks
    (22formatter/47export), empty runtime stderr, exact49inputs/93pins unchanged.
-   Receipt SHA `4a54ef19…`; runner15080 ended0; Mac compiler is free.
+   Receipt SHA `4a54ef19…`; runner15080 ended0.
    ATIF CLI/UI integration passed204 focused Linux assertions at explicit-O1.
    Its final handoff is frozen (`build/atif-cli-ui-integration/HANDOFF.md`);
    capture UI owner will assemble all shared-file changes once preview is frozen.
@@ -148,10 +181,28 @@ at `build/reader-attachments-remote.json`. No combined attachment UI claim follo
    Six-file patch `daaefac5…` and manifest `8e2aaa79…` are delivered to the
    combined GUI owner, with the discovery progress summary hook. Full-app
    refresh interaction and source-alias presentation remain open.
+8. **Independent next slices:** recorded Claude titles have a frozen six-file
+   handoff at `build/provider-title-integration/HANDOFF-SOURCES.json`
+   (`dd9f8c2c…`). Final focused title suite passed49 assertions; five unchanged
+   suites passed601 in the preceding run, whose separate test-oracle failure
+   remains preserved. A real stale-title bug after oversized records was fixed
+   with unreadable-record barriers. Backend source adoption is complete;
+   see `docs/receipts/provider-titles-native.txt`. No Mac title UI or combined
+   application acceptance yet. Verified child-result links (`discovery_parity`),
+   bounded JPEG decode (`remaining_parity_audit`) and recorded successful-commit
+   provenance (`archive_decoder`) continue in separate ignored trees. They do
+   not alter the frozen combined app or its input manifests.
 
 Next keep PR #1 current with explicit limitations, then assemble
 capture/ATIF/image UI seams into one new main build and validate actual use.
 Stop only verified owned Tart children; preserve all failed attempts.
+
+Latest publication verified: implementation branch `44e46619357cab333248da298962b67693b60df8`,
+tree `68e1f843…`, exact bare ref `codex/published-native-followup`; protected index
+unchanged. PR body updated; open/draft/unmerged. The PR metadata response still
+reported the prior head while its branch-ref endpoint confirmed the new commit.
+This local live-integration note follows that publication; publish with the next
+coherent app slice. No Tart session remains active.
 
 ## Remaining goal and measured limits
 

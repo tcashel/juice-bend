@@ -154,6 +154,7 @@ def schema_base(+db: U32) -> IO(Unit):
     "CREATE INDEX IF NOT EXISTS event_scope ON events(repository,role,timestamp,snapshot,ordinal)",
     "CREATE INDEX IF NOT EXISTS source_latest ON sources(latest)",
     "CREATE VIRTUAL TABLE IF NOT EXISTS search USING fts5(body,arguments,result,tool,snapshot UNINDEXED,ordinal UNINDEXED,event UNINDEXED,tokenize='unicode61')",
+    "CREATE INDEX IF NOT EXISTS events_recorded_title ON events(snapshot,ordinal DESC) WHERE coverage IN ('recorded_title','recorded_title; invalid_timestamp','oversized_record_fragment') OR coverage GLOB 'invalid_utf8:*' OR role='error'",
     "CREATE TABLE IF NOT EXISTS projection_checks(snapshot INTEGER PRIMARY KEY REFERENCES snapshots(id),version TEXT NOT NULL,digest TEXT NOT NULL)",
     "CREATE TABLE IF NOT EXISTS snapshot_context(snapshot INTEGER NOT NULL REFERENCES snapshots(id),ordinal INTEGER NOT NULL,repository TEXT NOT NULL,session TEXT NOT NULL,model TEXT NOT NULL,parent TEXT NOT NULL,version TEXT NOT NULL,digest TEXT NOT NULL,PRIMARY KEY(snapshot,ordinal)) WITHOUT ROWID",
     "CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY,value TEXT NOT NULL)"
@@ -682,7 +683,7 @@ def selected_record(db: U32,snapshot: String,generation: String,extent: U32,
 # the legacy seal below binds snapshot, raw metadata and parser version. Like raw digests, this detects corruption relative to trusted
 # metadata; an actor rewriting both data and checksums is outside the boundary.
 def projection_version() -> String:
-  "providers-v4-utc-context-relay"
+  "providers-v5-utc-context-relay-title"
 
 def projection_cell(value: Sql.Cell) -> String:
   match value:
