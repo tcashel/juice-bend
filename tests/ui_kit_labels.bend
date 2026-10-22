@@ -20,11 +20,22 @@ def choose(right: Bool,bottom: Bool,tl: C.Canvas,tr: C.Canvas,bl: C.Canvas,br: C
     case True{} False{}: tr
     case False{} True{}: bl
     case True{} True{}: br
+# Edge masks can use pixel subtrees inside an 8px tile; visit those three
+# additional levels instead of treating a valid subtree as an absent pixel.
+def tile_pixel(depth: Nat,c: C.Canvas,+x: U32,+y: U32) -> U32:
+  match depth c:
+    case _ C.Flat{color}: color
+    case _ C.Tile{bits,fg,bg}: C.blend(fg,bg,Mono.coverage(bits,x,y))
+    case 0n _: 4294967295
+    case 1n+ +rest C.Four{tl,tr,bl,br}:
+      +half = U32.shln(1,rest)
+      tile_pixel(rest,choose(U32.is_ge(x,half),U32.is_ge(y,half),tl,tr,bl,br),U32.mod(x,half),U32.mod(y,half))
+
 def pixel(fuel: Nat,c: C.Canvas,+x: U32,+y: U32) -> U32:
   match fuel c:
     case _ C.Flat{color}: color
     case _ C.Tile{bits,fg,bg}: C.blend(fg,bg,Mono.coverage(bits,U32.mod(x,8),U32.mod(y,8)))
-    case 0n _: 0
+    case 0n node: tile_pixel(3n,node,x,y)
     case 1n+ +n C.Four{tl,tr,bl,br}:
       +half = U32.shln(8,n)
       pixel(n,choose(U32.is_ge(x,half),U32.is_ge(y,half),tl,tr,bl,br),U32.mod(x,half),U32.mod(y,half))

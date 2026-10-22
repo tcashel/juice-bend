@@ -2,6 +2,11 @@
 
 An experimental, standalone native reproduction of Juice's core history and provenance workflow, written in Bend 2.
 
+The reusable [Bend UI prototype](src/bend_ui/README.md) is exercised by the app
+and [controls example](examples/ui_controls.bend). Its shared Button keeps checked
+geometry and caller-owned actions/focus. Community extraction is being developed
+through actual app use; no separate package or first-party license is published.
+
 ## Run locally
 
 Requires an Apple Silicon Mac, Xcode command-line tools, and
@@ -229,7 +234,8 @@ mise run smoke-ui
 ```
 
 `prove` distinguishes ordinary Bend checking from the stronger kernel.
-Both now pass for the twelve production laws on the implementation host.
+Earlier receipts record passes for twelve production laws on the implementation
+host; the current shared Button slice has no fresh global proof run.
 The optional `mise run setup-lean` installs the exact Lean 4.34.0 archive into
 `.tools` after SHA-256 verification; it needs `zstd` on PATH. An already
 downloaded official archive can be supplied as its only argument. No global

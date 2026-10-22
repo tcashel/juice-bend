@@ -1,6 +1,23 @@
 # Acceptance evidence
 
-## Current native app206 — 2026-10-22
+## Shared Button207 — 2026-10-22
+
+The 207-input app `429410ee…` builds through the original pinned CLI with the
+maintained GC512 preload and LLVM 23.1.4 -O1. Focused Linux tests passed 42
+Button/example/toolbar checks and 103 attachment/layout checks. The app/example
+share the bounded painter; existing app target rectangles and action IDs remain.
+Native Usage passed 17 exact clipboard comparisons, 10 canonical reports, one
+export and filter/capture/Back/source-loss actions. Root reviewed seven of 15
+captured images: new borders, underlay and labels accepted without new clipping;
+toolbar density remains. PNG functional checks passed 8 Fit/3 actual pixels,
+72-byte export and Escape restoration; root reviewed six images. Strict combined
+JPEG/PNG and worker-creation observation remain unaccepted. The exact 12-path
+slice and all three executable defaults are adopted; all 207 inputs match the
+tested binary. Previous sources/binaries and root HEAD/index are preserved.
+Earlier 206 native results below retain their bindings. This is not a full-suite/proof
+refresh or a performance claim. See `receipts/native207.json`.
+
+## Historical app206 — 2026-10-22
 
 Adopted native app `4ffb4903…` has 206 exact inputs and builds through the original
 pinned Bend CLI/main with the maintained minimal GC512 preload, then LLVM 23.1.4

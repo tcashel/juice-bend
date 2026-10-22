@@ -6,6 +6,8 @@ import ./ui_geometry.bend as G
 import ./ui_palette.bend as Palette
 import ./bend_ui/canvas.bend as C
 import ./bend_ui/label.bend as Chrome
+import ./bend_ui/button.bend as Button
+import ./bend_ui/region.bend as Region
 import ./reader_document.bend as ReaderDoc
 import ./reader_projection.bend as Projection
 import ./reader_cards.bend as ReaderCards
@@ -1412,6 +1414,46 @@ def top_library(+s: State,group: U32,phase: U32) -> State & Action:
 def top_action(+s: State,group: U32) -> State & Action:
   top_library(s,group,library_phase(s))
 
+# One availability/geometry descriptor drives both top-button paint and hits.
+# Existing action functions remain the authority and keep their own gates.
+def quota_top_available(results: Results,index: U32) -> Bool:
+  match index:
+    case 0: quota_available(results,1)
+    case 1: quota_available(results,2)
+    case 2: quota_available(results,3)
+    case 3: quota_available(results,4)
+    case 4: quota_available(results,5)
+    case 5: result_available(results,False{})
+    case 6: result_available(results,True{})
+    case _: False{}
+
+
+def toolbar_available(+results: Results,+index: U32) -> Bool:
+  match results:
+    case QuotaResults{_,_,_,_,_,_,_}: quota_top_available(results,index)
+    case AttachmentResults{_,_,_,_}: attachment_available(results,attachment_top_index(index))
+    case AttachmentCaptureResults{_,_,_,_,_,_}: attachment_available(results,attachment_top_index(index))
+    case AttachmentFoldersResults{_,_,_,_,_,_}: attachment_available(results,folder_top_index(index))
+    case BriefResults{_}: U32.is_lt(index,4)
+    case LibraryUsageResults{5,_,_}: U32.is_eq(index,0)
+    case _: True{}
+
+def toolbar_region(results: Results,+index: U32) -> Region.ControlRegion:
+  G.top_region(index,toolbar_available(results,index))
+
+def toolbar_regions(+results: Results) -> List<&2,Region.ControlRegion>:
+  [toolbar_region(results,0),toolbar_region(results,1),toolbar_region(results,2),
+   toolbar_region(results,3),toolbar_region(results,4),toolbar_region(results,5),toolbar_region(results,6)]
+
+def toolbar_hit(+s: State,x: U32,y: U32) -> Maybe<&2,U32>:
+  State{Content{_,_,_,_,_,_,_,results,_,_},_,_,_} = s
+  Region.hit(7n,toolbar_regions(results),x,y)
+
+def toolbar_action(s: State,hit: Maybe<&2,U32>) -> State & Action:
+  match hit:
+    case None{}: (s,NoAction{})
+    case Some{index}: top_action(s,index)
+
 def query_click_editable(+s: State, col: U32) -> State & Action:
   +pos = query_at(s, col)
   (set_edit(s, Edit{0, pos, pos, True{}, query_offset(s)}), NoAction{})
@@ -1426,7 +1468,7 @@ def query_click(+s: State,col: U32) -> State & Action:
 
 def mouse_top.action(+s: State,x: U32,inside: Bool) -> State & Action:
   match inside:
-    case True{}: top_action(s,G.top_index(x))
+    case True{}: toolbar_action(s,toolbar_hit(s,x,80))
     case False{}: (s,NoAction{})
 
 def mouse_top.query(+s: State,+col: U32,+x: U32,+y: U32,inside: Bool) -> State & Action:
@@ -2008,14 +2050,29 @@ def brief_top_label(+index: U32) -> String:
     case 3: "Back to reader"
     case _: ""
 
+def toolbar_painted(value: Result<&2,&2,C.Failure,C.Canvas>) -> C.Canvas:
+  match value:
+    case Done{canvas}: canvas
+    case Fail{_}: C.Flat{16711680}
+
+def toolbar_button_named(empty: Bool,c: C.Canvas,region: Region.ControlRegion,label: String) -> C.Canvas:
+  match empty:
+    case True{}: c
+    case False{}:
+      toolbar_painted(Button.draw(c,Button.Button{region,label},
+        Button.Style{Palette.ink(Palette.Action{}),Palette.ink(Palette.Secondary{}),
+          Palette.button_paper(),Palette.button_disabled_paper(),Palette.button_edge(),
+          Palette.button_focus()},False{}))
+
+def toolbar_button(c: C.Canvas,region: Region.ControlRegion,+label: String) -> C.Canvas:
+  toolbar_button_named(String.is_empty(label),c,region,label)
+
 def draw_top(fuel: Nat,c: C.Canvas,+index: U32,+files: Bool,+settings: Bool,+whole: Bool,+automatic: String,+brief: Bool) -> C.Canvas:
   match fuel:
     case 0n: c
     case 1n+n:
-      +x = G.top_x(index)
-      +w = G.top_width(index)
-      base = box(c,x,80,w,32,panel())
-      label = chrome_text(base,Bool.pick(String,brief,brief_top_label(index),top_label(index,files,settings,whole,automatic)),U32.add(x,8),80,U32.sub(w,16),0,accent(),panel())
+      label = toolbar_button(c,G.top_region(index,Bool.not(brief) || U32.is_lt(index,4)),
+        Bool.pick(String,brief,brief_top_label(index),top_label(index,files,settings,whole,automatic)))
       draw_top(n,label,U32.add(index,1),files,settings,whole,automatic,brief)
 
 def quota_side_label(index: U32) -> String:
@@ -2057,17 +2114,6 @@ def quota_top_label(index: U32) -> String:
     case 6: "Next samples"
     case _: ""
 
-def quota_top_available(results: Results,index: U32) -> Bool:
-  match index:
-    case 0: quota_available(results,1)
-    case 1: quota_available(results,2)
-    case 2: quota_available(results,3)
-    case 3: quota_available(results,4)
-    case 4: quota_available(results,5)
-    case 5: result_available(results,False{})
-    case 6: result_available(results,True{})
-    case _: False{}
-
 def quota_top_color(results: Results,index: U32) -> U32:
   Bool.pick(U32,quota_top_available(results,index),accent(),muted())
 
@@ -2075,10 +2121,7 @@ def draw_quota_top(fuel: Nat,c: C.Canvas,+index: U32,+results: Results) -> C.Can
   match fuel:
     case 0n: c
     case 1n+n:
-      +x = G.top_x(index)
-      +w = G.top_width(index)
-      base = box(c,x,80,w,32,panel())
-      label = text(base,quota_top_label(index),U32.add(x,8),88,U32.sub(U32.div(w,8),2),quota_top_color(results,index),panel())
+      label = toolbar_button(c,toolbar_region(results,index),quota_top_label(index))
       draw_quota_top(n,label,U32.add(index,1),results)
 
 def draw_top_context(quota: Bool,c: C.Canvas,results: Results,files: Bool,settings: Bool,whole: Bool,automatic: String,brief: Bool) -> C.Canvas:
@@ -2145,10 +2188,7 @@ def draw_attachment_top(fuel: Nat,c: C.Canvas,+index: U32,+results: Results) -> 
   match fuel:
     case 0n: c
     case 1n+n:
-      +x = G.top_x(index)
-      +w = G.top_width(index)
-      base = box(c,x,80,w,32,panel())
-      label = text(base,attachment_label(results,attachment_top_result_index(results,index)),U32.add(x,8),88,U32.sub(U32.div(w,8),2),attachment_top_color(results,index),panel())
+      label = toolbar_button(c,toolbar_region(results,index),attachment_label(results,attachment_top_result_index(results,index)))
       draw_attachment_top(n,label,U32.add(index,1),results)
 
 def draw_attachment_side_context(attachments: Bool,quota: Bool,c: C.Canvas,results: Results,files: Bool,settings: Bool,scope: String,brief: Bool) -> C.Canvas:
@@ -2190,20 +2230,17 @@ def library_top_label(capture: Bool,index: U32) -> String:
         case 5: "Back"
         case _: "Open capture"
 
-def draw_library_top(fuel: Nat,c: C.Canvas,+index: U32,+capture: Bool) -> C.Canvas:
+def draw_library_top(fuel: Nat,c: C.Canvas,+index: U32,+phase: U32) -> C.Canvas:
   match fuel:
     case 0n: c
     case 1n+rest:
-      +x = G.top_x(index)
-      +w = G.top_width(index)
-      base = box(c,x,80,w,32,panel())
-      named = chrome_text(base,library_top_label(capture,index),U32.add(x,8),80,U32.sub(w,16),0,accent(),panel())
-      draw_library_top(rest,named,U32.add(index,1),capture)
+      named = toolbar_button(c,G.top_region(index,U32.is_ne(phase,5) || U32.is_eq(index,0)),library_top_label(U32.is_ge(phase,5),index))
+      draw_library_top(rest,named,U32.add(index,1),phase)
 
 def draw_library_top_context(+s: State,c: C.Canvas,+results: Results,files: Bool,automatic: String,+phase: U32) -> C.Canvas:
   match phase:
     case 0: draw_attachment_top_context(is_attachments(s) || is_attachment_folders(s),is_quota(s),c,results,files,is_settings(s),whole_usage(s),automatic_label(results,automatic),is_brief(s))
-    case _: draw_library_top(7n,c,0,U32.is_ge(phase,5))
+    case _: draw_library_top(7n,c,0,phase)
 
 def draw_attachment_entry(c: C.Canvas,visible: Bool) -> C.Canvas:
   match visible:

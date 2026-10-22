@@ -62,7 +62,7 @@ def main() -> IO(Unit):
     Pixel.require(value(E.events([Key{9,True{}},Key{32,True{}}],Some{E.initial()}),10,10),"standalone Space activates a focused control")
     Pixel.require(closed(E.events([Close{},Key{9,True{}}],Some{E.initial()})),"standalone native Close is terminal for the remaining event batch")
     Pixel.require(U32.is_eq(Pixel.pixel(8n,E.paint(E.initial()),0,0),16316144),"standalone checked drawing retains the neutral canvas outside controls")
-    Pixel.require(U32.is_eq(Pixel.pixel(8n,E.paint(E.Model{Some{10},10,False{}}),24,96),2502743),"standalone focus is visible in the same painted control rectangle")
+    Pixel.require(U32.is_eq(Pixel.pixel(8n,E.paint(E.Model{Some{10},10,False{}}),96,96),2502743),"standalone focus is visible in the same painted control rectangle")
     Pixel.require(frame_pixels(110592n,E.paint(E.initial()),E.frame(E.initial()),0),"initial native frame preserves all 512x216 canvas pixels at window coordinates")
     Pixel.require(frame_pixels(110592n,E.paint(E.Model{Some{20},20,False{}}),cached_image(E.cached(True{},E.State{E.initial(),Pix{0}},E.Model{Some{20},20,False{}})),0),"changed cached native frame preserves all 512x216 selected-control pixels")
     Pixel.require(image_refused(C.image_viewport(C.Flat{0},0,216)) && image_refused(C.image_viewport(C.Flat{0},512,0)) && image_refused(C.image_viewport(C.Flat{0},2049,216)) && image_refused(C.image_viewport(C.Flat{0},512,4294967295)),"viewport refuses zero and oversized dimensions instead of wrapping or scaling")

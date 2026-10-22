@@ -1,94 +1,88 @@
 # Implementation checkpoint
 
-The working default is `4ffb4903…` with all 206 tested application inputs adopted.
-PR #1 remains draft and unmerged. Prior 201-input sources and binaries are preserved.
+The accepted default is `429410ee…` (207 inputs), with the shared Button adopted
+after focused native acceptance. PR #1 remains draft and unmerged.
 
 ## Goal and boundaries
 
 Continue functional and pleasant native UX parity with Swift Juice, excluding
-embeddings/models. All application logic, UI, policy, tests and benchmarks are
-Bend 2; SQLite has the narrow native bridge. Lean is an optional proof checker.
+embeddings/models. App logic, UI, policy, tests and benchmarks remain Bend 2;
+SQLite has the narrow native bridge. Lean is a development proof checker.
 Mise pins Bend 2.0.37, Bun 1.4.2 and LLVM 23.1.4. Original Juice and histories stay
-read-only. Fixtures and libraries are synthetic and isolated. No user answer is pending.
+read-only; fixtures and libraries are synthetic. No user response is pending.
 
-`mise run demo` launches the accepted 206-input default. Preserve the dirty root,
-index and prior binaries. Use explicit publication paths through the separate
-`build/publication.git` index; do not merge automatically.
+`mise run demo` launches the accepted default. Preserve root HEAD/index and all
+unrelated changes. Publish explicit paths through `build/publication.git`; keep
+PR draft and unmerged. Prior sources/binaries remain preserved.
 
-## Current executable and native evidence
+## Shared Button slice
 
-Exact executable `4ffb4903…` binds 206 inputs from
-`build/combined-polish-cancel-seal-v1/tree`: Usage metric cards with Overview/Report,
-list readability, cooperative JPEG cancellation/Close acknowledgment and byte-oriented
-event sealing. The SQLite bridge and existing identity/preservation contracts are unchanged.
+Executable `429410ee…` binds 207 application inputs. The 12-path candidate adds a
+pure Button painter shared by the real toolbar and controls example, with
+rounded edges, clear disabled/focus styles and proportional labels. Existing
+seven app targets/action IDs remain unchanged. The app still owns selection,
+dispatch and focus; app toolbar keyboard focus is not added by this slice.
+Bounds, label work and corner masks are fixed/bounded; cutouts preserve underlay.
 
-The full Mac build passed through original pinned CLI/main with the maintained
-minimal GC512 preload, without telemetry or a relocated compiler copy. Frontend
-271.646s and LLVM -O1 compilation 557.623s are build diagnostics, not app timings.
-This closes the full-app maintained-compiler validation gap; it was the equivalent
-runner setup, not a literal `scripts/build` invocation. Receipt c5c55080:
-`build/combined206-mac/runs/4f49b7aa-34e5-4476-90f9-824a7bd97875/receipt.json`.
+Full Mac build passed through original pinned CLI/main plus the maintained
+minimal GC512 preload, then LLVM -O1: frontend 264.105s/native 553.046s. Empty
+diagnostics, exact inputs/pins and no owned compiler groups. This is the bound
+maintained setup, not literal `scripts/build` execution or app-performance evidence.
+Receipt: `build/button207-mac/runs/4742f192-5926-445f-a35c-ae62f1cf837d/receipt.json`
+(1ae85506). Existing Linux gates passed 42 (Button 15/example 17/toolbar 10) and 103
+(attachments 76/layout 27). Four necessary paint expectations changed; action and
+bounds assertions remain. No fresh full suite or proof pass is claimed.
 
-- Usage native PASS: 17 exact clipboard comparisons, 10 canonical report comparisons,
-  one canonical export, provider filtering, capture reopen, two Back levels and
-  restored partial Unicode selection. The original three captures survived a
-  different-process source-loss restart; the fourth was imported afterward, with
-  no second restart claimed. Root reviewed all 15 actual images. Receipts:
-  `build/native206-staging/usage-summary/run-01/{native-result,root-visual-review}.json`
-  (b31321dc / 81f5119a).
-- Pending JPEG Close PASS: the child was observed live before and after the click;
-  window gone within 394ms, parent/child within 762ms; no orphan and exact nonce
-  spool removed before harness cleanup. These are observation upper bounds for
-  this fixture, not a global cancellation guarantee. Root reviewed three images.
-  `build/native206-staging/pending-close/run-01/pending-close-result.json` (2592bff6).
-- Inline-PNG functional checks passed 8 Fit/3 actual pixels, original 72-byte
-  export, Escape selection restoration, source loss and ready Close. Root reviewed
-  six images. Additive collector b258bb6b used the already sealed PNG collector;
-  the incorrect generic JPEG collector failure is preserved. No rerun or artifact
-  edits occurred. Strict JPEG/PNG and worker-creation observation remain unaccepted.
+Native207 Usage passed 17 exact clipboard comparisons, 10 canonical reports and
+one export, provider/capture/Back actions and source-loss restart. Root reviewed
+seven representative images from 15 captured: rounded edges, underlay and labels
+accepted, no new clipping; toolbar density remains. Receipt bb5785ef is in
+`build/native207-staging/usage-summary/run-01/native-result.json`. PNG functional
+checks passed 8 Fit/3 actual pixels, 72-byte export and Escape restoration; root
+reviewed six images (receipt 24c5defc, review c3d86992). Strict combined JPEG/PNG and
+worker-creation observation remain unaccepted. Earlier 206 results retain 4ff bindings.
 
-Older 201-input native reader/Child/retained-PNG results remain historical and
-bound to `943eee7e…`; they are not fresh 206 validation. See scoped public receipts.
+Adoption receipt `build/native207-root-adoption/receipt.json` (2cc196ce)
+verifies all 12 source/test paths, all 207 app inputs and three executable defaults.
+Earlier sources/binaries are preserved under `build/native207-root-adoption/previous`;
+root HEAD/index are unchanged. A component README count correction is docs-only.
 
-## Focused tests and append measurement
+The component API and example are an extraction prototype for community reuse.
+No separate repository/package or first-party license has been published.
+Hover/pressed lifecycle, accessibility, resizing and shaping/IME remain outside
+this component. Sidebar and daily-Usage work are separate isolated candidates.
 
-Usage 130 passed on Linux (summary 19, interaction 19, existing UI 20, controller 47,
-list-row 25). Cancellation App12 passed actual Bend events (active 5, retired 5,
-Escape 2). Exact generated-C continuation after the earlier compile timeout is
-recorded separately. These are component tests, not a combined full-suite pass.
+## Preserved prior evidence
 
-Event-seal bytes passed 73 focused assertions plus 1,611 preservation assertions,
-including 27 crash cuts. The original collector failed on the unchanged crash
-footer; additive read-only collection accepted the existing outputs without a
-rerun or changed assertion. Its fourth C/binary hashes are post-run bindings;
-only the first three retained durable pre/post hashes.
+The adopted 206 source/default receipt is `build/native206-root-adoption/receipt.json`
+(808b2736); publication receipt is `build/native206-publication/receipt.json`.
+The separately scoped Usage 17-copy/15-image, live-JPEG Close and functional-PNG
+results are in `docs/receipts/native206-native.json`. Close was one observed
+fixture, not a global bound; strict JPEG/PNG/worker-creation observation remains
+unaccepted. The PNG generic-collector failure and additive collection are preserved.
 
-One matched physical-Mac pair measured baseline/candidate import 45.304/42.028s,
-unchanged 4.405/5.570s and 16-record append 28.252/26.535s at 100k records. Bytes,
-prefix identities and seals matched. This modest single pair does not solve slow
-append or show significance; unchanged refresh was slower. No Swift comparison.
-Receipt: `build/event-seal-bytes-integration/mac-paired-01/receipt.json` (0b0402d5).
+Append remains slow. One same-physical-Mac pair measured import 45.304→42.028s,
+append 16 records 28.252→26.535s and unchanged 4.405→5.570s at 100k records, with
+matching bytes/IDs/seals. This was a modest single-pair result, not significance
+or a Swift comparison. Focused component tests and crash-collector caveats stay
+in `docs/receipts/native206-build-tests.json`; they are not rerun 207 claims.
 
 ## Exact continuation
 
-1. The 30 source/test/tooling paths and all three default binaries are adopted. Receipt
-   `build/native206-root-adoption/receipt.json` (808b2736) binds the exact 206 closure;
-   originals remain in `build/native206-root-adoption/previous/`. HEAD/index stayed
-   unchanged. Future PR updates use explicit paths/modes and preserve history.
-2. The runner skips redundant App12 aggregate discovery; all three split entries
-   and explicit aggregate invocation remain. Its build-stub check proves discovery,
-   not Bend assertions. The Child fixture's shape-only summary constructor adapter
-   retains Export 552 and assertions; adapted 3/4/4 tests were not rerun.
-3. Button207 is a separate native build, already running in session 25809:
-   `python3 build/button207-mac/runs/4742f192-5926-445f-a35c-ae62f1cf837d/run-mac.py`.
-   Collect current receipt/process status before continuation; do not restart if
-   active. See `build/button207-mac/HANDOFF.md`. Its separate Linux 42+103 checks
-   passed; no native acceptance is claimed. Default 4ff remains protected.
-4. Sidebar polish is active in isolation. Continue using Swift Juice's information
-   hierarchy and real Bend screenshots. Keep Tart and Mac compilation sequential.
+1. Button207 is adopted; Usage/PNG run-01 terminal and visual results are collected,
+   with VM stopped and lease released. Do not rerun the completed adoption runner.
+2. For this or a future publication, refresh PR head/draft status and use only the
+   explicit reviewed path/mode inventory, preserving root HEAD/index and unrelated
+   work. Verify full app closure afterward. The sealed Button207 bundle is
+   `build/native207-publication-terminal`; its 16 paths include one compact receipt
+   and the component README wording correction. All modes are 100644.
+3. Continue the isolated sidebar and daily-Usage candidates. Inspect their current
+   receipts/process status before starting or restarting any build. Keep Tart and
+   Mac compilation sequential; preserve the accepted 429410ee default until a
+   replacement passes source binding, focused tests and native acceptance.
+4. Ground the next layout slice in Swift Juice and actual Bend screenshots, then
+   complete the bounded user journey before expanding component APIs.
 
-Remaining: dense toolbar/metadata, singular counts, stale generic copy status,
-missing CJK/emoji glyphs, shaping/IME, accessibility, resizing and input latency.
-Usage date charts/costs and broader parity remain open. Synchronous retained
-hashing, PNG/container allocation and generic workers retain cancellation gaps.
-No new kernel proof, global test suite or complete-goal claim is made.
+Missing glyphs, dense metadata, wording, shaping/IME, accessibility, resize,
+latency and broader parity remain open. No global Close guarantee, new proof,
+global suite or complete-goal claim is made.

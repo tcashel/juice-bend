@@ -6,6 +6,7 @@ import ../src/ui.bend as UI
 import ../src/ui_geometry.bend as G
 import ../src/font.bend as Font
 import ../src/sans_font.bend as Sans
+import ../src/ui_palette.bend as Palette
 import ./tab_readability.bend as Tiles
 
 def require(ok: Bool,label: String) -> IO(Unit):
@@ -204,9 +205,9 @@ def painting() -> IO(Unit):
     require(String.eq(UI.result_label(UI.AttachmentResults{3,False{},False{},False{}}),"Exporting selected inline bytes"),"exporting phase is labeled as pending publication rather than a read failure")
     require(String.eq(UI.list_heading(UI.AttachmentResults{2,False{},False{},False{}},False{}),"Captured attachments") &&
       String.eq(UI.result_label(UI.AttachmentResults{2,False{},False{},False{}}),"See record coverage in details"),"attachment list names captured metadata without claiming total extraction completeness")
-    require(Tiles.tile.empty(Tiles.tile.at(8n,canvas,2,27),UI.rail()) && glyph(canvas,160,88,69,UI.accent(),UI.panel()),"eligible Export bytes paints once at its toolbar target")
-    require(Tiles.tile.empty(Tiles.tile.at(8n,pending,2,27),UI.rail()) && glyph(pending,160,88,69,UI.muted(),UI.panel()),"pending Export bytes remains muted at its sole toolbar target")
-    require(glyph(pending,856,88,80,UI.muted(),UI.panel()) && Tiles.tile.empty(Tiles.tile.at(8n,pending,24,74),UI.panel()) && Tiles.tile.empty(Tiles.tile.at(8n,pending,45,74),UI.panel()),"pending toolbar Previous remains muted while duplicate list paging is absent")
+    require(Tiles.tile.empty(Tiles.tile.at(8n,canvas,2,27),UI.rail()) && chrome_glyph(canvas,160,88,69,0,UI.accent(),Palette.button_paper()),"eligible Export bytes paints once at its toolbar target")
+    require(Tiles.tile.empty(Tiles.tile.at(8n,pending,2,27),UI.rail()) && chrome_glyph(pending,160,88,69,0,UI.muted(),Palette.button_disabled_paper()),"pending Export bytes remains muted at its sole toolbar target")
+    require(chrome_glyph(pending,856,88,80,0,UI.muted(),Palette.button_disabled_paper()) && Tiles.tile.empty(Tiles.tile.at(8n,pending,24,74),UI.panel()) && Tiles.tile.empty(Tiles.tile.at(8n,pending,45,74),UI.panel()),"pending toolbar Previous remains muted while duplicate list paging is absent")
     require(chrome_glyph(canvas,536,120,76,1,UI.heading_ink(),UI.paper()) && chrome_glyph(normal,704,120,65,0,UI.accent(),UI.paper()),"attachment panel reclaims its title while captured reader paints the entry")
     require(Bool.not(blank(Tiles.tile.at(8n,normal,98,16),UI.paper())) &&
       blank(Tiles.tile.at(8n,normal,99,16),UI.paper()) &&

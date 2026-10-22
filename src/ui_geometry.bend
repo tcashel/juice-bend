@@ -142,9 +142,14 @@ def top_width(index: U32) -> U32:
     case 4: 144
     case _: 168
 
-def top_contains(+x: U32,+index: U32) -> Bool:
-  +left = top_x(index)
-  (x >= left && x < U32.add(left,top_width(index)) : U32)
+def top_bounds(+index: U32) -> Region.Rect:
+  Region.Rect{top_x(index),80,U32.add(top_x(index),top_width(index)),112}
+
+def top_region(+index: U32,enabled: Bool) -> Region.ControlRegion:
+  Region.ControlRegion{index,top_bounds(index),enabled,False{}}
+
+def top_contains(x: U32,index: U32) -> Bool:
+  Region.contains(top_bounds(index),x,80)
 
 def top_index.go(fuel: Nat,+x: U32,+index: U32,inside: Bool) -> U32:
   match fuel inside:

@@ -51,3 +51,9 @@ def navigation_ink() -> U32: 16447968
 def navigation_muted() -> U32: 12571048
 def navigation_current() -> U32: 16771970
 def navigation_current_ink() -> U32: 2575118
+
+# Neutral action surfaces; persistent navigation keeps its existing yellow.
+def button_paper() -> U32: 16777215
+def button_disabled_paper() -> U32: 15921900
+def button_edge() -> U32: 13159363
+def button_focus() -> U32: 2909508

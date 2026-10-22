@@ -37,7 +37,7 @@ def painting() -> IO(Unit):
     require(glyph(brief,16,312,83,UI.rail()) && Tiles.tile.empty(Tiles.tile.at(8n,brief,2,43),UI.rail()),"Brief paints Select all and leaves later navigation blank")
     require(glyph(canvas,536,600,114,UI.paper()) && Tiles.tile.empty(Tiles.tile.at(8n,canvas,67,77),UI.paper()),"nineteenth reader line paints completely with eight pixels clear before footer")
     require(A.chrome_glyph(canvas,816,120,67,0,UI.accent(),UI.paper()) && A.chrome_glyph(canvas,1104,120,83,0,UI.accent(),UI.paper()),"long reader title cannot paint over Copy or Select all")
-    require(glyph(canvas,688,80,67,UI.rail()) && A.chrome_glyph(canvas,1032,80,78,0,UI.accent(),UI.panel()),"capture hint and Next button both remain fully visible")
+    require(glyph(canvas,688,80,67,UI.rail()) && A.chrome_glyph(canvas,1032,88,78,0,UI.accent(),Palette.button_paper()),"capture hint and Next button both remain fully visible")
     require(glyph(canvas,992,640,67,UI.rail()) && Tiles.tile.empty(Tiles.tile.at(8n,canvas,1,82),UI.rail()),"status detail hint and bottom padding remain inside content height")
     require(Tiles.tile.empty(Tiles.tile.at(8n,canvas,150,80),UI.paper()) && Tiles.tile.empty(Tiles.tile.at(8n,canvas,1,83),UI.paper()),"actual production painter does not extend footer beyond 1200 by 664")
 

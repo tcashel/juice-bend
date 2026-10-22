@@ -3,16 +3,20 @@ import Base
 import ../src/bend_ui/canvas.bend as C
 import ../src/bend_ui/label.bend as L
 import ../src/bend_ui/region.bend as R
+import ../src/bend_ui/button.bend as B
 
 type Model is Data:
   Model{focus: Maybe<&2,U32>,selected: U32,shift: Bool}
 type State is Data:
   State{model: Model,image: Image}
 
+def buttons() -> List<&2,B.Button>:
+  [B.Button{R.ControlRegion{10,R.Rect{24,96,168,128},True{},True{}},"Apricot"},
+   B.Button{R.ControlRegion{20,R.Rect{184,96,328,128},True{},True{}},"Meadow"},
+   B.Button{R.ControlRegion{30,R.Rect{344,96,488,128},False{},True{}},"Disabled"}]
+
 def regions() -> List<&2,R.ControlRegion>:
-  [R.ControlRegion{10,R.Rect{24,96,168,136},True{},True{}},
-   R.ControlRegion{20,R.Rect{184,96,328,136},True{},True{}},
-   R.ControlRegion{30,R.Rect{344,96,488,136},False{},True{}}]
+  B.regions(buttons())
 
 def accepted(result: Result<&2,&2,C.Failure,C.Canvas>) -> C.Canvas:
   match result:
@@ -27,13 +31,14 @@ def focused(current: Maybe<&2,U32>,id: U32) -> Bool:
     case Some{value}: U32.is_eq(value,id)
     case None{}: False{}
 
-def button(+c: C.Canvas,+focus: Maybe<&2,U32>,+id: U32,+left: U32,text: String,+enabled: Bool) -> C.Canvas:
-  +bg = Bool.pick(U32,enabled,15395035,14737632)
-  +fg = Bool.pick(U32,enabled,2111513,8421504)
-  +border = Bool.pick(U32,focused(focus,id),2502743,bg)
-  outline = accepted(C.fill_rect(c,R.Rect{left,96,U32.add(left,144),136},border))
-  body = accepted(C.fill_rect(outline,R.Rect{U32.add(left,8),104,U32.add(left,136),128},bg))
-  label(body,text,R.Rect{U32.add(left,16),104,U32.add(left,128),128},L.Strong{},fg,bg)
+def draw_buttons(fuel: Nat,c: C.Canvas,buttons: List<&2,B.Button>,+focus: Maybe<&2,U32>) -> C.Canvas:
+  match fuel buttons:
+    case 0n _: c
+    case _ Nil{}: c
+    case 1n+n +button <> rest:
+      B.Button{R.ControlRegion{id,_,_,_},_} = button
+      next = accepted(B.draw(c,button,B.Style{2111513,8421504,15395035,14737632,8421504,2502743},focused(focus,id)))
+      draw_buttons(n,next,rest,focus)
 
 def selected_text(id: U32) -> String:
   match id:
@@ -45,9 +50,7 @@ def paint(+model: Model) -> C.Canvas:
   Model{+focus,selected,_} = model
   a = label(C.Flat{16316144},"Bend UI controls",R.Rect{24,24,488,56},L.Heading{},2111513,16316144)
   b = label(a,"Click or Tab; Enter activates. Shift-Tab goes back.",R.Rect{24,64,488,88},L.Regular{},4210752,16316144)
-  c = button(b,focus,10,24,"Apricot",True{})
-  d = button(c,focus,20,184,"Meadow",True{})
-  e = button(d,focus,30,344,"Disabled",False{})
+  e = draw_buttons(3n,b,buttons(),focus)
   label(e,selected_text(selected),R.Rect{24,160,488,184},L.Regular{},2111513,16316144)
 
 def accepted_image(result: Result<&2,&2,C.Failure,Image>) -> Image:
