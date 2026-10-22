@@ -27,6 +27,13 @@ import ./attachment_root_rules.bend as RootRules
 import ./paths.bend as Paths
 import ./quota_cli.bend as QuotaCli
 import ./refresh_preferences.bend as Refresh
+import ./gui_library_usage.bend as Library
+import ./library_usage_types.bend as LibraryTypes
+import ./library_usage_view_types.bend as LibraryView
+import ./library_usage_screen.bend as LibraryScreen
+import ./library_usage_wire.bend as LibraryWire
+import ./library_usage_page_wire.bend as LibraryPage
+import ./session_usage.bend as SessionUsage
 
 # The window owns no effectful database path. Every operation is a bounded call
 # to this same native executable. One reader and one writer can be outstanding;
@@ -70,6 +77,7 @@ type Navigation is Data:
   QuotaNavigation{origin: List<&2,QuotaOrigin>,prior: List<&2,Navigation>,model: List<&2,Quota.Model>}
   AttachmentNavigation{origin: List<&2,AttachmentOrigin>,prior: List<&2,Navigation>,model: List<&2,Attachments.Model>,external: List<&2,External.Model>,work: List<&2,Request>}
   AttachmentFoldersNavigation{view: UI.Bookmark,prior: List<&2,Navigation>,model: List<&2,Folders.Model>}
+  LibraryUsageNavigation{origin: List<&2,AttachmentOrigin>,prior: List<&2,Navigation>,model: List<&2,Library.Model>,view: List<&2,UI.Bookmark>,target: List<&2,SessionUsage.Capture>,request: List<&2,Request>,phase: U32}
   UsageNavigation{origin: Selection,origin_view: UI.Bookmark,origin_search: String,
     prior: List<&2,Navigation>,ready: Bool}
 
@@ -279,6 +287,7 @@ def navigation_phase(value: Navigation) -> U32:
     case QuotaNavigation{_,_,_}: 6
     case AttachmentNavigation{_,_,_,_,_}: 7
     case AttachmentFoldersNavigation{_,_,_}: 8
+    case LibraryUsageNavigation{_,_,_,_,_,_,_}: 9
 
 def related_filters(value: Navigation) -> Query.Filters:
   match value:
@@ -1710,6 +1719,232 @@ def why(+state: State) -> State:
   why_mode(state,files_active(state))
 
 
+# The whole original workspace and report bookmark are boxed. Capture identity
+# never comes from clipped row text and never retargets to a newer snapshot.
+def library_model(value: Navigation) -> Library.Model:
+  match value:
+    case LibraryUsageNavigation{_,_,[model],_,_,_,_}: model
+    case _: Library.initial()
+
+def library_phase(value: Navigation) -> U32:
+  match value:
+    case LibraryUsageNavigation{_,_,_,_,_,_,phase}: phase
+    case _: 0
+
+def library_update_value(state: State,model: Library.Model,value: Navigation) -> State:
+  match value:
+    case LibraryUsageNavigation{origin,prior,_,view,target,request,phase}:
+      set_navigation(state,LibraryUsageNavigation{origin,prior,[model],view,target,request,phase})
+    case _: state
+
+def library_update(+state: State,model: Library.Model) -> State:
+  library_update_value(state,model,navigation(state))
+
+def library_items(rows: List<&2,LibraryView.CaptureItem>) -> List<&2,Item>:
+  match rows:
+    case []: []
+    case LibraryView.CaptureItem{SessionUsage.Capture{provider,_,_,gen,snap,_,_},title,_,_,_} <> rest:
+      Item{snap,0,title,provider,"",gen,empty_filters()} <> library_items(rest)
+
+def library_selection_view(value: LibraryScreen.Screen) -> Selection:
+  LibraryScreen.Screen{_,_,_,_,_,rows} = value
+  Selection{library_items(rows),"",0,44,[],empty_filters(),empty_listing()}
+
+def library_selection(model: Library.Model) -> Selection:
+  library_selection_view(LibraryScreen.view(model))
+
+def library_render_screen(state: State,screen: LibraryScreen.Screen) -> State:
+  State{db,dir,program,ui,selection,form,jobs,deadline,serial} = state
+  LibraryScreen.Screen{title,text,message,+provider,phase,+rows} = screen
+  State{db,dir,program,UI.set_status(UI.set_reader(UI.set_results(UI.set_scope(UI.set_files(UI.focus_list(UI.set_rows(ui,LibraryScreen.titles(rows))),False{}),
+    Bool.pick(String,String.is_empty(provider),"all",provider)),UI.LibraryUsageResults{phase,U32.from_nat(List.length(&2,LibraryView.CaptureItem,rows))}),title,text),message),
+    Selection{library_items(rows),"",0,44,[],empty_filters(),empty_listing()},form,jobs,deadline,serial}
+
+def library_render_value(state: State,model: Library.Model) -> State:
+  library_render_screen(state,LibraryScreen.view(model))
+
+def library_render(+state: State) -> State:
+  library_render_value(state,library_model(navigation(state)))
+
+def library_restore_origin(+state: State,prior: List<&2,Navigation>,origin: List<&2,AttachmentOrigin>) -> State:
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,old,settings},jobs,deadline,serial} = state
+  match origin:
+    case [AttachmentOrigin{saved,view,oldmode,oldsearch}]:
+      invalidate(State{db,dir,program,UI.restore(ui,view),saved,Form{oldmode,oldsearch,source,blame,files,prior,settings},jobs,deadline,serial})
+    case _: status(state,"Library Usage origin is unavailable; no other capture was opened.")
+
+def library_back_value(+state: State,value: Navigation) -> State:
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,old,settings},jobs,deadline,serial} = state
+  match value:
+    case LibraryUsageNavigation{origin,prior,[+model],[view],_,_,5}:
+      invalidate(State{db,dir,program,UI.restore(ui,view),library_selection(model),
+        Form{0,search,source,blame,files,[LibraryUsageNavigation{origin,prior,[model],[],[],[],2}],settings},jobs,deadline,serial})
+    case LibraryUsageNavigation{origin,prior,[+model],[view],_,_,6}:
+      invalidate(State{db,dir,program,UI.restore(ui,view),library_selection(model),
+        Form{0,search,source,blame,files,[LibraryUsageNavigation{origin,prior,[model],[],[],[],2}],settings},jobs,deadline,serial})
+    case LibraryUsageNavigation{origin,prior,_,_,_,_,_}: library_restore_origin(state,prior,origin)
+    case _: state
+
+def library_back(+state: State) -> State:
+  library_back_value(state,navigation(state))
+
+def library_load_change(+state: State,change: Library.Change) -> State:
+  Library.Change{+model,effects} = change
+  match effects:
+    case [Library.RequestLoad{nonce,_}]:
+      library_render(queue(library_update(state,model),Request{44,["library-usage-v1",U32.show(nonce)],"",0,"Library usage | all time"}))
+    case _: status(library_update(state,model),Library.display_message(Library.message(model)))
+
+def library_load(+state: State) -> State:
+  State{_,_,_,_,_,_,Jobs{revision,_,_,_,_},_,_} = state
+  library_load_change(state,Library.start(U32.add(revision,1),LibraryTypes.defaults(),library_model(navigation(state))))
+
+def library_enter_value(+state: State,value: Navigation) -> State:
+  State{db,dir,program,+ui,+selection,Form{+mode,+search,source,blame,files,+prior,settings},jobs,deadline,serial} = state
+  match value:
+    case LibraryUsageNavigation{_,_,_,_,_,_,_}: status(state,"Library Usage is already open. Back restores its original workspace.")
+    case _:
+      library_load(State{db,dir,program,ui,selection,Form{0,search,source,blame,files,
+        [LibraryUsageNavigation{[AttachmentOrigin{selection,UI.bookmark(ui),mode,search}],prior,[Library.initial()],[],[],[],2}],settings},jobs,deadline,serial})
+
+def library_enter(+state: State) -> State:
+  library_enter_value(state,navigation(state))
+
+def library_owns_reader(value: Maybe<&2,Pending>,revision: U32) -> Bool:
+  match value:
+    case Some{Pending{ticket,Request{44,_,_,_,_},_}}: U32.is_eq(ticket,revision)
+    case _: False{}
+
+def library_cancel_active(+state: State,+model: Library.Model,active: Bool) -> State:
+  match active:
+    case True{}: library_render(library_update(state,model))
+    case False{}: library_render(library_update(invalidate(state),Library.retired(model,LibraryScreen.nonce(model))))
+
+def library_cancel_change(+state: State,change: Library.Change) -> State:
+  State{_,_,_,_,_,_,Jobs{revision,_,reader,_,_},_,_} = state
+  Library.Change{model,_} = change
+  library_cancel_active(state,model,library_owns_reader(reader,revision))
+
+def library_cancel(+state: State) -> State:
+  library_cancel_change(state,Library.cancel(library_model(navigation(state))))
+
+def library_provider(+state: State,+provider: String) -> State:
+  library_render(library_update(state,Library.select_provider(library_model(navigation(state)),Bool.pick(String,String.eq(provider,"all"),"",provider))))
+
+def library_open_ready(+state: State,+capture: SessionUsage.Capture,+first: U32,value: Navigation) -> State:
+  State{db,dir,program,+ui,selection,Form{mode,search,source,blame,files,old,settings},Jobs{+revision,wanted,reader,writer,paused},deadline,serial} = state
+  SessionUsage.Capture{_,_,_,_,+snapshot,_,_} = capture
+  match value:
+    case LibraryUsageNavigation{origin,prior,[model],view,_,_,+phase}:
+      +saved = {Bool.pick(List<&2,UI.Bookmark>,U32.is_eq(phase,2),[UI.bookmark(ui)],view) : List<&2,UI.Bookmark>}
+      +request = {Request{45,["library-usage-capture-v1",U32.show(U32.add(revision,1)),SessionUsage.capture_text(capture),U32.show(first)],snapshot,first,"Transcript | captured session " ++ snapshot} : Request}
+      queue(State{db,dir,program,UI.set_results(UI.set_status(ui,"Opening the exact retained capture. Back restores the Usage report."),UI.LibraryUsageResults{5,0}),selection,
+        Form{0,search,source,blame,files,[LibraryUsageNavigation{origin,prior,[model],saved,[capture],[request],5}],settings},Jobs{revision,wanted,reader,writer,paused},deadline,serial},request)
+    case _: state
+
+def library_open_capture(+state: State,value: Maybe<&2,SessionUsage.Capture>) -> State:
+  match value:
+    case None{}: status(state,"Choose a capture from the accepted Usage report.")
+    case Some{+capture}: library_open_ready(state,capture,0,navigation(state))
+
+def library_open(+state: State,index: U32) -> State:
+  library_open_capture(state,LibraryScreen.selected(library_model(navigation(state)),index))
+
+def library_page_allowed(state: State,capture: SessionUsage.Capture,next: U32,nav: Navigation,valid: Bool) -> State:
+  match valid:
+    case True{}: library_open_ready(state,capture,next,nav)
+    case False{}: status(state,"This is the end of the exact retained capture range.")
+
+def library_capture_records(capture: SessionUsage.Capture) -> U32:
+  SessionUsage.Capture{_,_,_,_,_,_,records} = capture
+  records
+
+def library_page_value(+state: State,+forward: Bool,+value: Navigation) -> State:
+  State{_,_,_,_,Selection{_,_,+start,_,_,_,_},_,_,_,_} = state
+  match value:
+    case LibraryUsageNavigation{_,_,_,_,[+capture],_,6}:
+      records : U32 = library_capture_records(capture)
+      +next = Bool.pick(U32,forward,Bool.pick(U32,U32.is_le(start,4294967255),U32.add(start,40),start),Bool.pick(U32,U32.is_gt(start,40),U32.sub(start,40),0))
+      library_page_allowed(state,capture,next,value,Bool.not(U32.is_eq(next,start)) && (Bool.not(forward) || U32.is_lt(next,records)))
+    case _: status(state,"Wait for the exact captured page, or Back to the Usage report.")
+
+def library_page(+state: State,forward: Bool) -> State:
+  library_page_value(state,forward,navigation(state))
+
+def library_report_decoded(+state: State,+model: Library.Model,nonce: U32,result: Result<&2,&2,String,LibraryTypes.Report>) -> State:
+  match result:
+    case Fail{message}: library_render(library_update(state,Library.failed(model,nonce,message)))
+    case Done{report}: library_render(library_update(state,Library.received(model,nonce,report)))
+
+def library_report_result(+state: State,+model: Library.Model,+nonce: U32,result: Result<&2,&2,String,Json.Json>) -> State:
+  match result:
+    case Fail{message}: library_render(library_update(state,Library.failed(model,nonce,message)))
+    case Done{value}: library_report_decoded(state,model,nonce,LibraryWire.decode(value,nonce))
+
+def library_done_valid(state: State,model: Library.Model,nonce: U32,result: Result<&2,&2,String,Json.Json>,valid: Bool) -> State:
+  match valid:
+    case True{}: library_report_result(state,model,nonce,result)
+    case False{}: state
+
+def library_done(+state: State,request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
+  Request{kind,args,_,_,_} = request
+  +model = library_model(navigation(state))
+  +nonce = LibraryScreen.nonce(model)
+  library_done_valid(state,model,nonce,result,U32.is_eq(library_phase(navigation(state)),2) && U32.is_eq(kind,44) && quota_args_equal(args,["library-usage-v1",U32.show(nonce)]))
+
+def library_capture_ready(+state: State,+request: Request,+page: LibraryPage.Page,+value: Json.Json,nav: Navigation) -> State:
+  State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,old,settings},jobs,deadline,serial} = state
+  Request{_,+args,+snapshot,+start,title} = request
+  LibraryPage.Page{SessionUsage.Capture{+provider,_,_,+generation,_,_,_},_,_,text,document} = page
+  match nav:
+    case LibraryUsageNavigation{origin,prior,model,view,target,work,5}:
+      +filters = {Query.Filters{"",provider,"","",""} : Query.Filters}
+      State{db,dir,program,UI.set_status(UI.set_results(UI.set_document(ui,title,document,"45\0" ++ String.join(args,"\0")),UI.LibraryUsageResults{6,0}),
+        "Exact retained capture opened. Back returns to Library Usage; Session usage inspects this complete capture."),
+        Selection{[Item{snapshot,start,"Library Usage capture",provider,"",generation,filters}],snapshot,start,3,
+          Brief.range_args(Json.field(value,"page"),snapshot,start,[]),filters,empty_listing()},
+        Form{0,search,source,blame,files,[LibraryUsageNavigation{origin,prior,model,view,target,work,6}],settings},jobs,deadline,serial}
+    case _: state
+
+def library_capture_decoded(+state: State,+request: Request,+value: Json.Json,result: Result<&2,&2,String,LibraryPage.Page>) -> State:
+  match result:
+    case Fail{message}: status(library_back(state),message)
+    case Done{page}: library_capture_ready(state,request,page,value,navigation(state))
+
+def library_capture_result(+state: State,+request: Request,capture: SessionUsage.Capture,nonce: U32,result: Result<&2,&2,String,Json.Json>) -> State:
+  State{_,_,_,_,_,_,Jobs{revision,_,_,_,_},_,_} = state
+  Request{_,_,_,start,_} = request
+  match result:
+    case Fail{message}: status(library_back(state),message)
+    case Done{+value}: library_capture_decoded(state,request,value,LibraryPage.decode(value,nonce,capture,start,revision))
+
+def library_capture_checked(state: State,request: Request,capture: SessionUsage.Capture,nonce: U32,result: Result<&2,&2,String,Json.Json>,valid: Bool) -> State:
+  match valid:
+    case False{}: state
+    case True{}: library_capture_result(state,request,capture,nonce,result)
+
+def library_request_nonce(args: List<&2,String>) -> U32:
+  match args:
+    case _ <> value <> _ <> _ <> []: Store.number(value)
+    case _: 0
+
+def library_capture_request(+state: State,+request: Request,result: Result<&2,&2,String,Json.Json>,value: Navigation) -> State:
+  Request{kind,+args,+snapshot,+start,_} = request
+  match value:
+    case LibraryUsageNavigation{_,_,_,_,[+capture],[Request{45,expected,snap,first,_}],5}:
+      library_capture_checked(state,request,capture,library_request_nonce(args),result,
+        U32.is_eq(kind,45) && String.eq(snapshot,snap) && U32.is_eq(start,first) && quota_args_equal(args,expected))
+    case _: state
+
+def library_capture_done(+state: State,request: Request,result: Result<&2,&2,String,Json.Json>) -> State:
+  library_capture_request(state,request,result,navigation(state))
+
+def library_capture_identity(captures: List<&2,SessionUsage.Capture>,value: Result<&2,&2,String,SessionUsage.Capture>) -> Bool:
+  match captures value:
+    case Con{expected,Nil{}} Done{actual}: LibraryWire.same_capture(expected,actual)
+    case _ _: False{}
+
+
 def usage_scope(filters: Query.Filters) -> Bool:
   Usage.scope(filters)
 
@@ -1790,6 +2025,7 @@ def usage_view_identity(args: List<&2,String>,+capture: Json.Json) -> Bool:
 def usage_related_identity(value: Navigation,+capture: Json.Json) -> Bool:
   match value:
     case NoNavigation{}: True{}
+    case LibraryUsageNavigation{_,_,_,_,targets,_,6}: library_capture_identity(targets,LibraryWire.parse_capture(capture))
     case RelatedNavigation{_,_,_,_,_,_,2,Some{target}}:
       Related.same(target,Related.reference(capture))
     case _: False{}
@@ -1813,12 +2049,15 @@ def usage_selection(origin: Selection) -> Selection:
   Selection{items,snap,first,displayed,view_args,filters,listing} = origin
   Selection{items,snap,first,14,view_args,filters,listing}
 
+def usage_reader_ui(+ui: UI.State) -> UI.State:
+  Bool.pick(UI.State,UI.is_library_usage(ui),UI.set_results(ui,UI.Results{0,0,False{},True{}}),ui)
+
 def usage_apply_ready(+state: State,+request: Request,+report: Usage.Report,value: Navigation) -> State:
   State{db,dir,program,ui,selection,Form{mode,search,source,blame,files,old,settings},jobs,deadline,serial} = state
   Request{kind,args,snapshot,start,title} = request
   match value:
     case UsageNavigation{+origin,view,+saved_search,prior,False{}}:
-      State{db,dir,program,UI.set_status(UI.set_reader(ui,title,Usage.displayed(report)),Usage.description(report)),
+      State{db,dir,program,UI.set_status(UI.set_reader(usage_reader_ui(ui),title,Usage.displayed(report)),Usage.description(report)),
         usage_selection(origin),
         Form{mode,search,source,blame,files,[UsageNavigation{origin,view,saved_search,prior,True{}}],settings},jobs,deadline,serial}
     case _: status(state,"Usage reply was already accepted. Displayed evidence is unchanged.")
@@ -2074,6 +2313,25 @@ def attachment_worker(program: String,dir: String,args: List<&2,String>) -> IO(R
       Process.run(program,"--data-dir" <> dir <> linear_args(args),"",262144,600000)
     return Reply{CaptureAck.completed(result)}
 
+def library_process_valid(out: String,valid: Bool) -> Result<&2,&2,String,Json.Json>:
+  match valid:
+    case True{}: LibraryWire.parse_summary(out)
+    case False{}: Fail{"Library Usage worker failed or exceeded its bounded response. No report was accepted."}
+
+def library_process_output(code: U32,+out: String,error: String) -> Result<&2,&2,String,Json.Json>:
+  library_process_valid(out,U32.is_eq(code,0) && String.is_empty(error) && LibraryWire.fits(out,2097152))
+
+def library_process_completed(result: Result<&1,&1,U32 & String,U32 & (String & String)>) -> Result<&2,&2,String,Json.Json>:
+  match result:
+    case Fail{_}: Fail{"Library Usage worker could not complete. No report was accepted."}
+    case Done{(code,(out,error))}: library_process_output(code,out,error)
+
+def library_read_worker(program: String,dir: String,args: List<&2,String>) -> IO(Reply):
+  do IO<Reply>:
+    result : Result<&1,&1,U32 & String,U32 & (String & String)> <-
+      Process.run(program,"--data-dir" <> dir <> linear_args(args),"",2097152,600000)
+    return Reply{library_process_completed(result)}
+
 def read_job_command(kind: U32,+program: String,+dir: String,+command: String,+args: List<&2,String>) -> IO(Reply):
   match kind args:
     case 0 root <> token <> minimum <> rest: quota_worker(program,root,rest)
@@ -2085,6 +2343,7 @@ def read_job_command(kind: U32,+program: String,+dir: String,+command: String,+a
         return Reply{result}
     case 3 _: attachment_worker(program,dir,command <> args)
     case 4 _: read_scoped(program,dir,command <> args)
+    case 6 _: library_read_worker(program,dir,command <> args)
     case _ _:
       do IO<Reply>:
         result : Result<&2,&2,String,Json.Json> <- Client.call(program,dir,linear_args(command <> args))
@@ -2325,7 +2584,7 @@ def export_capture(+state: State) -> IO(State):
 def full_export_available(+state: State) -> Bool:
   State{_,_,_,_,Selection{_,+snapshot,_,+kind,_,_,_},Form{+mode,_,_,_,_,_,_},_,_,_} = state
   U32.is_eq(mode,0) && U32.is_eq(kind,3) && Related.id(Json.JString{snapshot}) &&
-    U32.is_eq(navigation_phase(navigation(state)),3) && Bool.not(settings_active(state)) && Bool.not(files_active(state))
+    (U32.is_eq(navigation_phase(navigation(state)),3) || U32.is_eq(library_phase(navigation(state)),6)) && Bool.not(settings_active(state)) && Bool.not(files_active(state))
 
 def full_export_request(state: State,now: Nat,+container: Bool) -> Request:
   State{_,dir,_,_,Selection{_,+snapshot,_,_,_,_,_},_,_,_,serial} = state
@@ -3418,6 +3677,8 @@ def read_done(+state: State,+request: Request,result: Result<&2,&2,String,Json.J
       attachment_done(state,request,result)
     case 42: attachment_folder_read_done(state,request,result)
     case 43: attachment_owned_done(state,request,result)
+    case 44: library_done(state,request,result)
+    case 45: library_capture_done(state,request,result)
     case 32:
       brief_done(state,request,result)
     case 33:
@@ -3936,6 +4197,8 @@ def handle_normal(+state: State,action: UI.Action) -> IO(Maybe<State>):
       IO.pure(Maybe<State>,Some{why(state)})
     case UI.Usage{}:
       IO.pure(Maybe<State>,Some{usage(state)})
+    case UI.LibraryUsage{}:
+      IO.pure(Maybe<State>,Some{library_enter(state)})
     case UI.Tools{}:
       IO.pure(Maybe<State>,Some{tools(state)})
     case UI.Related{}:
@@ -4079,10 +4342,48 @@ def usage_export(+state: State,ready: Bool) -> IO(Maybe<State>):
         next : State <- export(state)
         return Some{next}
 
+def handle_library_capture(+state: State,ready: Bool,+action: UI.Action) -> IO(Maybe<State>):
+  match ready:
+    case False{}: IO.pure(Maybe<State>,Some{status(state,"Wait for the exact retained page, or Back to the Usage report.")})
+    case True{}:
+      match action:
+        case UI.Usage{}: handle_normal(state,action)
+        case UI.Attachments{}: handle_normal(state,action)
+        case UI.Why{}: handle_normal(state,action)
+        case UI.Tools{}: handle_normal(state,action)
+        case UI.Export{}: handle_normal(state,action)
+        case UI.WholeExport{}: handle_normal(state,action)
+        case UI.ContainerExport{}: handle_normal(state,action)
+        case UI.AtifExport{}: handle_normal(state,action)
+        case _: IO.pure(Maybe<State>,Some{status(state,"This view stays on its exact retained capture. Back returns to Library Usage.")})
+
+def handle_library_phase(+state: State,action: UI.Action,+phase: U32) -> IO(Maybe<State>):
+  State{_,_,_,+ui,_,_,_,_,_} = state
+  match action:
+    case UI.Quit{}: IO.pure(Maybe<State>,None{})
+    case UI.Back{}: IO.pure(Maybe<State>,Some{library_back(state)})
+    case UI.Copy{text}: handle_normal(state,UI.Copy{text})
+    case UI.CopyStatus{text}: handle_normal(state,UI.CopyStatus{text})
+    case UI.NoAction{}: IO.pure(Maybe<State>,Some{state})
+    case UI.LibraryUsage{}: IO.pure(Maybe<State>,Some{status(state,"Library Usage is open. Back restores the original workspace.")})
+    case UI.Scope{provider}: IO.pure(Maybe<State>,Some{library_provider(Bool.pick(State,U32.is_ge(phase,5),library_back(state),state),provider)})
+    case UI.Refresh{}: IO.pure(Maybe<State>,Some{Bool.pick(State,U32.is_eq(phase,2),library_load(state),status(state,"Back to the Usage report before reloading library totals."))})
+    case UI.Pause{}: IO.pure(Maybe<State>,Some{Bool.pick(State,U32.is_eq(phase,2),library_cancel(state),status(state,"Back cancels this captured-page view."))})
+    case UI.Open{index}: IO.pure(Maybe<State>,Some{Bool.pick(State,U32.is_eq(phase,2),library_open(state,index),state)})
+    case UI.Submit{}: IO.pure(Maybe<State>,Some{Bool.pick(State,U32.is_eq(phase,2),library_open(state,UI.selected(ui)),state)})
+    case UI.Previous{}: IO.pure(Maybe<State>,Some{library_page(state,False{})})
+    case UI.Next{}: IO.pure(Maybe<State>,Some{library_page(state,True{})})
+    case other: handle_library_capture(state,U32.is_eq(phase,6),other)
+
+def handle_library(+state: State,action: UI.Action) -> IO(Maybe<State>):
+  handle_library_phase(state,action,library_phase(navigation(state)))
+
+
 def handle_usage_origin_phase(state: State,action: UI.Action,phase: U32) -> IO(Maybe<State>):
   match phase:
     case 3: handle_normal(state,action)
     case 4: IO.pure(Maybe<State>,Some{status(state,"Invalid nested Usage origin; current evidence retained.")})
+    case 9: handle_library(state,action)
     case phase: handle_related(state,action,phase)
 
 def handle_usage_origin(+state: State,action: UI.Action) -> IO(Maybe<State>):
@@ -4182,6 +4483,7 @@ def handle_mode_phase(+state: State,+action: UI.Action,active: Bool,phase: U32) 
     case 6: handle_quota(state,action)
     case 7: handle_attachments(state,action)
     case 8: handle_attachment_folders(state,action)
+    case 9: handle_library(state,action)
     case _: handle_mode_inner(state,action,active)
 
 def handle_mode(+state: State,+action: UI.Action,active: Bool) -> IO(Maybe<State>):

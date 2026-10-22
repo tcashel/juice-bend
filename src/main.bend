@@ -13,6 +13,7 @@ import ./attachment_worker_protocol.bend as AttachmentProtocol
 import ./attachment_worker.bend as AttachmentWorker
 import ./attachment_capture_cli.bend as AttachmentCapture
 import ./attachment_capture_command.bend as AttachmentCommand
+import ./library_usage_worker.bend as LibraryWorker
 
 def mkdir_result(result: Result<&1,&1,U32 & String,U32 & (String & String)>) -> IO(Unit):
   match result:
@@ -63,7 +64,9 @@ def preview_kind(+command: String) -> U32:
   Bool.pick(U32,String.eq(command,"attachment-preview-inline-v1"),0,
     Bool.pick(U32,String.eq(command,"attachment-preview-retained-v1"),1,
       Bool.pick(U32,String.eq(command,ImageWorker.inline_command()),3,
-        Bool.pick(U32,String.eq(command,ImageWorker.external_command()),4,2))))
+        Bool.pick(U32,String.eq(command,ImageWorker.external_command()),4,
+          Bool.pick(U32,String.eq(command,LibraryWorker.command()),5,
+            Bool.pick(U32,String.eq(command,LibraryWorker.command_capture()),6,2))))))
 
 def run_command(kind: U32,dir: String,program: String,command: String,args: List<String>) -> IO(Unit):
   match kind:
@@ -71,6 +74,8 @@ def run_command(kind: U32,dir: String,program: String,command: String,args: List
     case 1: ExternalPreviewWorker.root(dir,args)
     case 3: ImageWorker.inline_root(dir,args)
     case 4: ImageWorker.external_root(dir,args)
+    case 5: LibraryWorker.root(dir,args)
+    case 6: LibraryWorker.root_capture(dir,args)
     case _: run_ordinary(dir,program,command <> args)
 
 def run(dir: String,program: String,args: List<String>) -> IO(Unit):
@@ -78,13 +83,23 @@ def run(dir: String,program: String,args: List<String>) -> IO(Unit):
     case []: run_ordinary(dir,program,[])
     case +command <> rest: run_command(preview_kind(command),dir,program,command,rest)
 
-def capture_root(program: String,args: List<&2,String>,root: Maybe<&2,String>) -> IO(Unit):
-  match root:
-    case Some{dir}: run(dir,program,Route.linear(args))
-    case None{}:
+def library_explicit_root(args: List<&2,String>) -> Bool:
+  match args:
+    case +command <> _: String.eq(command,LibraryWorker.command()) || String.eq(command,LibraryWorker.command_capture())
+    case _: False{}
+
+def capture_default(program: String,args: List<&2,String>,explicit_required: Bool) -> IO(Unit):
+  match explicit_required:
+    case True{}: IO.die(Unit,2,"Library Usage requires an explicit existing --data-dir.")
+    case False{}:
       do IO<Unit>:
         home : String <- IO.try(String,IO.get_env("HOME"))
         run(home ++ "/Library/Application Support/JuiceBend",program,Route.linear(args))
+
+def capture_root(program: String,+args: List<&2,String>,root: Maybe<&2,String>) -> IO(Unit):
+  match root:
+    case Some{dir}: run(dir,program,Route.linear(args))
+    case None{}: capture_default(program,args,library_explicit_root(args))
 
 def routed(program: String,route: Route.Route) -> IO(Unit):
   match route:

@@ -45,7 +45,8 @@ existing bundle. Direct GUI launch needs a desktop session. Restricted shell
 agents may lack display access even on a Mac.
 
 The fixed native window uses a green History navigation rail, yellow selection,
-provider filters, proportional UI labels and a selectable monospace transcript.
+provider filters, proportional UI labels and selectable proportional message text.
+Code, tool output and evidence references retain a monospace layout.
 Transcript cards group roles and expose tool/evidence details through Show/Hide.
 Tab and Shift-Tab move between disclosures; Enter or Space toggles one. Copy
 includes selected visible text; captured-page export retains collapsed evidence.
@@ -54,8 +55,8 @@ read or copy its full message; Escape closes it. Wheel and Page Up/Down scroll
 the reader. Usage and Related show when automatic capture is suspended until
 you return to History; the saved Pause/Resume preference remains separate.
 
-Font data is pinned to JetBrains Mono 2.304 for selectable text and Inter 4.1
-for UI labels, with their SIL OFL licenses included. `mise run font-check` and
+Font data is pinned to JetBrains Mono 2.304 for code/evidence and Inter 4.1
+for message prose and UI labels, with their SIL OFL licenses included. `mise run font-check` and
 `mise run sans-font-check` verify the checked-in Bend atlases. These are static
 Latin-1/punctuation glyph sets, not general Unicode shaping or font fallback.
 Offline font packing adds no application runtime. See the
@@ -65,7 +66,7 @@ Offline font packing adds no application runtime. See the
 ## Reusable Bend UI foundation
 
 Juice and a small standalone example use the same pure Bend 2 drawing, label,
-hit-testing and keyboard-focus components. The component source depends on Base
+hit-testing, cached text-line geometry and keyboard-focus components. The component source depends on Base
 and the pinned public font modules. See [the API and examples](src/bend_ui/README.md).
 
 ```sh
@@ -172,12 +173,20 @@ plain captures and their identities. Earlier builds that support only schema 2
 refuse to open the upgraded library. This is separate from the original Juice
 database, which is never migrated or modified.
 
-Usage reads the whole pinned captured session from verified owned bytes, within
+Session usage reads the whole pinned captured session from verified owned bytes, within
 explicit record/byte/key limits. It separates scan coverage from accounting
 coverage, deduplicates supported Claude mirrors and interprets recorded Codex
 counters conservatively. Unknown values remain unknown; these are recorded token
 facts, not billing or subscription totals. Back restores the original reader.
 Repository/role/date-scoped views refuse widening to a whole-session summary.
+
+Library usage reads retained captures across the selected Juice Bend library.
+It shows all-time recorded counters, verified-byte aliases, excluded captures and
+missing contributions. Provider buttons filter the capture list; each capture
+opens its pinned transcript, with Back restoring the report and original reader.
+Unknown counters remain unknown. Activity-date charts, prices and account totals
+are not included. Native copy, navigation, exports and source-loss checks are
+recorded in [the combined UI receipt](docs/receipts/library-usage-prose-native.json).
 
 Search supports literal words, quoted phrases, and GUI filters such as
 `provider:claude repo:"/selected/repository" role:assistant after:2026-10-01`.

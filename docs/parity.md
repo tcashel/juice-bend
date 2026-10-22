@@ -5,8 +5,8 @@ filters, static Inter labels and exact transcript selection/copy now pass in the
 combined app981e84fd. Retained JPEG/PNG, pending Escape/Back, source-loss restart,
 external capture and complete ATIF passed. See `history-workspace-jpeg-native.json`,
 `history-workspace-external-native.json` and `history-workspace-build-tests.json`.
-This is incomplete visual parity; proportional message prose, Unicode shaping
-and pending Close remain open. The shared Bend Canvas/Label/Region layer is now adopted in app 1b6fd416 and
+This is incomplete visual parity; Unicode shaping and pending Close remain open.
+The shared Bend Canvas/Label/Region layer is now adopted in app 1b6fd416 and
 its standalone controls example. Both passed native checks; see
 `bend-ui-app-native.json`, `bend-ui-controls-native.json` and
 `bend-ui-build-tests.json`. This is an early reusable foundation, not a separate
@@ -14,7 +14,14 @@ licensed framework release. Reader cards are now adopted in app c51b1592: native
 mouse/keyboard folding, exact copy, Settings/Back restoration, paging/filtering,
 plaintext fallback, retained-source restart and canonical export passed. See
 `receipts/reader-cards-native.json` and `receipts/reader-cards-build-tests.json`.
-Warmer cards, proportional prose and library Usage remain isolated candidates.
+App 8d424301 now adopts warmer cards, proportional message prose and Library Usage.
+Native proportional selection/copy, Settings/Back, retained-source restart,
+provider-filtered capture drilldown, exact exports and ready Close passed. See
+`receipts/library-usage-prose-native.json` and the separately scoped build/tests
+receipt. Usage currently provides an all-time textual report with explicit
+unknown/excluded accounting; date charts, costs and a polished dashboard remain
+open. The inherited toolbar hint/hit-area overlap is recorded for repair. Missing
+glyphs, shaping, IME and accessibility remain limitations of the current reader.
 
 Current adopted source and exact continuation are in [progress.md](progress.md).
 Recorded commit-result evidence has native positive acceptance; see

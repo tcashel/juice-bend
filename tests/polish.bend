@@ -69,6 +69,7 @@ def kind(action: UI.Action) -> U32:
     case UI.AttachmentFolderEnable{}: 54
     case UI.AttachmentFolderDisable{}: 55
     case UI.AttachmentFolderUse{}: 56
+    case UI.LibraryUsage{}: 57
 
 def clicked(result: UI.State & UI.Action,expected: U32,label: String) -> IO(Unit):
   (state,action) = result
@@ -101,7 +102,7 @@ def ordinary() -> IO(Unit):
     click(s,U32.add(G.provider_x(1),8),G.provider_y(),3,"Claude target")
     click(s,U32.add(G.provider_x(2),8),G.provider_y(),3,"Codex target")
     click(s,16,U32.add(G.sidebar_y(4),8),0,"capture section heading is inert")
-    click(s,16,U32.add(G.sidebar_y(12),8),0,"library section heading is inert")
+    click(s,16,U32.add(G.sidebar_y(12),8),57,"Library Usage target")
     click(s,16,U32.add(G.sidebar_y(14),8),16,"Filter target")
     click(s,16,U32.add(G.sidebar_y(5),8),9,"Tools target")
     click(s,16,U32.add(G.sidebar_y(2),8),8,"Usage target")

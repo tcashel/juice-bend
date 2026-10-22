@@ -1,6 +1,6 @@
 # Compact fixed native content area. The pinned upstream Window API does not
-# expose resizing or a display visible frame. Canonical transcript/query text
-# retains the 8px grid; proportional chrome uses the same bounded targets.
+# expose resizing or a display visible frame. Query/code rows retain the 8px
+# grid; prose uses cached scalar/pixel boundaries within these 24px row targets.
 import Base
 import ./bend_ui/region.bend as Region
 
@@ -75,7 +75,7 @@ def sidebar_action_index.normal(index: U32) -> U32:
     case 9: 12
     case 10: 14
     case 11: 16
-    case 12: 99
+    case 12: 19
     case 13: 11
     case 14: 4
     case 15: 17

@@ -134,3 +134,34 @@ def fill_checked(valid: Bool,c: Canvas,bounds: Region.Rect,color: U32) -> Result
 
 def fill_rect(c: Canvas,+bounds: Region.Rect,color: U32) -> Result<&2,&2,Failure,Canvas>:
   fill_checked(bounds_valid(bounds),c,bounds,color)
+
+# A single 8x8 coverage tile with a half-open selected column interval. Empty
+# and full intervals retain compact Tile storage. Only boundary tiles need a
+# three-level pixel subtree; callers insert it with canvas.set(8n,...).
+def coverage_tile.pixels(depth: Nat,+bits: Font.Half,+fg: U32,+bg: U32,+selected_bg: U32,
+  +lo: U32,+hi: U32,+x: U32,+y: U32) -> Canvas:
+  match depth:
+    case 0n:
+      Flat{blend(fg,Bool.pick(U32,U32.is_ge(x,lo) && U32.is_lt(x,hi),selected_bg,bg),Font.coverage(bits,x,y))}
+    case 1n+ +rest:
+      +half = U32.shln(1,rest)
+      Four{coverage_tile.pixels(rest,bits,fg,bg,selected_bg,lo,hi,x,y),
+        coverage_tile.pixels(rest,bits,fg,bg,selected_bg,lo,hi,U32.add(x,half),y),
+        coverage_tile.pixels(rest,bits,fg,bg,selected_bg,lo,hi,x,U32.add(y,half)),
+        coverage_tile.pixels(rest,bits,fg,bg,selected_bg,lo,hi,U32.add(x,half),U32.add(y,half))}
+
+def coverage_tile.surface(empty: Bool,+lo: U32,+hi: U32,bits: Font.Half,fg: U32,bg: U32,selected_bg: U32) -> Canvas:
+  match empty:
+    case True{}: Tile{bits,fg,bg}
+    case False{}:
+      match lo hi:
+        case 0 8: Tile{bits,fg,selected_bg}
+        case _ _: coverage_tile.pixels(3n,bits,fg,bg,selected_bg,lo,hi,0,0)
+
+def coverage_tile.checked(valid: Bool,bits: Font.Half,fg: U32,bg: U32,selected_bg: U32,+lo: U32,+hi: U32) -> Result<&2,&2,Failure,Canvas>:
+  match valid:
+    case False{}: Fail{InvalidBounds{}}
+    case True{}: Done{coverage_tile.surface(U32.is_eq(lo,hi),lo,hi,bits,fg,bg,selected_bg)}
+
+def coverage_tile(bits: Font.Half,fg: U32,bg: U32,selected_bg: U32,+lo: U32,+hi: U32) -> Result<&2,&2,Failure,Canvas>:
+  coverage_tile.checked(U32.is_le(lo,hi) && U32.is_le(hi,cell()),bits,fg,bg,selected_bg,lo,hi)

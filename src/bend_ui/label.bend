@@ -4,8 +4,8 @@ import ../sans_font.bend as Sans
 import ./canvas.bend as C
 import ./region.bend as Region
 
-# Small, bounded label rasterizer. Only non-editable application chrome uses
-# proportional advances. Transcript/query text keeps its canonical cell map.
+# Small, bounded non-editable label rasterizer. Transcript prose uses the
+# separate cached text_line component; query/code rows retain their cell map.
 type Placed is Data:
   Placed{x: U32,glyph: Sans.Glyph}
 

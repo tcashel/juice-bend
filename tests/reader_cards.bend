@@ -4,6 +4,7 @@ import ../src/reader_document.bend as D
 import ../src/reader_projection.bend as P
 import ../src/transcript_document.bend as T
 import ../src/providers.bend as Provider
+import ../src/bend_ui/text_line.bend as Prose
 
 def check(ok: Bool,label: String) -> IO(Unit):
   match ok:
@@ -27,6 +28,8 @@ def exact_rows(rows: List<&2,C.Row>,+text: String) -> Bool:
   match rows:
     case []: True{}
     case C.TextRow{start,+body,+count,_} <> rest:
+      U32.is_eq(count,D.length(body)) && String.eq(body,D.slice(text,D.Span{start,count})) && exact_rows(rest,text)
+    case C.ProseRow{Prose.Line{start,+body,+count,_,_},_} <> rest:
       U32.is_eq(count,D.length(body)) && String.eq(body,D.slice(text,D.Span{start,count})) && exact_rows(rest,text)
     case _ <> rest: exact_rows(rest,text)
 

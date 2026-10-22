@@ -1,6 +1,28 @@
 # Acceptance evidence
 
-Latest app c51b1592 adds typed transcript cards and collapsible tool/evidence
+Latest app 8d424301 adopts Library Usage and proportional message prose; its
+189 application inputs match the promoted executable. The combined native Tart
+run passed 32 exact clipboard comparisons, three summary checks, four proportional
+drags, 24 key pairs and three canonical exports. It exercised wrapped Unicode/tab
+selection, Settings/Back restoration, disclosure controls, paging/filtering,
+plaintext fallback, source deletion and different-process restart. Usage added
+positive counters, missing-not-zero accounting, provider filtering, retained
+capture drilldown and both Back levels. Its fourth synthetic capture was imported
+after the original three-capture restart; no second restart is claimed.
+
+Root inspected 11 actual window/display images. All guest/cleanup steps exited 0;
+the owned wrapper exited 143, stopped its VM and released its lease before final
+collection of 332 artifacts. Ready Close was observed within 561ms for the window
+and 401ms for the process, including observation overhead. See
+`receipts/library-usage-prose-native.json`. The full Mac build and 156 focused
+Linux assertions plus two renderer frame writes are separately bound in
+`receipts/library-usage-prose-build-tests.json`; historical gates are not summed.
+The standalone polish entry passed 35 checks before finding an inherited toolbar
+hit-area/status-hint overlap. Its failure is preserved and a repair is queued.
+No full-suite/proof refresh, pending Close, shaping/IME/accessibility, date/cost
+charts, performance comparison or complete Swift feature/visual parity is claimed.
+
+Earlier app c51b1592 adds typed transcript cards and collapsible tool/evidence
 details. Its 178 application inputs match the promoted executable. Native Tart
 run-03 passed 13 exact clipboard comparisons, one canonical export, keyboard and
 mouse disclosure interaction, Settings/Back selection restoration, same-snapshot

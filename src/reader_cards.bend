@@ -2,12 +2,16 @@ import Base
 import ./reader_document.bend as Doc
 import ./reader_projection.bend as P
 import ./ui_geometry.bend as G
+import ./bend_ui/text_line.bend as Prose
 
 # Cached view-only rows. Text positions are visible Unicode scalars; section
 # chrome has no selectable character and is never appended to copied text.
 type Row is Data:
   TextRow{start: U32,text: String,count: U32,style: U32}
+  ProseRow{line: Prose.Line,style: U32}
   SectionRow{label: String,key: Maybe<&2,Doc.PartKey>,closed: Bool}
+  RoleRow{label: String,role: String}
+  GapRow{}
 
 type Hit is Data:
   NoHit{}
@@ -96,6 +100,21 @@ def style(kind: Doc.PartKind) -> U32:
     case Doc.EvidenceDetails{}: 1
     case _: 0
 
+# Role surfaces come only from admitted typed descriptors. They never classify
+# captured body text. Code/tool blocks keep their neutral code presentation.
+def role_style(role: String,secondary: Bool) -> U32:
+  match role:
+    case "user": Bool.pick(U32,secondary,5,3)
+    case "assistant": Bool.pick(U32,secondary,6,4)
+    case _: Bool.pick(U32,secondary,1,0)
+
+def part_style(kind: Doc.PartKind,role: String) -> U32:
+  match kind:
+    case Doc.MessageText{}: role_style(role,False{})
+    case Doc.EventHeading{}: role_style(role,True{})
+    case Doc.ToolName{}: role_style(role,True{})
+    case other: style(other)
+
 def reference(key: Doc.PartKey) -> String:
   Doc.PartKey{_,record,event,_} = key
   "r" ++ record ++ ":e" ++ U32.show(event)
@@ -116,10 +135,10 @@ def detail_title(kind: Doc.PartKind) -> String:
     case _: "Evidence details"
 
 def section(part: Doc.Part,closed: Bool) -> List<&2,Row>:
-  Doc.Part{+key,kind,_,role,tool,collapsible} = part
+  Doc.Part{+key,kind,_,+role,tool,collapsible} = part
   match kind collapsible:
     case Doc.EventHeading{} _:
-      [SectionRow{role_title(role) ++ "  ·  " ++ reference(key),None{},False{}}]
+      [RoleRow{role_title(role) ++ "  ·  " ++ reference(key),role}]
     case _ True{}:
       [SectionRow{detail_title(kind) ++ "  ·  " ++ reference(key),Some{key},closed}]
     case _ _: []
@@ -155,22 +174,54 @@ def wrap.go(+s: String,+at: U32,+start: U32,+col: U32,+acc: String,+done: List<&
 def wrap(text: String,+start: U32,style: U32) -> List<&2,Row>:
   wrap.go(text,start,start,0,"",[],False{},0,style)
 
+def prose_rows(lines: List<&2,Prose.Line>,+style: U32) -> List<&2,Row>:
+  match lines:
+    case []: []
+    case line <> rest: ProseRow{line,style} <> prose_rows(rest,style)
+
+def prose_body(result: Result<&2,&2,Prose.Failure,List<&2,Prose.Line>>,text: String,start: U32,style: U32) -> List<&2,Row>:
+  match result:
+    case Done{lines}: prose_rows(lines,style)
+    case Fail{_}: wrap(text,start,style)
+
+def body_kind(kind: Doc.PartKind,+role: String,+text: String,+start: U32) -> List<&2,Row>:
+  match kind:
+    case Doc.MessageText{}:
+      prose_body(Prose.wrap(text,start,U32.mul(G.reader_columns(),G.cell())),text,start,role_style(role,False{}))
+    case other: wrap(text,start,part_style(other,role))
+
 def body(part: Doc.Part,text: String,start: U32,closed: Bool) -> List<&2,Row>:
-  Doc.Part{_,kind,_,_,_,_} = part
+  Doc.Part{_,kind,_,role,_,_} = part
   match closed:
     case True{}: []
-    case False{}: wrap(text,start,style(kind))
+    case False{}: body_kind(kind,role,text,start)
 
-def layout(parts: List<&2,Doc.Part>,+canonical: String,+collapsed: List<&2,Doc.PartKey>,+visible: U32) -> List<&2,Row>:
+# A gap is chrome, not an inserted newline. It consumes one visual row and no
+# visible/canonical scalar, and is emitted only between typed event headings.
+def event_heading(kind: Doc.PartKind) -> Bool:
+  match kind:
+    case Doc.EventHeading{}: True{}
+    case _: False{}
+
+def event_gap(show: Bool) -> List<&2,Row>:
+  match show:
+    case True{}: [GapRow{}]
+    case False{}: []
+
+def layout.go(parts: List<&2,Doc.Part>,+canonical: String,+collapsed: List<&2,Doc.PartKey>,+visible: U32,+seen: Bool) -> List<&2,Row>:
   match parts:
     case []: []
     case +part <> rest:
-      Doc.Part{key,_,Doc.Span{_,+count},_,_,can_fold} = part
+      Doc.Part{key,+kind,Doc.Span{_,+count},_,_,can_fold} = part
       +closed = can_fold && Doc.has_key(collapsed,key)
-      List.append(&2,Row,section(part,closed),List.append(&2,Row,
+      +heading = event_heading(kind)
+      List.append(&2,Row,event_gap(seen && heading),List.append(&2,Row,section(part,closed),List.append(&2,Row,
         body(part,String.take(canonical,U32.to_nat(count)),visible,closed),
-        layout(rest,String.drop(canonical,U32.to_nat(count)),collapsed,
-          U32.add(visible,Bool.pick(U32,closed,0,count)))))
+        layout.go(rest,String.drop(canonical,U32.to_nat(count)),collapsed,
+          U32.add(visible,Bool.pick(U32,closed,0,count)),seen || heading))))
+
+def layout(parts: List<&2,Doc.Part>,canonical: String,collapsed: List<&2,Doc.PartKey>,visible: U32) -> List<&2,Row>:
+  layout.go(parts,canonical,collapsed,visible,False{})
 
 def from_view(page: String,epoch: U32,+view: P.View) -> Model:
   P.View{+document,collapsed,projection,_,_,_} = view
@@ -201,12 +252,24 @@ def row_at(rows: List<&2,Row>,at: Nat) -> Maybe<&2,Row>:
 def hit_row(row: Maybe<&2,Row>,column: U32) -> Hit:
   match row:
     case Some{TextRow{start,_,count,_}}: TextHit{U32.add(start,U32.min(count,column))}
+    case Some{ProseRow{+line,_}}: TextHit{U32.add(Prose.start(line),U32.min(Prose.count(line),column))}
     case Some{SectionRow{_,Some{key},_}}: FoldHit{key}
     case _: NoHit{}
 
 def hit(model: Model,row: U32,column: U32) -> Hit:
   Model{_,_,_,rows,_,_,_} = model
   hit_row(row_at(rows,U32.to_nat(row)),column)
+
+# Pointer coordinates are pixels; only legacy mono rows divide them into cells.
+# Cached prose boundaries are shared with painting, without a layout pass here.
+def hit_row_pixel(row: Maybe<&2,Row>,x: U32) -> Hit:
+  match row:
+    case Some{ProseRow{line,_}}: TextHit{Prose.hit(line,x)}
+    case other: hit_row(other,U32.div(x,G.cell()))
+
+def hit_pixel(model: Model,row: U32,x: U32) -> Hit:
+  Model{_,_,_,rows,_,_,_} = model
+  hit_row_pixel(row_at(rows,U32.to_nat(row)),x)
 
 def controls(rows: List<&2,Row>) -> List<&2,Doc.PartKey>:
   match rows:

@@ -1,0 +1,570 @@
+{
+  "schema": 1,
+  "scope": "Combined Library Usage and proportional reader app build plus separately scoped native Linux correctness gates. Native macOS UI acceptance is recorded separately and is not included in these build/test counts.",
+  "implementation": "Application behavior and UI remain Bend 2; SQLite and its narrow bridge remain the native-code exception.",
+  "counting_rule": "No cross-gate assertion total is claimed. Historical assertions overlap each other and the focused gate. Fixture command acknowledgements and two renderer frame writes are recorded separately; a passing entry does not make a mixed historical batch pass.",
+  "source": {
+    "application_closure_files": 189,
+    "application_closure_sha256": "fbf78e3a9ce961e2974134d2c1abfdeec28dcdbd0ed3dd64b976b696dafec7bd",
+    "closure_hash_format": "SHA256 of sorted UTF-8 lines: hexadecimal content SHA256, two spaces, repository-relative path, newline",
+    "combined_compile_binding_sha256": "07c0695548105211249228b46b025eddb32ac8da691870129618e95dda286d10",
+    "candidate_binding_sha256": "c8085db16c27bddea5edd0d187790529a1bd193c52b56baa007874502cfca927",
+    "bend_revision": "60ca80aedeec9d8f0629b5f10dd19457d8ad67af"
+  },
+  "linux": {
+    "platform": "Linux x86_64",
+    "mode": "Pinned Bend 2 to C; native Clang 22.1.8 -O0",
+    "focused_combined_gate": {
+      "run_id": "e6ea2e03-f3ac-4261-b4da-922a790b9126",
+      "manifest_sha256": "bb6381465fd32a70755d1c7962eb8f9ee98a8e202ccd1ea05df94e442145784c",
+      "receipt_sha256": "e202fd5969ed22e04bc2ac7fa1fa2604e341f54685458b61d3643fbeb1f7e845",
+      "summary_sha256": "c9c66c2cad8d501b0b860ffca9f2391ecb666c2313d9282272e2d7645f987497",
+      "whole_batch_passed": true,
+      "inputs_unchanged_per_receipt": true,
+      "compiler_tools_unchanged_per_receipt": true,
+      "bun_unchanged_per_receipt": true,
+      "local_frozen_payload_and_command_stream_hashes_verified": true,
+      "entries": [
+        {
+          "entry": "tests/gui_library_usage_app.bend",
+          "passed_assertions": 47,
+          "fixture_command_pass_lines": 0,
+          "frontend_exit": 0,
+          "native_compile_exit": 0,
+          "runtime_exit": 0,
+          "runtime_stderr_bytes": 0,
+          "failure_labels": [],
+          "test_source_sha256": "90f00f80d475b1b96271df6926a8f9779a3f102a22c35a69a7fbc9acb2f0ca6f",
+          "test_import_closure_files": 95,
+          "test_import_closure_sha256": "01f870df03f652b909869c02041948124c0e1b409c9069eca3da8d4d0b0c117a",
+          "production_import_closure_files": 94,
+          "production_import_closure_sha256": "0cd40fbb3bf512ecf55e2d1d9b0f43e46f0582ea143a353a1d1b4bb37e28b744",
+          "production_import_closure_matches_combined_app_exactly": true,
+          "production_differences_from_combined_app": [],
+          "stdout_sha256": "686d186d8d9fe88dd9cb7ae23a0b8d4c506f4423a118ee95a38fd22757bd3f7d",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "generated_c_sha256_recorded_by_runner": "58075d8460b0cbe64b0aa6fb95f3d2c3b8ed7efc8c99f677a499631d3a36a338",
+          "native_binary_sha256_recorded_by_runner": "4f326c6dd589a9926a2dd29ccee946b8be04a1c0e7e62d485149dffce98f87b2"
+        },
+        {
+          "entry": "tests/ui_library_usage.bend",
+          "passed_assertions": 20,
+          "fixture_command_pass_lines": 0,
+          "frontend_exit": 0,
+          "native_compile_exit": 0,
+          "runtime_exit": 0,
+          "runtime_stderr_bytes": 0,
+          "failure_labels": [],
+          "test_source_sha256": "898cfcdaf292c2e7d8a17edd1704094adbf731e348c2e1b0c181fb079325bfc9",
+          "test_import_closure_files": 13,
+          "test_import_closure_sha256": "a88d6ea0d2e3789001cffc675b9b42d0aa950045005be6b3bdf3209902fb3968",
+          "production_import_closure_files": 12,
+          "production_import_closure_sha256": "cf350f403da44b2b2c4e79f317217e1d8cd6aba73a7aa7b6f02cb7442bcfd44a",
+          "production_import_closure_matches_combined_app_exactly": true,
+          "production_differences_from_combined_app": [],
+          "stdout_sha256": "c8bafedcd5a4f99fe0b06db577857216c7cb8a1ea691ec5e9a35855118158051",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "generated_c_sha256_recorded_by_runner": "c186bd07901d6118f8287a41139516a2eb74046b947938aee1d17d6f064ca24c",
+          "native_binary_sha256_recorded_by_runner": "0878bd1d895af6ce7b770fe9c1835fecf837b1be378d5d4cc47c1b1732f7f917"
+        },
+        {
+          "entry": "tests/reader_prose.bend",
+          "passed_assertions": 89,
+          "fixture_command_pass_lines": 0,
+          "frontend_exit": 0,
+          "native_compile_exit": 0,
+          "runtime_exit": 0,
+          "runtime_stderr_bytes": 0,
+          "failure_labels": [],
+          "test_source_sha256": "6a125ef4cbfd839ddd2ab3ce11b31a2afc3b2e5fae72943ad014bd72163dc502",
+          "test_import_closure_files": 29,
+          "test_import_closure_sha256": "4513185c23407bd881264a1048c12ac987c473ee71ea1c6865abd920d2ffd77d",
+          "production_import_closure_files": 17,
+          "production_import_closure_sha256": "d84c59ea95de4b98b780a37d64bae520ca19b46e85d495419f53b5fb16d24940",
+          "production_import_closure_matches_combined_app_exactly": true,
+          "production_differences_from_combined_app": [],
+          "stdout_sha256": "66ebfa3a9316257dde0a615a2942577f1073d94ebdb4168978d57089a491a2e6",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "generated_c_sha256_recorded_by_runner": "30da4847c5d89d3390867d10268d204ea09c178a9235195a73416c058b0f2fb9",
+          "native_binary_sha256_recorded_by_runner": "d259791878fa907415dc9e81030787418ea3fa0a52b271ccf3d36ba82921ff42"
+        },
+        {
+          "entry": "tests/reader_prose_preview.bend",
+          "passed_assertions": 0,
+          "fixture_command_pass_lines": 0,
+          "frontend_exit": 0,
+          "native_compile_exit": 0,
+          "runtime_exit": 0,
+          "runtime_stderr_bytes": 0,
+          "failure_labels": [],
+          "test_source_sha256": "ea90c7474cb07bf6c696141300a6e7491b53c7eee194fc5755e94237f5631f35",
+          "test_import_closure_files": 28,
+          "test_import_closure_sha256": "23224b9a6efd131408b0fc3eb8203efe2fb5e74d36c86c01d61761862865e417",
+          "production_import_closure_files": 17,
+          "production_import_closure_sha256": "d84c59ea95de4b98b780a37d64bae520ca19b46e85d495419f53b5fb16d24940",
+          "production_import_closure_matches_combined_app_exactly": true,
+          "production_differences_from_combined_app": [],
+          "stdout_sha256": "9cd5b05a0505f6222f93bf753470ec060de6deecbcf473f4e394a94c241d4a8c",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "generated_c_sha256_recorded_by_runner": "3bece0b2c4ed6ac49872a85c59d59c40ac8959b381260f9f050a5c89927da249",
+          "native_binary_sha256_recorded_by_runner": "9c811cf66ec8c66782e6da8ece3e0ae23fc76c6bb6a277bb125f311ddcac8e0a",
+          "production_frame_write_commands": 2
+        }
+      ],
+      "scope": "Focused final combined controller, action and prose tests. Two production Image writes are separate commands, not UI acceptance or additional behavioral assertions.",
+      "behavioral_assertions_in_this_gate": 156,
+      "production_frame_write_commands": 2
+    },
+    "historical_separate_gates": [
+      {
+        "run_id": "6dc2d9eb-2895-4a17-aff3-e5f07f5fb864",
+        "manifest_sha256": "0c81a12637dfbca5994ceb47952c4c3b9f123d5f83693f5f3a0b29281144e4fc",
+        "receipt_sha256": "08e2d119f0b6d3f491b7cacbf29c6b5c28af2be138692be6b07015e1a818bc29",
+        "summary_sha256": "60dd7c93aceb8835768d84820c5c8ac0d18bbbbfc6e856944c04eca67c0822b3",
+        "whole_batch_passed": true,
+        "inputs_unchanged_per_receipt": true,
+        "compiler_tools_unchanged_per_receipt": null,
+        "bun_unchanged_per_receipt": null,
+        "local_frozen_payload_and_command_stream_hashes_verified": true,
+        "entries": [
+          {
+            "entry": "tests/library_usage_aggregate.bend",
+            "passed_assertions": 26,
+            "fixture_command_pass_lines": 0,
+            "frontend_exit": 0,
+            "native_compile_exit": 0,
+            "runtime_exit": 0,
+            "runtime_stderr_bytes": 0,
+            "failure_labels": [],
+            "test_source_sha256": "3d0c04960ca0878aa282ca1afa14cdff36b2be4dcab04edeb6d66d0dabe7278b",
+            "test_import_closure_files": 37,
+            "test_import_closure_sha256": "695d33f4e4bfdd437570677d160e3e0c07269bd2dd4920a653213a64cb7952d8",
+            "production_import_closure_files": 36,
+            "production_import_closure_sha256": "4184151d89a96af23e2ec9ac78b856211ecb65b0949147e7279f7cd83d8fa3d8",
+            "production_import_closure_matches_combined_app_exactly": false,
+            "production_differences_from_combined_app": [
+              {
+                "path": "src/store.bend",
+                "tested_sha256": "22b6091b8d26bd5457c97f88da4a3c4a35a91c99716af4491692664b287fa61f",
+                "combined_app_sha256": "81b16a57c399274311ac92dae930b34387f232a8af99ffe59c2ee6ca09defd70",
+                "only_full_line_comments_differ": false
+              },
+              {
+                "path": "src/transcript_format.bend",
+                "tested_sha256": "351654f33db2a4d73f4b4f2ab34790b09ef29d452345f8027ead36663d37178e",
+                "combined_app_sha256": "36afbfaffa12f1db991aa90f5cf7e12e23e3ce28a41abc66e99cb17046fbeda4",
+                "only_full_line_comments_differ": false
+              }
+            ],
+            "stdout_sha256": "2c2f9bb23100d09e2e568b58863b9290e95f0f320765fbe6fcbd37eca0b84a81",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "generated_c_sha256_recorded_by_runner": "2d6d487b56763bdea08a75d077d5e8f75608e233d7065bb88f55016a0ff166f4",
+            "native_binary_sha256_recorded_by_runner": "1bac87d0b73d57126dbca6abbd5fae43ce2a980a901b35e1af3d721a76944835"
+          },
+          {
+            "entry": "tests/library_usage.bend",
+            "passed_assertions": 24,
+            "fixture_command_pass_lines": 2,
+            "frontend_exit": 0,
+            "native_compile_exit": 0,
+            "runtime_exit": 0,
+            "runtime_stderr_bytes": 0,
+            "failure_labels": [],
+            "test_source_sha256": "b4b615e582cadda6537e24c2db157e2ed433116ce2d81b9b07b1082e76e7009a",
+            "test_import_closure_files": 38,
+            "test_import_closure_sha256": "272a4de9aaa7f43ebb30235899d80722fd74aeac863c14ba778252c5a9403cae",
+            "production_import_closure_files": 37,
+            "production_import_closure_sha256": "535866bc3f267a993994bcac0ac7938cc64d7e8e299675ae4d2347ef173c5b69",
+            "production_import_closure_matches_combined_app_exactly": false,
+            "production_differences_from_combined_app": [
+              {
+                "path": "src/store.bend",
+                "tested_sha256": "22b6091b8d26bd5457c97f88da4a3c4a35a91c99716af4491692664b287fa61f",
+                "combined_app_sha256": "81b16a57c399274311ac92dae930b34387f232a8af99ffe59c2ee6ca09defd70",
+                "only_full_line_comments_differ": false
+              },
+              {
+                "path": "src/transcript_format.bend",
+                "tested_sha256": "351654f33db2a4d73f4b4f2ab34790b09ef29d452345f8027ead36663d37178e",
+                "combined_app_sha256": "36afbfaffa12f1db991aa90f5cf7e12e23e3ce28a41abc66e99cb17046fbeda4",
+                "only_full_line_comments_differ": false
+              }
+            ],
+            "stdout_sha256": "11289fb0db4bec12ced616e73cb71b80c7aa1e2b94b0fc413e6fa8c3a5466ed1",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "generated_c_sha256_recorded_by_runner": "515aa24f95e040794b035431600c707f0829332373203b2b391d12113eef000b",
+            "native_binary_sha256_recorded_by_runner": "80650c4ca941ebc95e76776231ea907300ec0eb42af4c6a2c110c6104f91216d"
+          }
+        ],
+        "scope": "Core accounting: 50 assertions plus two synthetic fixture command acknowledgements. Earlier dependency versions; not a fresh combined-app regression."
+      },
+      {
+        "run_id": "ea80cb4e-b8de-4584-bead-d6bc4eff44cb",
+        "manifest_sha256": "b32880a483facda3097b52a2699befee5faf4fd31b4b9911c3bb9014e9e22e76",
+        "receipt_sha256": "1646358c8adb2c6c70e6f2e477797636cb35ce929bdf4da4de758c78d35937bc",
+        "summary_sha256": "323be747afed31396a5c50ebfff0dbcb457fb9fa2c793bd69e2636b083afddc9",
+        "whole_batch_passed": false,
+        "inputs_unchanged_per_receipt": true,
+        "compiler_tools_unchanged_per_receipt": null,
+        "bun_unchanged_per_receipt": null,
+        "local_frozen_payload_and_command_stream_hashes_verified": true,
+        "entries": [
+          {
+            "entry": "tests/library_usage_wire.bend",
+            "passed_assertions": 37,
+            "fixture_command_pass_lines": 0,
+            "frontend_exit": 0,
+            "native_compile_exit": 0,
+            "runtime_exit": 0,
+            "runtime_stderr_bytes": 0,
+            "failure_labels": [],
+            "test_source_sha256": "28affa5acde9c80f42db68007843c05929427d6834f781abba76063c8457ae80",
+            "test_import_closure_files": 43,
+            "test_import_closure_sha256": "947370503c7c7a3bfde5bdc8a12a1b541f8ea34a27e17386975b4f715dcf96ad",
+            "production_import_closure_files": 42,
+            "production_import_closure_sha256": "e87f96635e10d3265a7bb830560bf477ae5d49bd0c1aa6daa22814e0fb1cbfab",
+            "production_import_closure_matches_combined_app_exactly": true,
+            "production_differences_from_combined_app": [],
+            "stdout_sha256": "d805125f6e772d6f94833f1b1f16fda65356826047132abf77a7c69e806ab707",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "generated_c_sha256_recorded_by_runner": "538426076c77e6d6d6f3f5c76a989ed33fb2a597a573f1843b26acc9b486fcab",
+            "native_binary_sha256_recorded_by_runner": "d35d01ba06f67f266ad8e3214c15ce95f0ea29b5454007306a804f4c83ffeb15"
+          },
+          {
+            "entry": "tests/library_usage_page_wire.bend",
+            "passed_assertions": 23,
+            "fixture_command_pass_lines": 0,
+            "frontend_exit": 0,
+            "native_compile_exit": 0,
+            "runtime_exit": 0,
+            "runtime_stderr_bytes": 0,
+            "failure_labels": [],
+            "test_source_sha256": "ebd5fdb51773a4813820b3e304ad3d2ce6971da544d2718abbd9afd4b2a627ae",
+            "test_import_closure_files": 45,
+            "test_import_closure_sha256": "82060517c2e4abc910786bac787cc2eb190d24167b7b2cc3950c8d7f0c5a73fa",
+            "production_import_closure_files": 44,
+            "production_import_closure_sha256": "b8953ad92c1045001a8cb7c22a3255934caed806799b7f1453dca002f936590c",
+            "production_import_closure_matches_combined_app_exactly": true,
+            "production_differences_from_combined_app": [],
+            "stdout_sha256": "ac8e301ab550863bd7827d3a726ec1a44ba8c2d716a638f98b4e1d16812f53ed",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "generated_c_sha256_recorded_by_runner": "3e113f54dcc376e910f581307c44b919cf1f4547989e7cc1a10aaf6f8155f0d7",
+            "native_binary_sha256_recorded_by_runner": "ca128485e65a9ba9aa494b9aadea7cddc88496c49d1f7c528f45a4778cd49d6d"
+          }
+        ],
+        "scope": "Wire and captured-page validation only; the same historical batch failed its earlier worker fixture. The later worker gate is listed separately."
+      },
+      {
+        "run_id": "960e12d2-10e9-4bac-af5c-22799e27c89a",
+        "manifest_sha256": "f225e115fed95ff4fad1ba8d9bc068e7c01e4139f19525c39fe4856ff6cd01ab",
+        "receipt_sha256": "aa85d10884c5a8ee365cb652a4d117c8722ebe79fc175f055fc0c4e390c5f012",
+        "summary_sha256": "cd63b1e78d730b64609ca00d1a16ff1fd872f42d4a64cc5578ae23eaa9f7ccb9",
+        "whole_batch_passed": true,
+        "inputs_unchanged_per_receipt": true,
+        "compiler_tools_unchanged_per_receipt": null,
+        "bun_unchanged_per_receipt": null,
+        "local_frozen_payload_and_command_stream_hashes_verified": true,
+        "entries": [
+          {
+            "entry": "tests/library_usage_worker.bend",
+            "passed_assertions": 112,
+            "fixture_command_pass_lines": 0,
+            "frontend_exit": 0,
+            "native_compile_exit": 0,
+            "runtime_exit": 0,
+            "runtime_stderr_bytes": 0,
+            "failure_labels": [],
+            "test_source_sha256": "ecf5403b24eaeaa39e2499657c44b83b4a5dcdf032cc34f7c704588901b245a8",
+            "test_import_closure_files": 50,
+            "test_import_closure_sha256": "5832f48848312d50e309e3615b6c0487546e095f53f1cfb2ef90a44cacdf918a",
+            "production_import_closure_files": 49,
+            "production_import_closure_sha256": "f77c815867ad0da531ea3479886962a0bd68aa141d233eeb1a3ed95138106bc1",
+            "production_import_closure_matches_combined_app_exactly": true,
+            "production_differences_from_combined_app": [],
+            "stdout_sha256": "0ad618c9fcab16f86dadfdf13db675f4321c09ffe430c8f06b77e87a42f42034",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "generated_c_sha256_recorded_by_runner": "525fd70817d7a8da6ca219cd901d40b26396c9b2822a67298de7e1c8ffede565",
+            "native_binary_sha256_recorded_by_runner": "e5189aa6b52a40780e8d3128eb51fb6cacf35272d55778425bc0193cac25eb00"
+          }
+        ],
+        "scope": "Retained-library worker validation: 112 assertions on unchanged worker dependencies."
+      },
+      {
+        "run_id": "179698bd-7178-445a-aece-211f18272a1a",
+        "manifest_sha256": "a6817838f772e9edc3ce8d51e188acae00330a6f6c541954ffdb836208ab0f21",
+        "receipt_sha256": "e54c45502f4a4c513a92410c2cc382132b70803feecdf913b20a0b038cb4315b",
+        "summary_sha256": "8b9951c68a1c0781c058512f378f20c6f3f3e6205c07feadc9d8fe246010aad7",
+        "whole_batch_passed": true,
+        "inputs_unchanged_per_receipt": true,
+        "compiler_tools_unchanged_per_receipt": null,
+        "bun_unchanged_per_receipt": null,
+        "local_frozen_payload_and_command_stream_hashes_verified": true,
+        "entries": [
+          {
+            "entry": "tests/gui_library_usage.bend",
+            "passed_assertions": 39,
+            "fixture_command_pass_lines": 0,
+            "frontend_exit": 0,
+            "native_compile_exit": 0,
+            "runtime_exit": 0,
+            "runtime_stderr_bytes": 0,
+            "failure_labels": [],
+            "test_source_sha256": "ccb2cddb0e43c69d4cd11662e3150a66a13a74cb9fa306c24656d57e84586be2",
+            "test_import_closure_files": 39,
+            "test_import_closure_sha256": "d6fa65c2853b7ce2056700fed7f46123111ce7ed5ee8850fee1492e42f5714a2",
+            "production_import_closure_files": 38,
+            "production_import_closure_sha256": "ac24c936d57d44f7ef00642a82b6c6b2bb17af4ec66ab677dcaaf542b4ff0a6d",
+            "production_import_closure_matches_combined_app_exactly": false,
+            "production_differences_from_combined_app": [
+              {
+                "path": "src/store.bend",
+                "tested_sha256": "22b6091b8d26bd5457c97f88da4a3c4a35a91c99716af4491692664b287fa61f",
+                "combined_app_sha256": "81b16a57c399274311ac92dae930b34387f232a8af99ffe59c2ee6ca09defd70",
+                "only_full_line_comments_differ": false
+              },
+              {
+                "path": "src/transcript_format.bend",
+                "tested_sha256": "351654f33db2a4d73f4b4f2ab34790b09ef29d452345f8027ead36663d37178e",
+                "combined_app_sha256": "36afbfaffa12f1db991aa90f5cf7e12e23e3ce28a41abc66e99cb17046fbeda4",
+                "only_full_line_comments_differ": false
+              }
+            ],
+            "stdout_sha256": "1706c15c54daf50ed689114352c246bc4af6e00fd52f9ecea1e17d2f0463a7cf",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "generated_c_sha256_recorded_by_runner": "57331f9f8bb0190dfe5363445e2b576d861c18a5d33123fa3fbe6955b06c6b69",
+            "native_binary_sha256_recorded_by_runner": "e5f999dfefcae8b502121e04c193e17286a14c270f654adb07bddd26d5924877"
+          },
+          {
+            "entry": "tests/library_usage_presentation.bend",
+            "passed_assertions": 26,
+            "fixture_command_pass_lines": 0,
+            "frontend_exit": 0,
+            "native_compile_exit": 0,
+            "runtime_exit": 0,
+            "runtime_stderr_bytes": 0,
+            "failure_labels": [],
+            "test_source_sha256": "3b369da20febcd6f213ee3e49d82c90be3df8e949f23e780f97df156cad4d5e9",
+            "test_import_closure_files": 40,
+            "test_import_closure_sha256": "fab733ed6ec30f58a75fdc8b31967a8edec26cfce36fd28199458fb1399133fa",
+            "production_import_closure_files": 39,
+            "production_import_closure_sha256": "8356cca22cbb95902d378f3a353fe0d9f6debacaba0d9407ef09e9bbec4a36a5",
+            "production_import_closure_matches_combined_app_exactly": false,
+            "production_differences_from_combined_app": [
+              {
+                "path": "src/store.bend",
+                "tested_sha256": "22b6091b8d26bd5457c97f88da4a3c4a35a91c99716af4491692664b287fa61f",
+                "combined_app_sha256": "81b16a57c399274311ac92dae930b34387f232a8af99ffe59c2ee6ca09defd70",
+                "only_full_line_comments_differ": false
+              },
+              {
+                "path": "src/transcript_format.bend",
+                "tested_sha256": "351654f33db2a4d73f4b4f2ab34790b09ef29d452345f8027ead36663d37178e",
+                "combined_app_sha256": "36afbfaffa12f1db991aa90f5cf7e12e23e3ce28a41abc66e99cb17046fbeda4",
+                "only_full_line_comments_differ": false
+              }
+            ],
+            "stdout_sha256": "a240ff3f102b48cf9077f9724b6650035337783c49e515f2972b63392b4e1c1c",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "generated_c_sha256_recorded_by_runner": "229e6b6bd1c466f06e0ec3115c9b21f13ea3e1baccf0adf204c82e8bc45bb261",
+            "native_binary_sha256_recorded_by_runner": "2ca9c360d65aa60bbbcd9f7441c34335e9f9576f59329867c2a7435e42851416"
+          }
+        ],
+        "scope": "Presentation and controller model: 65 assertions on earlier dependency versions. These behaviors overlap the combined controller/action gate."
+      },
+      {
+        "run_id": "cdf0fb29-49d4-4fd3-9291-f2a1d5b68748",
+        "manifest_sha256": "38720ba55d335f388ae14d50182c808047d09a4eff32d2f039061c966398dab5",
+        "receipt_sha256": "fee27bd7aab4f80cb170bd56e21ea789bbc9a6b9fbcbc2b379771469b1e10bc3",
+        "summary_sha256": null,
+        "whole_batch_passed": true,
+        "inputs_unchanged_per_receipt": true,
+        "compiler_tools_unchanged_per_receipt": true,
+        "bun_unchanged_per_receipt": true,
+        "local_frozen_payload_and_command_stream_hashes_verified": true,
+        "entries": [
+          {
+            "entry": "tests/text_line.bend",
+            "passed_assertions": 20,
+            "fixture_command_pass_lines": 0,
+            "frontend_exit": 0,
+            "native_compile_exit": 0,
+            "runtime_exit": 0,
+            "runtime_stderr_bytes": 0,
+            "failure_labels": [],
+            "test_source_sha256": "189993a6e1bd7beb7f861c5ebfe9031fe529cd4111c08265d91d103a35fb7500",
+            "test_import_closure_files": 7,
+            "test_import_closure_sha256": "535be1785744d56c31c373fbae18a2e8442295fb1dce8f1e34bac96e040deab7",
+            "production_import_closure_files": 6,
+            "production_import_closure_sha256": "51f75bd2b72f706a5e84ec38801ed967f5c46bd107bba6b6dc08a327abf177dc",
+            "production_import_closure_matches_combined_app_exactly": false,
+            "production_differences_from_combined_app": [
+              {
+                "path": "src/bend_ui/label.bend",
+                "tested_sha256": "67a1ad66c5eba93d06b47aa62b1e8cb588d65975f186e1cc26b5fcc6a12f49be",
+                "combined_app_sha256": "c3d6e640a70bea119b385c00b46f96811db1e6af6b473bccae598f93236ef89e",
+                "only_full_line_comments_differ": true
+              }
+            ],
+            "stdout_sha256": "d47ee4b32e0ea5b41b0b1ee569d238d743371c0e3f1066452be8ec7e03ca86f2",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "generated_c_sha256_recorded_by_runner": "3bc60036746c1c1f41f476cf20e0ba36764c89a505034cd02f7cad703826797b",
+            "native_binary_sha256_recorded_by_runner": "feff23e2cabfe8ac4ff4fd990245db2a53fae04f72eed5e001d89551ac856c94"
+          }
+        ],
+        "scope": "Scalar line geometry: 20 assertions, overlapping the later 89 prose assertions. Label differs only in full-line comments."
+      },
+      {
+        "run_id": "ee08e455-55e5-4d71-859a-94a9e7295fb2",
+        "manifest_sha256": "381b1b61074292ce27ba12eb0fdc2ec912a272d11204ef9cfa698667d12e63af",
+        "receipt_sha256": "f649ade61da7751f7c24ee1fb45b0e48da11e1a379c70d6459e8fea438164166",
+        "summary_sha256": null,
+        "whole_batch_passed": false,
+        "inputs_unchanged_per_receipt": true,
+        "compiler_tools_unchanged_per_receipt": true,
+        "bun_unchanged_per_receipt": true,
+        "local_frozen_payload_and_command_stream_hashes_verified": true,
+        "entries": [
+          {
+            "entry": "tests/text_line_canvas.bend",
+            "passed_assertions": 14,
+            "fixture_command_pass_lines": 0,
+            "frontend_exit": 0,
+            "native_compile_exit": 0,
+            "runtime_exit": 0,
+            "runtime_stderr_bytes": 0,
+            "failure_labels": [],
+            "test_source_sha256": "6598e73566f9cebcaaa8b4c8406ca6294e081b04b18ab0e963b0c4b52ba8933f",
+            "test_import_closure_files": 4,
+            "test_import_closure_sha256": "0893275487dde4bb46128048c50c5d35e4b3559024007258596724067a010e99",
+            "production_import_closure_files": 3,
+            "production_import_closure_sha256": "bc343928eb053b9baee12bde80048c3f8821fae762ec9a46353179ef05ca92ae",
+            "production_import_closure_matches_combined_app_exactly": true,
+            "production_differences_from_combined_app": [],
+            "stdout_sha256": "527233a371795de48c7178ca77e8afa6c1dfc6f76293a58450bc12ada3059522",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "generated_c_sha256_recorded_by_runner": "013e0bd225bb90a7e5eea6f26b3f46a84e82a697837c62d0e483a016fa45e74d",
+            "native_binary_sha256_recorded_by_runner": "33cb880b8c547e059d1560110e207c3223c518cb8a34abdff0282b4c8111876b"
+          }
+        ],
+        "scope": "Canvas pixel arithmetic: 14 assertions. Other entries in this earlier batch failed compilation; this is only the successful Canvas entry."
+      }
+    ],
+    "binary_hash_scope": "Linux binary/C hashes are recorded by completed runners. Local audit rehashed frozen payloads and collected command streams; it did not rerun binaries or compilers.",
+    "fresh_full_suite_run": false,
+    "partial_polish_gate": {
+      "run_id": "1a3dc0ef-76a1-444e-a434-a4e4bb25e1cf",
+      "manifest_sha256": "40e000b63c616d5f677debed0efe71de9dbc7ca3bfed9fe624ba67a5b137d54f",
+      "receipt_sha256": "d2a23fdea5dad25bbb9ef35d19370502c583b87b1cb1a341ee993034d251f97c",
+      "summary_sha256": "9e2e82395aa0deb0915e7c5d9237c54b94d8d3f41ee7de23ece2801e6804ec7c",
+      "whole_batch_passed": false,
+      "inputs_unchanged_per_receipt": true,
+      "compiler_tools_unchanged_per_receipt": true,
+      "bun_unchanged_per_receipt": true,
+      "local_frozen_payload_and_command_stream_hashes_verified": true,
+      "entries": [
+        {
+          "entry": "tests/polish.bend",
+          "passed_assertions": 35,
+          "fixture_command_pass_lines": 0,
+          "frontend_exit": 0,
+          "native_compile_exit": 0,
+          "runtime_exit": 1,
+          "runtime_stderr_bytes": 31,
+          "failure_labels": [
+            "FAIL capture hint gap is inert"
+          ],
+          "test_source_sha256": "4a83d4cad7f82c9f744dd68b422baa06e6bea0cc8db3425da29cd54721a9b22e",
+          "test_import_closure_files": 13,
+          "test_import_closure_sha256": "2a093c9d2cc5db48e96bb7417ad9cd13c52566f368bc49630e31fbbf6d8de275",
+          "production_import_closure_files": 12,
+          "production_import_closure_sha256": "cf350f403da44b2b2c4e79f317217e1d8cd6aba73a7aa7b6f02cb7442bcfd44a",
+          "production_import_closure_matches_combined_app_exactly": true,
+          "production_differences_from_combined_app": [],
+          "stdout_sha256": "62ed3a732cfdc3360c98d2e8e94b473ad9060d6b8e01d7eef11c8bf810e8010e",
+          "stderr_sha256": "125439c52df6ca6b2f8b0592a3fb6294d0aa2013a76d96e8f5198439ee205097",
+          "generated_c_sha256_recorded_by_runner": "7a5e758865efa3ec64d5107ab739e0cca19f6f31c533e9939ee42a3648294175",
+          "native_binary_sha256_recorded_by_runner": "e27fe8a545f49dad5d514b0c20d3fe84858cf0a34d837eb4124af8caa7c0108a"
+        }
+      ],
+      "scope": "Incomplete focused polish gate. Only the stale Library Usage sidebar expectation was updated; the existing capture-hint toolbar assertion then failed. Remaining assertions were not reached. No full-suite or polish pass is claimed.",
+      "planned_assertions": 113
+    }
+  },
+  "mac_build": {
+    "platform": "Darwin arm64",
+    "maintained_wrapper": "scripts/build",
+    "compiler": "Pinned Bend 2 frontend plus mise-managed LLVM 23.1.4 -O1",
+    "completed": true,
+    "exit": 0,
+    "binary_sha256": "8d42430177b7ca2614c8eda393076bfe5ed5bbc5d2a3382ec6f119068675569c",
+    "binary_bytes": 26930808,
+    "generated_c_sha256": "4f32e52260e1c008f28c90ff95240124ba8b24f55403e82c923bb675ce0b53d7",
+    "build_manifest_sha256": "aaabe691224b3875052fda0cbbf9a0d3da4fda46639c690ee673189dc6f427c3",
+    "receipt_sha256": "ba0edaca15b4cfd2072b139a8a889e02ffe020ab2a5269e05947d1fa73d4f289",
+    "terminal_collection_sha256": "76b0ed6fa32c96b077e5385a8c86b2be3956fe02f3a6eb92bf0c271bc80e81c5",
+    "sources": 189,
+    "runtime_build_pins": 96,
+    "compiler_tools": 2,
+    "all_sources_pins_tools_and_command_streams_locally_rehashed": true,
+    "all_observed_owned_processes_absent_at_collection": true,
+    "working_executable_preserved_at_collection": true,
+    "application_executed_by_build": false,
+    "compiler_timing_scope": "Diagnostic compiler observations only; not application performance acceptance.",
+    "frontend_to_native_seconds": 363.944,
+    "total_seconds": 944.524,
+    "owned_group_peak_rss_bytes": 11819433984,
+    "minimum_observed_free_disk_bytes": 7011815424,
+    "limits": {
+      "frontend_seconds": 420,
+      "native_seconds": 900,
+      "owned_group_rss_bytes": 17179869184,
+      "minimum_free_disk_bytes": 2147483648
+    },
+    "limits_triggered": false
+  },
+  "preserved_test_arity_failures": {
+    "attempts": [
+      {
+        "run_id": "076eae85-9edc-46b6-ba63-7cd72c2fd35d",
+        "receipt_sha256": "fbc8014f2f061aec3c3e275f100629ce8551ec4074a263947474d15e211ec2e0",
+        "diagnostic_sha256": "af95b9da24ddec47e7afcca065f867efc7a546fa2c9716cde785df0ab6541bab",
+        "entry": "tests/gui_library_usage_app.bend",
+        "frontend_exit": 1,
+        "native_execution_for_entry": false
+      },
+      {
+        "run_id": "7910eeda-3437-4280-b286-e73ce87eae1e",
+        "receipt_sha256": "bc45fd2b6545ccfbf43fd2204f453572b4959eeb1ca1816ed5aa35a623d68937",
+        "diagnostic_sha256": "af95b9da24ddec47e7afcca065f867efc7a546fa2c9716cde785df0ab6541bab",
+        "entry": "tests/gui_library_usage_app.bend",
+        "frontend_exit": 1,
+        "native_execution_for_entry": false
+      },
+      {
+        "run_id": "00e002ca-2c44-4d91-ba47-9221abdc3efd",
+        "receipt_sha256": "f752aaa97ce01e90ccaecf51a1be277f299d14094b2420f09ded100fae8d1e81",
+        "diagnostic_sha256": "7cfeaed847d9f5043d18509dffe07790378dae37cf27b3e8d57f291bff4c221b",
+        "entry": "tests/gui_library_usage_app.bend",
+        "frontend_exit": 1,
+        "native_execution_for_entry": false
+      }
+    ],
+    "diagnosis": "Test continuations captured multiple flattened 98-slot GUI states and exceeded the unchanged 247-slot compiler bound. Extracted helpers alone did not remove the captures.",
+    "repair": "The final test fixture returns recursive List<State> boxes and consumes them through scalar projections. All 47 expectations remain. No application source or compiler limit changed for this test repair.",
+    "repaired_test_sha256": "90f00f80d475b1b96271df6926a8f9779a3f102a22c35a69a7fbc9acb2f0ca6f"
+  },
+  "acceptance": {
+    "native_macos_reader_and_library_usage_ui": "recorded separately in library-usage-prose-native.json",
+    "native_window_input_clipboard": "not claimed by this receipt",
+    "visual_acceptance": "not claimed; Linux frame writes are renderer evidence only",
+    "application_performance": "not measured",
+    "fresh_full_suite": "not run",
+    "source_adoption_or_default_promotion": "not performed by this receipt audit"
+  },
+  "publication_safety": "Synthetic test metadata, public repository-relative module names, diagnostic labels and hashes only. No private histories, advisor logs, source snapshots, host usernames or absolute host paths are copied.",
+  "native_acceptance_reference": {
+    "path": "library-usage-prose-native.json",
+    "sha256": "bdba3b02fc1d9407dac21ec5461940c06c19de2006e37368047faa4fd0d1de14",
+    "included_in_build_test_assertion_counts": false
+  }
+}
