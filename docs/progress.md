@@ -31,10 +31,10 @@ Adoption manifests: `build/reader-attachments-adoption`,
 the accepted executable. Combined capture/PNG/ATIF/discovery remains isolated;
 its full app does not include title-v5 yet.
 
-Latest verified published head before this follow-up: `e0b69acd28a89631f0c21f72368ae8e223cd36dc`,
-tree `0131ae566909ca163f36628d85f8190cab5603af`, open/draft/unmerged.
-Remote object: `build/worker-dispatch-remote.json`; bare ref
-`codex/published-worker-dispatch`. Do not reset the protected checkout to it.
+Latest verified published head: `cb65333fae78b52cd7d379aafcba7f7473e60ec4`,
+tree `ba308d7e208ba7f4121dbbbf5d24e7c35defbb4d`, open/draft/unmerged.
+Remote object: `build/literal-dispatch-remote.json`; bare ref
+`codex/published-literal-dispatch`. Do not reset the protected checkout to it.
 
 ## Current native result
 
@@ -73,23 +73,52 @@ Source shows pure PNG decoding on the parent UI path after bytes arrive. This
 is a plausible cause of the pending/close delay; no live sample was obtained
 before exit, so the exact cause is not proven.
 
+**Async JPEG Tart v2 also failed its image check, with clean exit.** The new
+app `876aab5a…` ran in `build/jpeg-native-v2-plan/run-native-1` using isolated
+source-absent synthetic captures. Native launch, role-filtered transcript/copy
+and attachment selection passed. The JPEG child reached its 120-second limit;
+all 140 Fit pixel observations failed. The app displayed an explicit unavailable
+message, then accepted normal application termination. Fixture verification,
+unchanged copy, payload hashes and display restoration passed; app/window absent,
+VM stopped and lease released. Root inspected four screenshots. Actual native
+Close during pending decode, cancellation, PNG, exports and restart did not run.
+A three-second sample of the exact decoder child shows Bend JPEG pixel-transform
+and runtime-evaluation work; this -O0 result is not optimized performance evidence.
+Result `7a9c691b…`; public scope: `docs/receipts/async-image-native.txt`.
+
 ## Exact continuation
 
 1. Same-C optimized diagnostic `669b85cf` (session 80312) ended with the same
    clang error after 216.638s, without timeout. Disabling shrink wrapping did
    not fix it; receipt `6f4ac57a…`, sources/C/pins unchanged, processes absent.
-   Mac compiler is released. Investigate a concrete upstream compiler fix;
-   do not repeat blind flag changes or promote an untested binary.
+   A locally isolated LLVM 23.1.4 passed a tiny ABI/Objective-C/SQLite probe.
+   Root authorized a bounded same-C -O1 experiment for the new 158-input app
+   after Tart stopped. Agentbox clang 22 also passes a cross-target ABI probe;
+   GCC fails the required-attribute gate and must not silently drop attributes.
+   No full-app alternate-compiler success is claimed yet.
 2. Build the full app with supervised PNG/JPEG decode and exact startup routes.
    `build/jpeg-wrapper-integration/HANDOFF.md` binds 31 files and 21 native Linux
    wrapper checks, preserving its initial compile timeout and successful same-C
    retry. Child decode and bounded parent raster admission replace UI-path
    decoding. Cancellation retains channel ownership until drain. JPEG owner is
-   assembling against exact final 143-file source; no title/G15/polish overlay.
+   assembled against exact final 143-file source; no title/G15/polish overlay.
+   New full-app run `build/jpeg-final-app-integration/mac/70e59948-cb3a-4949-a096-58952285601f/app`
+   passed: normal Bend frontend 279.597s, explicit-SDK native -O0 373.934s,
+   empty diagnostics. App binary `876aab5a…`, receipt `185a3f79…`.
+   Matching helper passed frontend/native -O3, binary `e9f772ee…`, receipt
+   `6a8f6c5b…`. All 158 app inputs, 59 helper inputs, 51 shared paths and 93 pins
+   match; compiler processes exited. `BUILT-EVIDENCE.json` at the integration
+   root binds both builds (`1b0c341d…`). Both ran in the failed v2 test above.
 3. Run actual capture/retained preview/export/ATIF and prepared JPEG cancellation/
-   restart journeys. `build/jpeg-native-plan/HANDOFF.md` requires final app/helper
-   receipts, control binding and observed child lifecycle. Cancellation checks
-   remain read-only until child exit so clipboard cannot mask ignored Escape/Back.
+   restart journeys. Revised `build/jpeg-native-v2-plan/HANDOFF.md` binds the
+   successful app/helper and adds terminal-error and actual Close observations.
+   Independent review found no blocker; run-native-1 failed as recorded above.
+   The separately prepared external capture/source-loss/export/ATIF plan is at
+   `build/external-async-native-plan/HANDOFF.md`; it has not run. Prefer retesting
+   the unchanged source with a successful optimized build before more -O0 image
+   runs; keep every earlier result intact.
+   Cancellation checks remain read-only until child exit so clipboard cannot
+   mask ignored Escape/Back. The original native plan/failure remain preserved.
 4. Reconcile root preimages before adoption, rebuild with title-v5 and run affected
    tests. Never blindly apply candidate-relative patches over root. Keep PR #1
    current with failed and unrun scopes. Default executable stays unchanged.
@@ -116,8 +145,11 @@ before exit, so the exact cause is not proven.
 - Child-result navigation is isolated in `build/result-link-ui-integration`.
   Worker/protocol checks passed; actual GUI/CLI gates remain in progress.
 - `build/reader-hierarchy-candidate` prepares shorter reader headings with exact
-  metadata retained in details. Not compiled or visually validated; no accepted
-  presentation/oracle replaced.
+  metadata retained in details: 37 native Linux assertions passed. Scoped CLI
+  validation remains unverified after a compiler memory guard. A separate
+  `build/reader-chrome-candidate` adds a typed palette and clearer selection;
+  static review passed, compilation and actual visuals remain untested. Neither
+  presentation candidate is adopted in the accepted executable.
 
 ## Remaining goal and measured limits
 
