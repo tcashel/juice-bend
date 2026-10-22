@@ -1,0 +1,43 @@
+Observed native Darwin arm64, 2026-10-20.
+
+Baseline command: ./scripts/test tests/hash.bend
+Baseline Domain SHA256:
+8199e1c32f6b0497f06c80b8b6afd57ed6311d247c100ead2232fce4be1112a0
+Baseline test SHA256:
+1270d8b7fead26c555d0b2eaac59d0586661d2918f3f9c0e27cfed76bb9db940
+Exit 0; 157 named checks. The later test revision replaced one pending-buffer
+assertion with eight boundary assertions, adding seven checks.
+
+Final command: ./scripts/test tests/hash.bend tests/domain.bend
+The build-harness agent ran this command; the proof/domain agent independently
+reviewed the recorded stdout and source hashes, without claiming a second run.
+Exit 0; 217 named checks: hash 164, domain 53. Exact output: hash-final.txt.
+Output SHA256:
+da986983d63bdab928f363d90f9a93372b4335dba1ec27967eccef7aa2b9c844
+Final Domain SHA256:
+f2f68a4a9781ea102f3e275781380a885e3057e178d75c8d45b310c3c5002191
+Final tests/hash.bend SHA256:
+06e8e3f3edb2b2f3f972dc31c7dc72be5dbeece9f52d9cb5054bc9b738475ed5
+Final tests/domain.bend SHA256:
+5095d65ac626502a7a76e8a679510fb510ffa42d858282e9c5e5c56fe6e2080a
+
+Expected digests are fixed independent Python hashlib.sha256 results. Native
+maintained test logic is Bend. Checks cover 12 patterned input lengths through
+262144 bytes, all byte values and NUL, a fixed retained-record serialization,
+all 130 stream split positions for a 129-byte input, maximum fragments fed in
+1/63/64/65-byte chunks, exact HashContext pending-buffer ABI at eight boundaries,
+and seven exact 64-bit padding lengths through the U32 maximum byte count.
+The fixed retained-record serialization test does not itself claim a read of
+an older SQLite database. Capture/append/rebuild tests cover that integration.
+
+Independent source review found the aligned implementation preserves ordered
+big-endian packing, all 64 compression rounds, state addition, modulo U32 size
+accounting, and the prior partial-context path. The bounded alias experiment
+was rejected because its emitted C was byte-identical. The selected original
+aligned source was restored to the exact tested SHA256 above.
+
+The real Lean 4.34.0 verdict was then rerun against this final Domain and all
+twelve existing production laws passed unchanged (prove.stdout.txt, exit 0).
+Those laws do not prove the complete SHA256 algorithm; these vectors and stream
+checks provide separate runtime evidence. Timing and generated-code-size
+tradeoffs are recorded in benchmarks/results/hash-paired-aligned.jsonl.

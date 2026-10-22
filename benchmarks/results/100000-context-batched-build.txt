@@ -1,0 +1,17 @@
+Native macOS arm64 benchmark, pinned Bend2.0.37/Apple clang-O3/systemSQLite.
+Unchanged benchmarks/main.bend, generator1, seed1337;100000 physical records/125000 normalized events; append16.
+Task builds/tests/Tart held during operation timers; unrelated host activity uncontrolled. One observation, not statistical comparison; no UI latency or memory measured.
+Binary SHA256 d341efb43dc21342d6434df3699d794894670d16d3a1ed354408e5b437e6fbc8; bytes 3431472; generated C fe08945fb7502a13c89a4f62aa0a9c46577b51278c298280ba6f774f6726d6af.
+All22 transitive inputs unchanged; all88 upstream hashes verified before/after build/run.
+Native benchmark exit0; all benchmark assertions passed. External postflight initially failed because filename replacement also changed its expected incoming-context-v2 tag to incoming-context-batched. Actual application correctly kept v2. Original wrapper/log preserved; corrected read-only postflight passed all checks on the same database without rerunning timers or changing the app.
+First import36194ms; unchanged3910ms; append23816ms; warm scoped search/late/scopedlate p95 42/7/17ms (five-trial maximum). Prior37564/3922/24678ms. Long-session append remains slow.
+Exact counts, both event/context prefix EXCEPT directions with context types,100000 sharedrawIDs, latestFTS,2seals,200016v2contexts, SQLitequick_check/FK passed.
+
+SHA256 input/evidence files:
+00dc705e7f8298cf459153ebf6b05fd9de77f0a52f7951e58a89a172b303f892  benchmarks/results/100000-context-batched.jsonl
+94a056ca350143a42e9b9d70a1617fa09b06fe9e069939e3613770c2edb81e0a  benchmarks/results/100000-context-batched-db-check.json
+2e3e90dca4c4fc9c2f6abcea2f23eefd4a48d2a75641f29037ed0161548feedd  benchmarks/results/100000-context-batched-sources.sha256
+8669da5f6db95414e6d1cf560e195e16ef68eb10f7535896503d5172df163ba8  build/context-batched-benchmark-original-run.py
+9829136301e988b235538f417f85c53f0f98a107b96fb200d9e6ac47818fc9e9  build/context-batched-benchmark-run.log
+5234617c423e4b04d11032c59c4c0edfbbb0e943c95e6d1dbff9595f5876a3de  build/context-batched-postflight.py
+730558fef9fd33ee165c38b9fd6341fa96fbde5f4f6fbd869ded039c5903f508  build/context-batched-postflight.log

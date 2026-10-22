@@ -1,0 +1,72 @@
+#!/bin/sh
+set -eu
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$ROOT"
+mode=${1:-install}
+if [ "$#" -gt 1 ]; then
+  printf 'Usage: ./scripts/setup-llvm [--check | --path]\n' >&2
+  exit 2
+fi
+case "$mode" in
+  install|--check|--path) ;;
+  *) printf 'Usage: ./scripts/setup-llvm [--check | --path]\n' >&2; exit 2 ;;
+esac
+if [ "$(uname -s)" != Darwin ] || [ "$(uname -m)" != arm64 ]; then
+  printf 'The pinned native toolchain targets macOS arm64.\n' >&2
+  exit 1
+fi
+# Keep installation, downloads, caches and trust state out of global locations.
+for dir in .tools .cache .tools/mise-llvm .tools/mise-llvm-state .cache/mise-llvm; do
+  if [ -L "$ROOT/$dir" ]; then
+    printf 'Refusing a linked toolchain directory; preserve and inspect: %s\n' "$dir" >&2
+    exit 1
+  fi
+done
+export MISE_DATA_DIR="$ROOT/.tools/mise-llvm"
+export MISE_CACHE_DIR="$ROOT/.cache/mise-llvm"
+export MISE_STATE_DIR="$ROOT/.tools/mise-llvm-state"
+export MISE_TRUSTED_CONFIG_PATHS="$ROOT"
+export MISE_HTTP_DOWNLOAD_TIMEOUT=15m
+export MISE_HTTP_TIMEOUT=30s
+llvm_where() {
+  mise --cd "$ROOT/toolchain/llvm" where github:llvm/llvm-project
+}
+check_install() {
+  install=$(llvm_where) || {
+    printf 'Missing pinned LLVM; run mise run setup-llvm explicitly.\n' >&2
+    return 1
+  }
+  install=$(CDPATH= cd -P -- "$install" && pwd)
+  case "$install" in
+    "$ROOT/.tools/mise-llvm/installs/"*) ;;
+    *) printf 'Refusing a toolchain outside repository-local mise storage: %s\n' "$install" >&2; return 1 ;;
+  esac
+  (cd "$install" && shasum -a 256 -c "$ROOT/toolchain/llvm/clang.sha256" >/dev/null)
+  test -x "$install/bin/clang-23"
+  if [ "$mode" = --path ]; then
+    printf '%s\n' "$install/bin/clang-23"
+  else
+    "$install/bin/clang-23" --version
+  fi
+}
+if [ "$mode" != install ]; then
+  check_install
+  exit
+fi
+if llvm_where >/dev/null 2>&1; then
+  check_install
+  exit
+fi
+# The verified archive is 1.57 GB and expands to 8.16 GB. Reserve headroom;
+# mise checks the exact archive byte count and digest before extraction.
+free_kib=$(df -Pk "$ROOT" | awk 'NR == 2 {print $4}')
+case "$free_kib" in
+  ''|*[!0-9]*) printf 'Could not determine free toolchain storage.\n' >&2; exit 1 ;;
+esac
+if [ "$free_kib" -lt 12000000 ]; then
+  printf 'LLVM setup needs at least 12,000,000 KiB free; available: %s KiB.\n' "$free_kib" >&2
+  exit 1
+fi
+printf 'Installing pinned LLVM locally: 1,570,051,292-byte download, 8.16 GB extracted.\n' >&2
+mise --cd "$ROOT/toolchain/llvm" install --jobs 1 github:llvm/llvm-project
+check_install

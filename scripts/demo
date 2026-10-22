@@ -1,0 +1,16 @@
+#!/bin/sh
+# Launch the existing local executable against a fresh synthetic library.
+set -eu
+umask 077
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+if [ "$#" -ne 0 ]; then
+  printf 'Usage: mise run demo (no arguments; always a fresh synthetic library)\n' >&2
+  exit 2
+fi
+if [ ! -x "$ROOT/build/juice-bend" ]; then
+  printf 'No local executable found. Run mise run build first.\n' >&2
+  exit 1
+fi
+data=$(mktemp -d "${TMPDIR:-/tmp}/juice-bend-demo.XXXXXX")
+printf 'Synthetic demo data directory: %s\n' "$data" >&2
+exec "$ROOT/build/juice-bend" --data-dir "$data" --demo

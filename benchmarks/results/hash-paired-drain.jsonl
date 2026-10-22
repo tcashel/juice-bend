@@ -1,0 +1,49 @@
+{"measurement":"sha256-alternating-v1","trials_per_variant":3,"order":["before","drain","drain","before","before","drain"],"benchmark_sha256":"f8f1bd8a600b614c6be3dbeb12d13dc988387a3f2ed6f713d99c59888be1d9e7","tests_sha256":"1270d8b7fead26c555d0b2eaac59d0586661d2918f3f9c0e27cfed76bb9db940","domain_sources":{"before":"8199e1c32f6b0497f06c80b8b6afd57ed6311d247c100ead2232fce4be1112a0","drain":"7768f6e2c11db4b9ed4addf8d49c2d1abf21c0c89a027cf15d8b1f331d188859"},"binaries":{"before":{"path":"build/juice-bend-hash-before","sha256":"3f8b090e0f38da0e08739eb586812e7d56845e1b8376fe64f533d1c65d2f7b98"},"drain":{"path":"build/juice-bend-hash-drain","sha256":"c6d45278a8ddba8b31c4ff29ac81f9099b24a1de344988c842e0c2ed7f5336cb"}},"host_os":"27.0.1","architecture":"arm64","timers":"Native IO.now intervals include one checksum print, exclude corpus generation and checks","concurrency":"Root reserved quiet window; no other task build/test/benchmark running"}
+{"trial":1,"variant":"before","benchmark":"sha256-chains-v1","seed":"64 ASCII zeroes","generation_and_corpus_checks":"outside_timers","checksum_output":"inside_timers"}
+{"trial":1,"variant":"before","operation":"byte_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":1,"variant":"before","operation":"byte_chain_512","iterations":10000,"message_bytes":512,"duration_ms":157}
+{"trial":1,"variant":"before","operation":"utf8_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":1,"variant":"before","operation":"utf8_chain_512","iterations":10000,"message_bytes":512,"duration_ms":189}
+{"trial":1,"variant":"before","operation":"byte_chain_262144","final_sha256":"18926dfa939ab08b83a305a816f30ba07205704af6cc2672d209a318bf0ce999"}
+{"trial":1,"variant":"before","operation":"byte_chain_262144","iterations":16,"message_bytes":262144,"duration_ms":104}
+{"trial":1,"variant":"before","benchmark_complete":true}
+{"trial":1,"variant":"drain","benchmark":"sha256-chains-v1","seed":"64 ASCII zeroes","generation_and_corpus_checks":"outside_timers","checksum_output":"inside_timers"}
+{"trial":1,"variant":"drain","operation":"byte_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":1,"variant":"drain","operation":"byte_chain_512","iterations":10000,"message_bytes":512,"duration_ms":169}
+{"trial":1,"variant":"drain","operation":"utf8_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":1,"variant":"drain","operation":"utf8_chain_512","iterations":10000,"message_bytes":512,"duration_ms":194}
+{"trial":1,"variant":"drain","operation":"byte_chain_262144","final_sha256":"18926dfa939ab08b83a305a816f30ba07205704af6cc2672d209a318bf0ce999"}
+{"trial":1,"variant":"drain","operation":"byte_chain_262144","iterations":16,"message_bytes":262144,"duration_ms":106}
+{"trial":1,"variant":"drain","benchmark_complete":true}
+{"trial":2,"variant":"drain","benchmark":"sha256-chains-v1","seed":"64 ASCII zeroes","generation_and_corpus_checks":"outside_timers","checksum_output":"inside_timers"}
+{"trial":2,"variant":"drain","operation":"byte_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":2,"variant":"drain","operation":"byte_chain_512","iterations":10000,"message_bytes":512,"duration_ms":164}
+{"trial":2,"variant":"drain","operation":"utf8_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":2,"variant":"drain","operation":"utf8_chain_512","iterations":10000,"message_bytes":512,"duration_ms":192}
+{"trial":2,"variant":"drain","operation":"byte_chain_262144","final_sha256":"18926dfa939ab08b83a305a816f30ba07205704af6cc2672d209a318bf0ce999"}
+{"trial":2,"variant":"drain","operation":"byte_chain_262144","iterations":16,"message_bytes":262144,"duration_ms":109}
+{"trial":2,"variant":"drain","benchmark_complete":true}
+{"trial":2,"variant":"before","benchmark":"sha256-chains-v1","seed":"64 ASCII zeroes","generation_and_corpus_checks":"outside_timers","checksum_output":"inside_timers"}
+{"trial":2,"variant":"before","operation":"byte_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":2,"variant":"before","operation":"byte_chain_512","iterations":10000,"message_bytes":512,"duration_ms":156}
+{"trial":2,"variant":"before","operation":"utf8_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":2,"variant":"before","operation":"utf8_chain_512","iterations":10000,"message_bytes":512,"duration_ms":186}
+{"trial":2,"variant":"before","operation":"byte_chain_262144","final_sha256":"18926dfa939ab08b83a305a816f30ba07205704af6cc2672d209a318bf0ce999"}
+{"trial":2,"variant":"before","operation":"byte_chain_262144","iterations":16,"message_bytes":262144,"duration_ms":105}
+{"trial":2,"variant":"before","benchmark_complete":true}
+{"trial":3,"variant":"before","benchmark":"sha256-chains-v1","seed":"64 ASCII zeroes","generation_and_corpus_checks":"outside_timers","checksum_output":"inside_timers"}
+{"trial":3,"variant":"before","operation":"byte_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":3,"variant":"before","operation":"byte_chain_512","iterations":10000,"message_bytes":512,"duration_ms":158}
+{"trial":3,"variant":"before","operation":"utf8_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":3,"variant":"before","operation":"utf8_chain_512","iterations":10000,"message_bytes":512,"duration_ms":186}
+{"trial":3,"variant":"before","operation":"byte_chain_262144","final_sha256":"18926dfa939ab08b83a305a816f30ba07205704af6cc2672d209a318bf0ce999"}
+{"trial":3,"variant":"before","operation":"byte_chain_262144","iterations":16,"message_bytes":262144,"duration_ms":104}
+{"trial":3,"variant":"before","benchmark_complete":true}
+{"trial":3,"variant":"drain","benchmark":"sha256-chains-v1","seed":"64 ASCII zeroes","generation_and_corpus_checks":"outside_timers","checksum_output":"inside_timers"}
+{"trial":3,"variant":"drain","operation":"byte_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":3,"variant":"drain","operation":"byte_chain_512","iterations":10000,"message_bytes":512,"duration_ms":164}
+{"trial":3,"variant":"drain","operation":"utf8_chain_512","final_sha256":"065f8e9551fd243d2d8c1e092dcb68e0889845783262e829970d08a34cd98b2c"}
+{"trial":3,"variant":"drain","operation":"utf8_chain_512","iterations":10000,"message_bytes":512,"duration_ms":192}
+{"trial":3,"variant":"drain","operation":"byte_chain_262144","final_sha256":"18926dfa939ab08b83a305a816f30ba07205704af6cc2672d209a318bf0ce999"}
+{"trial":3,"variant":"drain","operation":"byte_chain_262144","iterations":16,"message_bytes":262144,"duration_ms":106}
+{"trial":3,"variant":"drain","benchmark_complete":true}

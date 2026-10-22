@@ -1,0 +1,21 @@
+#!/bin/sh
+set -eu
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+REV=60ca80aedeec9d8f0629b5f10dd19457d8ad67af
+cd "$ROOT"
+if [ -f .tools/bend/SOURCE_REVISION ] && [ "$(cat .tools/bend/SOURCE_REVISION)" = "$REV" ]; then
+  shasum -a 256 -c toolchain/bend.sha256 >/dev/null
+  exec ./scripts/bend version
+fi
+if [ -e .tools/bend ]; then
+  echo "Existing .tools/bend has no matching revision receipt; preserve it and inspect." >&2
+  exit 1
+fi
+mkdir -p .tools
+curl --fail --location --proto '=https' --tlsv1.2 \
+  "https://codeload.github.com/bendlang/bend/tar.gz/$REV" -o .tools/bend.tar.gz
+mkdir .tools/bend
+tar -xzf .tools/bend.tar.gz --strip-components=1 -C .tools/bend
+shasum -a 256 -c toolchain/bend.sha256 >/dev/null
+printf '%s\n' "$REV" > .tools/bend/SOURCE_REVISION
+exec ./scripts/bend version

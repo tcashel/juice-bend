@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "scope": "Shared Bend Button, actual toolbar, controls example and required tests only; no sidebar or daily Usage changes.",
+  "application_inputs": 207,
+  "candidate_binding_sha256": "4d07a55164e1fad62b33acb288ba784de10289293634aaeb98549fa919c69b5a",
+  "application_closure_sha256": "904474ca816cf18b6b39fc64cda5302a670fd6c6dfb384fbe327f835c6658a15",
+  "binary_sha256": "429410ee156e602ebd6be72dea66436d67bc167da24d1d7088d28609506e60d4",
+  "adoption": {
+    "completed": true,
+    "receipt_sha256": "2cc196ce6cb94b1905ce63e1882bb243a88609f910df9eb0fe9c9e61d2d96935",
+    "paths": 12,
+    "defaults": 3,
+    "full_closure_verified": true,
+    "previous_files_preserved": true,
+    "root_head_and_index_unchanged": true,
+    "documentation_overlay": "Component README count wording only; no application input changed."
+  },
+  "build": {
+    "passed": true,
+    "receipt_sha256": "1ae85506cdf2cc0d82c24a003953758a47d806ece2d46901d0b6d3c46a8050a5",
+    "frontend_seconds": 264.105,
+    "native_seconds": 553.046,
+    "compiler": "Pinned Bend2.0.37 original CLI/main, Bun1.4.2 minimal GC512 preload; LLVM23.1.4 -O1, SDK27, target26",
+    "scope": "Maintained compiler setup in a bound runner; not literal scripts/build invocation. Empty diagnostics, exact inputs/pins and no owned process groups. Build time is not app performance."
+  },
+  "linux_tests": [
+    {
+      "assertions": 42,
+      "groups": "Button15, controls example17, toolbar routing10",
+      "receipt_sha256": "66b23ea78755ac9ac7a848b31e23c1e0e3391b30a7e5aac59fa7451cde98df7e"
+    },
+    {
+      "assertions": 103,
+      "groups": "attachments76, window layout27",
+      "receipt_sha256": "f3992d313bd8f9763359454cadd2eabae7176ceba12fc5ae0533f94d781bc8cf"
+    }
+  ],
+  "test_scope": "Focused component gates with exact inputs/tools/artifacts and empty native diagnostics. Four paint expectations changed for proportional labels, surfaces and Next inset; action/bounds assertions remain intact. No global suite or new proof pass.",
+  "native_usage": {
+    "status": "PASS",
+    "receipt_sha256": "bb5785ef09eb28f4803c5e9baab7622fde024140144849b44fd6a48093805561",
+    "clipboard": 17,
+    "canonical_reports": 10,
+    "canonical_exports": 1,
+    "screenshots_captured": 15,
+    "images_reviewed": 7,
+    "observed": "Rounded border, preserved underlay and labels accepted with no new clipping; toolbar remains dense. Filter/capture/Back and source-loss restart passed. Fourth capture imported after restart; no second restart claimed.",
+    "guest_exit": 0,
+    "cleanup_exit": 0,
+    "wrapper_exit": 143,
+    "vm_stopped_and_lease_released": true,
+    "visual_receipt_sha256": "9ee497d5c7ebd08a7d8ecae0177f953c286fff506cad6547ce9860ec3622e420"
+  },
+  "native_png": {
+    "status": "PASS functional-only",
+    "receipt_sha256": "24c5defc05070128776d43ca7765d4cf36051fee410db9d26a7dfe8bf68df902",
+    "visual_receipt_sha256": "c3d869924e0304648dd34b8f7f163dbb94e433372fca707d3196e48279966ccd",
+    "fit_pixels": 8,
+    "actual_pixels": 3,
+    "export_bytes": 72,
+    "escape_selection_restored": true,
+    "images_reviewed": 6,
+    "strict_combined_profile": false,
+    "worker_creation_observation": false,
+    "guest_exit": 0,
+    "cleanup_exit": 0,
+    "wrapper_exit": 143,
+    "vm_stopped_and_lease_released": true
+  },
+  "component_contract": "Pure bounded painter joins label, caller-supplied style and existing half-open descriptor. App keeps seven rectangles/action IDs and owns dispatch, selection and focus lifecycle. Rounded cutouts preserve actual underlay; full rectangular corner hits are deliberate.",
+  "limits": [
+    "App toolbar keyboard focus is not added; example focus behavior remains separate.",
+    "Hover/pressed states, accessibility, resize and shaping/IME are outside this slice.",
+    "Earlier206 Usage/Close/PNG and append results retain their own bindings; no fresh207 Close or performance claim."
+  ],
+  "community": "Documented extraction prototype used by app/example. No new first-party license, separate package or repository is published.",
+  "publication_safety": "Synthetic metadata and hashes only; no private histories, screenshots, databases or host paths."
+}

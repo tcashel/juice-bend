@@ -1,0 +1,93 @@
+{
+  "receipt_version": 1,
+  "date": "2026-10-20",
+  "host": "macOS27.0.1 arm64",
+  "guest": "macOS27.0 arm64",
+  "tart": "2.40.1",
+  "network": "host-only",
+  "application_sha256": "503f1098ef910c153db717074311c692bd864030e1cf818f3484ad0b60a90694",
+  "application_bytes": 11908344,
+  "build_inputs_verified": 48,
+  "upstream_hashes_verified": 88,
+  "old_application_sha256": "2e3191d9487b920a6a9aa4184239485f921e8a8f06d9b4378019f7f2eb226687",
+  "fixture_sha256": "7cff09dd93f7fcbd77746244cb9fc1bdb4213be8a0df00bff78659bfd77530e9",
+  "observed": [
+    "New app reads two captures created by frozen v1 binaries through native scoped search and transcript selection/copy",
+    "Source-only append leaves2snapshots/44raw; native manual Refresh publishes snapshot3 with3v2contexts and47raw through verified full replay",
+    "Second native Refresh is unchanged; both prior v1 context sets and exact scoped reader texts remain unchanged",
+    "Pinned snapshot2 reader and selection remain exact while search results advance; fresh scoped search opens snapshot3 record2",
+    "Five exact Unicode clipboard comparisons and one pinned-reader pixel-region comparison pass",
+    "Native Command+E exports the exact scoped transcript with its bounded-range header,921bytes,mode0600",
+    "Complete retained extent verification passes for all three snapshots; database integrity and replayed-prefix bytes pass",
+    "Command+Q closes the owned window; runner stops its own VM and releases leases"
+  ],
+  "clipboard": {
+    "origin-reader.txt": {
+      "exact": true,
+      "bytes": 1089,
+      "sha256": "59894bd3964b251416df880ef039ca1eb3868e3625602c2d334ea7d10c70bfcb"
+    },
+    "old-candidate-reader.txt": {
+      "exact": true,
+      "bytes": 752,
+      "sha256": "b0f9a9e7a216da597d218a14e3df960271b3354a3a57cdc4554c03bd6e93173d"
+    },
+    "old-candidate-pinned-selection.txt": {
+      "exact": true,
+      "bytes": 752,
+      "sha256": "b0f9a9e7a216da597d218a14e3df960271b3354a3a57cdc4554c03bd6e93173d"
+    },
+    "old-candidate-pinned-full.txt": {
+      "exact": true,
+      "bytes": 752,
+      "sha256": "b0f9a9e7a216da597d218a14e3df960271b3354a3a57cdc4554c03bd6e93173d"
+    },
+    "appended-reader.txt": {
+      "exact": true,
+      "bytes": 806,
+      "sha256": "dde2231ca5060ab2e06d14c8179654ea1083aad0736ca0b15d798e1a53b4b02e"
+    }
+  },
+  "pixel_restoration": {
+    "exact": true,
+    "rectangle": [
+      648,
+      198,
+      1464,
+      934
+    ]
+  },
+  "export": {
+    "exact": true,
+    "bytes": 921,
+    "mode": "0600",
+    "sha256": "6675e6be029f909371df7cb0d0d1620f5553e999448533eff0f0fdb586229231"
+  },
+  "database": {
+    "sources": 2,
+    "generations": 2,
+    "snapshots": 3,
+    "raw": 47,
+    "records": 47,
+    "events": 47,
+    "current_search": 45,
+    "context": 47,
+    "checks": 3,
+    "quick_check": "ok",
+    "foreign_key_violations": 0,
+    "replayed_prefix_records_equal": 2
+  },
+  "cleanup": {
+    "app_windows_after_close": 0,
+    "vm_state": "stopped",
+    "runner_exit": 130,
+    "leases_absent": true
+  },
+  "limitations": [
+    "No native latency, sustained scrolling, IME, accessibility or resource measurement; unsupported glyphs remain boxes",
+    "GUI preferences/root registration were preconfigured through the actual CLI; this run does not repeat Settings interaction acceptance",
+    "First external count expectation assumed v2 raw-prefix reuse; corrected to47 because v1 migration performs full replay",
+    "First external export lookup assumed an exports subdirectory; corrected to the observed generated library/evidence-3 path before assertions",
+    "No production source changed during this native run; no signing/notarization/distribution"
+  ]
+}

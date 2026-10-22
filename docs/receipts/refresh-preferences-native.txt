@@ -1,0 +1,87 @@
+Refresh preferences native backend and CLI adapter receipt — 2026-10-20
+
+Result: 154 named native PASS checks across two executables, exit 0.
+tests/refresh_preferences.bend: 88; tests/refresh_preferences_cli.bend: 66.
+Host: Darwin arm64. Fixtures used isolated temporary SQLite databases and
+synthetic settings only. No original Juice data, provider histories or accounts
+were read. This gate is correctness evidence, not a performance measurement.
+
+Command:
+./scripts/test tests/refresh_preferences.bend tests/refresh_preferences_cli.bend > build/refresh-preferences-final.log 2>&1
+Exit status: build/refresh-preferences-final.exit.txt contains 0.
+Log footer: Completed 2 Bend test executables.
+
+Verified contract:
+- Only main.settings keys refresh.enabled and refresh.interval_seconds are
+  addressed. Values are TEXT true/false and exactly 30/7200/14400/28800/86400.
+  Missing keys default independently to enabled/30 seconds. Load creates no
+  schema, persists no defaults, and performs no source/account/filesystem work.
+- Invalid stored types or values fail explicitly; ordinary save does not repair
+  them. Unrelated settings and temporary table shadows are left untouched.
+- Load owns BEGIN DEFERRED; save owns BEGIN IMMEDIATE. A failed BEGIN never
+  commits or rolls back a caller transaction. Owned failures roll back; cleanup
+  failure explicitly reports uncertain connection state.
+- Save validates existing state, writes the complete pair with bound SQL,
+  verifies both present typed keys and exact values, then commits. Native tests
+  cover a partial statement failure, ignored update, deferred commit failure,
+  read-only refusal, competing writer, persistence and reopening.
+- Independent review found that defaulting during readback could conceal an
+  ignored insert. The correction requires both exact keys after writing. Three
+  actual SQLite IGNORE-on-INSERT regressions cover both default keys missing,
+  missing enabled=true while interval changes, and missing interval=30 while
+  enabled changes. Each refuses success and preserves the original key set and
+  other preference. Independent re-review confirmed this defect was closed.
+- Scheduling uses exact Nat milliseconds, preserves uptime above U32, returns
+  no deadline when disabled, and rejects addition beyond the pinned native
+  2^48-1 limit before arithmetic can overflow.
+
+Closed adapter protocol:
+refresh-preferences
+refresh-preferences-set true|false SECONDS
+SECONDS is exactly 30, 7200, 14400, 28800 or 86400.
+Success example:
+{"kind":"refresh_preferences","enabled":true,"interval_seconds":30,"interval_milliseconds":30000}
+Success is at most 256 ASCII bytes including newline. Failures exit 2 with no
+success output and bounded JSON {"error":MESSAGE,"code":CODE} on stderr.
+Invalid input, invalid stored state, database error, transaction refusal and
+cleanup failure have distinct codes. Messages do not echo supplied/stored data.
+
+Scope limits:
+The CLI tests execute the new adapter in native child workers. They do not
+exercise shared Cli.command dispatch, a GUI toggle, application restart behavior,
+active-capture scheduling or native Settings interaction. Those require the
+integration/native UI gate. Saving preferences does not itself interrupt a
+capture or start discovery. No GUI acceptance or proof-kernel result is claimed.
+
+Input stability:
+All 15 listed first-party/test/bridge/build/pin/Base inputs were hashed before
+and after the final gate; the manifests are byte-identical. Receipt creation
+rechecked every listed input live without drift. Other upstream compiler sources
+are represented by the revision/source manifests and toolchain lock; this is
+not a separate live audit of every upstream file. Source/test files stayed
+frozen while this receipt was written. Logs and binaries remain ignored locally.
+
+SHA256 artifact receipts:
+deebcabd8ecbcd09df342412962c8aaa3cae207a6283d00ba97cb0c00e7eced7  build/refresh-preferences-inputs-before.sha256
+deebcabd8ecbcd09df342412962c8aaa3cae207a6283d00ba97cb0c00e7eced7  build/refresh-preferences-inputs-after.sha256
+97fd8929393141fffb93d51d8c00c3d50d11d70fb881a39c534abb3d9db4f7d7  build/refresh-preferences-final.log (9505 bytes)
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  build/refresh-preferences-final.exit.txt (2 bytes)
+9bf312c1168e2dc585bb80ba8ad76aca3e23194dad98d35fc66274fb5b5c12c4  build/tests/refresh_preferences (366208 bytes)
+f54fcb8042a5e9717376626afb06f07d7ebd9b604301f6e0a1d1f43cffccda6e  build/tests/refresh_preferences_cli (482984 bytes)
+
+Complete 15-input SHA256 manifest (before = after):
+a30da0148c411e46fa5343e40cb14ec9ad72b6e7cf46a399b6afa0e10f296ede  .tools/bend/SOURCE_FILES.json
+6e54fdf74793c9a50c98576a4f3a5c3285aa1800500b5799790b242946b50fe6  .tools/bend/SOURCE_REVISION
+2da042974826279cf216cbe009a201bf14a6875747d7f5caf43ccf200b066f26  .tools/bend/bend2/base.bend
+814ea7ec479614f977416115f33c33f4a9f5efc250a0f0093311e8f6d72dc908  mise.toml
+919cb2abd8bad19a3e8cdf12c676f586717121a9c7222a557345ade8f7ab753e  native/sqlite.c
+daed2fbc1e56005659ca2eb1a95437f5d3d644e3210376ca592fc767e874e6d6  scripts/bend
+d078faa6a8923cf6eee5098a85f4b416a6687afdaab4736d20a9baa048e6fc54  scripts/build
+f11b7cd9a668dc0ee39a4292a5168479166f50297b860cff4f4bb9599cd8ec50  scripts/test
+02941eb344a355c5d4b41e544a987ca762cf662f7c978b983fd65c3e7de565e6  src/json.bend
+e0d70821050b21ca0cc239c2983d5c22f63a1786de72dff5c431510f6e794b62  src/sql.bend
+ff7d09cada36e4217bc8d1c7c7aecf29ff1498182133cdeee7fe0b60467ae8d1  src/refresh_preferences.bend
+a185f7db33d1d9bf3cdf60003ac546433548697dc89a4ea7ab8b364c265b82d4  src/refresh_preferences_cli.bend
+ecfb317603683b5358c2cb35c762d0b02bce009bf3f3b4d7df04fd8f3ad97cd2  tests/refresh_preferences.bend
+d883f16e1e8e1a87297b8fa788930bef2e87fe34e600b3d78dcc1db610e129bc  tests/refresh_preferences_cli.bend
+a493c0b966f4901cddb1e7a67820a05af613b71dc1373255f31cc7c7e594a5ea  toolchain/bend.sha256

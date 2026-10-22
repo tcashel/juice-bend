@@ -1,0 +1,54 @@
+Native History request titles — 2026-10-21
+
+Bend 2.0.37 / 60ca80aedeec9d8f0629b5f10dd19457d8ad67af, Bun 1.4.2 via mise.
+All maintained app behavior/UI is Bend 2; the SQLite C bridge is unchanged.
+macOS 27.0.1 arm64 host; Tart 2.40.1, macOS 27.0 arm64 guest, host-only network.
+
+App: 13,285,648 bytes; SHA256 b1cc6430206dd6f24059cffb69f005acc9abda5a7cb8e0ad9535d7b068efadf9.
+Generated C SHA256 dbe39ec804127513048cddc7371c01ac4a71cc2260bed9895cde13550bd0bfba.
+All 58 app inputs and 88 upstream hashes unchanged; history-build-inputs.sha256.
+
+Three production native gates, all exit 0, 199 checks / 142 unchanged inputs:
+- titles: 28; binary SHA256 960953dc520f92ef4386a12a948a7402f13b1e4a28afc2eabd7c46ab345b9759
+- cli: 9; binary SHA256 10780ae4e6862919761ac271c7c0ffadabdab095cee18eb9676f9487c6e2c61e
+- pagination: 162; binary SHA256 f5535384ccb656947c0dd7351a2d457aa45f8b73b34f4edd34393d20368fe7e6
+Pagination fixtures now supply authentic retained raw records. Prior high-ID,
+ordering and concurrent-capture assertions remain; no acceptance weakened.
+
+Observed native UI and exact comparisons:
+- Six History rows show two recorded-request titles and four neutral labels.
+  All other nine row cells, ordering and pagination metadata match the prior
+  Reading binary. Search Keep rows match byte for byte.
+- History opens the retained physical start 0; Search opens its hit at start 1.
+  Exact clipboard/CLI comparisons passed, including Unicode text.
+- Usage and Back restored the selected History reader exactly.
+- Claude and matching repository each show six rows; Codex and a different
+  repository show none. Scoped wrapped-request copy matched the exact CLI body.
+- One displayed scoped export: 4,781 bytes, mode 0600, SHA256
+  ab7222c45020c8d0ea27fb3944d58982032ffc860efe291ba7d018c193fcd668.
+- Synthetic append/rewrite made snapshots 7/8, then original paths moved away.
+  The selected snapshot 2 text and full-window pixels remained identical while
+  source 1 advanced, then snapshot 2 survived its own source removal. Old
+  snapshot 1 preservation is separately supported by the fixture assertions.
+  A new CLI History read still recovered the retained title from owned bytes.
+- Owned windows closed, Dock preference restored, runner exit 130, VM stopped
+  and owned lease absent. Standard executable and named History app contain
+  this observed binary; isolated empty-library launcher status passed.
+
+Fixture reuses benchmarks/native_request_origin.bend, 30 unchanged inputs,
+binary SHA256 d183ee7a837c27cef782a5bb7a9f95531f5ed119d989d8657db752c321f03e1d.
+First Search comparison incorrectly expected physical start 0. Search row and
+actual reader correctly selected start 1; the corrected CLI comparison passed.
+Original failed oracle stays in ignored artifacts. No app change was needed.
+
+History title reads admit four candidate user records per snapshot, with a
+shared 8 MiB raw/predecessor byte budget per page and pre-materialization length
+checks. Raw integrity and scope are verified before the full event is assessed;
+only then is eligible request text collapsed/truncated to 90 scalars. Missing
+context does not replay a prefix for titles. This read budget does not bound
+peak memory or SQL work. Parser, capture, schema and request policy unchanged.
+
+No new performance, full-suite or proof claim. CJK/emoji/combining glyphs still
+fall back, while copy is exact; shaping/IME/accessibility/resize/latency remain
+open. Raw synthetic traces/screenshots stay ignored. See
+benchmarks/results/tart-history-summary.json.

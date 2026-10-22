@@ -1,0 +1,27 @@
+{
+  "scope": "Focused checks of the adopted current-root attachment/capture/ATIF/discovery slice. Native Linux executables are not macOS UI interaction evidence; imported assertions can overlap.",
+  "linux": {
+    "earlier_suites": 16,
+    "checks": 720,
+    "receipts": [
+      "4ba9945d04aefbf5be3377cd42bd28ab42b58124b8973cd45adac6e8258c1b03",
+      "a57ea9ce6ec0da5c862883448b2d79f92c72a15aa108f51980d8124c503cc4eb"
+    ],
+    "later_capture_ui_checks": 38,
+    "later_atif_ui_checks": 171,
+    "later_receipt": "d27a26f2c11b73c0c9ab8c49083c97d82d90eb6d3fc56eceed9a4132043b93b2",
+    "earlier_failures_preserved": "ATIF CLI and preview app frontend memory guards; stale export-coordinate test corrected without application change."
+  },
+  "macOS": {
+    "compiler": "Pinned LLVM 23.1.4 -O1 via maintained scripts/build",
+    "dc_and_pixels_checks": 71,
+    "atif_cli_checks": 11,
+    "preview_lifecycle_checks": 21,
+    "lifecycle_receipt": "c28da5e6259bab77854b30f4082d7995fc793b5eec40cbbd5bbbcda66bf8f06a",
+    "runtime_stderr_empty": true,
+    "sources_and_tools_unchanged": true,
+    "owned_processes_absent": true
+  },
+  "native_GUI": "Separate scoped receipts; not established by these CLI/state tests.",
+  "fresh_full_suite": false
+}

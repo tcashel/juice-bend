@@ -1,0 +1,84 @@
+Related GUI focused native gates — 2026-10-20 America/New_York
+
+Host: native macOS/Apple Silicon. The normal scripts/test and scripts/build
+wrappers used mise, the pinned Bend compiler, and Apple clang 21 at -O3.
+Fixtures ran only in fresh isolated temporary directories. These tests do not
+open a native window; actual interaction is recorded separately in
+docs/receipts/relations-ui-native.txt.
+
+Commands and observed exits
+  ./scripts/test tests/gui_relations.bend
+  Exit 0; 51 named assertions; Completed 1 Bend test executables.
+
+  ./scripts/test tests/gui.bend tests/gui_activity.bend tests/gui_repository.bend tests/ui.bend tests/native_trace.bend
+  Exit 0; 240 named assertions; Completed 5 Bend test executables.
+  Breakdown: GUI 87, Tools 48, Files 54, UI 41, native_trace 10.
+  Two suite-completion PASS banners are excluded from these counts.
+
+Total: 291 named passing assertions across the two separate invocations.
+
+The Related gate covers typed identity/scope/cursor validation, bounded pages,
+Unicode locators, page-local ambiguity, missing/partial metadata, exact pinned
+target requests, two Back levels, stale response rejection, frozen filters,
+Tools/Why/paging/export transitions, capture completion and auto-refresh guards.
+Restoration comparisons include every saved Item field/filter, listing flags,
+listing filters/offset/anchor, selected snapshot/range/view arguments, Form.search,
+and reader/title/query/scope/rows/result state/selection/caret/scroll.
+
+Successful native test artifact
+  build/tests/gui_relations: 4,587,152 bytes
+  SHA256 ca70a10dd0e30eaee5b0441a2d154cb012638cdf06429705459f24a5fd3538c1
+  Generated C SHA256 889410f65786fd0c02601e863bd1e860e7aa25ebea58d546bb372c851a9d7d40
+
+Local full-log identities (ignored build artifacts; not published transcripts)
+  build/gui-relations-focused.log
+  SHA256 078197bbe66b170fa93085e0425b8b6da8c84196cb339d5a7b7728e230774cc7
+  build/gui-relations-regressions.log
+  SHA256 c7349131f04ad9940ae39256a50762b692ad96d2710c2460ebbb897f6177dd20
+
+Input binding
+  All 42 entries in docs/receipts/relations-build-inputs.sha256 were checked
+  against the working files after the gates and still match the frozen app
+  inputs. That manifest SHA256 is
+  2d2dc4d1372b29d8f652cd01875d67d2da6d5a5eab0c577865f7024f9e834171.
+  The six test entry points reach 44 Bend files. Their only inputs outside that
+  production manifest are the seven files below. This is a final input check;
+  a separate test-start manifest was not collected.
+
+0e15fcff5e17ed3a65bce5f6c1bc980b53272f80742606280c208bd5b8b91c8c  benchmarks/native_trace.bend
+2a8a848a2b98dbae3673c1b20235329ab28f448bd2400b096551340b86dee9f9  tests/gui.bend
+2437ce036897dad52ef250c260b6f0c4d79685933f73421bf29a8872976b9a80  tests/gui_activity.bend
+2bf20a7c4cb7b7ae480f060d135662869b83bb5ebc656581b4e76a87daf5696d  tests/gui_relations.bend
+b37dc32f09f169419f6162dd5c02d86a1905cd14f7eadfe959cce3d38d042c03  tests/gui_repository.bend
+eedd0993c5745a225ccb4baa48f1b7b6bd70823b6cd79ed6ff51cb9f35f1dc37  tests/native_trace.bend
+7530c52aefde7c61a8b7aa099f1527450f38e1c48c105613e55edfbdf16234fc  tests/ui.bend
+
+Other successful regression executable SHA256 values
+e9ac0198f9cd341a458d20c57a4c08fe355817184b370242f42ed6ab3e20f508  build/tests/gui
+f3496e55acac0ea563a8839e3b6eef08739c749808359d8347de5b39955f501b  build/tests/gui_activity
+2e4cdfa728011460f6ea4ea439896f9498f6674fae2b859d699ae69025d31cdf  build/tests/gui_repository
+82b78f52be5704fba17c43684d8739f6671fe9451fee0114c24bb01d62fe5302  build/tests/ui
+e70ca7d737c8bf548d1ab68d463dca63228eaeb6044933fb1c4392d2fa47595b  build/tests/native_trace
+
+Failed attempts remain separate and are not counted as passes
+  build/gui-relations-arity-initial.log
+  build/gui-relations-arity-retry.log
+  build/gui-relations-clang-crash.log
+  build/gui-relations-clang-retry.log
+  build/gui-relations-clang-observation-retry.log
+  build/gui-relations-diagnostic.log
+  build/gui-relations-clang-diagnostic.log
+  build/gui-relations-observation-diagnostic.log
+
+The initial Bend failure was a generated continuation exceeding 247 words.
+Production Navigation now uses a zero/one list while retaining the full saved
+objects. Subsequent test-only Apple clang failures identified a continuation
+holding two 95-word fixture states. The final tests box those fixture returns
+between the same production transitions and compare complete observations;
+all 51 assertion intents remain and restoration coverage was strengthened.
+Independent read-only review found no weakened assertions. Diagnostic logging
+changed neither the pinned compiler/runtime files nor final build flags. The
+successful gates use the ordinary wrappers and optimization settings.
+
+The production app and its 42 inputs remained frozen through the final test
+workaround. No benchmark timing or input-to-photon claim follows from this gate.

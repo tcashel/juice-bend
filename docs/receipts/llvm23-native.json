@@ -1,0 +1,23 @@
+{
+  "scope": "Unchanged Bend-generated native app C compiled on macOS arm64; build only, not UI acceptance.",
+  "compiler": "LLVM 23.1.4",
+  "optimization": "-O1",
+  "deployment_target": "26.0",
+  "Bend": "2.0.37",
+  "Bend_revision": "60ca80aedeec9d8f0629b5f10dd19457d8ad67af",
+  "prior_compiler_failure": "Apple clang 21: live register clobbered by inserted prologue instructions",
+  "generated_c_sha256": "6bd10362983c7f0d1d0267851ef282c91cfc14ea1c0997f02b66695bd3e2c8e9",
+  "receipt_sha256": "4c93443bbb07e711fce1ad7f8f798f9fc3e2d18ff1500f8cfedefed571559aa5",
+  "elapsed_seconds_diagnostic": 498.204,
+  "binary_sha256": "e6bf90ee9cbd98389d61c805d86e88e16933ea17440690c2eb42dc5c96575743",
+  "binary_bytes": 24141432,
+  "source_files_unchanged": 158,
+  "pins_unchanged": 93,
+  "c_and_tools_unchanged": true,
+  "source_and_optimized_abi_declarations_unchanged": true,
+  "macro_or_stack_check_override": false,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "child_absent": true,
+  "child_group_absent": true
+}

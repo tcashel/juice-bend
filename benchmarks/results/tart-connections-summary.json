@@ -1,0 +1,49 @@
+{
+  "accepted_native_workflow": true,
+  "full_parity": false,
+  "binary_sha256": "0d4839d98088aff7c3c5a5581908ded7e877e5987e17ecafd592e03ce6d75988",
+  "binary_bytes": 19275464,
+  "first_party_main_closure_files": 81,
+  "runtime_build_pins": 93,
+  "physical_mac_build_seconds": 712.306,
+  "native_nonce": "97d942a4-7419-4841-9cc7-ad5c6c85a432",
+  "native_guest_exit": 0,
+  "display": [
+    1280,
+    800
+  ],
+  "dock_autohide": false,
+  "containment_observations": 75,
+  "exact_clipboard_comparisons": 18,
+  "inert_setup_copy_comparisons": 4,
+  "settings_and_reader_pixels_restored": true,
+  "capture_counts_unchanged": true,
+  "full_raw_export_bytes": 8313,
+  "full_raw_export_mode": "0600",
+  "full_raw_export_matches_source": true,
+  "linux_focused_assertions": 387,
+  "mac_focused_assertions": 334,
+  "counts_overlap": true,
+  "cleanup": {
+    "owned_windows_closed": true,
+    "display_restored": true,
+    "dock_unchanged": true,
+    "vm_stopped": true,
+    "lease_absent": true,
+    "runner_exit": 130
+  },
+  "not_claimed": [
+    "real account or provider integration",
+    "status-line installation or real provider feed",
+    "40-row GUI history paging",
+    "simultaneous GUI callback/root-edit race",
+    "clock reversal",
+    "full suite, proof or performance rerun"
+  ],
+  "visual_gaps": [
+    "history row newline renders as fallback box",
+    "raw Unix timestamps and lengthy policy prose",
+    "existing CJK/emoji fallback",
+    "generic guest OS Tips notification overlaps upper-right search area"
+  ]
+}

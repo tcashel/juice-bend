@@ -1,0 +1,29 @@
+{
+  "scope": "Actual native Close during same-child inline JPEG decode. Optimized e6 binary before DC/title/polish changes.",
+  "status": "FAIL: window and parent close latency exceed 5-second threshold",
+  "app_sha256": "e6bf90ee9cbd98389d61c805d86e88e16933ea17440690c2eb42dc5c96575743",
+  "observations": {
+    "scope": "observed native Close only; no inference from Chan.close",
+    "same_child_bracketed": true,
+    "parent_exit_observed_ms": 39781,
+    "child_exit_observed_ms": 36778,
+    "window_exit_observed_ms": 39984,
+    "orphan_observed": false,
+    "app_window_threshold_ms": 5000,
+    "owned_cleanup_bound_ms": 130000,
+    "times_are_observation_bounds_not_exact_event_timestamps": true
+  },
+  "original_guest_exit": 0,
+  "harness_defect": "An AND-list combined two required threshold assertions; a false first command bypassed errexit. Original exit0 is preserved and is not a native acceptance pass. Future harness must use independent required assertions.",
+  "cleanup_exit": 0,
+  "fixture_copy_exit": 0,
+  "display_restore_exit": 0,
+  "display_holder_exit": 0,
+  "cleanup_screenshot_exit": 2,
+  "cleanup_screenshot_scope": "Post-close optional window screenshot did not succeed; exact process/window absence checked separately.",
+  "wrapper_exit_after_requested_stop": 143,
+  "owned_vm_stopped": true,
+  "owned_lease_released": true,
+  "close_observations_sha256": "c4da6bf835a6d4051b95ed56314e340152b166f8d0d6dc224b7d37ffc2198f22",
+  "root_visual_review": "Root inspected the guarded native Close action and immediate pending-UI screenshot. The final display shows no owned Juice window. No other application was operated."
+}

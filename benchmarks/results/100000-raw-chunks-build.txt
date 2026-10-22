@@ -1,0 +1,17 @@
+Retained raw-chunk comparison: standard production benchmark, macOS 27.0.1 arm64.
+2026-10-20; Bend 2.0.37, pinned revision, Apple clang -O3.
+Build: ./scripts/build benchmarks/main.bend build/juice-bend-bench-raw-chunks
+Run: absolute native binary with argument 100000 in a fresh private temporary cwd.
+Build, native child and independent postflight exit 0; stderr empty.
+Binary SHA256: 1e3a30ae66cedb984d587b97f73a4d8e6cc3bbef54fa700526bdf615eb34e750
+Binary bytes: 3067000
+Generated C SHA256: 887c0f2fff8075e96ce9cd90ce35fc20b5b3785750c47eef0c619b913448f566
+All 20 transitive inputs and 88 upstream hashes matched before/after build and run.
+Same unchanged generator/workload as context-prefix candidate; first 33582 ms,
+unchanged 4088 ms, append 16 records 27728 ms. Search/late/scoped-late p95 50/8/48 ms.
+Previous append was 27262 ms: no end-to-end append improvement is established.
+All benchmark assertions and independent database checks passed.
+Full raw/source verification, exact context digest bytes and event seals remain.
+No task build/test/Tart overlapped timers; unrelated host activity uncontrolled.
+One observation per version, not a statistical comparison or UI measurement.
+Five-trial p95 is the observed maximum. Fixture generation outside timers.

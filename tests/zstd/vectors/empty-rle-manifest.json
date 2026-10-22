@@ -1,0 +1,9 @@
+{
+  "source": "independent hand-encoded format case",
+  "encoded_sha256": "f5dac958e4adb1667f98c6fd2254f96980ead4510f6fe0d97d92bc6d11463e14",
+  "decoded_bytes": 0,
+  "external_verification": "zstd CLI v1.5.6 -q -d -c exits0; empty exact output; no stderr",
+  "note": "RLE stored byte exists even when regenerated size/window are zero",
+  "original_manifest_sha256": "59dba1181558c6143e60f780d5af18554214295ebe5603db862a5539ef0f638e",
+  "maintained_test": "tests/zstd/frame_tests.bend: zero-length RLE frame"
+}

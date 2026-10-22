@@ -1,0 +1,70 @@
+Raw comparator Store integration: native correctness gate
+
+./scripts/test tests/append_batches.bend tests/append_integrity.bend tests/event_seal_append.bend tests/storage_edges.bend tests/selected_integrity.bend tests/coverage_integrity.bend tests/maintenance.bend tests/integration.bend tests/publication_crash.bend
+Exit:0; Completed9 Bend test executables.
+tests/append_batches.bend: 226 PASS
+tests/append_integrity.bend: 49 PASS
+tests/event_seal_append.bend: 283 PASS
+tests/storage_edges.bend: 33 PASS
+tests/selected_integrity.bend: 24 PASS
+tests/coverage_integrity.bend: 4 PASS
+tests/maintenance.bend: 30 PASS
+tests/integration.bend: 21 PASS
+tests/publication_crash.bend: 1203 PASS
+Integrated1873 + separately frozen pure comparator352 =2225 checks across10 entry points.
+All27 initial/append/rewrite x9phase cuts confirmed exact nonce+mode+phase, then owned child timeout/kill/reap.
+Before/candidate/after manifests cover100 resolved transitive test/build/runtime inputs. OnlyStore changed between before/candidate; zero changed during regressions.
+Native standard app was not overwritten. This correctness gate did not time performance.
+Separate production timing is recorded in benchmarks/results/100000-raw-chunks-build.txt;
+append27728ms versus preceding27262ms did not establish an end-to-end improvement.
+
+Preservation review: every record_valid predicate and state increment,128-row/actual-byte SQL bound, exact read offset/end-offset length, all-row validation before source comparison, both source passes, observers and transaction/publication are unchanged. Original BLOB order is preserved by outer-list cons.
+Codegen: integrated append_batches byte loop spin_127 uses direct WL_AGAIN; no outerchunks parameter, heap_alloc/task_node/WL_PUSHN in consume body. Runtime throughput is unmeasured here.
+Review: domain_proofs cleared exact candidate84ea44bd and comparator e8f08315.
+
+SHA256:
+66e1e27c42f512fd09c0fb1e9cd0285e59044f8e990b3b4dbc4f5490a1e4464a  tests/append_batches.bend
+7d967d72ceae43edc99b952e2e7737ad3c6ca266faac88854a43ceae0f2109df  build/tests/append_batches
+b7fdc89c98fb9f085e17c2b5c704f45cc4cc9086499db525b8345cd2f16cc784  build/tests/append_batches.c
+41a133946aace732b8549de390d2ce38fd230625760e8d0c5785140eb19c26f0  tests/append_integrity.bend
+5ea0c0b5a1a66311fc3344468078ef8ff8d4b066e0ef3ca7d24eed32b148586c  build/tests/append_integrity
+f8e6f87167f8851d5c3de23b774e82967e6d365683962473da18bcc79e39bc70  build/tests/append_integrity.c
+1a21f4b3e12505836c4aa5929ffc05d44678ffaf9244c88bd9b749a4acb010a5  tests/event_seal_append.bend
+727d5261f54034525cfc18eb615b3dac9d86ed8b9452389d504b686d2db62d5a  build/tests/event_seal_append
+212df826d5599bff36255eaa9c8d5d69ef6f10d012125ffb438f9ecb07685670  build/tests/event_seal_append.c
+25ed3caf0b7c77595aaf1b3350cf2b3008925097099d79286405dac78aea2e0a  tests/storage_edges.bend
+272899cdf5d152d45ac39881f07190df0232dddb5af7b7d9bdd18ffbae23a5f7  build/tests/storage_edges
+d2f70949da3afcb5964eda8692d5d94fff4eefa48e2508608a91cf0db201f2b8  build/tests/storage_edges.c
+bc72e10a789c3b2e28bb43e6ceee62d967a445ba82afc1d6c8360d81a2e486fe  tests/selected_integrity.bend
+de9e3818ac0545924c7164c1231d47e277505a080c4e45045ad6af2d26dd7b37  build/tests/selected_integrity
+6222893487fe9ca71367ff78ee3c61130422c4108e696d293bd2c6e03aa69380  build/tests/selected_integrity.c
+c8086ca284e2980eec589582ed069f60335c9e3f8e7daa1ffb78aacee9c5f23e  tests/coverage_integrity.bend
+77474c21e906877cb9ba784a548aa616c4c0e32295f696d62870cf0855df1973  build/tests/coverage_integrity
+6d7d37194da6d2832226371d53933c679647fb23ae6e12f3f0276d9962407ab0  build/tests/coverage_integrity.c
+a7bb7428776b02cb71215d4d3f6fec5fe37644b6cff9410ebfc08a8e41a47aa1  tests/maintenance.bend
+8ab5437153865f37e7754a09828d437f6e739fa1f3d478c7aa175ee85bf15a9b  build/tests/maintenance
+05cae62e917494ff4a3bc9ebf0988c71fc9f97d3e88fb974be0139d849f15499  build/tests/maintenance.c
+f13271b02f90231be34fec006ebe3bc9e0a2d18d2eebb9a831ac5e498610d4e3  tests/integration.bend
+d44ab40bce068f779d3b5acbd46bf03d2c0943bfc7b7d2249ee275bcab325d3c  build/tests/integration
+2560cf2ae122b7a254d83530c215380ae8fc0ffe6bd268499c594b3af28b332a  build/tests/integration.c
+58638fc09beb949ca40a93c1738fc7798ca3b83b6039b202c6dd2ad3e7f412c8  tests/publication_crash.bend
+c9e3224dae3bf9f696cfddab4087f7da820f7680c0bd9f12818f600586e93d5f  build/tests/publication_crash
+d9c8e3e0764cbc88cadc6cd225c839021cdc7a8f52563307148f815cc474acc3  build/tests/publication_crash.c
+84ea44bdac6d1e2d5cb44b0c54abe415019fee6581a62a2ae79b5b722ac510ac  src/store.bend
+e8f08315fa90db8038b28e186ce78937a964aa3092f8e2c8beedd6b820d7ec52  src/raw_compare.bend
+f2f68a4a9781ea102f3e275781380a885e3057e178d75c8d45b310c3c5002191  src/domain.bend
+eba657f6476109b035a3c4daf0ffdb87e0017524425caecb572b3af39d688b30  src/projection_seal.bend
+e3bf2ed16fd237a9422a30fc06716159fa093308219ad0426949d293929b817d  src/maintenance.bend
+919cb2abd8bad19a3e8cdf12c676f586717121a9c7222a557345ade8f7ab753e  native/sqlite.c
+813ca3a5504160c7cc68156f003c03d806ab2af22337ca603ad4d2c205fdc002  tests/raw_compare.bend
+abd6f1544f732411488069a5d023ccab2b67c59760959d242e10d41966e7cce4  build/tests/raw_compare
+fc98241b44bd21e42bf8046ece2d55b4a35c8bfe556721059e1815cad096438e  build/tests/raw_compare.c
+7de7296316934e3e6e106e0cc5893a8a3cf2a7c90b3d960b3a2679a9c9f4ef72  build/raw-compare-test.log
+931f1e664a679af1355a9ca547ac1daef9f7b14137bc7cc21b110b0cc504b5b1  build/raw-compare-check.log
+be963b6828a4f0373dbc03645daa0a845a529ac5361c165d9c9f3600b1151f6c  build/raw-compare-integration/inputs-before.json
+53c7f4fc8e6bfa7917ba51b5cfeaf0040be72ecf39429bf740f6136839a2cc47  build/raw-compare-integration/inputs-candidate.json
+53c7f4fc8e6bfa7917ba51b5cfeaf0040be72ecf39429bf740f6136839a2cc47  build/raw-compare-integration/inputs-after.json
+effc341cede49824a9b4db11f51eb17fdc568cca0ce65160a558765a5b0b654d  build/raw-compare-integration/regression.log
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  build/raw-compare-integration/regression.exit.txt
+6cfc67a1a00459ae68787d8cc407192332613b6d05354371f373b526999a0cdb  build/raw-compare-integration/generated-loop.txt
+a4949943c36cec17015da3a66fb10bd1754d01dae683afddb601dda89aa45615  build/raw-compare-integration/store.patch

@@ -1,0 +1,131 @@
+#!/bin/bash
+# External test orchestration only. This script neither launches nor tests the app.
+set -euo pipefail
+umask 077
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)
+[[ $# == 2 ]] || { echo 'Usage: scripts/vm-session EXISTING_PAYLOAD NEW_ARTIFACTS' >&2; exit 2; }
+network=${JUICE_BEND_VM_NETWORK:-host}
+case "$network" in
+  host|shared) ;;
+  *) echo 'JUICE_BEND_VM_NETWORK must be host (default) or shared.' >&2; exit 2 ;;
+esac
+export TART_HOME=/Volumes/VM_disks/tart
+tart="$HOME/.local/bin/tart"
+vm=juice-tests
+lock="$TART_HOME/.juice-test-lock-$vm"
+[[ -d "$TART_HOME" && -x "$tart" ]] || { echo 'Prepared external Tart storage/tool missing.' >&2; exit 2; }
+[[ ! -L "$1" && -d "$1" && ! -e "$2" && ! -L "$2" ]] || { echo 'Payload must exist; artifacts must be new.' >&2; exit 2; }
+payload=$(CDPATH= cd -- "$1" && pwd -P)
+artifacts=$(CDPATH= cd -- "$(dirname -- "$2")" && pwd -P)/$(basename -- "$2")
+case "$payload:$artifacts" in *$'\n'*|*$'\r'*) echo 'Newlines are not allowed in share paths.' >&2; exit 2 ;; esac
+[[ "$payload" == "$ROOT/build/"* && "$artifacts" == "$ROOT/build/"* ]] || { echo 'Both shares must be inside this checkout build directory.' >&2; exit 2; }
+[[ "$payload" != *:* && "$artifacts" != *:* && "$(basename -- "$artifacts")" != . && "$(basename -- "$artifacts")" != .. ]] || exit 2
+[[ "$artifacts" != "$payload/"* ]] || { echo 'Artifacts cannot be inside the read-only payload.' >&2; exit 2; }
+[[ -z "$(find "$payload" ! -type f ! -type d -print -quit)" ]] || { echo 'Payload may contain only regular files/directories, no links.' >&2; exit 2; }
+[[ -f "$payload/run-id" ]] || { echo 'Payload needs a fresh UUID in run-id.' >&2; exit 2; }
+nonce=$(cat "$payload/run-id")
+[[ "$nonce" =~ ^[A-Fa-f0-9]{32}$ || "$nonce" =~ ^[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$ ]] || exit 2
+mkdir "$artifacts"
+printf '%s\n' "$network" > "$artifacts/network-mode.txt"
+owner=$(printf '{"protocol":1,"nonce":"%s","pid":%s,"repository":"juice-bend"}' "$nonce" "$$")
+vm_pid= probe_pid= lease=0
+
+# Bash's own child table avoids signalling a recycled/unrelated PID. Include
+# stopped children: they still need eventual KILL rather than an unbounded wait.
+running() {
+  # Run jobs in this shell, not a pipeline subshell with a different child table.
+  jobs -pr > "$artifacts/live-children.txt"
+  jobs -ps >> "$artifacts/live-children.txt"
+  /usr/bin/grep -qx "$1" "$artifacts/live-children.txt"
+}
+stop_child() {
+  local child=$1 attempt
+  if running "$child"; then kill -TERM "$child" 2>/dev/null || true; fi
+  for attempt in {1..15}; do running "$child" || break; sleep 1; done
+  if running "$child"; then kill -KILL "$child" 2>/dev/null || true; fi
+  wait "$child" 2>/dev/null || true
+}
+bounded() {
+  local seconds=$1 started=$SECONDS status
+  shift
+  "$@" & probe_pid=$!
+  while running "$probe_pid"; do
+    if (( SECONDS - started >= seconds )); then stop_child "$probe_pid"; probe_pid=; return 124; fi
+    sleep 1
+  done
+  status=0
+  wait "$probe_pid" || status=$?
+  probe_pid=
+  return "$status"
+}
+stopped() {
+  local index=0 name found=0
+  bounded 10 "$tart" list --source local --format json > "$artifacts/vm-state.json" || return 1
+  while name=$(/usr/bin/plutil -extract "$index.Name" raw -o - "$artifacts/vm-state.json" 2>/dev/null); do
+    if [[ "$name" == "$vm" ]]; then
+      [[ "$(/usr/bin/plutil -extract "$index.Running" raw -o - "$artifacts/vm-state.json")" == false ]] || return 1
+      [[ "$(/usr/bin/plutil -extract "$index.State" raw -o - "$artifacts/vm-state.json")" == stopped ]] || return 1
+      found=$((found + 1))
+    fi
+    index=$((index + 1))
+  done
+  [[ "$found" == 1 ]]
+}
+cleanup() {
+  local status=$? stopped_ok=0
+  trap - EXIT INT TERM HUP
+  set +e
+  [[ -z "$probe_pid" ]] || stop_child "$probe_pid"
+  [[ -z "$vm_pid" ]] || stop_child "$vm_pid"
+  if [[ "$lease" == 1 ]]; then
+    if stopped; then stopped_ok=1; else echo 'Cannot verify VM stopped; retaining lease for inspection.' >&2; status=1; fi
+    if [[ "$stopped_ok" == 1 && ! -L "$lock" && -f "$lock/owner.json" && ! -L "$lock/owner.json" && "$(cat "$lock/owner.json")" == "$owner" ]]; then
+      rm -- "$lock/owner.json"
+      rmdir -- "$lock" || status=1
+    else
+      echo 'Lease retained; ownership/state needs inspection.' >&2
+      status=1
+    fi
+  fi
+  printf '%s\n' "$status" > "$artifacts/session-exit-code"
+  exit "$status"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM HUP
+bounded 10 "$tart" --version > "$artifacts/tart-version.txt" || exit 2
+[[ "$(cat "$artifacts/tart-version.txt")" == 2.40.1 ]] || { echo 'Expected installed Tart 2.40.1.' >&2; exit 2; }
+stopped || { echo 'Dedicated VM is absent, active, or unreadable; refusing to attach.' >&2; exit 2; }
+[[ ! -e "$TART_HOME/.juice-cleanup-lock" && ! -L "$TART_HOME/.juice-cleanup-lock" ]] || { echo 'VM storage cleanup lease is active.' >&2; exit 2; }
+mkdir "$lock" || { echo 'Could not acquire shared VM lease; no VM started.' >&2; exit 2; }
+printf '%s\n' "$owner" > "$lock/owner.json"
+lease=1
+[[ ! -e "$TART_HOME/.juice-cleanup-lock" && ! -L "$TART_HOME/.juice-cleanup-lock" ]] || exit 2
+stopped || { echo 'VM state changed while acquiring lease.' >&2; exit 2; }
+run_args=(run "$vm" --no-graphics --no-audio --no-usb-accessories --no-clipboard)
+if [[ "$network" == host ]]; then run_args+=(--net-host); fi
+# Shared NAT is opt-in for dependency downloads; normal native validation uses host-only.
+"$tart" "${run_args[@]}" \
+  "--dir=juice-bend-payload:$payload:ro" "--dir=juice-bend-results:$artifacts" \
+  </dev/null > "$artifacts/tart.log" 2>&1 &
+vm_pid=$!
+printf '%s\n' "$vm_pid" > "$artifacts/tart-pid"
+printf '%s\n' "$owner" > "$artifacts/session-owner.json"
+started=$SECONDS
+ready=0
+# The final transport probe/TERM grace/sleep may add at most 27 seconds.
+while (( SECONDS - started < 300 )); do
+  running "$vm_pid" || { echo 'Owned Tart process exited before readiness.' >&2; exit 2; }
+  if bounded 10 "$tart" exec "$vm" /bin/cat '/Volumes/My Shared Files/juice-bend-payload/run-id' > "$artifacts/readiness.txt" 2> "$artifacts/readiness-error.txt"; then
+    if [[ "$(cat "$artifacts/readiness.txt")" == "$nonce" ]]; then ready=1; break; fi
+  fi
+  sleep 2
+done
+[[ "$ready" == 1 ]] || { echo 'Guest payload nonce was not confirmed within the bounded boot wait.' >&2; exit 2; }
+running "$vm_pid" || { echo 'Owned Tart process exited at readiness.' >&2; exit 2; }
+printf 'READY vm=%s network=%s nonce=%s owned_tart_pid=%s artifacts=%s\n' "$vm" "$network" "$nonce" "$vm_pid" "$artifacts"
+echo 'Session only; no app/test has run. Keep this process alive; Ctrl-C stops its owned VM.'
+status=0
+wait "$vm_pid" || status=$?
+vm_pid=
+exit "$status"

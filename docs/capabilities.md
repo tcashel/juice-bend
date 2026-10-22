@@ -1,0 +1,147 @@
+# Capabilities
+
+The current source adds readable transcript formatting, canonical-offset word
+wrapping, retained inline attachment inventory/export and streaming archives.
+The confined attachment worker has passed native boundary checks; explicit
+external capture UI, image viewing and ATIF export remain in isolated integration.
+The newest executable has an unresolved intermittent selection/Copy result and
+is not promoted over the preserved working app. See
+[the scoped receipt](receipts/reader-attachments-native.txt).
+
+## Connections native validation — 2026-10-21
+
+Current app `0d4839d9…` adds explicit local Claude quota collection under
+Settings → Connections. Actual Tart interaction passed Enable, reviewed setup
+copy, known-zero/partial observations, invalid/unknown feed handling, retained
+history, Disconnect/retired callbacks, root-edit refusal and exact Back restoration.
+Eighteen clipboard comparisons, four inert-copy checks and 75 containment
+observations passed; capture counts and full 8,313-byte export stayed exact.
+This is passive local observation, not account authentication or real-provider
+integration. See [native receipt](receipts/connections-native.txt). Focused Linux 387
+and Mac 334 assertions have overlapping scopes, not a new full-suite total.
+The narrow SQLite bridge is 454 lines; new existing-file open flags do not change
+capture-open behavior. History-row newline, raw timestamp presentation and long
+policy text remain polish gaps. Earlier compact evidence below is preserved.
+
+The preserved compact app `e780c37b…` fits completely at observed 1280×800 with
+the Dock visible. Actual keyboard/wheel paging, status return, eighteen clipboard
+comparisons and six exports passed, including retained source-absent reads.
+See [compact receipt](receipts/compact-native.txt). This closes the observed
+footer obstruction; it does not add upstream resize or text-shaping facilities.
+
+This is an evidence ledger, not an acceptance declaration. Product acceptance
+is recorded in `acceptance.md`.
+
+| Boundary | Current evidence |
+|---|---|
+| Native CPU compilation | `scripts/build` compiled upstream hello and window examples to arm64 Mach-O; hello ran and printed `Hello, world!` |
+| Native reading polish | App `fabcd506…` passed exact Files/Settings/History selection and pixel restoration, Why export, Page Down/Up, Unicode clipboard/Delete and pending-Usage Back. 604 focused checks and 55 unchanged app inputs. Licensed 204-glyph grayscale font, word-aware rows, full status inspector and capture-hold hint; shaping/IME/accessibility/resize remain open. See `receipts/polish-native.txt` |
+| Native runtime | Actual macOS arm64 app launched and interacted with; browse/search/transcript, explicit capture, Blame/Why/export, Pause, Usage, rebuild and filters observed. See `native-validation.md` for build identities and remaining checks |
+| Capture scheduling and guest resources | The historical Bend trace measured callback progress; the final uninstrumented Tart build visibly accepted input and Pause during a successful 100,016-record capture. An intermediate candidate with the final GUI measured 1.55% of one core at settled idle. Final GUI physical footprint after capture/rebuild was 46.2M. Input-to-photon remains unmeasured. See `performance.md` and the separately identified receipts |
+| Compiler host | `scripts/bend version` executes Bend through mise-pinned Bun |
+| Application language / runtime | Application/UI/test/proof sources remain Bend 2, with one maintained native source `native/sqlite.c`. Fresh `otool -L` on app `d06447f6…` shows SQLite, libSystem/libobjc and upstream macOS frameworks; no Lean dependency. Bun hosts the compiler; optional Lean checks BendTT proofs during development. Neither runs application behavior |
+| Integrated native tests | The expanded suite completed 40 executables and 2,960 named checks, including 87 GUI-state checks, 226 append-batch checks and 27 publication crash cuts. All recorded inputs remained unchanged. See `receipts/test-parity-summary.txt`; the earlier 33-executable baseline receipt is preserved |
+| SQLite boundary / FTS5 | Native boundary suite covers typed/NUL/binary/exact-integer round trips, FTS5, rollback/reopen, stale handles, statement failure cleanup, BUSY, cancellation, registry exhaustion/reuse and timer responsiveness; current integrated counts belong in `acceptance.md` |
+| Exact file addressing | Pinned Base uses U32 file sizes/offsets; application must reject unsupported sizes explicitly |
+| Raw file input / maintenance | `scripts/test tests/maintenance.bend` passed 30 checks, including exact UTF-8/NUL/invalid bytes, stale source independence, immutable append snapshots, oversized boundaries, full verification, rollback on rebuild failure and atomic export destination protection |
+| Bounded archive capture | Adopted Bend 2 `.jsonl.zst` decoder and atomic capture retain exact compressed containers and decoded logical records. The staged decoder passed 485 assertions; capture, retained search/dual export and interruption gates have separate receipts. Final metadata, migration-race and maintenance gates passed 99, 92 and 60 checks with unchanged inputs. Broader earlier gates predate the final metadata/migration fixes; actual native archive import/search/copy/dual export/source-absent restart passed on app `d06447f6…`. See `receipts/archive-native.txt`; no new full-suite claim |
+| Full capture export controls | History now exposes Export full JSONL and Export archive separately from Export evidence. The combined production export/Brief/keyboard/readability gate emitted 251 PASS lines, including suite/fixture lines, with 49 unchanged inputs. The existing UI/polish gate passed another 162 PASS lines. Actual native full exports from a filtered late reader matched every retained byte before and after source removal; native plain-file archive export refused without creating a file |
+| Source identity | Native maintenance tests confirm relative, absolute and explicit symlink aliases resolve to one canonical source |
+| Explicit source refresh | Native sources suite passes 24 checks; real main CLI registration, discovery/import, disabling and refresh were also observed with synthetic folders |
+| Settings / Indexing controls | Candidate `2e3191d9…` passed native Claude/Codex Add folder without capture, selected canonical-row Enable/Disable, explicit Import file, manual batches while paused, and durable disabled/two-hour preferences after restart. Back preserved scoped record 40, exact reader/query/list/selection; seven clipboard and four pixel-region comparisons passed. The 388 focused GUI and 154 preference backend/CLI checks are separate from historical full-suite results. See `receipts/settings-gui-tests.txt` and the [native summary](../benchmarks/results/tart-settings-summary.json) |
+| Portable context checkpoints | V2 binds source/generation/raw identity while retaining exact v1 reads and conservative old-writer replay. 1,896 live storage checks, 812 portable-context checks and 45 actual old-writer checks passed. App `503f1098…` observed old captures, native v2 Refresh, pinned text, exact copy/export. Single-run 100k append24.678s and first import37.564s; performance remains incomplete |
+| Whole-session Usage | Native app `91a147f0…` passed exact Claude/Codex summaries, scope refusal, retained old/latest reads, exports, a real History automatic refresh and Back while a 100,001-record Usage worker ran. Separate coverage/unknown buckets and hard scan/key/output limits remain explicit. Usage suspends capture until History is restored; see `receipts/usage-ui-native.txt` |
+| Context batching | 3,315 native checks across 12 targets, including 27 actual crash cuts. Exact typed metadata bounds reduce copied context work; both raw/source passes and final context gates remain. One physical-Mac 100k append observed 23.816 s; no statistical speed guarantee |
+| Portable Linux correctness | 300 checks across six native Bend executables, 116 unchanged inputs; isolated x86_64 laptop tooling via mise. The corrected integration harness reused the same binary. No macOS GUI or comparative performance claim |
+| Continuation brief | App `78c396eb…` passed actual native explicit-root preparation, checked exact selected/whole copy and private export, root-edit refusal, retained reads and Back. Eight query keyboard cases and held Delete passed after plain-arrow collapse correction; 46 focused assertions and a 53-line runtime gate. Distinct earlier production gates are in `receipts/brief-native.txt`; bounded recorded facts, pattern withholding and explicit uncertainty remain. No inference/model work. |
+| History request titles | App `b1cc6430…` passed six native titles, provider/repository scopes, exact copy/export, Usage Back and retained text/pixels. Only title cell changes; immutable opening identity and Search stay unchanged. Three focused gates: 199 checks, 142 unchanged inputs. Four candidates per snapshot and 8 MiB admitted raw/predecessor bytes per page; no peak-memory or SQL-work bound. See `receipts/history-native.txt` |
+| Reading and rebuild | App `9af66798…` passed request-first Why, scoped content before citation, exact Unicode/tab copy, four exports, selected-snapshot Settings Rebuild with unchanged raw bytes, empty-target refusal and retained restart. Six focused gates: 107 checks, 155 unchanged inputs. See `receipts/reading-native.txt`; no new full-suite/performance/proof claim |
+| Recorded-request provenance | App `668cf892…` passed six native Files Why cases, exact copy/export and retained reads after append/rewrite/source absence. 423 production checks; bounded read-time context/relay/meta classification preserves raw bytes and citation ordinals. No rebuild; History why-scope unchanged. See `receipts/request-origin-native.txt` |
+| Scoped transcript / Why | Native scoped reader suite passed 18 checks, including frozen provider/repository/role/date scopes, inherited context, projection forgery rejection and corrupt checkpoint failure |
+| Displayed evidence export | Native CLI suite passed 9 checks for exact Unicode/citations, one MiB input bound, malformed UTF-8 rejection and existing-destination protection |
+| Git Blame / file and commit Why | Native file-evidence suite passed 35 checks plus 36 unified-diff cases; real synthetic Git workflows cover per-hunk content, explicit-trailer exact identity, body-reference probable identity, ambiguity, linked worktrees and eligible child navigation |
+| Current application CLI | Final executable passed isolated demo/status/search/scoped-read/verify/rebuild and identical-bundle launcher status. Earlier broader export/Usage/file/commit checks retain their separate build identities in `receipts/cli-final.txt` |
+| Native Files browser | Candidate `0e1d1018…` passed actual pinned-commit source/evidence navigation, 107-entry directory paging, Unicode paths, unsupported-entry refusal, exact copy/export and captured History restoration. Focused CLI/GUI gates passed 351 checks. See `receipts/repository-files.txt` and `native-validation.md` |
+| Recorded tool activity | Candidate `5ef9603d…` passed payload-first native viewports, actual Refresh with selected old text preserved, explicit latest after source removal, wheel scrolling, exact Unicode copy and exports. Readability gates passed 219 focused checks after the preceding 435-check integration gate. Pairing is confined to verified scoped occurrences; ambiguity and missing counterparts stay explicit. No complete-session or execution-success claim |
+| Related captures | Candidate `784d48c4…` passed actual two-page navigation, scoped target/Tools, exact reader/list/query/scroll/selection restoration, old watermark after concurrent native capture, retained reads after hiding 22 synthetic sources, 13 clipboard and 3 export comparisons. Backend/CLI gates passed 163 checks. Coverage and ambiguity remain bounded and explicit; see `receipts/relations-host-lifecycle.txt` and `native-validation.md` |
+| Read-only processes | Pinned Base exposes bounded output and timeout; application allowlist remains a Bend responsibility |
+| Clipboard / Unicode / modifiers | Candidate `98283d91…` passed native Option+E/E composition to exact `café`, Command+A/C/V with exact `café 中文 🙂`, replacement and Shift+Arrow selection. Physical typing, complete IME and font shaping remain unverified; earlier failed injection retains its separate receipt |
+| Result pages / saved captures / Storage | Candidate `98283d91…` passed native History/Search paging, saved-capture selection, explicit Open latest and read-only owned inventory. A new capture307 left the reader pinned to306 until explicit navigation. Storage logical/reusable quantities are not physical reclaimable bytes |
+| Stronger kernel | Twelve production laws pass the pinned BendTT kernel with exact Lean 4.34.0 on macOS arm64. Optional repository-local setup verifies the official archive; missing prerequisites still fail `scripts/prove`. See `receipts/lean-toolchain.txt` and `receipts/prove-inputs.sha256` |
+
+`scripts/test` builds Bend test entry points and launches each from its own
+temporary directory. `scripts/bench` executes Bend workload logic from an
+isolated directory. Missing test/benchmark/proof implementations are failures,
+never successful empty runs.
+
+Run/test/benchmark/UI-smoke wrappers set `umask 077`. `scripts/run --demo`
+creates an isolated temporary directory unless an explicit `--data-dir` is
+supplied. A source path is never inferred from a private home history.
+
+Root discovery is limited to one enabled directory per refresh, two seconds,
+256 KiB of entry output and 2,048 entries. Each refresh attempts at most eight
+files, with independent failures in its JSON report. Discovered symlinks are
+excluded and canonical paths rechecked; upstream lacks an atomic no-follow
+file-open primitive, so hostile concurrent path replacement is not a claimed
+filesystem sandbox. A running refresh can finish its bounded batch after pause;
+pause prevents subsequent automatic refreshes.
+
+Explicit imports and registered-root discovery accept `.jsonl.zst` alongside
+plain JSONL. The streaming archive profile is limited to 64 MiB compressed input,
+256 MiB total decoded output, an 8 MiB window, 64 frames including skippable frames,
+and 4,096 blocks per ordinary frame. The Bend decoder supports raw/RLE/ordinary
+compressed blocks, Huffman/FSE table reuse, LZ matches and checksum verification.
+It uses no external decoder process or native decoding bridge. Dictionaries,
+larger inputs and full archive parity remain unsupported; existing plain input
+limits are unchanged. Synthetic vectors and their generation metadata are in
+[`tests/zstd`](../tests/zstd/).
+
+Schema 3 distinguishes identity and Zstandard generations and atomically retains
+the compressed container, decoded records and accepted snapshot. Upgrades
+preserve existing plain identities; migration rechecks the version under its
+write lock, and earlier schema-2-only builds refuse to open an upgraded library.
+Raw record offsets, selected-record metadata and Brief commitments use
+`logical_source_bytes`, decoded for archives. Container export uses
+`compressed_container_bytes`. Both streams remain exportable after source loss;
+full `verify` checks the retained transformation. Storage inventory reports
+compressed bytes separately from logical raw bytes.
+
+Export evidence remains bounded to the displayed scope. Export full JSONL and
+Export archive pin the opened History snapshot and explicitly include records
+outside current filters. They write private, non-replacing files; plain captures
+cannot produce an archive export. Native archive capture, reader and full-export
+interaction passed on the preserved archive executable; later focused reader,
+attachment and streaming gates have separate source identities. See
+`receipts/archive-native.txt` and `receipts/reader-attachments-native.txt`.
+
+Settings exposes explicit provider/path input and persisted automatic refresh
+choices of 30 seconds, 2, 4, 8 or 24 hours. Changes take effect after durable
+acknowledgment; invalid stored preferences remain a visible error and do not arm
+automatic capture. The observed native restart covered disabled/two-hour state,
+not elapsed scheduling at every interval. Native source-inventory pagination was
+not exercised; focused model/UI tests cover the bounded 32-root inventory pages.
+The Settings run accepted a synthetic append from four snapshots/49 raw rows to
+five/50 and preserved the old reader. It adds no new timing, full IME, font
+shaping, accessibility or export claim.
+
+The upstream UI audit compared the pin with main `042e797e…` and release
+v2.0.38 (`0a57ca0d…`). Base, window runtime and Apache-2.0 license blobs are
+unchanged. The current API supports image pixels/quadrants and committed Unicode
+Text events, but has no font loading/metrics/shaping, resize/scale events or
+application accessibility tree. macOS window dimensions are fixed. Newer
+runtime option syntax also requires compatibility work. No pin change was made;
+see the [upstream comparison](https://github.com/bendlang/bend/compare/60ca80aedeec9d8f0629b5f10dd19457d8ad67af...042e797ebd1cfc060603e2682879909fe86fa8c2)
+and open [resize issue](https://github.com/bendlang/bend/issues/1021).
+
+Each import worker permits at most five minutes. The GUI refresh worker has a ten-minute outer
+limit. An unusually slow eight-file batch can exceed that outer limit: its
+result is a partial/failed refresh, and earlier independently committed captures
+remain available. A timed-out batch must not be reported as fully successful.
+
+Large projection/FTS publication is batched in Bend within the original atomic
+transaction. The bridge deadline is unchanged. The final guest capture and
+source-independent rebuild both published 125,020 searchable events. FTS cleanup
+still scans the current index per source. A separate frozen 100-source/100k-record
+workload measured 27.875 s initial import, 50 ms unchanged last source and 477 ms
+middle-source append, with independent integrity and untouched-source checks.
+This does not establish scaling for arbitrary library shapes; see `performance.md`.

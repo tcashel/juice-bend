@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+umask 077
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$ROOT"
+if [ "$(uname -s)" != Darwin ]; then
+  printf 'Native macOS interaction test NOT RUN: this host is not macOS.\n' >&2
+  exit 1
+fi
+cat >&2 <<'STEPS'
+Native interaction checklist (a successful launch is not a passing checklist):
+1. Confirm the Juice Bend window and synthetic demo sessions are readable.
+2. Type a search, open a result, and scroll the transcript.
+3. Select text, copy, paste into search, and compare with underlying text.
+4. Check Command/Shift modifiers and committed accented/CJK/emoji text.
+5. Change a filter, inspect generation/coverage, and open Blame/Why.
+6. Export captured evidence; pause/resume refresh; close the window normally.
+Record observed, failed, and untested interactions in docs/acceptance.md.
+STEPS
+exec ./scripts/run --demo "$@"

@@ -1,0 +1,39 @@
+Juice Bend async image integration — 2026-10-22
+
+Scope: isolated candidate, not the accepted default executable or full parity.
+All maintained application/image behavior is Bend 2. No ABI/runtime change.
+
+Mac builds:
+- App: 158 inputs, 93 pins; normal Bend frontend exit0/279.597s;
+  Apple clang21 explicit-SDK -O0 exit0/373.934s; empty diagnostics.
+- App SHA256 876aab5ac968ddc2c7f059842a5b6419b2c5e6d2eb28867892cb104f563d3932
+- Generated C SHA256 6bd10362983c7f0d1d0267851ef282c91cfc14ea1c0997f02b66695bd3e2c8e9
+- Fixture helper: 59 inputs, 51 exact shared paths; frontend and -O3 native pass.
+- Helper SHA256 e9f772ee4bef064a809df12585cdf29e7a6a60bde74318fc0a5af72586eb4323
+- Source/build binding SHA256 1b0c341d32bb07145158e7f2dc67f5161c27a62366b5da2b1308eac0eccf413f
+
+Actual Tart result: FAILED, guest exit1.
+Run nonce da69fc74-60a8-4a02-8651-2d79ac1e01c8; macOS27 arm64 guest.
+Only synthetic fixtures and binaries shared; original source removed by fixture.
+Preparation, launch, scoped transcript/copy and exact attachment selection pass.
+First JPEG Fit: all140 pixel observations failed. Decoder reached its120s limit;
+app displayed an explicit readable unavailable message. No raster pass claimed.
+Three-second macOS sample of the exact child observed JPEG pixel-transform and
+Bend runtime-evaluation work. This unoptimized sampled run is not a performance
+acceptance or a comparison with Swift Juice.
+
+Cleanup: normal application-termination request completed, no app/window remained.
+Guarded fixture verification/copy, unchanged source/copy hashes, payload hashes,
+display restoration all pass. Exact owned VM stopped; lease released. Wrapper
+exit143 records root's scoped TERM after the guest test had already ended.
+Root inspected initial reader, pending image, unavailable image and pre-close
+screenshots. Missing CJK/emoji glyphs remain a known visual gap.
+
+NOT RUN: native Close-button during pending decode; Back/Escape cancellation;
+PNG rendering; actual-size/pan; image exports; second-process restart; external
+retained-file capture/source-loss/export/ATIF journey. Existing component tests
+do not substitute for these actual native checks.
+
+Native result SHA256 7a9c691b60b5f1899785cc1a2906f0c94afaec8eb69cfdc70dc0c556ed88371b
+Local run: build/jpeg-native-v2-plan/run-native-1
+Previous v4 parent-decoder failure remains preserved. Default reader unchanged.

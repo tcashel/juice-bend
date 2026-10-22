@@ -1,0 +1,281 @@
+import Base
+import ../src/ui.bend as UI
+import ../src/ui_geometry.bend as G
+import ../src/font.bend as Font
+
+def require(ok: Bool,label: String) -> IO(Unit):
+  match ok:
+    case True{}: IO.print("PASS " ++ label)
+    case False{}: IO.die(Unit,1,"FAIL " ++ label)
+
+def kind(action: UI.Action) -> U32:
+  match action:
+    case UI.NoAction{}: 0
+    case UI.Search{}: 1
+    case UI.Open{index}: U32.add(100,index)
+    case UI.Submit{}: 2
+    case UI.Scope{provider}: 3
+    case UI.Copy{text}: 4
+    case UI.Paste{}: 5
+    case UI.Export{}: 6
+    case UI.Why{}: 7
+    case UI.Usage{}: 8
+    case UI.Tools{}: 9
+    case UI.Related{}: 10
+    case UI.Back{}: 11
+    case UI.Rebuild{}: 12
+    case UI.Versions{}: 13
+    case UI.OpenLatest{}: 14
+    case UI.Blame{}: 15
+    case UI.Filter{}: 16
+    case UI.Refresh{}: 17
+    case UI.Pause{}: 18
+    case UI.Settings{}: 19
+    case UI.SettingsAddFolder{}: 20
+    case UI.SettingsImportFile{}: 21
+    case UI.SettingsEnable{}: 22
+    case UI.SettingsDisable{}: 23
+    case UI.SettingsInterval{seconds}: U32.add(1000,seconds)
+    case UI.SettingsReload{}: 24
+    case UI.Storage{}: 25
+    case UI.Files{}: 26
+    case UI.RepoOpen{}: 27
+    case UI.RepoParent{}: 28
+    case UI.Previous{}: 29
+    case UI.Next{}: 30
+    case UI.ListPrevious{}: 31
+    case UI.ListNext{}: 32
+    case UI.Quit{}: 33
+    case UI.Brief{}: 34
+    case UI.BriefPrepare{}: 35
+    case UI.BriefCopy{}: 36
+    case UI.BriefExport{}: 37
+    case UI.CopyStatus{text}: 38
+    case UI.WholeExport{}: 39
+    case UI.ContainerExport{}: 40
+    case UI.Connections{}: 41
+    case UI.QuotaEnable{}: 42
+    case UI.QuotaDisconnect{}: 43
+    case UI.QuotaHistory{}: 44
+    case UI.QuotaSetup{}: 45
+    case UI.QuotaCopySetup{}: 46
+    case UI.Attachments{}: 47
+    case UI.AttachmentExport{}: 48
+    case UI.AtifExport{}: 49
+    case UI.AttachmentPreview{}: 50
+    case UI.AttachmentFolders{}: 51
+    case UI.AttachmentCapture{}: 52
+    case UI.AttachmentFolderAdd{}: 53
+    case UI.AttachmentFolderEnable{}: 54
+    case UI.AttachmentFolderDisable{}: 55
+    case UI.AttachmentFolderUse{}: 56
+    case UI.LibraryUsage{}: 57
+    case UI.ChildResultsOpen{}: 58
+
+def clicked(result: UI.State & UI.Action,expected: U32,label: String) -> IO(Unit):
+  (state,action) = result
+  require(U32.is_eq(kind(action),expected),label)
+
+def click(s: UI.State,x: U32,y: U32,expected: U32,label: String) -> IO(Unit):
+  clicked(UI.event(Mouse{x,y,0,True{}},s),expected,label)
+
+def state(result: UI.State & UI.Action) -> UI.State:
+  (s,action) = result
+  s
+
+def repeat(n: Nat,+s: String) -> String:
+  match n:
+    case 0n: ""
+    case 1n+p: s ++ repeat(p,s)
+
+def ready() -> UI.State:
+  UI.select_all(UI.set_query(UI.set_results(UI.init(),UI.Results{100,100,True{},True{}}),"A🙂B"))
+
+def ordinary() -> IO(Unit):
+  +s = ready()
+  do IO<Unit>:
+    click(s,16,G.sidebar_y(0),0,"History target focuses the existing list")
+    require(U32.is_eq(UI.focus(state(UI.event(Mouse{16,G.sidebar_y(0),0,True{}},s))),1),"History target changes focus to the list")
+    click(s,16,G.sidebar_y(1),26,"Files target top edge")
+    click(s,167,U32.sub(U32.add(G.sidebar_y(1),G.control_height()),1),26,"Files target far edge")
+    click(s,16,72,0,"padding above header controls is inert")
+    click(s,U32.add(G.provider_x(0),8),G.provider_y(),3,"All provider target")
+    click(s,U32.add(G.provider_x(1),8),G.provider_y(),3,"Claude target")
+    click(s,U32.add(G.provider_x(2),8),G.provider_y(),3,"Codex target")
+    click(s,16,U32.add(G.sidebar_y(4),8),0,"capture section heading is inert")
+    click(s,16,U32.add(G.sidebar_y(12),8),57,"Library Usage target")
+    click(s,16,U32.add(G.sidebar_y(14),8),16,"Filter target")
+    click(s,16,U32.add(G.sidebar_y(5),8),9,"Tools target")
+    click(s,16,U32.add(G.sidebar_y(2),8),8,"Usage target")
+    click(s,16,U32.add(G.sidebar_y(6),8),10,"Related target")
+    click(s,16,U32.add(G.sidebar_y(7),8),13,"Versions target")
+    click(s,16,U32.add(G.sidebar_y(8),8),14,"Latest target")
+    click(s,16,U32.add(G.sidebar_y(3),8),19,"Settings target")
+    click(s,16,U32.add(G.sidebar_y(13),8),25,"Storage target")
+    click(s,16,U32.add(G.sidebar_y(9),8),34,"Prepare brief target")
+    click(s,824,136,4,"Copy toolbar preserves selected query")
+    click(s,16,U32.add(G.sidebar_y(10),8),39,"Full JSONL export target")
+    click(s,1016,136,1,"Clear toolbar target")
+    click(s,16,U32.add(G.sidebar_y(11),8),49,"ATIF export target")
+    click(s,120,U32.add(G.sidebar_y(11),8),40,"Compressed archive export target")
+    click(s,16,U32.add(G.sidebar_y(15),8),11,"Back target")
+    click(s,16,U32.sub(G.footer_y(),1),11,"Back final row does not collide with footer")
+    click(s,16,G.footer_y(),0,"first footer pixel cannot trigger Back")
+    click(s,16,U32.sub(G.height(),1),0,"last footer pixel cannot trigger Back")
+    click(s,16,88,17,"Refresh toolbar")
+    click(s,168,88,18,"Pause toolbar")
+    click(s,312,88,15,"Blame toolbar")
+    click(s,432,88,7,"Why toolbar")
+    click(s,552,88,6,"Export toolbar")
+    click(s,864,88,29,"Previous reader page")
+    click(s,1040,88,30,"Next reader page")
+    click(s,744,88,0,"capture hint gap is inert")
+    click(s,824,136,4,"Reader Copy action")
+    click(s,920,136,5,"Reader Paste action")
+    click(s,1016,136,1,"Reader Clear action")
+    click(s,1112,136,0,"Reader Select all action")
+    click(s,200,600,31,"Previous result page")
+    click(s,400,600,32,"Next result page")
+    click(UI.set_files(s,True{}),200,136,28,"Files parent navigation")
+    click(UI.set_files(s,True{}),16,88,27,"Files Open repository toolbar")
+
+def settings() -> IO(Unit):
+  +s = UI.set_results(ready(),UI.SettingsResults{0,2,"Resume",True{}})
+  +partial = UI.set_edit(s,UI.Edit{0,2,1,False{},0})
+  do IO<Unit>:
+    click(s,16,120,19,"Settings Back")
+    click(s,16,152,18,"Settings Automatic")
+    click(s,16,184,3,"Settings Claude")
+    click(s,16,216,3,"Settings Codex")
+    click(s,16,248,20,"Settings Add folder")
+    click(s,16,280,21,"Settings Import file")
+    click(s,16,312,41,"Settings Connections")
+    click(s,16,344,24,"Settings Reload")
+    click(s,16,376,22,"Settings Enable")
+    click(s,16,408,23,"Settings Disable")
+    click(s,16,440,1030,"Settings 30 seconds")
+    click(s,16,472,8200,"Settings two hours")
+    click(s,16,504,15400,"Settings four hours")
+    click(s,16,536,29800,"Settings eight hours")
+    click(s,16,568,87400,"Settings 24 hours")
+    click(s,824,136,4,"Settings Copy remains reachable")
+    click(s,920,136,5,"Settings Paste remains reachable")
+    require(String.eq(UI.selection(state(UI.event(Mouse{920,136,0,True{}},partial))),"🙂"),"Settings pointer Paste preserves the exact partial Unicode replacement")
+    click(s,1016,136,1,"Settings Clear")
+    click(s,1112,136,0,"Settings Select all")
+    require(String.eq(UI.selection(state(UI.event(Mouse{1112,136,0,True{}},partial))),"A🙂B"),"Settings toolbar Select all changes partial selection to the whole query")
+    click(s,16,600,12,"Settings Rebuild target")
+    click(s,312,88,20,"Settings Add toolbar")
+    click(s,432,88,21,"Settings Import toolbar")
+    click(s,552,88,22,"Settings Enable toolbar")
+    click(s,864,88,23,"Settings Disable toolbar")
+    click(s,1040,88,24,"Settings Reload toolbar")
+    click(s,744,88,0,"Settings toolbar whitespace stays inert")
+
+def line(line: UI.Line,start: U32,text: String) -> Bool:
+  UI.Line{actual,value} = line
+  U32.is_eq(actual,start) && String.eq(value,text)
+
+def text_tests() -> IO(Unit):
+  +query = UI.set_query(UI.init(),"A🙂B")
+  +drag = state(UI.event(Move{232,40},state(UI.event(Mouse{216,40,0,True{}},query))))
+  +wrapped = UI.wrap(repeat(80n,"x") ++ "🙂\nZ")
+  +reader = UI.set_reader(UI.init(),"Unicode","é café 中文 🙂\nsecond")
+  +selected = UI.select_all(UI.set_edit(reader,UI.Edit{2,0,0,False{},0}))
+  +at_second = state(UI.event(Mouse{544,192,0,True{}},reader))
+  +at_second_selected = state(UI.event(Move{568,192},at_second))
+  +longquery = UI.set_query(UI.init(),repeat(200n,"x"))
+  +pressed = state(UI.event(Mouse{208,40,0,True{}},longquery))
+  +moved = state(UI.event(Move{288,40},pressed))
+  +partial_query = UI.set_edit(query,UI.Edit{0,2,1,False{},0})
+  +partial_reader = UI.set_edit(reader,UI.Edit{2,3,0,False{},0})
+  do IO<Unit>:
+    require(String.eq(UI.selection(drag),"🙂B"),"8px query drag preserves Unicode scalars")
+    require(line(UI.line_at(wrapped,1),80,"🙂"),"80-column wrapping keeps exact offset")
+    require(line(UI.line_at(wrapped,2),82,"Z"),"newline after wrapped emoji keeps exact offset")
+    require(String.eq(UI.reader(selected),"é café 中文 🙂\nsecond"),"font does not alter canonical reader")
+    require(String.eq(UI.selection(selected),UI.reader(reader)),"Select all retains combining CJK emoji")
+    require(String.eq(UI.selection(state(UI.event(Mouse{920,136,0,True{}},partial_query))),"🙂"),"reader toolbar Paste preserves partial Unicode query selection")
+    require(String.eq(UI.selection(state(UI.event(Mouse{1112,136,0,True{}},partial_query))),"A🙂B"),"reader toolbar Select all expands the focused query selection")
+    require(String.eq(UI.selection(state(UI.event(Mouse{1112,136,0,True{}},partial_reader))),UI.reader(reader)),"reader toolbar Select all expands the focused reader selection")
+    require(String.eq(UI.selection(at_second_selected),"eco"),"24px reader pointer selects second-line scalars")
+    require(U32.is_eq(UI.query_offset(pressed),81) && U32.is_eq(UI.query_offset(moved),81),"query drag freezes viewport at new width")
+    require(U32.is_eq(UI.length(UI.selection(moved)),10),"query drag uses eight-pixel advance")
+    require(U32.is_eq(UI.blend(16777215,0,15),16777215) && U32.is_eq(UI.blend(16777215,0,0),0),"grayscale blend endpoints are exact")
+    require(U32.is_eq(Font.coverage(Font.half(Font.glyph(32),True{}),0,0),0),"space glyph remains empty")
+    require(U32.is_eq(G.reader_columns(),80) && U32.is_eq(G.reader_rows(),19),"reader geometry stays bounded")
+
+def paging() -> IO(Unit):
+  +s = UI.set_rows(UI.init(),["0","1","2","3","4","5","6","7","8","9","10","11"])
+  do IO<Unit>:
+    click(s,200,184,100,"first card top edge")
+    click(s,200,247,100,"first card bottom edge")
+    click(s,200,248,101,"second card starts at 64px")
+    click(UI.set_position(s,11,0),200,184,106,"selected tail keeps six visible rows")
+    click(UI.set_position(s,11,0),200,504,111,"last visible card resolves original index")
+    click(s,200,176,0,"list heading does not open a row")
+    click(s,200,568,0,"padding after final visible card cannot open invisible row")
+    click(s,200,591,0,"last padding pixel cannot open invisible row")
+    click(UI.init(),400,600,0,"unloaded pagination is inert")
+
+def copied(result: UI.State & UI.Action) -> String:
+  (s,action) = result
+  match action:
+    case UI.CopyStatus{text}: text
+    case _: ""
+
+def kind.action(result: UI.State & UI.Action) -> U32:
+  (s,action) = result
+  kind(action)
+
+def status_tests() -> IO(Unit):
+  +message = repeat(80n,"A long diagnostic line.\n") ++ "final diagnostic café 🙂"
+  +original = UI.set_edit(UI.set_position(UI.set_reader(UI.set_status(UI.init(),message),"Retained transcript","exact evidence"),4,7),UI.Edit{2,8,2,False{},0})
+  +opened = state(UI.event(Mouse{10,648,0,True{}},original))
+  +scrolled = state(UI.event(Key{63277,True{}},opened))
+  +closed = state(UI.event(Key{27,True{}},scrolled))
+  +query = UI.select_all(UI.set_query(UI.init(),"café 中文 🙂"))
+  +query_open = state(UI.event(Mouse{10,648,0,True{}},query))
+  +query_arrival = UI.set_reader(query_open,"arrival","new evidence")
+  +query_returned = state(UI.event(Key{27,True{}},query_arrival))
+  do IO<Unit>:
+    require(U32.is_eq(UI.focus(opened),5),"status strip opens full diagnostic inspector")
+    require(String.eq(UI.reader(opened),"exact evidence") && U32.is_eq(UI.scroll(scrolled),7),"status inspector preserves canonical evidence and reader scroll")
+    require(String.eq(UI.selection(closed),UI.selection(original)),"status inspection preserves canonical evidence selection")
+    require(String.eq(copied(UI.event(Mouse{920,128,0,True{}},scrolled)),message),"status Copy and close includes text beyond summary")
+    require(U32.is_eq(UI.focus(closed),2) && U32.is_eq(UI.selected(closed),4) && U32.is_eq(UI.scroll(closed),7),"Escape restores reader without changing list or scroll")
+    click(opened,552,88,0,"status modal blocks underlying Export")
+    require(U32.is_eq(kind.action(UI.event(Key{101,True{}},UI.set_modifiers(opened,True{},False{}))),0),"status modal blocks Command-E export")
+    require(String.eq(UI.selection(query_returned),UI.selection(query)) && U32.is_eq(UI.focus(query_returned),0),"status closes to exact query selection after reader arrival")
+    require(String.eq(copied(UI.event(Key{99,True{}},UI.set_modifiers(scrolled,True{},False{}))),message),"Command-C in status copies full diagnostic")
+    require(String.eq(UI.selection(state(UI.event(Key{99,True{}},UI.set_modifiers(scrolled,True{},False{})))),UI.selection(original)),"status copy restores canonical selection before callback")
+
+def card_is(value: UI.Card,first: String,second: String) -> Bool:
+  UI.Card{a,b} = value
+  String.eq(a,first) && String.eq(b,second)
+
+def card_width(value: UI.Card) -> Bool:
+  UI.Card{a,b} = value
+  U32.is_le(UI.length(a),38) && U32.is_le(UI.length(b),38)
+
+def card_tests() -> IO(Unit):
+  +row = {"claude  claude neutral physical record 0" : String}
+  +reader = UI.set_reader(UI.set_rows(UI.init(),[row]),"canonical",row)
+  do IO<Unit>:
+    require(card_is(UI.card("short title"),"short title",""),"short card uses one exact line")
+    require(card_is(UI.card(row),"claude  claude neutral physical","record 0"),"card keeps trailing record number with its word")
+    require(card_is(UI.card(repeat(39n,"x")),repeat(31n,"x"),repeat(8n,"x")),"unbroken card avoids a one-character second line")
+    require(card_is(UI.card(repeat(90n,"🙂")),repeat(38n,"🙂"),repeat(37n,"🙂") ++ "…"),"card ellipsis counts Unicode scalars")
+    require(card_width(UI.card(repeat(100n,"long title "))),"both card lines respect the existing width")
+    require(String.eq(UI.reader(reader),row),"card formatting leaves canonical reader unchanged")
+    require(String.eq(UI.capture_hint(True{}),"Capture suspended") && String.eq(UI.capture_hint(False{}),""),"effective capture hint stays separate from stored toggle label")
+    require(String.eq(UI.top_label(1,False{},False{},True{},"Resume"),"Resume"),"Usage preserves saved preference toggle semantics")
+
+def main() -> IO(Unit):
+  do IO<Unit>:
+    ordinary()
+    settings()
+    text_tests()
+    paging()
+    status_tests()
+    card_tests()

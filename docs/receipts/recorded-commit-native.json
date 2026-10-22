@@ -1,0 +1,71 @@
+{
+  "scope": "Actual positive native recorded-commit Why form, readable evidence, exact copy/export, source loss and different-PID restart; focused synthetic acceptance",
+  "completed": true,
+  "passed": true,
+  "steps": {
+    "prepare": 0,
+    "why": 0,
+    "source-loss": 0,
+    "restart": 0,
+    "finish": 0,
+    "cleanup": 0,
+    "cleanup-shot": 0,
+    "fixture-copy": 0,
+    "guest-run": 0,
+    "display-holder": 0,
+    "display-restored": 0
+  },
+  "app_sha256": "f17131747e7deb63bbaea965924cfb18436600addf8e9599b40f8c71a5467952",
+  "helper_sha256": "64d9627b9437b8db094fa1c9395f4aacba86e9cbc285939bdac98b975a2a1efd",
+  "payload_files_unchanged": 17,
+  "build_evidence_files_unchanged": 347,
+  "capture": {
+    "sources": 1,
+    "generations": 1,
+    "snapshots": 1,
+    "records": 4,
+    "events": 4,
+    "logical_bytes": 853,
+    "source_sha256": "13e52fc5f21a668a147eb01f848089f1ad11d48e675e8da1f5af90c634d7e870",
+    "all_raw_sha256_verified": true
+  },
+  "copy": {
+    "why_sha256": "8c07d69edddab78075cab7afee7659b074d6af2530a62e36298e7dd0463867e9",
+    "bytes": 3080,
+    "exact_original_scroll_restart_and_selection": true
+  },
+  "original_source_absent": true,
+  "copied_database": {
+    "quick_check": "ok",
+    "foreign_key_check": [],
+    "immutable_read_only": true,
+    "wal_bytes": 0
+  },
+  "limitations": [
+    "Positive GUI fixture only: ambiguous/incomplete/failed-output/Codex native GUI branches remain unrun by this journey.",
+    "Existing generic not_indexed summary is visually misleading above successful recorded command evidence; label scoping correction queued separately.",
+    "Some CJK/emoji glyphs remain missing, while exact Unicode copy and exports passed.",
+    "No performance, scheduler Close latency, full Swift parity, or root source adoption claim."
+  ],
+  "exports": [
+    {
+      "sha256": "f513551529c13530ce509df1ef87a01bd4ac5afb1317a0418c4ed4aa6f074e6f",
+      "bytes": 3251,
+      "mode": "0600"
+    },
+    {
+      "sha256": "f513551529c13530ce509df1ef87a01bd4ac5afb1317a0418c4ed4aa6f074e6f",
+      "bytes": 3251,
+      "mode": "0600"
+    },
+    {
+      "sha256": "f513551529c13530ce509df1ef87a01bd4ac5afb1317a0418c4ed4aa6f074e6f",
+      "bytes": 3251,
+      "mode": "0600"
+    }
+  ],
+  "different_app_pid_restart": true,
+  "root_visual_review_completed": true,
+  "normal_app_cleanup_and_display_restoration": true,
+  "native_result_sha256": "5474f49c95aeb71492997eeb1d90671937d38cee0946fe165a8879b1f77fba71"
+}

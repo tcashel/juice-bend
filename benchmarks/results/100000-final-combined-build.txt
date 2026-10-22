@@ -1,0 +1,36 @@
+Final combined benchmark candidate:
+c6e5d18eea9c900cff9bfccdf1208449330c5c9c plus the projection tuple-cursor
+optimization and the typed capture-publication observer. The benchmark uses
+the normal unobserved Store.import_file path.
+
+Build command:
+./scripts/build benchmarks/main.bend build/juice-bend-bench-final
+This build was not timed.
+
+Complete application and build-input SHA-256 manifest:
+benchmarks/results/100000-final-combined-sources.sha256
+Manifest SHA-256:
+0b7bca0cea044f278265b629fb51704329ddc68b047b5190dc758ebff6933461
+
+Store source SHA-256:
+9f945748d17d2ef0831e53928ea1ad7f4cd51796d97a65cc953f32fa9fbfe0df
+
+Native executable:
+build/juice-bend-bench-final
+2281480 bytes
+SHA-256 7f072fd9397a82a3ae940ece103063c886a76540302eba44ecbee6f38a4d6dfe
+
+Generated C:
+build/juice-bend-bench-final.c
+SHA-256 e2291e1d9c4cd3c04f53e4be5000fb9e67da908e61db0607adea2dd82bbb56a8
+
+Run command after changing to a new private mktemp directory:
+/Users/tcashel/repositories/juice-bend/build/juice-bend-bench-final 100000
+
+The executable generates the synthetic fixture before operation timers start.
+The focused native suites completed before this benchmark began. The host was
+not otherwise isolated. UI timings and process memory are not measured here.
+
+All 31 source/build-input hashes verified after compilation and before launch.
+All 31 hashes and the executable hash verified unchanged after the benchmark.
+The benchmark exited 0 and emitted benchmark_complete=true.

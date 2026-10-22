@@ -1,0 +1,134 @@
+{
+  "receipt_version": 1,
+  "date": "2026-10-20",
+  "host": "macOS 27.0.1 arm64",
+  "guest": "macOS 27.0 arm64",
+  "tart": "2.40.1",
+  "network": "host-only",
+  "application_sha256": "2e3191d9487b920a6a9aa4184239485f921e8a8f06d9b4378019f7f2eb226687",
+  "application_bytes": 11561056,
+  "build_inputs_verified": 46,
+  "upstream_hashes_verified": 88,
+  "fixture_sha256": "7cff09dd93f7fcbd77746244cb9fc1bdb4213be8a0df00bff78659bfd77530e9",
+  "observed": [
+    "Defaults read as automatic30s without writing preference keys; native Settings shows empty root inventory",
+    "Pause and2h controls persist acknowledged TEXT preferences; actual native restart retains false/7200",
+    "Claude and Codex folders register without capturing:1snapshot/42raw remains unchanged",
+    "Selected provider/root Disable and Enable affect only that authoritative inventory row",
+    "Explicit Import file captures a separate Claude file; manual Refresh batches capture both roots while paused",
+    "Back restores scoped snapshot1 physical record40 query, result list, reader and all-text selection exactly",
+    "Normal history Resume and Pause persist the same2h interval through the shared preference writer",
+    "After restart, source-only append leaves4snapshots/49raw; two native Refresh batches accept5snapshots/50raw",
+    "Old origin stays exact; a new scoped lexical hit opens appended snapshot5 record2",
+    "Seven exact Unicode clipboard comparisons and four pixel-region restoration checks pass",
+    "Command+Q closes owned windows; runner stops its own VM and releases both leases"
+  ],
+  "clipboard": {
+    "origin-reader.txt": {
+      "bytes": 1089,
+      "sha256": "2bb1967eecde6d590d04afc00b4d644769f044fca16b59999ca53534090e22b1",
+      "exact": true
+    },
+    "origin-restored-selection.txt": {
+      "bytes": 1089,
+      "sha256": "2bb1967eecde6d590d04afc00b4d644769f044fca16b59999ca53534090e22b1",
+      "exact": true
+    },
+    "origin-restored-full.txt": {
+      "bytes": 1089,
+      "sha256": "2bb1967eecde6d590d04afc00b4d644769f044fca16b59999ca53534090e22b1",
+      "exact": true
+    },
+    "relaunched-origin.txt": {
+      "bytes": 1089,
+      "sha256": "2bb1967eecde6d590d04afc00b4d644769f044fca16b59999ca53534090e22b1",
+      "exact": true
+    },
+    "append-origin-restored.txt": {
+      "bytes": 1089,
+      "sha256": "2bb1967eecde6d590d04afc00b4d644769f044fca16b59999ca53534090e22b1",
+      "exact": true
+    },
+    "appended-reader.txt": {
+      "bytes": 806,
+      "sha256": "18792251328bf1aba7801aeff73c22ce45b44ce674f90863aec73708b6d3b128",
+      "exact": true
+    },
+    "settings-unicode.txt": {
+      "bytes": 17,
+      "sha256": "12ada2b12f2ca7a70ea60dec21d9a44cfa8bc21f12918987416024cbfa8cfd21",
+      "exact": true
+    }
+  },
+  "pixel_restoration": {
+    "origin-restored/query": {
+      "exact": true,
+      "rectangle": [
+        264,
+        118,
+        1448,
+        166
+      ]
+    },
+    "origin-restored/reader_and_results": {
+      "exact": true,
+      "rectangle": [
+        248,
+        198,
+        1464,
+        934
+      ]
+    },
+    "append-origin-restored/query": {
+      "exact": true,
+      "rectangle": [
+        264,
+        118,
+        1448,
+        166
+      ]
+    },
+    "append-origin-restored/reader_and_results": {
+      "exact": true,
+      "rectangle": [
+        248,
+        198,
+        1464,
+        934
+      ]
+    }
+  },
+  "preferences_final": {
+    "kind": "refresh_preferences",
+    "enabled": false,
+    "interval_seconds": 7200,
+    "interval_milliseconds": 7200000
+  },
+  "database": {
+    "sources": 4,
+    "generations": 4,
+    "snapshots": 5,
+    "raw": 50,
+    "records": 52,
+    "events": 52,
+    "current_search": 50,
+    "context": 52,
+    "checks": 5,
+    "quick_check": "ok",
+    "foreign_key_violations": 0
+  },
+  "cleanup": {
+    "app_windows_after_close": 0,
+    "vm_state": "stopped",
+    "runner_exit": 130,
+    "leases_absent": true
+  },
+  "limitations": [
+    "Unsupported Unicode glyphs show boxes; exact paste/copy does not establish shaping or IME behavior",
+    "No input-to-display latency, sustained scroll cadence, accessibility or interval-duration timing measurement",
+    "Native Settings source inventory pagination was not exercised; model tests cover paging",
+    "Initial read-only postflight used an incorrect column name and was corrected to canonical_root before assertions",
+    "Native observations are separate from388 focused GUI assertions and154 preference backend/CLI checks",
+    "No new export, signing, notarization or distribution validation"
+  ]
+}

@@ -1,0 +1,386 @@
+{
+  "generator": "Offline synthetic 2000-record JSONL generation; no production or reference history",
+  "encoder": "zstd",
+  "encoder_version": "*** Zstandard CLI (64-bit) v1.5.6, by Yann Collet ***",
+  "arguments": [
+    "-q",
+    "-3",
+    "--target-compressed-block-size=4096"
+  ],
+  "records": 2000,
+  "plain_bytes": 330757,
+  "plain_sha256": "1e5612f2029851053d80c4317fc146d5e305e7dd01dfc86abc2e7da6628195a2",
+  "external_decode": "all three complete frames equal the independent synthetic raw bytes",
+  "prefix_verification": "external decoding of last-marked prefixes equals exact raw prefix; per-block output sizes measured",
+  "reuse_blocks_1_based": [
+    2,
+    4
+  ],
+  "raw_bridge_insertion_offset": 3230,
+  "variants": [
+    {
+      "name": "records",
+      "encoded_bytes": 17249,
+      "encoded_sha256": "51cb5ad8f6668f158c454f67405caa29130e032a082e2711cebe54278a6dddb1",
+      "decoded_sha256": "1e5612f2029851053d80c4317fc146d5e305e7dd01dfc86abc2e7da6628195a2",
+      "layout": {
+        "frame_header_bytes": 6,
+        "checksum": false,
+        "window_bytes": 2097152,
+        "content_size": null,
+        "blocks": [
+          {
+            "index": 1,
+            "header_offset": 6,
+            "end_offset": 3230,
+            "block_type": "compressed",
+            "size_field": 3221,
+            "last": false,
+            "block_sha256": "df099c72d7837e2cf47537a5e429ca57564a527e76a4c530160b4253d348d674",
+            "literal_kind": 2,
+            "literal_kind_name": "compressed",
+            "literal_size_format": 2,
+            "regenerated_literal_bytes": 1699,
+            "encoded_literal_bytes": 873,
+            "sequence_count": 1362,
+            "sequence_modes_ll_of_ml": [
+              2,
+              2,
+              2
+            ]
+          },
+          {
+            "index": 2,
+            "header_offset": 3230,
+            "end_offset": 6360,
+            "block_type": "compressed",
+            "size_field": 3127,
+            "last": false,
+            "block_sha256": "4424e3e12a86d4c49742300f9ef7535d7c71eb6f86d53a00b853c534758a1ff3",
+            "literal_kind": 3,
+            "literal_kind_name": "treeless",
+            "literal_size_format": 2,
+            "regenerated_literal_bytes": 1888,
+            "encoded_literal_bytes": 809,
+            "sequence_count": 1444,
+            "sequence_modes_ll_of_ml": [
+              3,
+              3,
+              3
+            ]
+          },
+          {
+            "index": 3,
+            "header_offset": 6360,
+            "end_offset": 9478,
+            "block_type": "compressed",
+            "size_field": 3115,
+            "last": false,
+            "block_sha256": "a1c82eb262a1ac0ef13dbde60423473cadac28f4d378a9ea2d99e180ebc5dc5d",
+            "literal_kind": 2,
+            "literal_kind_name": "compressed",
+            "literal_size_format": 2,
+            "regenerated_literal_bytes": 1675,
+            "encoded_literal_bytes": 744,
+            "sequence_count": 1326,
+            "sequence_modes_ll_of_ml": [
+              2,
+              2,
+              2
+            ]
+          },
+          {
+            "index": 4,
+            "header_offset": 9478,
+            "end_offset": 13257,
+            "block_type": "compressed",
+            "size_field": 3776,
+            "last": false,
+            "block_sha256": "4b8a0327bccae0d03665918a84dddf0ee10904e74e2c7491513180fb4f87dc63",
+            "literal_kind": 3,
+            "literal_kind_name": "treeless",
+            "literal_size_format": 2,
+            "regenerated_literal_bytes": 1616,
+            "encoded_literal_bytes": 690,
+            "sequence_count": 1458,
+            "sequence_modes_ll_of_ml": [
+              3,
+              3,
+              3
+            ]
+          },
+          {
+            "index": 5,
+            "header_offset": 13257,
+            "end_offset": 17249,
+            "block_type": "compressed",
+            "size_field": 3989,
+            "last": true,
+            "block_sha256": "d136231731fb242f985bdc6fc9d7375031a9901ca4c40c3802e9cd2e90eb98f1",
+            "literal_kind": 2,
+            "literal_kind_name": "compressed",
+            "literal_size_format": 2,
+            "regenerated_literal_bytes": 1738,
+            "encoded_literal_bytes": 748,
+            "sequence_count": 1408,
+            "sequence_modes_ll_of_ml": [
+              2,
+              2,
+              2
+            ]
+          }
+        ],
+        "body_end": 17249,
+        "checksum_low32": null
+      },
+      "bend_function": "records"
+    },
+    {
+      "name": "records-check",
+      "encoded_bytes": 17253,
+      "encoded_sha256": "576a874522673dd7d373281e49cf527f0a5f10f3c2c35aa3554f21f14a5d0ada",
+      "decoded_sha256": "1e5612f2029851053d80c4317fc146d5e305e7dd01dfc86abc2e7da6628195a2",
+      "layout": {
+        "frame_header_bytes": 6,
+        "checksum": true,
+        "window_bytes": 2097152,
+        "content_size": null,
+        "blocks": [
+          {
+            "index": 1,
+            "header_offset": 6,
+            "end_offset": 3230,
+            "block_type": "compressed",
+            "size_field": 3221,
+            "last": false,
+            "block_sha256": "df099c72d7837e2cf47537a5e429ca57564a527e76a4c530160b4253d348d674",
+            "literal_kind": 2,
+            "literal_kind_name": "compressed",
+            "literal_size_format": 2,
+            "regenerated_literal_bytes": 1699,
+            "encoded_literal_bytes": 873,
+            "sequence_count": 1362,
+            "sequence_modes_ll_of_ml": [
+              2,
+              2,
+              2
+            ]
+          },
+          {
+            "index": 2,
+            "header_offset": 3230,
+            "end_offset": 6360,
+            "block_type": "compressed",
+            "size_field": 3127,
+            "last": false,
+            "block_sha256": "4424e3e12a86d4c49742300f9ef7535d7c71eb6f86d53a00b853c534758a1ff3",
+            "literal_kind": 3,
+            "literal_kind_name": "treeless",
+            "literal_size_format": 2,
+            "regenerated_literal_bytes": 1888,
+            "encoded_literal_bytes": 809,
+            "sequence_count": 1444,
+            "sequence_modes_ll_of_ml": [
+              3,
+              3,
+              3
+            ]
+          },
+          {
+            "index": 3,
+            "header_offset": 6360,
+            "end_offset": 9478,
+            "block_type": "compressed",
+            "size_field": 3115,
+            "last": false,
+            "block_sha256": "a1c82eb262a1ac0ef13dbde60423473cadac28f4d378a9ea2d99e180ebc5dc5d",
+            "literal_kind": 2,
+            "literal_kind_name": "compressed",
+            "literal_size_format": 2,
+            "regenerated_literal_bytes": 1675,
+            "encoded_literal_bytes": 744,
+            "sequence_count": 1326,
+            "sequence_modes_ll_of_ml": [
+              2,
+              2,
+              2
+            ]
+          },
+          {
+            "index": 4,
+            "header_offset": 9478,
+            "end_offset": 13257,
+            "block_type": "compressed",
+            "size_field": 3776,
+            "last": false,
+            "block_sha256": "4b8a0327bccae0d03665918a84dddf0ee10904e74e2c7491513180fb4f87dc63",
+            "literal_kind": 3,
+            "literal_kind_name": "treeless",
+            "literal_size_format": 2,
+            "regenerated_literal_bytes": 1616,
+            "encoded_literal_bytes": 690,
+            "sequence_count": 1458,
+            "sequence_modes_ll_of_ml": [
+              3,
+              3,
+              3
+            ]
+          },
+          {
+            "index": 5,
+            "header_offset": 13257,
+            "end_offset": 17249,
+            "block_type": "compressed",
+            "size_field": 3989,
+            "last": true,
+            "block_sha256": "d136231731fb242f985bdc6fc9d7375031a9901ca4c40c3802e9cd2e90eb98f1",
+            "literal_kind": 2,
+            "literal_kind_name": "compressed",
+            "literal_size_format": 2,
+            "regenerated_literal_bytes": 1738,
+            "encoded_literal_bytes": 748,
+            "sequence_count": 1408,
+            "sequence_modes_ll_of_ml": [
+              2,
+              2,
+              2
+            ]
+          }
+        ],
+        "body_end": 17249,
+        "checksum_low32": 1988550351
+      },
+      "bend_function": "records_check"
+    },
+    {
+      "name": "records-raw-bridge",
+      "encoded_bytes": 17252,
+      "encoded_sha256": "e2595ae5c859bf5d53712face0ee1b9d729647997c34a65478107c45fec2d505",
+      "decoded_sha256": "1e5612f2029851053d80c4317fc146d5e305e7dd01dfc86abc2e7da6628195a2",
+      "layout": {
+        "frame_header_bytes": 6,
+        "checksum": false,
+        "window_bytes": 2097152,
+        "content_size": null,
+        "blocks": [
+          {
+            "index": 1,
+            "header_offset": 6,
+            "end_offset": 3230,
+            "block_type": "compressed",
+            "size_field": 3221,
+            "last": false,
+            "block_sha256": "df099c72d7837e2cf47537a5e429ca57564a527e76a4c530160b4253d348d674",
+            "literal_kind": 2,
+            "literal_kind_name": "compressed",
+            "literal_size_format": 2,
+            "regenerated_literal_bytes": 1699,
+            "encoded_literal_bytes": 873,
+            "sequence_count": 1362,
+            "sequence_modes_ll_of_ml": [
+              2,
+              2,
+              2
+            ]
+          },
+          {
+            "index": 2,
+            "header_offset": 3230,
+            "end_offset": 3233,
+            "block_type": "raw",
+            "size_field": 0,
+            "last": false,
+            "block_sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c"
+          },
+          {
+            "index": 3,
+            "header_offset": 3233,
+            "end_offset": 6363,
+            "block_type": "compressed",
+            "size_field": 3127,
+            "last": false,
+            "block_sha256": "4424e3e12a86d4c49742300f9ef7535d7c71eb6f86d53a00b853c534758a1ff3",
+            "literal_kind": 3,
+            "literal_kind_name": "treeless",
+            "literal_size_format": 2,
+            "regenerated_literal_bytes": 1888,
+            "encoded_literal_bytes": 809,
+            "sequence_count": 1444,
+            "sequence_modes_ll_of_ml": [
+              3,
+              3,
+              3
+            ]
+          },
+          {
+            "index": 4,
+            "header_offset": 6363,
+            "end_offset": 9481,
+            "block_type": "compressed",
+            "size_field": 3115,
+            "last": false,
+            "block_sha256": "a1c82eb262a1ac0ef13dbde60423473cadac28f4d378a9ea2d99e180ebc5dc5d",
+            "literal_kind": 2,
+            "literal_kind_name": "compressed",
+            "literal_size_format": 2,
+            "regenerated_literal_bytes": 1675,
+            "encoded_literal_bytes": 744,
+            "sequence_count": 1326,
+            "sequence_modes_ll_of_ml": [
+              2,
+              2,
+              2
+            ]
+          },
+          {
+            "index": 5,
+            "header_offset": 9481,
+            "end_offset": 13260,
+            "block_type": "compressed",
+            "size_field": 3776,
+            "last": false,
+            "block_sha256": "4b8a0327bccae0d03665918a84dddf0ee10904e74e2c7491513180fb4f87dc63",
+            "literal_kind": 3,
+            "literal_kind_name": "treeless",
+            "literal_size_format": 2,
+            "regenerated_literal_bytes": 1616,
+            "encoded_literal_bytes": 690,
+            "sequence_count": 1458,
+            "sequence_modes_ll_of_ml": [
+              3,
+              3,
+              3
+            ]
+          },
+          {
+            "index": 6,
+            "header_offset": 13260,
+            "end_offset": 17252,
+            "block_type": "compressed",
+            "size_field": 3989,
+            "last": true,
+            "block_sha256": "d136231731fb242f985bdc6fc9d7375031a9901ca4c40c3802e9cd2e90eb98f1",
+            "literal_kind": 2,
+            "literal_kind_name": "compressed",
+            "literal_size_format": 2,
+            "regenerated_literal_bytes": 1738,
+            "encoded_literal_bytes": 748,
+            "sequence_count": 1408,
+            "sequence_modes_ll_of_ml": [
+              2,
+              2,
+              2
+            ]
+          }
+        ],
+        "body_end": 17252,
+        "checksum_low32": null
+      },
+      "bend_function": "records_raw_bridge"
+    }
+  ],
+  "original_manifest_sha256": "893e7dec92ff37eec2dd8db4ab16ecbcbe82c8c719ca6230cc974df9f65f18ba",
+  "original_bend_module_sha256": "54076f649888fff87bddcef9cac3ff7e2a7bbe326da4f0586de2a688dfc5c226",
+  "bend_module": "tests/zstd/multiblock_vectors.bend",
+  "bend_module_sha256": "7c3a0dad7774baec44d9dd88e28d64acfa0d5ff286c3f50af79ad838b22bd2b2"
+}

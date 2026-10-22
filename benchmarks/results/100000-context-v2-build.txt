@@ -1,0 +1,17 @@
+Native production benchmark: benchmarks/main.bend, unchanged generator1/seed1337, 100000 raw records.
+Host: macOS27.0.1 (26A434), arm64; SQLite3.54.0/FTS5.
+Bend2.0.37 revision60ca80aedeec9d8f0629b5f10dd19457d8ad67af; Bun1.4.2.
+Executable SHA256: 755adddd9fcb50c3f2bdc4484680779fe7453cad570ac83308fa59545aa8d0df
+Executable bytes: 3414392
+Generated C SHA256: d706de651f984d8a64b3080e894e9a4353d4a7248f036da5ba55fa3e82923233
+Build and native benchmark exit:0. All22 transitive inputs unchanged.
+All88 pinned upstream hashes checked before/after build and timing.
+No task build/test/Tart workload during timed operations; unrelated host activity uncontrolled.
+External readonly postflight passed: exact row counts, typed prefix context equivalence,
+prefix event equivalence, exact prefix raw IDs, latest FTS, context/seal tags,
+quick_check and foreign keys. No memory/native UI latency measurement.
+The first external postflight's raw-ID-only join used snapshot-only scans and was
+interrupted after operation timers had completed (orchestration exit130).
+The resumed postflight uses snapshot+ordinal point lookups and exact raw-ID equality;
+it completed with exit0 against the same database and binary. No benchmark was rerun.
+Historical single-run comparisons are observations, not a statistical guarantee.

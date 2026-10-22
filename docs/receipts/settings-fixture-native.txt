@@ -1,0 +1,61 @@
+Settings fixture: native host CLI lifecycle
+Date: 2026-10-20
+Scope: synthetic data on macOS arm64. Native fixture and application CLI commands
+were observed. This receipt does not establish Settings UI interaction, automatic
+refresh preferences, persistence across restart, or Tart behavior.
+
+Frozen artifacts (SHA-256)
+Fixture source: benchmarks/native_settings.bend
+355a298ff1ec26760d882358124269ea1fbe847e96128fe31132cbc6396b6c85
+Fixture executable: build/native-settings-fixture (3,105,272 bytes)
+7cff09dd93f7fcbd77746244cb9fc1bdb4213be8a0df00bff78659bfd77530e9
+Fixture input manifest: build/native-settings-inputs.sha256
+0a9622f1fdca2096a55fabc450bbc50bc2d8ef1dede4659698345e7658a90794
+Application: build/juice-bend-relations
+784d48c4d180b5e711613dbf43797c869c526a2cbf8082c53f6b3bbb9e789ab2
+
+Build: ./scripts/build benchmarks/native_settings.bend build/native-settings-fixture
+All 24 recorded inputs were unchanged across the build. All 88 pinned upstream
+checksums passed before and after compilation. No application rebuild occurred
+during the lifecycle. Fixture creation, capture, validation, and source mutation
+are implemented in Bend.
+
+Fixture commands:
+  build/native-settings-fixture fixture NEW_ROOT
+  build/native-settings-fixture append-only NEW_ROOT
+NEW_ROOT must be a new canonical direct child of /private/tmp named
+juice-bend-settings-fixture with an optional safe suffix. Creation refuses an
+existing root and produces private owned files, a marker, and JSON source paths.
+It captures only the 42-record Claude origin. Physical record 40 contains
+"settings-origin café 中文 🙂". No directory roots or refresh preference keys exist
+initially. Separate Claude and Codex candidate folders and an explicit import
+file remain uncaptured until requested through the application.
+
+Observed CLI lifecycle: source-add codex -> refresh-all -> explicit Claude import
+-> source-add claude -> refresh-all -> source-disable claude -> source-add claude
+-> fixture append-only -> refresh-all -> scoped reader and lexical search.
+Candidate capture order was Codex, explicit Claude import, then Claude folder.
+The disabled root was observed with enabled=0 before re-enabling it.
+
+Database counts                 Initial   Candidates captured   Append captured
+Sources                         1         4                     4
+Generations                     1         4                     4
+Accepted snapshots              1         4                     5
+Raw records                     42        49                    50
+Snapshot record mappings        42        49                    52
+Normalized events               42        49                    52
+Current lexical-search rows     42        49                    50
+quick_check: ok. Foreign-key errors: 0. Refresh preference keys remained absent.
+
+Append-only added one known Claude record and left the database byte-identical.
+The subsequent application refresh-all attempted one changed source, succeeded
+once, failed zero times, and accepted snapshot 5 in the existing generation 4.
+Scoped lexical search found the appended Unicode text in snapshot 5. The complete
+scoped reader response for snapshot 1, start 40, count 40 remained identical,
+including exact Claude/repository/assistant/date filters and Unicode text.
+
+Refusals: repeated append, existing root, noncanonical /tmp alias, and wrong root
+basename all failed. Recorded owned file hashes remained unchanged after refusal.
+
+Detailed local receipt: build/native-settings-host-lifecycle.json
+SHA-256: 31eabbc533015fea2b19fcba13e7a7db116a8f04d16279b4f04c2272adc6ed3a

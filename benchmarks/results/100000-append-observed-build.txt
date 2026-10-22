@@ -1,0 +1,23 @@
+Production append observer diagnostic; local macOS 27.0.1 arm64, 2026-10-20.
+Build: ./scripts/build benchmarks/append_observed.bend build/append-observed
+Native build, correctness mode (400 + 16), timed append (100000 + 16),
+and independent postflight all exited 0. Correctness-mode timing is disabled.
+Binary SHA256: ef008e1f8279a816e65a2c2c338435148b75fca190102ba2e787f24d3e0efd4b
+Binary bytes: 2712080
+Generated C SHA256: 315f735b32f1e4b20c3ee7e43ad7b19864db90f59e9ab7f0fa87a38dd6409ea7
+All 20 transitive inputs and 88 pinned upstream hashes matched before/after run.
+The build manifest was recorded after build; source mtimes preceded generated C.
+Fixture preparation and independent preflight/postflight were outside the timer.
+The existing production Store.import_observed invokes nine callbacks; samples
+are printed at commit, without per-record clock calls. Timing includes callback
+overhead. Staging and sealing are aggregate phases, not SHA-only costs.
+Timed result: 28352 ms to committed; nine segment durations sum to that total.
+No task build, test or Tart workload overlapped timers; unrelated host activity
+was uncontrolled. One observation; no UI latency or memory measurement.
+Both seals, shared raw IDs, old typed capture fingerprints and exact counts
+passed. Independent quick_check ok and foreign-key violations zero.
+ea0a871c41f6d0b0cd153fb74dd9717ffe08389c600d864d95df033daee2285a  benchmarks/results/100000-append-observed-sources.sha256
+ac3ef642399c0911a1b6473226e860edfb36b45b664c93cdcbb474f329b2d209  benchmarks/append_observed.bend
+d78beddf313770eefe706b48c231e6aa6f82ba85c085836a203fa825021ad996  benchmarks/results/100000-append-observed.jsonl
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  benchmarks/results/100000-append-observed-stderr.txt
+603defc159e927dc3b5edc8daa29d3c8b4837888acc172ed96c6adc65de7288a  benchmarks/results/100000-append-observed-db-check.json

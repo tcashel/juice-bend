@@ -1,0 +1,36 @@
+#!/bin/sh
+set -eu
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$ROOT"
+if [ "$#" -gt 2 ]; then
+  printf 'Usage: ./scripts/build [entry.bend [output]]\n' >&2
+  exit 2
+fi
+entry=${1:-src/main.bend}
+output=${2:-build/juice-bend}
+if [ ! -f "$entry" ]; then
+  printf 'Missing Bend entry point: %s\n' "$entry" >&2
+  exit 1
+fi
+case "$output" in
+  *.bend|*.c) printf 'Output must be a native executable path.\n' >&2; exit 2 ;;
+esac
+if [ "$(uname -s)" != Darwin ] || [ "$(uname -m)" != arm64 ]; then
+  printf 'This build wrapper targets native macOS arm64; this host is %s %s.\n' "$(uname -s)" "$(uname -m)" >&2
+  exit 1
+fi
+compiler=$(./scripts/setup-llvm --path)
+sdk=$(/usr/bin/xcrun --sdk macosx --show-sdk-path)
+deployment=${MACOSX_DEPLOYMENT_TARGET:-26.0}
+mkdir -p "$(dirname -- "$output")" build/.module-cache/llvm
+./scripts/bend "$entry" -o "$output.c"
+# The pinned Bend CLI documents C emission. Compile that unchanged output with
+# the verified LLVM backend at the -O1 level checked by the same-C build.
+# Framework imports belong to the upstream native window/audio runtime.
+set -- -isysroot "$sdk" "-mmacosx-version-min=$deployment"
+if grep -q '^#import ' "$output.c"; then
+  set -- "$@" -x objective-c -fobjc-arc -fmodules \
+    "-fmodules-cache-path=$ROOT/build/.module-cache/llvm"
+fi
+"$compiler" "$@" -std=c11 -O1 "$output.c" -lpthread -lm -lsqlite3 -o "$output"
+printf 'Built %s\n' "$output" >&2

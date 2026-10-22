@@ -1,0 +1,212 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="688" viewBox="0 0 1600 688">
+<style>text{font-family:system-ui,sans-serif}.f:hover rect{stroke:#111;stroke-width:2}</style>
+<rect width="1600" height="688" fill="#faf9f5"/>
+<text x="18" y="31" font-size="22" font-weight="bold">Image admission after decoder exit — parent main thread</text>
+<text x="18" y="58" font-size="14">997 weighted stack observations · optimized Bend app in Tart · sampled while the pending UI was visible</text>
+<text x="18" y="83" font-size="14">Window.frame: 895/997 (89.77%); Cocoa run-loop wait: 879/997 (88.16%), included within that count.</text>
+<text x="18" y="108" font-size="13">Width is sampled stack weight, not CPU usage or a timeline. Concurrent host compilation; one diagnostic sample.</text>
+<g class="f"><title>parent main thread: 997/997 inclusive observations (100.00%); self 0</title><rect x="18.00000" y="590" width="1564.00000" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+<text x="22.00000" y="606" font-size="11">parent main thread</text>
+</g>
+<g class="f"><title>start: 997/997 inclusive observations (100.00%); self 0</title><rect x="18.00000" y="567" width="1564.00000" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+<text x="22.00000" y="583" font-size="11">start</text>
+</g>
+<g class="f"><title>main: 997/997 inclusive observations (100.00%); self 0</title><rect x="18.00000" y="544" width="1564.00000" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+<text x="22.00000" y="560" font-size="11">main</text>
+</g>
+<g class="f"><title>io_loop: 997/997 inclusive observations (100.00%); self 0</title><rect x="18.00000" y="521" width="1564.00000" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+<text x="22.00000" y="537" font-size="11">io_loop</text>
+</g>
+<g class="f"><title>io_step: 995/997 inclusive observations (99.80%); self 0</title><rect x="18.00000" y="498" width="1560.86259" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+<text x="22.00000" y="514" font-size="11">io_step</text>
+</g>
+<g class="f"><title>corpus_eval: 100/997 inclusive observations (10.03%); self 0</title><rect x="18.00000" y="475" width="156.87061" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+<text x="22.00000" y="491" font-size="11">corpus_eval</text>
+</g>
+<g class="f"><title>pool_turn: 3/997 inclusive observations (0.30%); self 0</title><rect x="18.00000" y="452" width="4.70612" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>cthread_yield: 1/997 inclusive observations (0.10%); self 0</title><rect x="18.00000" y="429" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>swtch_pri: 1/997 inclusive observations (0.10%); self 1</title><rect x="18.00000" y="406" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>pool_rows: 2/997 inclusive observations (0.20%); self 0</title><rect x="19.56871" y="429" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>monk_step: 2/997 inclusive observations (0.20%); self 0</title><rect x="19.56871" y="406" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>work_loop: 2/997 inclusive observations (0.20%); self 0</title><rect x="19.56871" y="383" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>Image_free: 2/997 inclusive observations (0.20%); self 0</title><rect x="19.56871" y="360" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>span_fade: 1/997 inclusive observations (0.10%); self 1</title><rect x="19.56871" y="337" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>term_drop: 1/997 inclusive observations (0.10%); self 1</title><rect x="21.13741" y="337" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>work_loop: 97/997 inclusive observations (9.73%); self 0</title><rect x="22.70612" y="452" width="152.16449" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+<text x="26.70612" y="468" font-size="11">work_loop</text>
+</g>
+<g class="f"><title>App_loop_1: 2/997 inclusive observations (0.20%); self 2</title><rect x="22.70612" y="429" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>Clo_apply: 13/997 inclusive observations (1.30%); self 13</title><rect x="25.84353" y="429" width="20.39318" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>ENTER: 1/997 inclusive observations (0.10%); self 1</title><rect x="46.23671" y="429" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>EXIT: 66/997 inclusive observations (6.62%); self 66</title><rect x="47.80542" y="429" width="103.53460" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+<text x="51.80542" y="445" font-size="11">EXIT</text>
+</g>
+<g class="f"><title>attachment_image_stream_chunk: 3/997 inclusive observations (0.30%); self 0</title><rect x="151.34002" y="429" width="4.70612" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>spin_140: 3/997 inclusive observations (0.30%); self 0</title><rect x="151.34002" y="406" width="4.70612" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>spin_141: 1/997 inclusive observations (0.10%); self 1</title><rect x="151.34002" y="383" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>spin_154: 2/997 inclusive observations (0.20%); self 1</title><rect x="152.90873" y="383" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>spin_48: 1/997 inclusive observations (0.10%); self 0</title><rect x="154.47743" y="360" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>spin_48: 1/997 inclusive observations (0.10%); self 1</title><rect x="154.47743" y="337" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>attachment_image_stream_push: 2/997 inclusive observations (0.20%); self 2</title><rect x="156.04614" y="429" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>attachment_image_stream_word: 6/997 inclusive observations (0.60%); self 6</title><rect x="159.18355" y="429" width="9.41224" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>gui_view: 4/997 inclusive observations (0.40%); self 2</title><rect x="168.59579" y="429" width="6.27482" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>spin_654: 2/997 inclusive observations (0.20%); self 2</title><rect x="171.73320" y="406" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>window_frame_run: 895/997 inclusive observations (89.77%); self 0</title><rect x="174.87061" y="475" width="1403.99198" height="22" fill="#dfbc7e" stroke="#faf9f5" stroke-width="0.4"/>
+<text x="178.87061" y="491" font-size="11">window_frame_run</text>
+</g>
+<g class="f"><title>window_frame: 895/997 inclusive observations (89.77%); self 0</title><rect x="174.87061" y="452" width="1403.99198" height="22" fill="#dfbc7e" stroke="#faf9f5" stroke-width="0.4"/>
+<text x="178.87061" y="468" font-size="11">window_frame</text>
+</g>
+<g class="f"><title>-[NSApplication(NSEventRouting) nextEventMatchingMask:untilDate:inMode:dequeue:]: 4/997 inclusive observations (0.40%); self 0</title><rect x="174.87061" y="429" width="6.27482" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>-[NSApplication(NSEventRouting) _nextEventMatchingEventMask:untilDate:inMode:dequeue:]: 2/997 inclusive observations (0.20%); self 0</title><rect x="174.87061" y="406" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>_DPSNextEvent: 2/997 inclusive observations (0.20%); self 0</title><rect x="174.87061" y="383" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>_DPSBlockUntilNextEventMatchingListInMode: 2/997 inclusive observations (0.20%); self 0</title><rect x="174.87061" y="360" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>NSUpdateCycleDebugLoggingEnabled: 1/997 inclusive observations (0.10%); self 1</title><rect x="174.87061" y="337" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>_BlockUntilNextEventMatchingListInMode: 1/997 inclusive observations (0.10%); self 0</title><rect x="176.43932" y="337" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>ReceiveNextEventCommon: 1/997 inclusive observations (0.10%); self 0</title><rect x="176.43932" y="314" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>RunCurrentEventLoopInMode: 1/997 inclusive observations (0.10%); self 0</title><rect x="176.43932" y="291" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>_CFRunLoopRunSpecificWithOptions: 1/997 inclusive observations (0.10%); self 0</title><rect x="176.43932" y="268" width="1.56871" height="22" fill="#dfbc7e" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>__CFRunLoopRun: 1/997 inclusive observations (0.10%); self 0</title><rect x="176.43932" y="245" width="1.56871" height="22" fill="#dfbc7e" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>__CFRunLoopDoObservers: 1/997 inclusive observations (0.10%); self 0</title><rect x="176.43932" y="222" width="1.56871" height="22" fill="#dfbc7e" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>__CFRunLoopPerCalloutARPEnd: 1/997 inclusive observations (0.10%); self 0</title><rect x="176.43932" y="199" width="1.56871" height="22" fill="#dfbc7e" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>_CFAutoreleasePoolPop: 1/997 inclusive observations (0.10%); self 0</title><rect x="176.43932" y="176" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>objc_autoreleasePoolPop: 1/997 inclusive observations (0.10%); self 0</title><rect x="176.43932" y="153" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>AutoreleasePoolPage::releaseUntil(objc_object**): 1/997 inclusive observations (0.10%); self 1</title><rect x="176.43932" y="130" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>-[_NSGestureExclusiveViewManager ignoreAllActiveGestureRecognizers]: 2/997 inclusive observations (0.20%); self 0</title><rect x="178.00802" y="406" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>+[_NSGestureEnvironmentBase activeGestureRecognizers]: 2/997 inclusive observations (0.20%); self 0</title><rect x="178.00802" y="383" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>+[_NSGestureEnvironmentBase enumerateActiveGestureRecognizers:]: 2/997 inclusive observations (0.20%); self 1</title><rect x="178.00802" y="360" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>_Block_copy: 1/997 inclusive observations (0.10%); self 0</title><rect x="179.57673" y="337" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>_call_copy_helpers_excp: 1/997 inclusive observations (0.10%); self 0</title><rect x="179.57673" y="314" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>_Block_object_assign: 1/997 inclusive observations (0.10%); self 0</title><rect x="179.57673" y="291" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>_xzm_xzone_malloc_tiny: 1/997 inclusive observations (0.10%); self 1</title><rect x="179.57673" y="268" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>-[NSObject(NSKeyValueCoding) valueForKey:]: 2/997 inclusive observations (0.20%); self 0</title><rect x="181.14544" y="429" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>os_unfair_lock_lock: 2/997 inclusive observations (0.20%); self 2</title><rect x="181.14544" y="406" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>-[NSRunLoop(NSRunLoop) runMode:beforeDate:]: 879/997 inclusive observations (88.16%); self 0</title><rect x="184.28285" y="429" width="1378.89268" height="22" fill="#dfbc7e" stroke="#faf9f5" stroke-width="0.4"/>
+<text x="188.28285" y="445" font-size="11">-[NSRunLoop(NSRunLoop) runMode:beforeDate:]</text>
+</g>
+<g class="f"><title>_CFRunLoopRunSpecificWithOptions: 879/997 inclusive observations (88.16%); self 0</title><rect x="184.28285" y="406" width="1378.89268" height="22" fill="#dfbc7e" stroke="#faf9f5" stroke-width="0.4"/>
+<text x="188.28285" y="422" font-size="11">_CFRunLoopRunSpecificWithOptions</text>
+</g>
+<g class="f"><title>__CFRunLoopRun: 879/997 inclusive observations (88.16%); self 0</title><rect x="184.28285" y="383" width="1378.89268" height="22" fill="#dfbc7e" stroke="#faf9f5" stroke-width="0.4"/>
+<text x="188.28285" y="399" font-size="11">__CFRunLoopRun</text>
+</g>
+<g class="f"><title>__CFRunLoopServiceMachPort: 879/997 inclusive observations (88.16%); self 0</title><rect x="184.28285" y="360" width="1378.89268" height="22" fill="#dfbc7e" stroke="#faf9f5" stroke-width="0.4"/>
+<text x="188.28285" y="376" font-size="11">__CFRunLoopServiceMachPort</text>
+</g>
+<g class="f"><title>mach_msg: 879/997 inclusive observations (88.16%); self 0</title><rect x="184.28285" y="337" width="1378.89268" height="22" fill="#dfbc7e" stroke="#faf9f5" stroke-width="0.4"/>
+<text x="188.28285" y="353" font-size="11">mach_msg</text>
+</g>
+<g class="f"><title>mach_msg_overwrite: 879/997 inclusive observations (88.16%); self 0</title><rect x="184.28285" y="314" width="1378.89268" height="22" fill="#dfbc7e" stroke="#faf9f5" stroke-width="0.4"/>
+<text x="188.28285" y="330" font-size="11">mach_msg_overwrite</text>
+</g>
+<g class="f"><title>mach_msg2_internal: 879/997 inclusive observations (88.16%); self 0</title><rect x="184.28285" y="291" width="1378.89268" height="22" fill="#dfbc7e" stroke="#faf9f5" stroke-width="0.4"/>
+<text x="188.28285" y="307" font-size="11">mach_msg2_internal</text>
+</g>
+<g class="f"><title>mach_msg2_trap: 879/997 inclusive observations (88.16%); self 879</title><rect x="184.28285" y="268" width="1378.89268" height="22" fill="#dfbc7e" stroke="#faf9f5" stroke-width="0.4"/>
+<text x="188.28285" y="284" font-size="11">mach_msg2_trap</text>
+</g>
+<g class="f"><title>-[NSWindow contentView]: 1/997 inclusive observations (0.10%); self 1</title><rect x="1563.17553" y="429" width="1.56871" height="22" fill="#dfbc7e" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>???: 4/997 inclusive observations (0.40%); self 0</title><rect x="1564.74423" y="429" width="6.27482" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>???: 4/997 inclusive observations (0.40%); self 0</title><rect x="1564.74423" y="406" width="6.27482" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>-[IOGPUMetalCommandBuffer initWithQueue:retainedReferences:synchronousDebugMode:]: 4/997 inclusive observations (0.40%); self 0</title><rect x="1564.74423" y="383" width="6.27482" height="22" fill="#dfbc7e" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>-[_MTLCommandBuffer initWithQueue:retainedReferences:synchronousDebugMode:]: 4/997 inclusive observations (0.40%); self 0</title><rect x="1564.74423" y="360" width="6.27482" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>+[FPCAMetalLayerState commandBufferCreate:creationTime:]: 3/997 inclusive observations (0.30%); self 0</title><rect x="1564.74423" y="337" width="4.70612" height="22" fill="#dfbc7e" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>-[FPMTLMetricsServiceInternal metalCommandBufferCreated:creationTimeInSec:]: 3/997 inclusive observations (0.30%); self 0</title><rect x="1564.74423" y="314" width="4.70612" height="22" fill="#dfbc7e" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>FPMTLMetricsDispatchQueueAsync: 3/997 inclusive observations (0.30%); self 0</title><rect x="1564.74423" y="291" width="4.70612" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>_dispatch_event_loop_poke: 2/997 inclusive observations (0.20%); self 0</title><rect x="1564.74423" y="268" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>_dispatch_kq_poll: 2/997 inclusive observations (0.20%); self 0</title><rect x="1564.74423" y="245" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>kevent_id: 2/997 inclusive observations (0.20%); self 2</title><rect x="1564.74423" y="222" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>dispatch_async: 1/997 inclusive observations (0.10%); self 0</title><rect x="1567.88164" y="268" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>_dispatch_Block_copy: 1/997 inclusive observations (0.10%); self 0</title><rect x="1567.88164" y="245" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>_Block_copy: 1/997 inclusive observations (0.10%); self 0</title><rect x="1567.88164" y="222" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>_xzm_xzone_malloc_tiny: 1/997 inclusive observations (0.10%); self 1</title><rect x="1567.88164" y="199" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>-[_MTLDevice commandBufferErrorOptions]: 1/997 inclusive observations (0.10%); self 1</title><rect x="1569.45035" y="337" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>_dispatch_root_queue_poke_slow: 2/997 inclusive observations (0.20%); self 0</title><rect x="1571.01906" y="429" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>_pthread_workqueue_addthreads: 2/997 inclusive observations (0.20%); self 0</title><rect x="1571.01906" y="406" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>__workq_kernreturn: 2/997 inclusive observations (0.20%); self 2</title><rect x="1571.01906" y="383" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>dispatch_async: 1/997 inclusive observations (0.10%); self 0</title><rect x="1574.15647" y="429" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>_dispatch_Block_copy: 1/997 inclusive observations (0.10%); self 0</title><rect x="1574.15647" y="406" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>_Block_copy: 1/997 inclusive observations (0.10%); self 0</title><rect x="1574.15647" y="383" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>_xzm_xzone_malloc_tiny: 1/997 inclusive observations (0.10%); self 1</title><rect x="1574.15647" y="360" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>objc_autoreleasePoolPop: 1/997 inclusive observations (0.10%); self 0</title><rect x="1575.72518" y="429" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>AutoreleasePoolPage::releaseUntil(objc_object**): 1/997 inclusive observations (0.10%); self 1</title><rect x="1575.72518" y="406" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>objc_retain: 1/997 inclusive observations (0.10%); self 1</title><rect x="1577.29388" y="429" width="1.56871" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>io_wait: 2/997 inclusive observations (0.20%); self 0</title><rect x="1578.86259" y="498" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<g class="f"><title>__select: 2/997 inclusive observations (0.20%); self 2</title><rect x="1578.86259" y="475" width="3.13741" height="22" fill="#91b8cf" stroke="#faf9f5" stroke-width="0.4"/>
+</g>
+<text x="18" y="646" font-size="12">Generated continuation names are grouped; gray-free spaces are self weight. Helper threads excluded.</text>
+<text x="18" y="666" font-size="11">Raw sample SHA256: 61245fcf37d83c1d822801faed51ecb9cc05f89ebf37935706b63237ec3455f1</text>
+</svg>

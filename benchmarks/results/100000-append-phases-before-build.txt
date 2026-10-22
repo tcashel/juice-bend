@@ -1,0 +1,21 @@
+Native append phase diagnostic before raw-I/O/context-insert batching
+Host: Darwin arm64, owner Mac, synthetic isolated data only.
+Build: ./scripts/build benchmarks/append_phases.bend build/juice-bend-append-phases
+Run from a fresh isolated directory: /Users/tcashel/repositories/juice-bend/build/juice-bend-append-phases 100000
+Exit status: 0. All production-helper and final count assertions passed.
+
+Recorded production source SHA256 before the run:
+src/store.bend e5c43459856a28fe711fa8a4dacf168d81d1c62bc507725d9d42a4b7033d0447
+src/maintenance.bend e3bf2ed16fd237a9422a30fc06716159fa093308219ad0426949d293929b817d
+native/sqlite.c 919cb2abd8bad19a3e8cdf12c676f586717121a9c7222a557345ade8f7ab753e
+benchmarks/append_phases.bend 5ba77c540a1020dee4c8c989672d7161fe18317624b5341245959b0d60043ca7
+build/juice-bend-append-phases f3a118e61cf34fdf59825c048fd06df2c92917001e9a3194327410031c25f10f
+Executable bytes: 1946696
+
+Raw measurements: 100000-append-phases-before.jsonl
+Initial capture and fixture generation are outside all append timers.
+Component probes call production helpers in a transaction that is rolled back.
+The following real import_observed append therefore has warmed caches; its phase
+intervals include observer JSON output. This is diagnostic evidence, not the
+canonical benchmark and not a measurement of GUI responsiveness or CPU usage.
+No competing heavy builds/tests or VM command activity ran during this profile.

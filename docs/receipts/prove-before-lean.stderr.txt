@@ -1,0 +1,1 @@
+Ordinary checking passed; kernel NOT RUN: Lean and leanc 4.34.0 are required.

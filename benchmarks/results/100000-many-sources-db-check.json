@@ -1,0 +1,20 @@
+{
+  "quick_check": "ok",
+  "foreign_key_violations": 0,
+  "table_counts": {
+    "sources": 100,
+    "generations": 100,
+    "snapshots": 101,
+    "raw": 100016,
+    "records": 101016,
+    "events": 101016,
+    "search": 100016,
+    "projection_checks": 101,
+    "snapshot_context": 101016
+  },
+  "current_only_fts": true,
+  "logical_page_bytes": 110604288,
+  "inputs_unchanged": true,
+  "upstream_hashes_verified": 88,
+  "checks_passed": true
+}

@@ -1,0 +1,642 @@
+{
+  "schema": "bend-ui-standalone-native-v1",
+  "passed": true,
+  "binary_sha256": "3747f04bd3d8f59142791aaa0317452b145bffeb4e63129dbd407cde69800d13",
+  "source_files": 6,
+  "pins": 96,
+  "build_receipt_sha256": "eedaf3d9d5c8a66143350d70217eb4171be9c55e6b647edcbc31a70d64aeb0ef",
+  "model_states": {
+    "initial": {
+      "focus": 0,
+      "selected": 0,
+      "label": "Choose a control",
+      "samples": 11155,
+      "png_sha256": "4fc37af7234fbaac7328cf74d13778cfd5e31e11ee9a1eadf8f5d86be2cef349"
+    },
+    "initial-backtab": {
+      "focus": 20,
+      "selected": 0,
+      "label": "Choose a control",
+      "samples": 11155,
+      "png_sha256": "bbb6f7b4b09f7bb3028009314f0dc4b13e6e1c542709a7bd4f1356471cf61cf3"
+    },
+    "space-meadow": {
+      "focus": 20,
+      "selected": 20,
+      "label": "Selected: Meadow",
+      "samples": 11155,
+      "png_sha256": "def923afd7ecb238b6b65faff03be584f4b3e6625597fcfa1be30464eb48c1a2"
+    },
+    "wrapped-tab": {
+      "focus": 10,
+      "selected": 20,
+      "label": "Selected: Meadow",
+      "samples": 11155,
+      "png_sha256": "eb85e222d1f92f9561d2cb5ed7ac204767a53f8f98e58c23bebb73b157735fd6"
+    },
+    "enter-apricot": {
+      "focus": 10,
+      "selected": 10,
+      "label": "Selected: Apricot",
+      "samples": 11155,
+      "png_sha256": "8e71012d4dba19e16863497c6a907cba563aafcfacfcebe9b255755608f91628"
+    },
+    "clicked-meadow": {
+      "focus": 20,
+      "selected": 20,
+      "label": "Selected: Meadow",
+      "samples": 11155,
+      "png_sha256": "def923afd7ecb238b6b65faff03be584f4b3e6625597fcfa1be30464eb48c1a2"
+    },
+    "disabled-inert": {
+      "focus": 20,
+      "selected": 20,
+      "label": "Selected: Meadow",
+      "samples": 11155,
+      "png_sha256": "def923afd7ecb238b6b65faff03be584f4b3e6625597fcfa1be30464eb48c1a2"
+    },
+    "tab-apricot": {
+      "focus": 10,
+      "selected": 20,
+      "label": "Selected: Meadow",
+      "samples": 11155,
+      "png_sha256": "eb85e222d1f92f9561d2cb5ed7ac204767a53f8f98e58c23bebb73b157735fd6"
+    },
+    "tab-skips-disabled": {
+      "focus": 20,
+      "selected": 20,
+      "label": "Selected: Meadow",
+      "samples": 11155,
+      "png_sha256": "def923afd7ecb238b6b65faff03be584f4b3e6625597fcfa1be30464eb48c1a2"
+    },
+    "reverse-tab": {
+      "focus": 10,
+      "selected": 20,
+      "label": "Selected: Meadow",
+      "samples": 11155,
+      "png_sha256": "eb85e222d1f92f9561d2cb5ed7ac204767a53f8f98e58c23bebb73b157735fd6"
+    },
+    "space-apricot": {
+      "focus": 10,
+      "selected": 10,
+      "label": "Selected: Apricot",
+      "samples": 11155,
+      "png_sha256": "8e71012d4dba19e16863497c6a907cba563aafcfacfcebe9b255755608f91628"
+    },
+    "relaunched-initial": {
+      "focus": 0,
+      "selected": 0,
+      "label": "Choose a control",
+      "samples": 11155,
+      "png_sha256": "4fc37af7234fbaac7328cf74d13778cfd5e31e11ee9a1eadf8f5d86be2cef349"
+    }
+  },
+  "pixel_samples": 133860,
+  "real_key_requests": [
+    {
+      "operation": "key",
+      "observedAt": "2026-10-22T16:41:45.084Z",
+      "pid": 789,
+      "executable": "/private/tmp/juice-bend-ui-controls.0dIQaUep/Bend UI Controls.app/Contents/MacOS/ui-controls",
+      "point": {
+        "x": 640,
+        "y": 370
+      },
+      "coordinateUnits": "logical top-left screen points",
+      "ok": true,
+      "inputEventSent": true,
+      "ownedWindow": {
+        "id": 42,
+        "pid": 789,
+        "owner": "Bend UI controls",
+        "name": "Bend UI components",
+        "bounds": {
+          "X": 384,
+          "Y": 143,
+          "Width": 512,
+          "Height": 248
+        },
+        "layer": 0,
+        "alpha": 1
+      },
+      "frontmost": {
+        "pid": 789,
+        "executable": "/private/tmp/juice-bend-ui-controls.0dIQaUep/Bend UI Controls.app/Contents/MacOS/ui-controls"
+      },
+      "axHitResult": 0,
+      "axOwnerResult": 0,
+      "axOwner": {
+        "pid": 789,
+        "names": [
+          "Bend UI controls"
+        ],
+        "bundleIdentifier": "org.juicebend.synthetic.controls.1d53fdcc-befd-46cc-90a8-80a54eb8d226",
+        "name": "Bend UI controls"
+      },
+      "status": "owned-visible-point",
+      "request": {
+        "key": "shift-tab",
+        "virtual": 48,
+        "flags": 131072
+      },
+      "constructed": {
+        "down": 25,
+        "up": 25
+      },
+      "shiftEdges": {
+        "down": {
+          "type": 12,
+          "keyCode": 56,
+          "flags": 131072
+        },
+        "up": {
+          "type": 12,
+          "keyCode": 56,
+          "flags": 0
+        }
+      },
+      "receivedEventOrVisualEffectObserved": false
+    },
+    {
+      "operation": "key",
+      "observedAt": "2026-10-22T16:41:48.406Z",
+      "pid": 789,
+      "executable": "/private/tmp/juice-bend-ui-controls.0dIQaUep/Bend UI Controls.app/Contents/MacOS/ui-controls",
+      "point": {
+        "x": 640,
+        "y": 370
+      },
+      "coordinateUnits": "logical top-left screen points",
+      "ok": true,
+      "inputEventSent": true,
+      "ownedWindow": {
+        "id": 42,
+        "pid": 789,
+        "owner": "Bend UI controls",
+        "name": "Bend UI components",
+        "bounds": {
+          "X": 384,
+          "Y": 143,
+          "Width": 512,
+          "Height": 248
+        },
+        "layer": 0,
+        "alpha": 1
+      },
+      "frontmost": {
+        "pid": 789,
+        "executable": "/private/tmp/juice-bend-ui-controls.0dIQaUep/Bend UI Controls.app/Contents/MacOS/ui-controls"
+      },
+      "axHitResult": 0,
+      "axOwnerResult": 0,
+      "axOwner": {
+        "pid": 789,
+        "names": [
+          "Bend UI controls"
+        ],
+        "bundleIdentifier": "org.juicebend.synthetic.controls.1d53fdcc-befd-46cc-90a8-80a54eb8d226",
+        "name": "Bend UI controls"
+      },
+      "status": "owned-visible-point",
+      "request": {
+        "key": "space",
+        "virtual": 49,
+        "flags": 0
+      },
+      "constructed": {
+        "down": 32,
+        "up": 32
+      },
+      "receivedEventOrVisualEffectObserved": false
+    },
+    {
+      "operation": "key",
+      "observedAt": "2026-10-22T16:41:51.479Z",
+      "pid": 789,
+      "executable": "/private/tmp/juice-bend-ui-controls.0dIQaUep/Bend UI Controls.app/Contents/MacOS/ui-controls",
+      "point": {
+        "x": 640,
+        "y": 370
+      },
+      "coordinateUnits": "logical top-left screen points",
+      "ok": true,
+      "inputEventSent": true,
+      "ownedWindow": {
+        "id": 42,
+        "pid": 789,
+        "owner": "Bend UI controls",
+        "name": "Bend UI components",
+        "bounds": {
+          "X": 384,
+          "Y": 143,
+          "Width": 512,
+          "Height": 248
+        },
+        "layer": 0,
+        "alpha": 1
+      },
+      "frontmost": {
+        "pid": 789,
+        "executable": "/private/tmp/juice-bend-ui-controls.0dIQaUep/Bend UI Controls.app/Contents/MacOS/ui-controls"
+      },
+      "axHitResult": 0,
+      "axOwnerResult": 0,
+      "axOwner": {
+        "pid": 789,
+        "names": [
+          "Bend UI controls"
+        ],
+        "bundleIdentifier": "org.juicebend.synthetic.controls.1d53fdcc-befd-46cc-90a8-80a54eb8d226",
+        "name": "Bend UI controls"
+      },
+      "status": "owned-visible-point",
+      "request": {
+        "key": "tab",
+        "virtual": 48,
+        "flags": 0
+      },
+      "constructed": {
+        "down": 9,
+        "up": 9
+      },
+      "receivedEventOrVisualEffectObserved": false
+    },
+    {
+      "operation": "key",
+      "observedAt": "2026-10-22T16:41:54.359Z",
+      "pid": 789,
+      "executable": "/private/tmp/juice-bend-ui-controls.0dIQaUep/Bend UI Controls.app/Contents/MacOS/ui-controls",
+      "point": {
+        "x": 640,
+        "y": 370
+      },
+      "coordinateUnits": "logical top-left screen points",
+      "ok": true,
+      "inputEventSent": true,
+      "ownedWindow": {
+        "id": 42,
+        "pid": 789,
+        "owner": "Bend UI controls",
+        "name": "Bend UI components",
+        "bounds": {
+          "X": 384,
+          "Y": 143,
+          "Width": 512,
+          "Height": 248
+        },
+        "layer": 0,
+        "alpha": 1
+      },
+      "frontmost": {
+        "pid": 789,
+        "executable": "/private/tmp/juice-bend-ui-controls.0dIQaUep/Bend UI Controls.app/Contents/MacOS/ui-controls"
+      },
+      "axHitResult": 0,
+      "axOwnerResult": 0,
+      "axOwner": {
+        "pid": 789,
+        "names": [
+          "Bend UI controls"
+        ],
+        "bundleIdentifier": "org.juicebend.synthetic.controls.1d53fdcc-befd-46cc-90a8-80a54eb8d226",
+        "name": "Bend UI controls"
+      },
+      "status": "owned-visible-point",
+      "request": {
+        "key": "enter",
+        "virtual": 36,
+        "flags": 0
+      },
+      "constructed": {
+        "down": 13,
+        "up": 13
+      },
+      "receivedEventOrVisualEffectObserved": false
+    },
+    {
+      "operation": "key",
+      "observedAt": "2026-10-22T16:42:02.720Z",
+      "pid": 789,
+      "executable": "/private/tmp/juice-bend-ui-controls.0dIQaUep/Bend UI Controls.app/Contents/MacOS/ui-controls",
+      "point": {
+        "x": 640,
+        "y": 370
+      },
+      "coordinateUnits": "logical top-left screen points",
+      "ok": true,
+      "inputEventSent": true,
+      "ownedWindow": {
+        "id": 42,
+        "pid": 789,
+        "owner": "Bend UI controls",
+        "name": "Bend UI components",
+        "bounds": {
+          "X": 384,
+          "Y": 143,
+          "Width": 512,
+          "Height": 248
+        },
+        "layer": 0,
+        "alpha": 1
+      },
+      "frontmost": {
+        "pid": 789,
+        "executable": "/private/tmp/juice-bend-ui-controls.0dIQaUep/Bend UI Controls.app/Contents/MacOS/ui-controls"
+      },
+      "axHitResult": 0,
+      "axOwnerResult": 0,
+      "axOwner": {
+        "pid": 789,
+        "names": [
+          "Bend UI controls"
+        ],
+        "bundleIdentifier": "org.juicebend.synthetic.controls.1d53fdcc-befd-46cc-90a8-80a54eb8d226",
+        "name": "Bend UI controls"
+      },
+      "status": "owned-visible-point",
+      "request": {
+        "key": "tab",
+        "virtual": 48,
+        "flags": 0
+      },
+      "constructed": {
+        "down": 9,
+        "up": 9
+      },
+      "receivedEventOrVisualEffectObserved": false
+    },
+    {
+      "operation": "key",
+      "observedAt": "2026-10-22T16:42:05.486Z",
+      "pid": 789,
+      "executable": "/private/tmp/juice-bend-ui-controls.0dIQaUep/Bend UI Controls.app/Contents/MacOS/ui-controls",
+      "point": {
+        "x": 640,
+        "y": 370
+      },
+      "coordinateUnits": "logical top-left screen points",
+      "ok": true,
+      "inputEventSent": true,
+      "ownedWindow": {
+        "id": 42,
+        "pid": 789,
+        "owner": "Bend UI controls",
+        "name": "Bend UI components",
+        "bounds": {
+          "X": 384,
+          "Y": 143,
+          "Width": 512,
+          "Height": 248
+        },
+        "layer": 0,
+        "alpha": 1
+      },
+      "frontmost": {
+        "pid": 789,
+        "executable": "/private/tmp/juice-bend-ui-controls.0dIQaUep/Bend UI Controls.app/Contents/MacOS/ui-controls"
+      },
+      "axHitResult": 0,
+      "axOwnerResult": 0,
+      "axOwner": {
+        "pid": 789,
+        "names": [
+          "Bend UI controls"
+        ],
+        "bundleIdentifier": "org.juicebend.synthetic.controls.1d53fdcc-befd-46cc-90a8-80a54eb8d226",
+        "name": "Bend UI controls"
+      },
+      "status": "owned-visible-point",
+      "request": {
+        "key": "tab",
+        "virtual": 48,
+        "flags": 0
+      },
+      "constructed": {
+        "down": 9,
+        "up": 9
+      },
+      "receivedEventOrVisualEffectObserved": false
+    },
+    {
+      "operation": "key",
+      "observedAt": "2026-10-22T16:42:09.186Z",
+      "pid": 789,
+      "executable": "/private/tmp/juice-bend-ui-controls.0dIQaUep/Bend UI Controls.app/Contents/MacOS/ui-controls",
+      "point": {
+        "x": 640,
+        "y": 370
+      },
+      "coordinateUnits": "logical top-left screen points",
+      "ok": true,
+      "inputEventSent": true,
+      "ownedWindow": {
+        "id": 42,
+        "pid": 789,
+        "owner": "Bend UI controls",
+        "name": "Bend UI components",
+        "bounds": {
+          "X": 384,
+          "Y": 143,
+          "Width": 512,
+          "Height": 248
+        },
+        "layer": 0,
+        "alpha": 1
+      },
+      "frontmost": {
+        "pid": 789,
+        "executable": "/private/tmp/juice-bend-ui-controls.0dIQaUep/Bend UI Controls.app/Contents/MacOS/ui-controls"
+      },
+      "axHitResult": 0,
+      "axOwnerResult": 0,
+      "axOwner": {
+        "pid": 789,
+        "names": [
+          "Bend UI controls"
+        ],
+        "bundleIdentifier": "org.juicebend.synthetic.controls.1d53fdcc-befd-46cc-90a8-80a54eb8d226",
+        "name": "Bend UI controls"
+      },
+      "status": "owned-visible-point",
+      "request": {
+        "key": "shift-tab",
+        "virtual": 48,
+        "flags": 131072
+      },
+      "constructed": {
+        "down": 25,
+        "up": 25
+      },
+      "shiftEdges": {
+        "down": {
+          "type": 12,
+          "keyCode": 56,
+          "flags": 131072
+        },
+        "up": {
+          "type": 12,
+          "keyCode": 56,
+          "flags": 0
+        }
+      },
+      "receivedEventOrVisualEffectObserved": false
+    },
+    {
+      "operation": "key",
+      "observedAt": "2026-10-22T16:42:12.925Z",
+      "pid": 789,
+      "executable": "/private/tmp/juice-bend-ui-controls.0dIQaUep/Bend UI Controls.app/Contents/MacOS/ui-controls",
+      "point": {
+        "x": 640,
+        "y": 370
+      },
+      "coordinateUnits": "logical top-left screen points",
+      "ok": true,
+      "inputEventSent": true,
+      "ownedWindow": {
+        "id": 42,
+        "pid": 789,
+        "owner": "Bend UI controls",
+        "name": "Bend UI components",
+        "bounds": {
+          "X": 384,
+          "Y": 143,
+          "Width": 512,
+          "Height": 248
+        },
+        "layer": 0,
+        "alpha": 1
+      },
+      "frontmost": {
+        "pid": 789,
+        "executable": "/private/tmp/juice-bend-ui-controls.0dIQaUep/Bend UI Controls.app/Contents/MacOS/ui-controls"
+      },
+      "axHitResult": 0,
+      "axOwnerResult": 0,
+      "axOwner": {
+        "pid": 789,
+        "names": [
+          "Bend UI controls"
+        ],
+        "bundleIdentifier": "org.juicebend.synthetic.controls.1d53fdcc-befd-46cc-90a8-80a54eb8d226",
+        "name": "Bend UI controls"
+      },
+      "status": "owned-visible-point",
+      "request": {
+        "key": "space",
+        "virtual": 49,
+        "flags": 0
+      },
+      "constructed": {
+        "down": 32,
+        "up": 32
+      },
+      "receivedEventOrVisualEffectObserved": false
+    },
+    {
+      "operation": "key",
+      "observedAt": "2026-10-22T16:42:15.823Z",
+      "pid": 789,
+      "executable": "/private/tmp/juice-bend-ui-controls.0dIQaUep/Bend UI Controls.app/Contents/MacOS/ui-controls",
+      "point": {
+        "x": 640,
+        "y": 370
+      },
+      "coordinateUnits": "logical top-left screen points",
+      "ok": true,
+      "inputEventSent": true,
+      "ownedWindow": {
+        "id": 42,
+        "pid": 789,
+        "owner": "Bend UI controls",
+        "name": "Bend UI components",
+        "bounds": {
+          "X": 384,
+          "Y": 143,
+          "Width": 512,
+          "Height": 248
+        },
+        "layer": 0,
+        "alpha": 1
+      },
+      "frontmost": {
+        "pid": 789,
+        "executable": "/private/tmp/juice-bend-ui-controls.0dIQaUep/Bend UI Controls.app/Contents/MacOS/ui-controls"
+      },
+      "axHitResult": 0,
+      "axOwnerResult": 0,
+      "axOwner": {
+        "pid": 789,
+        "names": [
+          "Bend UI controls"
+        ],
+        "bundleIdentifier": "org.juicebend.synthetic.controls.1d53fdcc-befd-46cc-90a8-80a54eb8d226",
+        "name": "Bend UI controls"
+      },
+      "status": "owned-visible-point",
+      "request": {
+        "key": "esc",
+        "virtual": 53,
+        "flags": 0
+      },
+      "constructed": {
+        "down": 27,
+        "up": 27
+      },
+      "receivedEventOrVisualEffectObserved": false
+    }
+  ],
+  "disabled_click_inert": true,
+  "two_distinct_launch_pids": true,
+  "exit_observations": {
+    "escape": {
+      "parent_observed_ms": 893,
+      "window_observed_ms": 1020,
+      "threshold_ms": 5000,
+      "observation_bounds_not_benchmark": true
+    },
+    "native-close": {
+      "parent_observed_ms": 542,
+      "window_observed_ms": 772,
+      "threshold_ms": 5000,
+      "observation_bounds_not_benchmark": true
+    }
+  },
+  "cleanup": "Guest processes/windows absent and display restored; VM stop is root-owned evidence.",
+  "limitations": [
+    "Standalone example only; no Juice application/data/provider acceptance.",
+    "Selection label is state, not a numeric counter.",
+    "Pixel oracle is source-bound to the static font/palette, not independent design approval.",
+    "Timing values include automation overhead. No asynchronous pending Close test."
+  ],
+  "artifact_manifest_sha256": "6c57433db5c9389bdd26ab597fe8d420da6646da32c242362ae731b2b1444971",
+  "collector_sha256": "32cbd3c3c5b1b839a87bf15f383f8cd8914dd35564592187f2d8cba5f8c7abf0",
+  "source_manifest_sha256": "2a06a1db5b7b0b143a30de1dc4cb4d19f58a46afd505427751279fe0b7652f35",
+  "build_terminal_note_sha256": "46266185b593356678c7f73f201c43c125374d6ae4d802aa0f5d6cba1e4b8fe8",
+  "root_visual_review": {
+    "observed": true,
+    "views": {
+      "initial": "11e1aab661a0861a269a8686b964b2001e68f2eeebaeb03b668b80dd3e8cc88d",
+      "initial-backtab": "a3a3ae19e16dd7280bfbd1eacd1fd5ab4493c1ad1cd05f82f7d8b8a5cf34f832",
+      "enter-apricot": "815def41c511b05d9c55c541010865fabe9ee3d07fe18754da18d79b5d44a887",
+      "disabled-inert": "ea1963b7afbbc5e90330828e06a5555fafedc2404826e7a83a46896b971d3a7c",
+      "relaunched-initial": "ee1b6704da12918fb0c1793ca00fbd17213f1965d8cf86a1a071b5b16e1ee749"
+    },
+    "findings": "Correct native control/text scale, legible labels, visible keyboard focus, disabled appearance, exact selected-state changes. The outline uses the existing coarse tile grid; this is a foundation example, not final Juice product polish."
+  },
+  "final_shutdown": {
+    "guest_exit": 0,
+    "owned_wrapper_exit": 143,
+    "vm_state": "stopped",
+    "lease_absent": true,
+    "live_children_absent": true,
+    "request_sha256": "154af6b56fc9a4495fef31577c581a78ffd6872dff4ee784f9a30b62a56bab36",
+    "final_artifact_manifest_sha256": "8e95178f434c4c81a2893c14e0a76cf79762379973e0c5ba6245ed9c8f1589d5",
+    "artifact_files": 162
+  },
+  "failed_predecessor": {
+    "run": "run-01",
+    "failure_receipt_sha256": "50d93abd6befeab078c93f7133ca63ea1309919b134a1bd91abb7945a73812b7",
+    "reason": "Fixed 2048 canvas submitted directly to smaller native window scaled the controls; failed native pixel gate preserved."
+  }
+}

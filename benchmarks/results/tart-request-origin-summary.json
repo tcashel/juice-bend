@@ -1,0 +1,129 @@
+{
+  "date": "2026-10-21",
+  "host": "macOS27.0.1 arm64",
+  "guest": "macOS27.0 arm64 (26A428)",
+  "tart": "2.40.1",
+  "network": "host-only",
+  "app": {
+    "inputs": 57,
+    "unchanged": true,
+    "bytes": 13161720,
+    "sha256": "668cf892677f2bc8b1ea1be48f26a9a06d12735ba1efa6933df36f45e821cb6e",
+    "generated_c_sha256": "f03ae764b8fade33cec57daff1fb8a29dc36962f74bdb969673837511d8fa445"
+  },
+  "native": {
+    "binary_sha256": "668cf892677f2bc8b1ea1be48f26a9a06d12735ba1efa6933df36f45e821cb6e",
+    "cases": [
+      {
+        "case": "01-wrapped-request",
+        "attribution": "exact",
+        "exact_clipboard": true,
+        "bytes": 3733,
+        "sha256": "cd595b2df4332854ee91cbfcf2af92c7d25cfd1ec08fbab564195f13bf5673b4"
+      },
+      {
+        "case": "02-long-context-unicode",
+        "attribution": "exact",
+        "exact_clipboard": true,
+        "bytes": 7596,
+        "sha256": "8f00905ca71a903a4710a4e7049a7062cf7a5f788b63ce36a9c117bcbb109b54"
+      },
+      {
+        "case": "03-context-only",
+        "attribution": "not_indexed",
+        "exact_clipboard": true,
+        "bytes": 1775,
+        "sha256": "789faf2894b5208defcfe6e47228e2c7d4797aa9af1be41362af65e88d2a4543"
+      },
+      {
+        "case": "04-relay-only",
+        "attribution": "not_indexed",
+        "exact_clipboard": true,
+        "bytes": 1771,
+        "sha256": "6440fdb05206761976f5959f2ce8e88288ac7c7070f9249e946b22fc6c6ff7b4"
+      },
+      {
+        "case": "05-meta-only",
+        "attribution": "not_indexed",
+        "exact_clipboard": true,
+        "bytes": 1769,
+        "sha256": "6f9ca17c62416f76d5da6d32cefc3b1a0d843cb7b92aa79b8c113ff26e5ba793"
+      },
+      {
+        "case": "06-malformed-wrapper",
+        "attribution": "not_indexed",
+        "exact_clipboard": true,
+        "bytes": 1785,
+        "sha256": "5ed8a9066d465e76cadad4ad3333a96158a049df26bd953f660298f63d67d49d"
+      }
+    ],
+    "retained": {
+      "append_snapshot": "7",
+      "rewrite_snapshot": "8",
+      "original_snapshot": "1",
+      "displayed_text_and_selection_exact": true,
+      "full_window_pixels_exact": true,
+      "old_raw_and_citation_and_projection_verified": true,
+      "long_why_exact_after_restart_and_source_absence": true,
+      "long_request_preview_observed_after_paging": true
+    },
+    "exports": [
+      {
+        "case": "01-wrapped-request",
+        "bytes": 3904,
+        "sha256": "27cc39974f6ff3ee4378e4556c07a21cdd478cba22e67cdcb8383b356c9d7f68",
+        "mode": "0600"
+      },
+      {
+        "case": "02-long-context-unicode",
+        "bytes": 7767,
+        "sha256": "82bf03a13d510324c54bd8196b304114acc003a09f432202be5f0ffeb4c7f752",
+        "mode": "0600"
+      },
+      {
+        "case": "01-wrapped-request",
+        "bytes": 3904,
+        "sha256": "27cc39974f6ff3ee4378e4556c07a21cdd478cba22e67cdcb8383b356c9d7f68",
+        "mode": "0600"
+      }
+    ],
+    "all_owned_windows_closed": true,
+    "dock_unchanged": true,
+    "automation_note": "Initial one-second window probe was premature; a subsequent read found the expected native window. No startup latency claim."
+  },
+  "correctness": {
+    "checks": 423,
+    "executables": 8,
+    "unchanged_union_inputs": 147,
+    "new_full_suite": false
+  },
+  "fixture": {
+    "source": "benchmarks/native_request_origin.bend",
+    "source_sha256": "86786c7e02d1fd12913c9dafdb1cd8432c5da36a60652e6b39b5cc95d5b97657",
+    "binary_sha256": "3bbdc1dd3212fb3fc9468339aa02e6f31dca977ddd35c5520dee8e40ff10d6fc",
+    "unchanged_inputs": 94,
+    "create_and_advance_passed": true,
+    "refusals_passed": [
+      "existing root",
+      "repeated advance",
+      "invalid UUID",
+      "Git environment override"
+    ]
+  },
+  "cleanup": {
+    "vm": "stopped",
+    "runner_exit": 130,
+    "owned_lease_released": true,
+    "owned_windows_closed": true,
+    "dock_unchanged": true
+  },
+  "limits": [
+    "Synthetic data only",
+    "File and commit Why only; History why-scope unchanged",
+    "First16 actor records and64 generations remain bounded",
+    "No full reference-origin parity",
+    "2048 decoded-character request preview and per-field retained event excerpts",
+    "Fallback boxes for unsupported glyphs; exact copied Unicode",
+    "No new latency, performance, IME, shaping, accessibility or resize acceptance"
+  ]
+}

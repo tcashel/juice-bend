@@ -1,0 +1,66 @@
+Related captured sessions: native host CLI lifecycle
+Date: 2026-10-20
+Scope: synthetic fixture only, on macOS arm64. CLI execution was observed;
+this receipt does not establish native UI navigation, input, or clipboard behavior.
+
+Frozen artifacts (SHA-256)
+Application: build/juice-bend-relations
+784d48c4d180b5e711613dbf43797c869c526a2cbf8082c53f6b3bbb9e789ab2
+Fixture executable: build/native-relations-bounded-fixture
+50d553d189c64691d48d1d514a179c06abe5c9c456f0acc44aaff2b6ffcd2b12
+Fixture source: benchmarks/native_relations.bend
+699f880b5fac701c1d83de3dc2932a971272e11303bb83f16e71f7cb3c5c81e7
+Application input manifest: build/relations-source-inputs.sha256
+2d2dc4d1372b29d8f652cd01875d67d2da6d5a5eab0c577865f7024f9e834171
+Fixture input manifest: build/native-relations-bounded-inputs.sha256
+af0c5ef9033fb98fa82f69be8a1155b9c4e3f437d2a91bef2998cf1f7cef9dae
+
+Build gates: all 42 application inputs and all 26 fixture inputs were unchanged
+across their respective builds. Each build verified all 88 pinned upstream
+checksums before and after compilation. No application rebuild occurred during
+this lifecycle. Fixture construction and mutation semantics are implemented in Bend.
+
+Lifecycle: fixture -> append-only -> rewrite-only -> exact application refresh-all
+-> fixture hide -> retained CLI reads. Source-only mutations left the database
+at 22 snapshots. One refresh batch attempted four registered sources, succeeded
+four, and failed zero. Discovery reported none. Parent append accepted snapshot
+23 in generation 1; child rewrite accepted snapshot 24 in generation 23.
+
+Database counts                 Before refresh   After refresh and hide
+Sources                         22               22
+Generations                     22               23
+Accepted snapshots              22               24
+Raw records                     89               97
+Snapshot record mappings        89               142
+Normalized events               89               142
+Current lexical-search rows     89               91
+Final quick_check: ok. Foreign-key errors: 0.
+
+Hide moved only the 22 owned synthetic source files to .retained paths, without
+deleting them. All original captures and both new captures passed exact retained
+byte and projection verification before hiding. No discoverable JSONL remained.
+
+Eight application CLI reads then passed with source files hidden:
+- Old anchor snapshot 1, watermark 22: first page scanned 15 candidates and
+  returned snapshots 2, 7, 8, 9, 10; source cursor 16 returned snapshot 17 after
+  scanning four candidates, with no further cursor.
+- Fresh watermark 24: first page returned 7, 8, 9, 10. The rewritten child's
+  former parent link was absent; old watermark 22 still retained snapshot 2.
+- Duplicate session aliases on snapshots 9 and 10 were marked ambiguous on page.
+- Claude snapshot 21 linked to 22 as retained_path_association, with a null
+  witness record; no recorded session-parent claim was substituted.
+- Frozen scope was codex, exact repository /synthetic/relations, assistant,
+  date 2026-10-20. Related output preserved this scope for target readers;
+  role/date did not filter relationship metadata.
+- Origin snapshot 1 at physical record 40 retained its Unicode text and excluded
+  future appended records. Child snapshot 2 retained its original scoped text;
+  snapshot 24 showed rewritten text. User, old-date, and tool-result exclusions
+  remained effective. Scoped Tools retained the eligible call and honestly
+  reported its counterpart unavailable within that selected page.
+
+Refusals: out-of-order rewrite failed with source hashes unchanged. An encoded
+marker exceeding 64 KiB failed before root creation. Repeated hide failed with
+all 22 retained-file hashes unchanged.
+
+Detailed local synthetic receipt: build/native-relations-host-lifecycle-check2.json
+SHA-256: bf428b7a31f0a87bd18c9c7211226002cbf3940d9f76cab71f3d34b9be2af64f

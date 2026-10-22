@@ -1,0 +1,41 @@
+Repository Files integration — local macOS arm64, 2026-10-20
+
+Native CLI gate:
+  ./scripts/test tests/repository_cli.bend tests/repository_browser.bend tests/cli.bend
+  Exit 0; 167 named checks (100 + 58 + 9), three executables.
+  Log SHA256: 3005bc253819fde0eef64cec31692917ab718da66006df86d13657c36cbdf055
+
+Native GUI/state gate:
+  ./scripts/test tests/gui.bend tests/gui_repository.bend tests/ui.bend tests/native_trace.bend
+  Exit 0; 184 named checks (87 + 54 + 33 + 10), four executables.
+  Two completion banners excluded from that count.
+  Log SHA256: 82b7bbc824b0ea2506e2a10d9eb79ab0375aa009b69d7c520f611dba2db0c33c
+  Oversized test continuations initially exceeded the pinned compiler's arity
+  limit. Splitting those assertions preserved the existing checks and required
+  no compiler, runtime or production invariant changes.
+
+Frozen native application:
+  ./scripts/build src/main.bend build/juice-bend-files
+  Exit 0; 35 recorded inputs identical before/after; 88 upstream hashes pass.
+  Bytes: 8265920
+  SHA256: 0e1d10180fa875ca225a1bae25f60b968689e6d0440ad1a21e82f4b7bbeb1434
+  Input manifest SHA256: 2f02d8f681351c15009e3dedfbd13228348d749da1a5bd0f0a96bbd9dd7a717b
+  Isolated empty-library CLI status passed.
+  Linked libraries: SQLite, libSystem and upstream macOS window/graphics
+  frameworks. No Lean or Bun runtime dependency.
+
+Independent read-only review found no blocking CLI/GUI identity mismatch.
+Canonical repository and selected checkout remain separate. Source/evidence
+requests retain the exact commit, path and displayed line range. Pending or
+stale replies cannot redirect the current reader. Captured snapshot/filter
+selection remains separate from repository state. Displayed exports contain
+the exact reader text.
+
+These are focused checks, not a full-suite rerun or UI interaction receipt.
+Actual native interaction is recorded separately in native-validation.md.
+
+Publication formatting check: removed one extra EOF newline from gui_files.bend
+after the native gates. Re-emitting main produced byte-identical generated C
+(SHA256 2f1c72418f0235cb65d99855f43bebfbe38fc2ba0b9d1470763814097f9cbb6f),
+so the observed executable remains exact. The input manifest above reflects
+that formatting-only source; original linking inputs remain in ignored build.

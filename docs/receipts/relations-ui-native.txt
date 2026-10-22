@@ -1,0 +1,63 @@
+Related native UI: local macOS arm64 and isolated Tart, 2026-10-20.
+
+Build: ./scripts/build src/main.bend build/juice-bend-relations
+Normal pinned build flags, including Apple Clang 21 -O3. Exit 0.
+All 42 transitive source/build inputs remained unchanged; all 88 pinned upstream
+hashes passed before/after. Input manifest: relations-build-inputs.sha256.
+Executable bytes: 10462024
+SHA256: 784d48c4d180b5e711613dbf43797c869c526a2cbf8082c53f6b3bbb9e789ab2
+Generated C SHA256: 7cd7e2c2647b53a4fd9936afa89a44be03feec08f6e12a2c1a1634f865da2b12
+Linked dependencies are system SQLite/libSystem/libobjc and upstream macOS
+frameworks. No Lean or Bun application runtime. All maintained application,
+fixture and UI behavior remains Bend 2; native/sqlite.c is unchanged.
+
+Fixture: 50d553d189c64691d48d1d514a179c06abe5c9c456f0acc44aaff2b6ffcd2b12
+It created 22 synthetic sources / 22 accepted captures / 89 retained raw records.
+The native lexical query opened snapshot 1 at physical record 40 with provider
+codex, repository /synthetic/relations, role assistant, date 2026-10-20.
+Related watermark 22 returned five links on page 1 and one on page 2.
+Child snapshot 2 and late-page snapshot 17 opened with those frozen filters.
+Tools used the same exact child capture. Back returned to page 2 or the origin.
+
+Seven screenshot pixel regions matched exactly: origin reader/title, query
+and list after initial navigation and again after source removal, plus page 2
+reader/list after opening and returning from its target. The original had a
+nonzero physical start, wheel-adjusted scroll and selected text; copied text
+after Back was the original 1518 UTF-8 bytes.
+
+A second instance of the identical app performed actual native Refresh while
+the original Related target remained open. Immediately before that click the
+database had 22 snapshots / 89 raw records; one click accepted 24 / 97. Only the
+fixture's parent append and child rewrite changed. Command+Q closed that
+second window, leaving the first pinned to snapshot 2.
+
+The fixture then hid all 22 owned original log paths. New target transcript
+and Tools requests remained exact. Related Refresh reread watermark 22;
+explicit Back and new Related entry used 24 and excluded the child's former
+parent link. Related Refresh itself rereads its pinned page rather than
+starting source capture. This is distinct from the second-instance capture.
+
+Thirteen native clipboard comparisons matched the frozen executable's CLI
+text exactly, including Unicode. Three mode-0600 displayed-evidence exports:
+Tools body 2228 / total 2399 bytes; old Related 5829 / 6000; fresh Related 4982 / 5153.
+All export bodies exactly matched the displayed text plus the standard header.
+See the JSON receipt for each SHA256 and clipboard observation.
+
+Final database: 22 sources, 23 generations, 24 snapshots, 97 raw rows, 142 record
+maps/events/context rows, 91 current FTS events, 24 projection checks.
+quick_check ok; foreign-key violations 0. Command+Q closed the last window.
+Tart 2.40.1 used host-only networking; runner exit 130, VM stopped, both leases
+absent. No owner desktop unlock or private history was needed.
+
+Sanitized observations: benchmarks/results/tart-relations-summary.json
+SHA256: 32e552ce63e84979ba1cecf84aa04a14d09cf8c1dbceb97566c54cd2156b6023
+Raw synthetic artifacts remain ignored under build/tart/relations-v9utxn_y.
+Backend/CLI and focused GUI tests have separate receipts. Native observations
+do not stand in for those gates. Unsupported glyphs still show boxes; no full
+IME/shaping, input latency, scroll cadence or distribution result is claimed.
+
+The separate focused GUI gates passed 291 named checks (51 Related and 240
+regressions); see relations-gui-tests.txt for compiler failures and final hashes.
+The exact observed app was promoted to build/juice-bend and the new
+build/Juice Bend Related.app. Plist and isolated empty-library launcher status
+passed. All earlier named binaries/bundles remain preserved.

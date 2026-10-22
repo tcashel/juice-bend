@@ -1,0 +1,66 @@
+Juice Bend Connections native validation — 2026-10-21
+
+Observed app SHA256
+0d4839d98088aff7c3c5a5581908ded7e877e5987e17ecafd592e03ce6d75988
+19,275,464 bytes; physical Mac build 712.306s (diagnostic, not a benchmark).
+Generated C 3a8b69aafe98486080b71f846e696f722ea09cf5c7abf803bf2ac10085daf03a.
+81 first-party main-closure files and 93 runtime/build pins match the promoted
+tree. Bend 2.0.37, pinned 60ca80ae…, Bun 1.4.2 via mise. Application behavior/UI
+remain Bend. The SQLite bridge grows from 418 to 454 lines only to supply an
+existing-file open primitive with RO/RW, FULLMUTEX and required NOFOLLOW;
+ordinary capture-open behavior is unchanged. No CREATE in the new primitive.
+
+Native focused evidence: nine Linux gates: 387 assertions; six Mac gates: 334
+assertions, including 30 exact-app transport assertions with HOME unset.
+These scopes overlap; this is not a new unique full-suite total. Every selected
+test exited 0 with empty test stderr. Earlier frontend/300s compiler-bound
+failures are retained. The exact generated GUI C completed under a 900s bound.
+The Mac WAL fixture initially assumed Linux sidecar cleanup. Its corrected
+checkpointed standalone-copy fixture passed 115 assertions without deleting
+source sidecars or changing production behavior. Exact-byte/absent-sidecar
+checks surround each rejected status/Enable/callback admission.
+
+Actual GUI: macOS 27.0 (26A428) arm64 in Tart 2.40.1, host-only networking;
+1280x800, Dock shown. Fixture is 42 synthetic captured records and four private
+feed files. No real account, provider configuration, credentials or histories.
+Settings → Connections Off created no quota database. Enable acknowledged
+epoch 1 awaiting feed. Reviewed Manual setup and exact fragment copy passed;
+copying left state unchanged and explicitly did not install/authenticate.
+Synthetic known 0 and partial 25.125% feeds displayed correctly. Unknown-only
+feed changed no stored observation; invalid 101% refused with the exact error.
+History retained the sampled partial observation through disconnect. Delayed
+epoch 1 callback refused; re-enable created epoch 2 without inventing usage.
+Editing the root away and back retired setup eligibility. A nonexistent root
+showed unavailable/error and was not created. Disconnecting epoch 2 succeeded.
+
+Eighteen exact clipboard comparisons and four inert-copy comparisons passed.
+Back restored both Settings and original transcript selection bytes and exact
+window PNGs. Source/generation/snapshot/raw/event counts were unchanged. Full
+accepted-extent verify passed; new 8,313-byte mode 0600 export matched source.
+Seventy-five guarded observations kept the complete window above the Dock.
+Root inspected full/window screenshots for Off, awaiting/setup, partial usage,
+history, unavailable and restored transcript. History's embedded newline draws
+a fallback box; raw Unix timestamps and policy-heavy prose need further polish.
+CJK/emoji fallback persists despite exact Unicode clipboard preservation. A
+generic OS Tips notification overlapped the upper-right search area.
+
+Both guest steps, UI cleanup and display restoration exited 0 with empty stderr.
+VM runner 77756 ended 130 after stopping only owned Tart PID 60317. VM stopped,
+lease absent, original display restored and Dock setting unchanged. Prepared
+driver v1 was not run; v2 corrected bounded fresh WindowServer observation after
+process exit, preserving the prior compact-run shutdown-race fix. App/fixture
+and assertions remained exact. Nonce 97d942a4-7419-4841-9cc7-ad5c6c85a432.
+Local receipts: build/quota-native-v2-plan/artifacts and
+build/quota-ui-integration/validation-current.json. Promotion:
+build/connections-promotion.json; prior compact/archive executables preserved.
+
+Reproduce native fixture/transport with scripts/build on
+benchmarks/native_quota.bend and benchmarks/native_quota_transport.bend.
+The latter takes the exact candidate executable as its sole argument. For UI,
+use a new /private/tmp/juice-bend-quota-fixture-UUID root, launch that library,
+search settings-origin and exercise the workflow above. Fixture creation and
+all feed/state policy/assertions remain Bend. Manual setup is copied, never run.
+
+Not observed here: real provider feed, account/subscription access, 40-row GUI
+paging, simultaneous in-flight GUI callback/root-edit race or clock reversal.
+No full-suite/proof/speed-comparison/full-parity acceptance follows from this run.

@@ -1,0 +1,36 @@
+Recorded Tools integration — local macOS arm64, 2026-10-20
+
+Focused native gates (separate builds; not a full-suite rerun):
+  tests/tool_activity.bend: 65 checks, exit 0.
+  Log SHA256: d31984ca4fce1b705cf8da39f6771699163ebffa91cf2445549e96de4e445628
+  tests/activity_reader.bend: 44 checks, exit 0.
+  Log SHA256: 666453ddccdc5ef2c353e197b7c1f0eabaab34c19dcebe8c6e8efb135d21ed58
+  tests/activity_cli.bend: 91 checks, exit 0; 35 inputs unchanged.
+  Log SHA256: f191a3f7f8200fc2b5ef6a88071baf3a62d164281f753ecd7d066b02f4bd6acf
+  tests/gui_activity.bend tests/gui.bend tests/gui_repository.bend
+  tests/ui.bend tests/native_trace.bend: 235 named checks, exit 0.
+  Counts: 48 + 87 + 54 + 36 + 10; two completion banners excluded.
+  Log SHA256: 5e7a4a2e90e283fd556a6563cc58317977af2f4bed9eb865d12df1e3c8957992
+  Total: 435 named checks, eight executables.
+
+Frozen application: build/juice-bend-activity
+  Build exited 0; 38 inputs unchanged, 88 upstream hashes verified pre/post.
+  Bytes: 8823088
+  SHA256: 68d221e24b7aed7635d2986783f4567c31004a14ff5424ed79a8b510780104db
+  Generated C SHA256: d64e51e5972e9a4a81552022bd038db5c82e4fc2419e9646144e1be61c553f12
+  Input manifest SHA256: a84844dbf89363d8a79e02baab92b24a1e7843c249443431197f93e0b7965f07
+  Linked libraries: SQLite, libSystem and upstream macOS frameworks.
+  No Lean or Bun runtime dependency; no maintained native source added.
+
+Synthetic Bend fixture: benchmarks/native_activity.bend
+  Binary SHA256: 6b453315f87fe5ff8ec07cfb2eca016955eabcbff7581ca88801787171cd3b85
+  Fixture/advance/hide passed with private isolated files and unchanged old
+  snapshots. Six unsafe/repeated invocation refusals exited nonzero.
+  Initial permission guard exposed mode-0644 WAL/SHM before DB chmod; setting
+  the fresh database mode before opening fixed it. The failed receipt remains.
+
+Independent review checked retained identity, transaction ownership, scope,
+pairing ambiguity, bounds, stale replies and exact exports. Two integration
+issues were fixed before final gates: numeric source ID instead of locator,
+and rejection of a valid beyond-EOF empty range. Native UI receipt is separate
+in native-validation.md and benchmarks/results/tart-activity-summary.json.

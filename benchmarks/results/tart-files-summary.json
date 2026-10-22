@@ -1,0 +1,59 @@
+{
+  "receipt_version": 1,
+  "date": "2026-10-20",
+  "host": "macOS 27.0.1 arm64",
+  "guest": "macOS 27.0 (26A428) arm64",
+  "tart": "2.40.1",
+  "network": "host-only",
+  "application_sha256": "0e1d10180fa875ca225a1bae25f60b968689e6d0440ad1a21e82f4b7bbeb1434",
+  "application_bytes": 8265920,
+  "build_inputs_verified": 35,
+  "upstream_hashes_verified": 88,
+  "fixture_sha256": "6626f4e630f1c5d0835165f93a6da9918e83bf293ee99d1567e7ff22aef711f3",
+  "fixture": {
+    "directory_entries": 107,
+    "source_lines": 130,
+    "initial_commits": 2,
+    "accepted_snapshots": 2,
+    "final_commits": 3,
+    "final_worktree_dirty": true
+  },
+  "observed": [
+    "Explicit repository opened at pinned HEAD",
+    "Committed Unicode-named source pages reached lines 121-130",
+    "Blame and Why retained citations to both captured requests",
+    "After fixture advanced HEAD and dirtied worktree, old source and Why clipboard text remained byte-identical",
+    "Binary and symlink refusal retained prior reader bytes",
+    "Directory pages reached entries 101-107; Previous and Up folder worked",
+    "Nested directory and Unicode child path opened",
+    "History restored exact prior captured transcript",
+    "Files entered from Settings returned to actual retained transcript",
+    "Explicit Open repo repinned to committed alpha=314 while dirty worktree alpha=999 remained excluded",
+    "Native Command+Q closed the owned window"
+  ],
+  "export": {
+    "bytes": 755,
+    "mode": "0600",
+    "sha256": "f1b765ab861e99f152b3fc32a53be17eee9dd7a9e8fb9f3fb31877130b406217",
+    "displayed_body_bytes": 584,
+    "body_exact": true
+  },
+  "database": {
+    "quick_check": "ok",
+    "foreign_key_violations": 0,
+    "accepted_snapshots": 2,
+    "current_search_events": 4
+  },
+  "cleanup": {
+    "app_windows_after_close": 0,
+    "vm_state": "stopped",
+    "runner_exit": 130,
+    "leases_absent": true
+  },
+  "limitations": [
+    "First synthetic fixture Git initialization failed before app launch; exact command then succeeded and fresh fixture retry passed; initial cause not established",
+    "Unsupported glyphs still display boxes; clipboard/export preserve Unicode",
+    "No new input-to-display or scrolling performance measurement",
+    "Focused regression gates are not a full-suite rerun"
+  ]
+}

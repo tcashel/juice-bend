@@ -1,0 +1,52 @@
+Combined event-seal and payload-first Tools app, local macOS arm64, 2026-10-20.
+
+Build: ./scripts/build src/main.bend build/juice-bend-seal-tools
+Exit 0. All 39 transitive source/build inputs remained unchanged; all 88 pinned
+upstream hashes passed before/after. No build-speed claim.
+Executable bytes: 9091528
+SHA256: 5ef9603de4cb1f618476e7885170ea0ac174370ceef2fa30023cea1d5b3a87ca
+Generated C SHA256: d7beedfa4dd6638452ae7966064a6141db59dc06bba99a8c92d444da12b2888e
+Input manifest: seal-tools-build-inputs.sha256
+Linked libraries remain system SQLite/libSystem and upstream macOS frameworks;
+no Lean or Bun application runtime dependency, no maintained native UI source.
+
+Storage: 2,262 named native checks; see event-seal-native.txt.
+Payload-first rendering: 219 distinct focused checks across separate receipts:
+tool_activity 74, activity_reader 54, activity_cli 91.
+The reader's 54 checks passed before a renderer footer wording refinement.
+The final tool_activity/activity_cli recheck exited 0 with 165 checks.
+Final recheck log SHA256: d72269cdd70b183b7c91146d365303764a05679fac3366c3eacaa577b8f4bf22
+Initial receipt SHA256: 457e740a22e1500f6f1a507573a5e08f8b7d583b435852dd474045da3930b8cb
+The initial combined gate failed two outdated CLI presentation expectations;
+those assertions were updated without removing pair/error/filter checks.
+Independent review confirmed payloads, identity/citations, counterpart details,
+scope, verification limits and error/uncertainty statements remain intact.
+These are focused gates, not another full-suite run.
+
+Synthetic fixture adds append-only, which changes source 43→45 records while
+leaving SQLite at snapshot 1. Repeated use refuses without changing bytes.
+The exact combined app's refresh-all accepted snapshot 2; hide then succeeded.
+Old and new activity reads remained available with the source absent.
+Fixture binary SHA256: f93f68c3a51b93881987690544be4f4681de4745abe5c51051951191d357c0f8
+Fixture inputs: 22 unchanged; all 88 upstream hashes passed. Original fixture
+and all preceding app binaries remain preserved.
+
+Actual Tart UI: first viewport showed arguments, result and next unpaired call
+before full citations. Page copies were exact (3904 / 3890 UTF-8 bytes).
+With automatic refresh paused, append-only left accepted state 1|43; clicking
+the real Refresh control changed it to 2|45 while selected text stayed exact.
+After source removal, Open latest displayed snapshot 2's final five records;
+5623 bytes copied exactly before and after wheel scrolling into evidence details.
+Two mode-0600 exports contained exact displayed old/latest bodies.
+Old export 4075 bytes SHA256 00aa75d34aad29f150429328220857008aa0877081046ae8ed5786d63eb3aa95
+Latest export 5794 bytes SHA256 e9e4c1af0769cb2a2196e8f1c57753331b66e4df1b882310294ce00e75bcd78c
+SQLite quick_check ok, FK violations 0; snapshots 43/45 records, raw 45,
+retained events 88, current search 45; both event-seal-v1.
+Command+Q closed the app; runner exit 130, VM stopped, both leases absent.
+Host-only networking. Raw observations: ignored build/tart/seal-tools-vyyhmmsm.
+No input-to-display, scroll cadence, full IME or Unicode shaping claim.
+
+Exact observed binary promoted to build/juice-bend and new
+build/Juice Bend Seal Tools.app; plist check and isolated empty-library launcher
+status passed. Earlier named executables and bundles remain preserved.
+Sanitized observations: benchmarks/results/tart-seal-tools-summary.json.

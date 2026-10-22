@@ -1,0 +1,69 @@
+{
+  "receipt_version": 1,
+  "date": "2026-10-20",
+  "host": "macOS 27.0.1 arm64",
+  "guest": "macOS 27.0 (26A428) arm64",
+  "tart": "2.40.1",
+  "network": "host-only",
+  "application_sha256": "68d221e24b7aed7635d2986783f4567c31004a14ff5424ed79a8b510780104db",
+  "application_bytes": 8823088,
+  "build_inputs_verified": 38,
+  "upstream_hashes_verified": 88,
+  "fixture_sha256": "6b453315f87fe5ff8ec07cfb2eca016955eabcbff7581ca88801787171cd3b85",
+  "fixture": {
+    "initial_records": 43,
+    "final_records": 45,
+    "accepted_snapshots": 2,
+    "source_absent": true
+  },
+  "observed": [
+    "Tools pages 40+3 physical records; Next at EOF preserved reader",
+    "Exact Unicode clipboard matches frozen CLI text on both pages",
+    "Old Tools pages unchanged after append and source removal",
+    "Why then Command+T restored old Tools page",
+    "Files then History restored old Tools page",
+    "Explicit Open latest selected snapshot 2; final page contains five records",
+    "Native wheel events visibly scrolled reader; subsequent copy preserved complete text",
+    "Two Markdown exports contained exact displayed old/latest body",
+    "Native Command+Q closed owned windows"
+  ],
+  "exports": [
+    {
+      "file": "export-1.md",
+      "selected": "latest",
+      "bytes": 5215,
+      "body_bytes": 5044,
+      "mode": "-rw------- 5215",
+      "sha256": "09d3027c1be9ddcbba9bf668174f1e60737f4429ef2956e11806253ac0a7710e"
+    },
+    {
+      "file": "export-2.md",
+      "selected": "old",
+      "bytes": 3558,
+      "body_bytes": 3387,
+      "mode": "-rw------- 3558",
+      "sha256": "666252fbc11151d2ca703b48fa53a7ced9df9a43055c18880099a26a2a7f1d88"
+    }
+  ],
+  "database": {
+    "quick_check": "ok",
+    "foreign_key_violations": 0,
+    "accepted_snapshots": 2,
+    "raw_records": 45,
+    "retained_events": 88,
+    "current_search_events": 45
+  },
+  "cleanup": {
+    "app_windows_after_close": 0,
+    "vm_state": "stopped",
+    "runner_exit": 130,
+    "leases_absent": true
+  },
+  "limitations": [
+    "Arrow-key injection did not visibly scroll; later wheel observation is separate",
+    "Unsupported glyphs display boxes; clipboard/export preserve Unicode",
+    "Initial viewport is metadata-heavy; presentation polish remains",
+    "No input-to-display or scrolling performance measurement",
+    "Focused gates are not a full-suite rerun"
+  ]
+}

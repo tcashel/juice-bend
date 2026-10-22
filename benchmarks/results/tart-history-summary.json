@@ -1,0 +1,113 @@
+{
+  "date": "2026-10-21",
+  "host": "macOS27.0.1 arm64 (26A434)",
+  "guest": "macOS27.0 arm64 (26A428)",
+  "tart": "2.40.1",
+  "network": "host-only",
+  "app": {
+    "inputs": 58,
+    "unchanged": true,
+    "bytes": 13285648,
+    "sha256": "b1cc6430206dd6f24059cffb69f005acc9abda5a7cb8e0ad9535d7b068efadf9",
+    "generated_c_sha256": "dbe39ec804127513048cddc7371c01ac4a71cc2260bed9895cde13550bd0bfba"
+  },
+  "production_tests": {
+    "gates": [
+      {
+        "name": "titles",
+        "checks": 28,
+        "receipt_sha256": "6062a459a3031202b957b2bb1f15dbd36058d4bc707d26a47c467d058a18e1da",
+        "binary": {
+          "bytes": 3547344,
+          "sha256": "960953dc520f92ef4386a12a948a7402f13b1e4a28afc2eabd7c46ab345b9759"
+        }
+      },
+      {
+        "name": "cli",
+        "checks": 9,
+        "receipt_sha256": "318f497b0ceb138fbd4ca3e3c0edc216d4382bdbe4c2539dde165cd655822c36",
+        "binary": {
+          "bytes": 7543712,
+          "sha256": "10780ae4e6862919761ac271c7c0ffadabdab095cee18eb9676f9487c6e2c61e"
+        }
+      },
+      {
+        "name": "pagination",
+        "checks": 162,
+        "receipt_sha256": "3e4ece6ca166d4ffcfbdd9cfc5e6fcede8e480df4d3c192f58e161be87670030",
+        "binary": {
+          "bytes": 2733440,
+          "sha256": "f5535384ccb656947c0dd7351a2d457aa45f8b73b34f4edd34393d20368fe7e6"
+        }
+      }
+    ],
+    "passed_checks": 199,
+    "input_count": 142,
+    "all_inputs_still_match": true,
+    "scope": "Three focused production native executables; no full-suite or native-window claim."
+  },
+  "native": {
+    "history_rows": 6,
+    "eligible_request_titles": 2,
+    "neutral_titles": 4,
+    "non_title_cells_identical": true,
+    "search_rows_identical": true,
+    "history_opening_record": 0,
+    "search_opening_record": 1,
+    "copy_cli_exact": true,
+    "usage_back_exact": true,
+    "claude_rows": 6,
+    "codex_rows": 0,
+    "matching_repository_rows": 6,
+    "other_repository_rows": 0,
+    "retained_text_and_pixels_identical": true,
+    "source_absent_checks": true,
+    "exact_exports": [
+      {
+        "bytes": 4781,
+        "sha256": "ab7222c45020c8d0ea27fb3944d58982032ffc860efe291ba7d018c193fcd668",
+        "mode": "0600"
+      }
+    ],
+    "owned_windows_closed": true,
+    "dock_preference_restored": true,
+    "runner_exit": 130,
+    "vm_stopped": true,
+    "owned_lease_released": true,
+    "retained_ui_snapshot": "2",
+    "advanced_source_snapshot": "1"
+  },
+  "promotion": {
+    "binary_sha256": "b1cc6430206dd6f24059cffb69f005acc9abda5a7cb8e0ad9535d7b068efadf9",
+    "empty_launcher_status": {
+      "columns": [
+        "sources",
+        "generations",
+        "accepted_snapshots",
+        "raw_bytes",
+        "projected_events"
+      ],
+      "rows": [
+        [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ]
+      ]
+    },
+    "all_58_inputs_unchanged": true,
+    "named_bundle": "build/Juice Bend History.app",
+    "previous_named_binary_retained": true
+  },
+  "limitations": [
+    "Three focused native gates, not a full-suite rerun.",
+    "No new performance or proof run.",
+    "CJK, emoji and combining marks still have fallback glyphs; copied Unicode is exact.",
+    "Full shaping, IME, accessibility, resize and input latency remain unverified.",
+    "History title reads admit at most four candidates per snapshot and eight MiB raw/predecessor bytes per page; this is not a peak-memory or SQL-work bound.",
+    "Retained UI observed snapshot 2 while source 1 advanced, then all source paths disappeared. Old snapshot 1 preservation is a separate fixture assertion."
+  ],
+  "automation": "First Search oracle incorrectly requested physical record 0; Search row and actual UI correctly selected record 1. Corrected CLI comparison passed; original failed oracle retained privately. No application change was needed."
+}

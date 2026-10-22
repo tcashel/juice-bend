@@ -1,0 +1,12 @@
+{"operation":"legacy_repository","milliseconds":10407}
+{"operation":"verified_projection_context_rebuild","milliseconds":38702}
+{"operation":"repository","milliseconds":20}
+{"operation":"record_local","milliseconds":19}
+{"operation":"repository","milliseconds":19}
+{"operation":"record_local","milliseconds":18}
+{"operation":"repository","milliseconds":18}
+{"operation":"record_local","milliseconds":18}
+{"operation":"repository","milliseconds":18}
+{"operation":"record_local","milliseconds":19}
+{"operation":"repository","milliseconds":18}
+{"operation":"record_local","milliseconds":19}

@@ -1,0 +1,150 @@
+{
+  "schema": 1,
+  "scope": "Observed native macOS Tart proportional reader and Library Usage input, exact copy/export, navigation and retained-source-loss acceptance. Synthetic fixtures only.",
+  "native_run": "build/library-usage-native-addendum-v1/run-01",
+  "nonce": "5202c832-44ce-42ab-8987-429fd8cf3430",
+  "binary_sha256": "8d42430177b7ca2614c8eda393076bfe5ed5bbc5d2a3382ec6f119068675569c",
+  "oracle_binary_sha256": "a270f8af7c4b2a31b6fe3a5e438e9fd1917056a4d7fd8148385eb71114c732ad",
+  "app_manifest_sha256": "aaabe691224b3875052fda0cbbf9a0d3da4fda46639c690ee673189dc6f427c3",
+  "app_build_receipt_sha256": "ba0edaca15b4cfd2072b139a8a889e02ffe020ab2a5269e05947d1fa73d4f289",
+  "app_source_files": 189,
+  "combined_compile_binding_sha256": "07c0695548105211249228b46b025eddb32ac8da691870129618e95dda286d10",
+  "oracle_manifest_sha256": "73e7e314c4ed3b44ffaa4b715ea4663af080deba8469ff18b6858d64e31109b3",
+  "oracle_build_receipt_sha256": "791590ad24603261a40213f9caf2e53cd9a00b27ac464c355fcc6d83f61eac4b",
+  "oracle_shared_production_source_files": 13,
+  "oracle_entry_sha256": "6f78dc664db5a5c162d910ad3ecc6551b188d06396a980510dc8bccb0b4a7abd",
+  "staging_seal_sha256": "de7d240502cb73828983f4050aced481848393e55f233027fecbeb80eee19443",
+  "staging_receipt_sha256": "34623494f843012f06415d3b347df6be1bff66c5c6ec53c0b1320f262c465130",
+  "plan_manifest_sha256": "c8dfdf5e454b8a9aea4fbf9e6fec3a13de58ef93259b409dedcce13cd0b7ce45",
+  "collector_sha256": "cf7dfadf0af0f600c09fc6d041c4216674ec2e70703ec878b092dfd3df49dd45",
+  "source_binding_sha256": "727771791094c94ddb95cdd9d42d117c48c8b56f3a9310a9bc5ee6b681a5e267",
+  "native_result_sha256": "84bcbce7e2798747b00dff7b7bd037413554a2d0d40d72f6ea589fcc036593b9",
+  "terminal_collection_sha256": "b8916b582ddcef7cf50cb67fe24f27feaf1b31224654b001e99f0d7c367bb940",
+  "root_visual_review_sha256": "ebd3bbbb90cdf08047cba819c48baf61c228c65f7b2689f225f200dd4fad5697",
+  "root_actual_visual_review": true,
+  "root_reviewed_image_count": 11,
+  "root_reviewed_image_hashes": [
+    {
+      "artifact": "prose-initial.png",
+      "sha256": "7ad53271446beb499a8af618faa1acce506d76116c852fe53116d4790bd0be85"
+    },
+    {
+      "artifact": "prose-wrapped-forward.png",
+      "sha256": "7e7bebe21b43dd7459f7326f9da5b971eb2348a69704d38557d75a9ce88ce965"
+    },
+    {
+      "artifact": "prose-settings-back-selection.png",
+      "sha256": "7e7bebe21b43dd7459f7326f9da5b971eb2348a69704d38557d75a9ce88ce965"
+    },
+    {
+      "artifact": "prose-unicode-reverse.png",
+      "sha256": "fbb1c69a4cc5ec378ef9e5dd4a5f59b561f03df419cc8b13dd45f73861ad6b7e"
+    },
+    {
+      "artifact": "usage-overview.png",
+      "sha256": "003dea39c8647747b39abe7a4325a7af26e7e58fa503be6e7defe96ceece48bb"
+    },
+    {
+      "artifact": "mouse-first-expanded.png",
+      "sha256": "94952bf1aec907bfa92d2d71ecebc3bba38ba4409f456daa686e3dbb89b04318"
+    },
+    {
+      "artifact": "prose-initial-display.png",
+      "sha256": "e62ac3db20539a3b505cdd1d1f58afec9d546d506e0ff205ad28594ff24865b2"
+    },
+    {
+      "artifact": "usage-filter-codex.png",
+      "sha256": "c9b3f08080faa0f520e42290c0f137429e7d0b79c59bfac566df06963ddc1d7f"
+    },
+    {
+      "artifact": "usage-cards-first-expanded.png",
+      "sha256": "84226011a4ef31e233b031bdd752573a1f7d3330195f0304f47f5b2a0b0a9afa"
+    },
+    {
+      "artifact": "usage-cards-next.png",
+      "sha256": "5b2603c6984265c80a69b1e566902eb409cc0173f0d9ff35e7f16b7048ae5398"
+    },
+    {
+      "artifact": "usage-origin-restored.png",
+      "sha256": "7ad53271446beb499a8af618faa1acce506d76116c852fe53116d4790bd0be85"
+    }
+  ],
+  "screenshots_published_by_this_receipt": false,
+  "guest_exit": 0,
+  "all_journey_cleanup_display_steps_exit_zero": true,
+  "owned_wrapper_exit": 143,
+  "wrapper_exit_context": "Root intentionally stopped the owned Tart wrapper after the guest completed successfully.",
+  "recorded_vm_state_after_owned_shutdown": "stopped",
+  "recorded_lease_absent_after_shutdown": true,
+  "recorded_owned_wrapper_and_tart_absent_after_shutdown": true,
+  "current_shared_vm_or_lease_state_claimed": false,
+  "native_result_collected_after_final_shutdown_artifacts": true,
+  "final_artifact_count": 332,
+  "all_collected_artifact_hashes_reverified": true,
+  "final_artifact_manifest_sha256": "808fbe4eff6e9348e380326f13d78b56e498c48be248a07c2a026a22a44abfcd",
+  "artifact_manifest_hash_format": "SHA256 of compact JSON mapping artifact-relative names to content SHA256, with sorted keys; source inventory remains in native-result.",
+  "clipboard_comparisons": 32,
+  "reader_clipboard_comparisons": 21,
+  "usage_exact_clipboard_comparisons": 11,
+  "usage_summary_content_checks": 3,
+  "native_proportional_drag_comparisons": 4,
+  "native_key_pairs": 24,
+  "canonical_export_comparisons": 3,
+  "export_mode": "0600 checked by the sealed guest new_export function before copying",
+  "inert_copy_checks": 2,
+  "range_selection_reset_observed": true,
+  "usage_counters": {
+    "provider": "claude",
+    "recorded_input": "123",
+    "recorded_cached_input": "2",
+    "recorded_cache_creation": "3",
+    "recorded_output": "7",
+    "optional_one_hour_cache_creation": "Unknown, not zero",
+    "inferred_costs_or_prices": false
+  },
+  "retention": {
+    "all_four_synthetic_source_files_absent_before_usage": true,
+    "original_snapshots": [
+      "1",
+      "2",
+      "3"
+    ],
+    "original_three_verified_after_different_pid_restart": true,
+    "known_counter_snapshot": "4",
+    "known_counter_capture_imported_after_restart_and_source_removed_before_usage": true,
+    "known_counter_capture_second_restart_tested": false
+  },
+  "bounded_report_limits": {
+    "selected_sources": 256,
+    "verified_records": 1000000,
+    "verified_logical_bytes": 134217728,
+    "interpretation": "Report bounds, not a performance or heap-memory measurement"
+  },
+  "observed_behavior": [
+    "Proportional prose forward/reverse mouse selection preserved exact Unicode scalars, combining marks, CJK, emoji and tab bytes; a second range crossed wrapped rows.",
+    "Settings Back restored the partial wrapped prose selection without reselecting.",
+    "Compact/expanded disclosure, mouse and keyboard folds, canonical export, page changes and descriptor-limit plain fallback retained exact evidence.",
+    "Library Usage showed recorded counters and an unknown optional metric with the explicit unknown-is-not-zero notice.",
+    "All/Claude/Codex controls filtered capture rows; empty Codex activation stayed on the report. Both provider summaries remain visible by design.",
+    "Retained capture drilldown supported disclosure, canonical page export and Next/Previous; Back restored the report and original History selection."
+  ],
+  "ready_close_observation_bounds_ms": {
+    "parent": 401,
+    "window": 561,
+    "threshold": 5000
+  },
+  "limitations": [
+    "Missing combining/CJK/emoji glyphs remain; exact copy passed but font fallback, shaping, grapheme behavior and IME are not established.",
+    "Usage is an all-time textual report; charts, activity-date filtering, cost/account integration and full visual parity are not implemented by this slice.",
+    "Inherited toolbar status-hint hit-area overlap is separately recorded for repair.",
+    "No pending-worker Close, accessibility, resize, or performance acceptance.",
+    "Close numbers are observation upper bounds including polling overhead, not app latency measurements.",
+    "The Bend oracle uses the same production layout/projection dependencies; it is not an independent proof of every rendering algorithm.",
+    "Native Shift-Tab effect was observed, but NSBackTab25 delivery inside the app was not instrumented.",
+    "Stale asynchronous callback injection remains pure-model evidence; it was not injected into the native application.",
+    "This focused journey is not a fresh full-suite pass or a same-host Swift-versus-Bend benchmark."
+  ],
+  "performance_acceptance": false,
+  "pending_close_acceptance": false,
+  "publication_safety": "Only synthetic test metadata, relative artifact names and hashes are copied. No screenshot pixels, databases, transcript contents, private histories, advisor logs or host paths are included."
+}

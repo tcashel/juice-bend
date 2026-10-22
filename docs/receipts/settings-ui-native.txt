@@ -1,0 +1,51 @@
+Settings native interaction — 2026-10-20 America/New_York
+
+Observed application SHA256:
+  2e3191d9487b920a6a9aa4184239485f921e8a8f06d9b4378019f7f2eb226687
+  11,561,056 bytes; generated C 5879a19b8d1e382611b22cd7d5fb8a9c5a0e5f50fe0930cca917e230cde3efb0.
+All 46 transitive application/build inputs stayed unchanged. All 88 pinned
+upstream hashes passed before and after build. Bend 2.0.37, Bun 1.4.2, normal
+Apple Clang -O3. otool -L shows system SQLite, libSystem, libobjc and macOS UI
+frameworks only; neither Lean nor Bun is an application runtime dependency.
+
+The exact executable ran in the host-only Tart 2.40.1 macOS 27.0 arm64 guest.
+Fixture 7cff09dd93f7fcbd77746244cb9fc1bdb4213be8a0df00bff78659bfd77530e9
+created isolated synthetic histories. Original Juice and provider logs untouched.
+
+Observed controls and independently checked outcomes:
+- Empty folder inventory and default automatic 30 seconds; reading defaults
+  created no preference keys. Pause and Every 2h saved TEXT false/7200.
+- Add folder registered explicit Claude and Codex roots without capturing:
+  one snapshot and 42 raw records remained unchanged. Selected-row Disable
+  and Enable changed only that provider/canonical root in fresh inventory.
+- Import file captured two records from a separate explicit Claude file.
+  Two manual Refresh batches while paused reached four snapshots / 49 raw.
+- Back restored the original scoped snapshot 1, physical start 40, query,
+  result list, reader and all-text selection. Normal Resume/Pause persisted
+  true then false while retaining the two-hour interval.
+- Real Command+Q/relaunch retained false/7200 in native Settings and SQLite.
+  A source-only fixture append changed no database counts. Two manual batches
+  accepted snapshot 5 with 50 total raw records while automatic capture stayed
+  paused. The old origin remained exact; scoped search opened new record 2.
+- Seven clipboard comparisons matched exact Unicode text; four screenshot
+  regions matched after restoration. Integrity was ok, no foreign-key errors:
+  4 sources, 4 generations, 5 snapshots, 50 raw, 52 records/events/context,
+  50 current search events and 5 projection checks.
+- Both owned windows closed. Runner exited 130, VM stopped, both leases absent.
+
+The observed binary is now build/juice-bend and build/Juice Bend Settings.app.
+Its isolated empty-library launcher status check passed; older named artifacts
+remain preserved. This is not a fresh native empty-library window observation.
+
+Sanitized summary: benchmarks/results/tart-settings-summary.json
+SHA256 22f022fb51cb0ede97a6f6e9928e708ed36393f2b85380eaee82674901022860
+Build manifest: docs/receipts/settings-build-inputs.sha256
+SHA256 a37aa0c63865e6a6e86e10dca6180eff47763deebadb827cdfba791236082359
+Raw synthetic artifacts: ignored build/tart/settings-2y8m6328.
+
+Limits: unsupported glyphs still show boxes; no new IME, accessibility,
+input-to-display, scroll cadence, interval-duration timing or export claim.
+Native source-inventory pagination was not exercised; model tests cover it.
+An initial read-only postflight used the wrong column name; corrected to
+canonical_root before assertions. Backend/CLI 154 checks and GUI 388 assertions
+are separate receipts, not a new full-suite total. No signing/distribution.

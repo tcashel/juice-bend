@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+umask 077
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$ROOT"
+./scripts/build
+demo=0
+explicit_data=0
+for arg do
+  case "$arg" in
+    --demo) demo=1 ;;
+    --data-dir|--data-dir=*) explicit_data=1 ;;
+  esac
+done
+if [ "$demo" -eq 1 ] && [ "$explicit_data" -eq 0 ]; then
+  data=$(mktemp -d "${TMPDIR:-/tmp}/juice-bend-demo.XXXXXX")
+  printf 'Synthetic demo data directory: %s\n' "$data" >&2
+  set -- --data-dir "$data" "$@"
+fi
+exec "$ROOT/build/juice-bend" "$@"

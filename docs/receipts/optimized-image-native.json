@@ -1,0 +1,65 @@
+{
+  "scope": "Actual optimized native Tart inline retained-image journey; partial acceptance, no full-parity or performance claim",
+  "status": "partial; final close test and cleanup gates did not pass",
+  "app_sha256": "e6bf90ee9cbd98389d61c805d86e88e16933ea17440690c2eb42dc5c96575743",
+  "compiler": "LLVM 23.1.4 -O1",
+  "DC_shortcut_in_this_binary": false,
+  "steps": {
+    "prepare": 0,
+    "jpeg": 0,
+    "pending": 0,
+    "variants": 0,
+    "restart": 0,
+    "close-pending": 2,
+    "cleanup": 1,
+    "guest-run": 1,
+    "display-holder": 1,
+    "display-restored": 1,
+    "recovery": 0
+  },
+  "observed_pass": [
+    "native launch, role-filtered transcript and exact selection/copy",
+    "JPEG Fit/actual size/arrow and wheel panning/edge clamps/reopen",
+    "Escape and Back during same-child decode; exact restored content/selection; stale completion stayed dismissed; subsequent image open",
+    "PNG Fit/actual size and exact 72-byte export",
+    "readable progressive/truncated JPEG refusal; remote reference remains unavailable",
+    "different-process restart with original archive absent; JPEG rendered and exact 9277-byte exports match",
+    "later independent recovery verified app/decoder/window absent, unchanged guarded fixture copy and payload hashes",
+    "owned VM stopped and lease released before next isolated run"
+  ],
+  "observed_failure": [
+    "native Close test identity guard rejected truncated non-final ps comm column before any Close click; Close interaction not run",
+    "normal cleanup application termination completed but decoder child remained at its final snapshot; child later exited without root signal",
+    "display mode restored exactly to 1600x1000 but visible frame shifted from y85/h885 to y82/h888; exact restoration gate failed"
+  ],
+  "not_run": [
+    "native Close during active decode",
+    "external file capture/source-loss/ATIF journey",
+    "native acceptance of later maintained source with title-v5 and DC shortcut"
+  ],
+  "root_inspected_screens": [
+    "jpeg-fit.png",
+    "pending-escape-stale-readonly-10.png",
+    "pending-back-stale-readonly-10.png",
+    "png-fit.png",
+    "progressive-unsupported-settled-3.png",
+    "truncated-invalid-settled-3.png"
+  ],
+  "artifacts": {
+    "payload-after.txt": "7d65cf8747751876c3dc3abfa0c433434b2144d22e23fabae860d5615ffbb4b8",
+    "recovery-source-before.sha256": "283a2c72c6f687ebdb1a6f31c0bf09ae1bdad06e2d577b05755e5a330823f001",
+    "recovery-source-after.sha256": "283a2c72c6f687ebdb1a6f31c0bf09ae1bdad06e2d577b05755e5a330823f001",
+    "recovery-copy.sha256": "283a2c72c6f687ebdb1a6f31c0bf09ae1bdad06e2d577b05755e5a330823f001",
+    "recovery-candidate-processes.tsv": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "recovery-windows.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "close-immediately-before-processes.txt": "66068dac8e0c6c5ab303f7c7458ace158e51cfb4cc27bfa4b538346585a53b4e",
+    "close-pending.stderr.txt": "7d39c752c38b23f15043f61fca51612672dcd4140685a0f3d53f53d3b0c02169",
+    "final-candidate-processes.tsv": "e82e455b62f145ee1a8e20048734f212a9e2662bb6ef19fe678bdb72c054ac83",
+    "display-restored.json": "8123d40a3335d11da4fb9fee64a1deb016a4e3fe210fd51397b8124f11f9bd39",
+    "vm-state.json": "9cae8836fc1e62183358f2b3ab05040a729c614fa3b0366899723dc7e9ea073c",
+    "session-exit-code": "9d9b18720961e9b4689fd763b85e7b6f36160ccd3a8a1c9ddc5103bb0f66c396"
+  },
+  "wrapper_exit": 143,
+  "wrapper_exit_reason": "Root stopped exact owned wrapper after guest terminal and separate app/child absence verification",
+  "native_result_sha256": "2938e0c1b19c4c6d72aebcba8b6a401f6e174c5a396d1255aa795196aa2e355e"
+}

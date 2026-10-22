@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-20",
+  "environment": {
+    "host": "macOS 27.0.1 arm64",
+    "guest": "macOS 27.0 (26A428) arm64",
+    "tart": "2.40.1",
+    "sqlite": "3.54.0",
+    "network": "host-only",
+    "data": "synthetic, isolated guest root"
+  },
+  "final_application": {
+    "sha256": "05cdff4f599edcd16646fc3363e27c3856bda4b073f52a92f23264887ef5ba35",
+    "bytes": 4708120,
+    "gui_source_sha256": "5ea2e41250cdec93f47386e459b95d6a18dc14c183ffed9e506535f78c955ac6"
+  },
+  "observed_final": {
+    "empty_library_launch": true,
+    "native_capture": {
+      "accepted_snapshots": 1,
+      "physical_records": 100016,
+      "normalized_events": 125020,
+      "raw_extent_bytes": 35607307,
+      "visible_query_while_writer_active": "live-capture-ok",
+      "pause_while_writer_active": true
+    },
+    "retained_after_source_moved": {
+      "search": true,
+      "transcript_open_scroll": true,
+      "drag_copy_utf8": "[assista",
+      "why": true,
+      "export": true,
+      "verified_rebuild": true,
+      "rebuilt_search_events": 125020,
+      "preservation_fts_hits": 75012,
+      "sqlite_quick_check": "ok"
+    },
+    "input": {
+      "command_a_c_v": true,
+      "unicode_clipboard_utf8": "café 中文 🙂",
+      "replacement_utf8": "keyboard-ok",
+      "shift_arrow_copy_utf8": "ok",
+      "direct_unicode_typing": "not verified: automation delivered altered native Text events",
+      "ime": "not run"
+    },
+    "export": {
+      "bytes": 11796,
+      "mode": "0600",
+      "sha256": "2639d7ef4eed2580e813f355b73f9286faccd00190afecafc7d36885101ff0d2"
+    },
+    "gui_vmmap_post_rebuild": {
+      "physical_footprint_reported": "46.2M",
+      "peak_physical_footprint_reported": "46.2M",
+      "scope": "GUI only, not RSS or aggregate GUI plus worker peak"
+    },
+    "normal_close": true
+  },
+  "idle_cpu_candidates": [
+    {
+      "candidate": "initial macOS 26 build",
+      "sha256": "d6dc2b797268eb377f7c0c9ffba1c3178cf7ce14594d34679d74a00f8b58558a",
+      "process_cpu_seconds_delta": 1.22,
+      "wall_seconds": 8,
+      "percent_one_core": 15.25
+    },
+    {
+      "candidate": "60 ms idle scheduler",
+      "sha256": "6c5ee83b4a9326c210dac874079b953c901ffe5644a5bdebbd4bfb011128161a",
+      "process_cpu_seconds_delta": 0.34,
+      "wall_seconds": 10,
+      "percent_one_core": 3.4
+    },
+    {
+      "candidate": "80 ms idle scheduler with intermediate storage",
+      "sha256": "0a6243d583e3ebc4dcb0200e4d45b7a50b64c2bc85f27d5bffce3820894452f0",
+      "process_cpu_seconds_delta": 0.31,
+      "wall_seconds": 20,
+      "percent_one_core": 1.55,
+      "rss_samples_kib_range": [
+        87904,
+        88208
+      ]
+    }
+  ],
+  "startup_observation": {
+    "candidate_sha256": "6c5ee83b4a9326c210dac874079b953c901ffe5644a5bdebbd4bfb011128161a",
+    "upper_bound_ms": 1308,
+    "includes": "intentional 1 second wait, window lookup and screenshot",
+    "precise_interactive_latency": false
+  },
+  "diagnostic": {
+    "sha256": "4a41d560a696236916260ab67bf1883ac74b7ad1ec134536475304fa2d16c4bb",
+    "native_events": "explicit opt-in, 64 details per frame; production callbacks receive all events",
+    "direct_unicode_witness": "AppleScript injection intended café 中文 🙂; observed Text cafa aa aa"
+  },
+  "not_measured": [
+    "input-to-photon p95",
+    "uninstrumented scroll cadence",
+    "aggregate GUI plus capture worker peak memory",
+    "many-source scaling",
+    "1M-record stress"
+  ],
+  "cleanup": {
+    "app_and_workers_closed": true,
+    "vm_stopped": true,
+    "lease_absent": true,
+    "cleanup_lock_absent": true,
+    "other_vm_user_notified": true,
+    "runner_exit_code": 130
+  },
+  "local_artifact_sha256": {
+    "final-empty-settings.png": "afea5ec687297483c19eb82e856e5a2b9d2ffce88029853aa89b625a5b79ca7e",
+    "final-capture-input.png": "cf5543f021e454a6eee625fe73e0a1e28aa6502731cb543da38d3956765e6f5a",
+    "final-retained-scroll.png": "b961558336ae840b67025daa7d8842dffc9498a844d3acc49983d39c05bcc9f8",
+    "final-export.png": "9158c1a1e201b94069284152545a84dac8cc481ee236f5e7f7e61893577f3a23",
+    "final-rebuild-complete.png": "879ceecefbeb4e49bbacc07d29a617facd8bb6280fb8437a8ea59bde70d2bb45",
+    "final-unicode-paste.png": "b7c2199b2f69ce30a9e668d7aaf3442c567e0990f8236a84b714f0f79091cb61",
+    "final-evidence.md": "2639d7ef4eed2580e813f355b73f9286faccd00190afecafc7d36885101ff0d2",
+    "final-post-rebuild-vmmap.txt": "5c6b8f761dce5d9a8f383e9e290e1257d4cb7060e1288d1e6f93db2b52d30b07",
+    "input-events-final.jsonl": "f4b190e86cccec288f4ab5e62d86c44ca82c5fcd48a99a20ab0318f235d5ecc1",
+    "input-events-unicode.jsonl": "1194121ffda47ef189903e903503354d8474d4ec6710d628906e6f6e11a38c83"
+  },
+  "publication": "Only this sanitized summary is committed. Raw screenshots, traces, databases and guest payloads remain ignored."
+}

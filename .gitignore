@@ -1,0 +1,27 @@
+# Private/local state — synthetic fixtures should use explicit tracked paths.
+.env
+.env.*
+!.env.example
+.DS_Store
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+/private-data/
+/local-data/
+/captures/
+/archives/
+/.reference/
+/references-private/
+
+# Local dependency/toolchain and build output.
+/.tools/
+/.cache/
+/build/
+/.build/
+/dist/
+/tmp/
+node_modules/
+*.dSYM/

@@ -1,0 +1,166 @@
+{
+  "schema": 1,
+  "scope": "Adopted 206-input native app build and separately bound focused component checks; no fresh full suite or proof claim.",
+  "implementation": "Application logic, UI, parsing, storage policy, tests and benchmarks remain Bend 2. SQLite and its narrow bridge are the maintained native exception. TypeScript GC code is development compiler tooling only.",
+  "source": {
+    "application_inputs": 206,
+    "bend_inputs": 205,
+    "sqlite_bridge_inputs": 1,
+    "candidate_binding_sha256": "0ca25c339a8ba857c7b170bf5d7fecbd293682066ea5a2bddccf8ed2df840a69",
+    "application_closure_sha256": "2d579d8b04a951aa1ea0dbfd490dc131b52309ccb70c4503b70132a2a4e33047",
+    "closure_hash_format": "SHA256 of sorted UTF-8 lines: content SHA256, two spaces, repository-relative path, newline",
+    "sources_manifest_sha256": "2363d8f59756437b1e0960dd2805b6049bd655d855a3676638e3cde1c91406d6",
+    "production_delta_paths": 15,
+    "test_support_delta_paths": 14,
+    "separate_test_discovery_tooling_paths": 1,
+    "source_adopted": true,
+    "published_base_commit": "3bda4ce772a2964c3a9b1f68ed32df4736670575"
+  },
+  "mac_build": {
+    "receipt_sha256": "c5c55080f5497630cdad9ba44d16306094b67aea7637f9e3afadf27d75a1384d",
+    "passed": true,
+    "platform": "macOS 27.0.1 arm64",
+    "bend_revision": "60ca80aedeec9d8f0629b5f10dd19457d8ad67af",
+    "bun": "1.4.2",
+    "frontend": "Original pinned CLI/main plus maintained exact-hash-guarded GC512 preload; no diagnostic telemetry or relocated compiler copy.",
+    "compiler_source_sha256": "5ae06d6c44581bd7e0e2f5952e402659c9be408f79a5a4e86ff23e5be9844ce6",
+    "preload_sha256": "7cba1caa6a299334bddd283e179c81835ca1d76fde9582f8140aa478f7bc6061",
+    "compiler_boundary": "Upstream source files on disk are unchanged; the loaded compiler receives the GC-only in-memory hook. No application/runtime algorithm is moved into this adapter.",
+    "frontend_exit": 0,
+    "frontend_seconds": 271.646,
+    "frontend_peak_physical_footprint_bytes": 10951516584,
+    "native_compiler": "mise-managed LLVM 23.1.4, -O1, macOS 26 target, macOS 27 SDK",
+    "native_exit": 0,
+    "native_compile_seconds": 557.623,
+    "native_peak_physical_footprint_bytes": 15799631904,
+    "binary_sha256": "4ffb49037779e361a4d501e205d5023b18d42adc28e611456b44aa0b148f9c13",
+    "generated_c_sha256": "e105104bb1f29563b0c2cf32ea954e00071215bb55fc38b70e2f09258070e21d",
+    "inputs_and_pins_unchanged": true,
+    "owned_build_processes_absent": true,
+    "timing_scope": "Build diagnostics only; no application speedup or literal full-app C equivalence to the original unmodified frontend is claimed."
+  },
+  "focused_component_tests": {
+    "usage": {
+      "receipt_sha256": "42719aa38f2b23b89f270956a4681eec84e25dfdd4405c495b08ed4a64dad078",
+      "platform": "Linux",
+      "passed": true,
+      "assertions": 130,
+      "groups": {
+        "summary": 19,
+        "interaction": 19,
+        "existing_ui": 20,
+        "controller": 47,
+        "list_row": 25
+      },
+      "all_300_inputs_tools_generated_c_binaries_exact": true,
+      "owned_processes_absent": true,
+      "scope": "Separately frozen compile-fix-v3 component. Parse/type completion followed by unsafe/foreign verdicts is not a proof pass; later all five compiled native tests passed."
+    },
+    "cancellation_app_events": {
+      "receipt_sha256": "c1f0d8aebeced1eaea3e2daca8c71c9c8c7e684612d91b555debbc4d5cae9013",
+      "platform": "Linux",
+      "passed": true,
+      "assertions": 12,
+      "groups": {
+        "active_close": 5,
+        "retired_close": 5,
+        "escape": 2
+      },
+      "native_compiler": "Clang 22.1.8 -O0",
+      "scope": "Actual Bend A.event cancellation sends to the exact worker, keeps the reply channel open until its cleanup acknowledgment, then closes it. This component test does not establish a native macOS window Close bound.",
+      "prior_timeout": "Initial 600-second native compile timeout is preserved; the same generated C passed a bounded 1800-second continuation without source, flags or memory-guard changes."
+    },
+    "event_seal_bytes": {
+      "receipt_sha256": "f2d3cc61461cab70a8563875b340d2e9dfff12293e558a310f1b2f892760698b",
+      "platform": "macOS",
+      "passed": true,
+      "assertions": 73,
+      "scope": "Byte-codec correctness; canonical field tags, order, escapes, separators and old seed behavior retained."
+    },
+    "event_seal_preservation": {
+      "receipt_sha256": "c543f4ff5738fa65cb9e34631a3a08e4281f840f4161910a4a2e30a30a73b233",
+      "platform": "macOS",
+      "passed": true,
+      "assertions": 1611,
+      "groups": {
+        "projection_seal": 76,
+        "event_seal_append": 283,
+        "append_integrity": 49,
+        "publication_crash": 1203
+      },
+      "crash_cuts": 27,
+      "original_failed_collector_sha256": "46af1d5c410b4c04a25ce145a0afc469dfa5b0444ce4a7f414f6f9e380178e29",
+      "collector_correction": "All four native executables exited 0. The original collector miscounted the unchanged literal crash-suite footer. An additive read-only collector accepted the existing 1203 PASS lines plus that footer; no source, assertion or executable was changed or rerun.",
+      "binding_limit": "The crash C/binary hashes were bound after execution because the original collector failed before persisting them. The first three tests retained durable pre/post artifact hashes; do not claim that stronger binding for the fourth."
+    }
+  },
+  "matched_backend_pair": {
+    "receipt_sha256": "0b0402d51b47e996c6fd9a532d0720d177687ab3ef7523db32951e1a508ed9c5",
+    "passed": true,
+    "host": "Same physical Apple M2 Pro Mac, 32 GiB, macOS 27.0.1 arm64; Tart stopped; no overlapping owned compile",
+    "compiler": "Both variants built before measurement with pinned LLVM 23.1.4 -O1; same runtime path and synthetic fixture",
+    "order": [
+      "baseline",
+      "byte_encoder_candidate"
+    ],
+    "pairs": 1,
+    "raw_records_before_append": 100000,
+    "appended_raw_records": 16,
+    "latest_events": 125020,
+    "fixture_bytes": 35607307,
+    "fixture_sha256": "49ba3143bcc16ed825f72406ce7e437b5d22cbe025c34fcf6f9e204f815ba853",
+    "seconds": {
+      "first_import": {
+        "baseline": 45.304,
+        "candidate": 42.028
+      },
+      "unchanged_refresh": {
+        "baseline": 4.405,
+        "candidate": 5.57
+      },
+      "append_16": {
+        "baseline": 28.252,
+        "candidate": 26.535
+      }
+    },
+    "warm_p95_ms": {
+      "scoped_search": {
+        "baseline": 49,
+        "candidate": 51
+      },
+      "late_page": {
+        "baseline": 11,
+        "candidate": 12
+      },
+      "repository_late_page": {
+        "baseline": 28,
+        "candidate": 31
+      }
+    },
+    "integrity": "Both quick checks and foreign-key checks passed; exact fixture bytes, both snapshot seals, typed event/context prefixes and 100000 prior raw IDs matched.",
+    "scope": "One matched backend pair for the separate byte-encoder component. Append was modestly faster; unchanged refresh was slower. No significance, solved-append, complete-app performance or Swift comparison claim."
+  },
+  "test_discovery": {
+    "candidate_runner_sha256": "6ad05e045123f894e3114da3d3579ef8a633e27b50bd16477ca1fe2df3a0c9e2",
+    "default_skips_only_new_aggregate": "tests/attachment_image_cancel_app.bend",
+    "all_three_split_entries_once": true,
+    "explicit_aggregate_available": true,
+    "verification": "Shell runner exercised with a build stub; this verifies discovery only and is not a Bend compilation or assertion result."
+  },
+  "not_claimed": [
+    "Fresh full test suite",
+    "New proof/kernel pass",
+    "Combined Child constructor-adapter test execution",
+    "Whole-app performance acceptance"
+  ],
+  "publication_safety": "Synthetic technical metadata and hashes only; no private history, screenshot pixels, database, private source, advisor log or absolute host paths.",
+  "root_adoption": {
+    "receipt_sha256": "808b2736cf17d0a584948f09cd88b45ed36b286f2591fd598256875b51ffec73",
+    "application_inputs": 206,
+    "exact_adoption_paths": 30,
+    "all_application_inputs_match_tested_executable": true,
+    "default_executables_promoted": 3,
+    "previous_sources_and_executables_preserved": true,
+    "root_head_and_index_unchanged": true
+  }
+}

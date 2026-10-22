@@ -1,0 +1,109 @@
+Relations native backend and CLI receipt — 2026-10-20
+
+Result: 163 named native PASS checks across two executables; command exit 0.
+Host verified for this receipt: Darwin 27.0.0, arm64. Fixtures and databases
+were synthetic and ran in isolated temporary directories. No real histories,
+private reference source, or screenshots are included in this receipt.
+
+Command:
+./scripts/test tests/relations.bend tests/relations_cli.bend > build/relations-final-test.log 2>&1
+The command's exit status was saved in build/relations-final-test.exit.txt.
+Log footer: Completed 2 Bend test executables.
+Counts: tests/relations.bend 67; tests/relations_cli.bend 96.
+The CLI tests dispatch through the production Cli.command and check help.
+These are correctness results, not isolated performance measurements or proofs.
+
+Scope verified:
+- First Codex session_meta owns actor/repository/parent metadata. Later headers
+  cannot add a new parent link or replace the actor; differing parent metadata
+  becomes explicit conflict. Consistent duplicates retain the first witness.
+  Event-local identity fields do not become a second metadata authority.
+- Only typed string Codex parent identifiers yield recorded parent links.
+  Claude nested retained locators yield separately labeled path associations;
+  raw session IDs and path aliases remain distinct. parentUuid is not a session
+  parent. Recorded witnesses cite physical records; path witnesses have no
+  invented record or event ordinal.
+- Exact source/generation/snapshot/extent identities remain pinned. Each candidate
+  source contributes one accepted snapshot across its generations at the fixed
+  accepted-ID watermark. Later append/rewrite does not change old pages. Source
+  relocation does not remove retained evidence. Duplicate actor IDs stay separate.
+- Provider/repository matching is exact. All four reader filters round-trip;
+  provider mismatch fails explicitly. Role/date are preserved for target readers
+  and do not filter relationship metadata.
+- Deferred transactions are owned by the reader. A caller transaction is refused
+  without committing or rolling it back. Ordinary failures end the owned read;
+  retained raw corruption fails before relationship output.
+- At most 16 physical records per source, 15 candidate sources plus the anchor,
+  256 records and 2 MiB aggregate retained raw per page. Budget-skipped candidates
+  carry explicit coverage and advance the source cursor; an oversized anchor
+  fails. Full escaped CLI JSON plus its newline is bounded to 1 MiB; no truncation.
+
+Limits:
+Only observed self-parent and direct two-way conflicts are detected; no general
+cycle detection or recursive graph traversal is claimed. Prefix tails, missing
+metadata, unsupported variants, conflicts and budget skips remain explicit.
+A false ambiguity flag, empty page, complete prefix or final cursor does not
+establish global uniqueness or absence of relatives. The watermark describes
+related captures in this library, not a reconstructed historical graph.
+Independent read-only review cleared the first-header correction and CLI scope,
+identity and output-bound contract before the final gate.
+
+This receipt covers native backend/CLI executables only. It does not establish
+Related GUI interaction, two-level Back restoration, clipboard/export interaction,
+or frame timing; those require their own native UI gate.
+
+Input stability:
+All 38 listed transitive first-party/test/bridge/build/pin inputs were hashed
+before and after the final gate; both manifests are byte-identical. Live receipt
+creation rechecked all 38 against that manifest with no drift. Upstream compiler
+identity is represented by its pinned revision and source-manifest files below;
+this gate is not a separate hash audit of every upstream compiler file.
+
+SHA256 artifact receipts (logs and binaries remain local ignored artifacts):
+f809d39447a5d6704c47f9ebb11412175e556731a913f0d283b0e9be345cc51b  build/tests/relations  (3538312 bytes)
+7ab987477197b276dcf4680d6621a212e3617f9a0ffb75d8d5bf8b4b8f66eff3  build/tests/relations_cli  (6149040 bytes)
+493dbeb6157475204f8030a4c6023ef68f3bcdc1050cbb327e68ad17b8f98b88  build/relations-final-test.log  (10589 bytes)
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  build/relations-final-test.exit.txt  (2 bytes)
+19aabf5b226a3d8bc69c1eb9628ba25eea97d0fcc8eb13bedb4dc43aebf50e1a  build/relations-cli-input-paths.txt  (733 bytes)
+966b8e3d6484bdea3ff18462519b99cdb4bab9b6a2cbfc8558186a166d888439  build/relations-cli-inputs-before.sha256  (3241 bytes)
+966b8e3d6484bdea3ff18462519b99cdb4bab9b6a2cbfc8558186a166d888439  build/relations-cli-inputs-after.sha256  (3241 bytes)
+
+Complete 38-input SHA256 manifest (before = after):
+a30da0148c411e46fa5343e40cb14ec9ad72b6e7cf46a399b6afa0e10f296ede  .tools/bend/SOURCE_FILES.json
+6e54fdf74793c9a50c98576a4f3a5c3285aa1800500b5799790b242946b50fe6  .tools/bend/SOURCE_REVISION
+814ea7ec479614f977416115f33c33f4a9f5efc250a0f0093311e8f6d72dc908  mise.toml
+919cb2abd8bad19a3e8cdf12c676f586717121a9c7222a557345ade8f7ab753e  native/sqlite.c
+daed2fbc1e56005659ca2eb1a95437f5d3d644e3210376ca592fc767e874e6d6  scripts/bend
+d078faa6a8923cf6eee5098a85f4b416a6687afdaab4736d20a9baa048e6fc54  scripts/build
+f11b7cd9a668dc0ee39a4292a5168479166f50297b860cff4f4bb9599cd8ec50  scripts/test
+6c33179b728ae529fa3356e7b3e210a278ff89a025117dde8224052d309c80b2  src/activity_cli.bend
+eb65d64619196ebbf94fba28f11d68498e2b48409d5b16d419fa50a8be218567  src/activity_reader.bend
+44e9c7ab678bcc1b745c933cb8f2407d87741979e9c4d62ecacd89905eea1fa7  src/actors.bend
+fafe78a3389444d03659d8f41cedefb85a18494ade37020495d4b87cc7009626  src/catalog.bend
+2cc66527bf40f041b43116b3bf0072fb9720f78e040a3dd97b737a842de1fd42  src/cli.bend
+f2f68a4a9781ea102f3e275781380a885e3057e178d75c8d45b310c3c5002191  src/domain.bend
+69d3caf7b9867bd3ef2f4c8d913207ba7f3a10d2fee24318f2b6720e955dad1f  src/evidence.bend
+3bcd8f324959d369643be7be4e42bad054a549626bf36f7c49b727bf04d30775  src/file_evidence.bend
+586152e3cecc8f1b8439e0bf3f4bc87802bd40da66fb9b8bd9172eafe1773083  src/git_diff.bend
+02941eb344a355c5d4b41e544a987ca762cf662f7c978b983fd65c3e7de565e6  src/json.bend
+e3bf2ed16fd237a9422a30fc06716159fa093308219ad0426949d293929b817d  src/maintenance.bend
+0f12835f723c4dfd8e0db055c6392bdc1f9b09518f5c4d22f7be93520c55e223  src/paths.bend
+eba657f6476109b035a3c4daf0ffdb87e0017524425caecb572b3af39d688b30  src/projection_seal.bend
+2a913606e0e2deb85c7fa44fd381662579acee1fd5caff924b3143b24496a62f  src/provenance.bend
+706758310c2885c8e6ccf29ad836ddcd49a0ee81236902e0df5bd8473d649d98  src/providers.bend
+df4792f6d0ca3d867b7b139a83f6b91014f75029299702e3258735eba72befe6  src/query.bend
+4bd935b98ab10a168863fcefd1c05660dece0600d462c26f6e53bd9ccaa4a4b7  src/relations.bend
+4c31b12f9336003a772db475151f07c77b5f854e581d8ae9720b2c82071d984d  src/relations_cli.bend
+7a5e66266caa9b95b4a25ff7bd7dd38bda49de43ef21bf88b526f4e18e653242  src/repo_scope.bend
+f351f01face759258bdb2aac1ee9dcdc62352e83b64116e0f738181f92abcf8e  src/repository_browser.bend
+df0c6db3661027a654e3de572d0057510057eca01c3863b6b07e49374acb975c  src/repository_cli.bend
+b638237b91649404169d0df12012d7c46844a246c41b47f429a9192e6cd1174a  src/scoped_reader.bend
+c01358789018b44c6bb8f2d49ccf7a62c3779b3c511fc449b7e90ec0d232ba13  src/sources.bend
+e0d70821050b21ca0cc239c2983d5c22f63a1786de72dff5c431510f6e794b62  src/sql.bend
+c9372c959f6a1450fdf58c04be4fb29b6a440b8505defd11a9f63aa1cffef3a4  src/storage_inventory.bend
+c5b0e67906e754f7cc71933c791a5b414e471331d6bc6920eee1f1f75c0cd9aa  src/store.bend
+ce5e6992c072e752b61702326d1ac9a6c3751e3ab5719496c7c0511529f083ee  src/timestamp.bend
+9a481a6f654adb78d843894317e605a6829ef10da62d1371cc46fc8ae2b5feb0  src/tool_activity.bend
+192e7ccd100c0da1c19488c5d299ca6c31a2b2260ec4b0f1f0647a9fd0cd7d34  src/usage.bend
+6d7d3998e7d98d5ab72583c34c22302fd37a8e58a275a701e54e4c465a855477  tests/relations.bend
+d7bb9f02feddfc72531c9285cd5785bb26594bb058136f20fc5c4ba81ff2bc10  tests/relations_cli.bend

@@ -1,0 +1,84 @@
+Juice Bend final Tart-validated application host smoke receipt
+Date: 2026-10-20
+Host: local macOS 27.0.1 / Apple Silicon
+Executable: build/juice-bend
+SHA-256: 05cdff4f599edcd16646fc3363e27c3856bda4b073f52a92f23264887ef5ba35
+
+Using a new isolated synthetic library, --demo status, search preservation,
+scoped transcript, verify and rebuild returned valid JSON and exited 0. Status:
+2 sources, 2 generations, 2 accepted snapshots, 11532 raw bytes, 32 events.
+The local bundle launcher returned byte-identical status from the same library.
+The exact Tart-tested binary is packaged in build/Juice Bend Validated.app.
+A fresh packaging compile produced identical generated C but a different Mach-O
+hash/UUID; that link result is preserved separately in ignored build/. It is
+not substituted for the exact UI-tested binary. No deterministic-link claim.
+
+Earlier broader CLI receipts follow with their own binary identities.
+
+Juice Bend earlier application CLI integration receipt
+Date: 2026-10-20
+Host: local macOS / Apple Silicon
+Executable: build/juice-bend
+SHA-256: 6a1287727e86e6d956dbfa7bf42bb6a1551d2fe064f110c805e14f6e8b85a32c
+
+A new private synthetic demo library was created by the native Bend executable.
+All nine commands exited 0 and returned valid structured JSON:
+
+--demo status
+history
+search preservation claude "" assistant ""
+session-scope 1 0 4 claude /synthetic/juice-bend-demo assistant 2026-10-20
+usage 1 0 4
+verify 1
+rebuild 1
+export-range-scope 1 0 4 claude /synthetic/juice-bend-demo assistant 2026-10-20 OUTPUT
+export-all 1 RAW_OUTPUT
+
+Every invocation used --data-dir ISOLATED_DIRECTORY. Observed/checked results:
+2 sources/generations/accepted snapshots, 11,532 raw bytes, 32 events; two history
+rows; 21 preservation search hits; exactly three scoped assistant events;
+complete-extent verification and rebuild reported unchanged raw bytes. Raw
+export compared byte-for-byte with the synthetic Claude source. Scoped Markdown
+retained Café and had mode 0600. Outputs remain under ignored build/current-cli.
+The new local bundle contains the identical executable hash and its status
+command returned the same library counts. This is historical CLI evidence on the identified earlier storage-hardening build. Its subsequent
+unlocked-desktop workflow is recorded separately in native-validation.md.
+The separate earlier file/commit smoke follows.
+
+Earlier desktop-observed application CLI integration receipt
+Date: 2026-10-20
+Host: local macOS / Apple Silicon
+Executable: build/juice-bend-next
+SHA-256: 4ad55c63cb542b68740e032f05ff528c25c3ce7250a6f07c1bfbd0d3f25f5d49
+
+The library was prepared in a new private temporary directory with the Bend
+synthetic demo and the isolated synthetic Git provenance fixture. No default
+home history, original Juice data or remote attachment was read. The following
+commands all exited 0 on this identified earlier binary:
+
+history claude /synthetic/juice-bend-demo
+usage 1 0 4
+session-scope 1 0 4 claude /synthetic/juice-bend-demo assistant 2026-10-20
+export-range-scope 1 0 4 claude /synthetic/juice-bend-demo assistant 2026-10-20 OUTPUT
+why-file SYNTHETIC_GIT_REPOSITORY a.bend 1 1
+why-commit SYNTHETIC_GIT_REPOSITORY FIXTURE_HEAD
+
+Each invocation used an explicit --data-dir ISOLATED_DIRECTORY. Placeholder
+paths above omit temporary local names; OUTPUT was a new file in that directory.
+
+Observed results:
+- History returned ten column labels and ten row fields, including
+  first_event_ordinal, with the selected repository's excerpt.
+- Usage identified the selected physical range and quoted recorded token
+  counters. The demo lacks a message.id, so deduplicated subtotals correctly
+  remained unknown rather than claiming a total.
+- The scoped reader returned exactly three assistant events, preserving
+  provider/repository/role/date scope and full captured citations.
+- The new Markdown export had the same three visible events and explicitly
+  labeled its bounded physical-record range.
+- File Why and commit Why returned the fixture's unique explicit-trailer
+  association and captured request. They did not infer tool success or rationale.
+
+Raw JSON and the exported synthetic Markdown remain under ignored build/
+and the private temporary fixture directory. This is CLI integration evidence;
+it is not a native window or input observation.

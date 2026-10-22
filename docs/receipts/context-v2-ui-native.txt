@@ -1,0 +1,33 @@
+Native context v2 application acceptance — 2026-10-20
+
+Application: build/juice-bend-context-v2
+SHA256: 503f1098ef910c153db717074311c692bd864030e1cf818f3484ad0b60a90694
+Bytes: 11,908,344
+Generated C SHA256: 954df0bcdbf57ac5ca09097bdf61db13056efa453eb9b687d727b06b7664ec8d
+All 48 transitive application inputs and 88 upstream hashes stayed unchanged.
+Build manifest: docs/receipts/context-v2-build-inputs.sha256
+Manifest SHA256: de0bfe762bb8972b14659fd574cb6e52ed236231f6a2ba888ee923df76179ccc
+
+Actual macOS27.0 arm64 Tart2.40.1 guest, host-only networking, isolated synthetic
+library. Old v1 app2e3191d9 and fixture7cff09dd created two initial captures.
+The candidate reads both through native scoped search and exact selection/copy.
+Source-only append leaves2snapshots/44raw. Native Refresh accepts snapshot3;
+old v1 append uses verified full replay, giving47raw and3v2contexts. A second
+Refresh is unchanged. Both older v1 context sets and scoped reader text remain
+unchanged. Five exact clipboard comparisons and one pinned-reader pixel region
+pass. Fresh lexical search opens snapshot3 physical record2. Native Command+E
+exports the exact bounded scoped transcript:921bytes,mode0600,
+SHA256 6675e6be029f909371df7cb0d0d1620f5553e999448533eff0f0fdb586229231.
+Full retained verification passes for all3snapshots; quick_check=ok, no FK errors.
+Counts:2sources,2generations,3snapshots,47raw,47records,47events,45currentFTS,
+47contexts,3event seals. Replayed prefix bytes match at both old ordinals.
+
+Summary: benchmarks/results/tart-context-v2-summary.json
+SHA256: 7430cefadaf9917e440aae14e04b388fcd90fc99ce9de4770afde8845cd8a1f0
+App window closed; runner exit130 stopped its owned VM; both leases absent.
+
+Limits: no native latency, IME/shaping, accessibility or resource measurement.
+Unsupported glyphs remain boxes. Settings were preconfigured through actual CLI;
+this is not a repeat Settings UI receipt. External postflight expectations were
+corrected for v1 full-replay raw allocation and the actual export path before
+assertions; no production defect or source edit occurred. No distribution work.

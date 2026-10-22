@@ -1,0 +1,89 @@
+{
+  "schema": "juice-bend-ui-foundation-build-tests-v1",
+  "scope": "Pure Bend UI extraction through the actual Juice renderer and standalone controls example. Individual source-bound gates, not a fresh full-suite/proof pass.",
+  "source": {
+    "kit_manifest_sha256": "b93973ae8c4cd837a0a4070b21e8298b99756beae9b4781b6a3dbfcb0695b94d",
+    "viewport_fix_manifest_sha256": "2a06a1db5b7b0b143a30de1dc4cb4d19f58a46afd505427751279fe0b7652f35",
+    "kit_paths": 16,
+    "viewport_paths_overlap": 4,
+    "application_closure": 172,
+    "preservation_sha256": "ae4c070c44b305b245f383c435c9b98624261b5e8127972bfbde795001933545"
+  },
+  "focused_before_viewport_fix": [
+    {
+      "entry": "tests/ui_kit_regions.bend",
+      "pass_lines": 48,
+      "receipt_sha256": "5c5a85892b9eb723365758bf1a2b6865e5e53524c2aea9eca6d9e3c338c997f2",
+      "binary_sha256": "73c8102d3d19f9afe056d7f8f0dbe0c08c9908abb95bb2cdd17810c3c4851045"
+    },
+    {
+      "entry": "tests/ui_kit_labels.bend",
+      "pass_lines": 15,
+      "receipt_sha256": "7066d38c57e8711f10e25d306aa5fe2e2b58c2da80ce3c7fa56d0829f8ae1c04",
+      "binary_sha256": "fc9398491159a74907fea32ad9d9fe15ce90b9a801045e516b91c10be3a54e6d"
+    },
+    {
+      "entry": "tests/history_workspace.bend",
+      "pass_lines": 123,
+      "receipt_sha256": "fc56fada45b6e6ee9b0dedcb6d4f7c09c1af88aed1bc83f3416ee3805cbd4a02",
+      "binary_sha256": "2fa1eb546658ae3639f2bb7cc268b4c976bb9961bf5950b47f817d0eddaa50e7"
+    },
+    {
+      "entry": "tests/ui_kit_example.bend",
+      "pass_lines": 13,
+      "receipt_sha256": "fc56fada45b6e6ee9b0dedcb6d4f7c09c1af88aed1bc83f3416ee3805cbd4a02",
+      "binary_sha256": "119795f5bef1db19ea016c59ec0deba8d4de57a836ec897e2be8e6e3ed3a0e0a"
+    }
+  ],
+  "focus_test_scope": "Region48, Label15, History123 and the earlier example13 passed on Linux. Label reuses only its passing entry from a batch with unrelated preserved failures. These gates precede the additive image_viewport helper; existing canvas.image/app adapters are unchanged.",
+  "current_viewport_and_example": {
+    "host": "native macOS arm64",
+    "assertions": 17,
+    "submitted_image_pixels_compared": 221184,
+    "manifest_sha256": "af1af9bb40ed36a65bb7b7dc9e85453f0a142f29c6de2a7b477bf768a0e7ec03",
+    "build_receipt_sha256": "24e9383c1c91fe54eded17887ce822da4432af3026e0df400c556855a04d7d84",
+    "test_receipt_sha256": "fe365b813685fb4fd40737e2300bcafad7d78a5e8c66eb505a7e6613cec82c65",
+    "binary_sha256": "1240bceebec2411d5e67bca4291d56df16c6d90886baef1d8494803f5b2ea4a6",
+    "native_window_receipt": "bend-ui-controls-native.json",
+    "native_window_receipt_sha256": "454c6da1b3b682c0db54f7cab4f280d97312013a908081c3641f801c8eb73b1f"
+  },
+  "history_raster_before_viewport_fix": {
+    "byte_identical_to_frozen_history": true,
+    "sha256": "70dd53d3447e0ae7ffbafd5d2a583e7aa674a6d3b11eb2998c9bd79f1b723465",
+    "bytes": 2390416
+  },
+  "application_build": {
+    "host": "Darwin arm64",
+    "compiler": "Pinned Bend 2.0.37 and repository LLVM23.1.4 at -O1 through maintained build wrapper",
+    "manifest_sha256": "dd769ab94275a49084698b132907ce1ffe7a1e53fa4c569aeb8d4a4a25e0e0de",
+    "receipt_sha256": "6b9d51ec9a68b8419379fba41f8bcabd18bf28dd5d83f80f6a8ce5fd207c01aa",
+    "terminal_collection_sha256": "a305a61576ac2bc14f6344ae1885817aeb6e023544b3d75d484733a2b9584484",
+    "source_files": 172,
+    "pins": 96,
+    "tool_binaries": 2,
+    "binary_sha256": "1b6fd416b7e79e70ef8108ea68a6df8071eed47c02c5a01d8947cee5544ad672",
+    "binary_bytes": 24805032,
+    "c_sha256": "86ea6ed28977bf7f63356990a3430e9e7169de26059bb7a12e086bf65c3f8e9c",
+    "exit": 0,
+    "inputs_and_outputs_unchanged": true,
+    "owned_processes_absent": true,
+    "elapsed_seconds_diagnostic": 907.778,
+    "application_runtime_acceptance": "Separate native application receipt; build alone does not establish UI acceptance."
+  },
+  "packaging": {
+    "component_source_dependencies": [
+      "Base",
+      "public generic Mono and Sans font modules"
+    ],
+    "application_dependencies_in_component_layer": false,
+    "repository_wrapper_links_system_sqlite_even_for_example": true,
+    "first_party_license_chosen": false
+  },
+  "limitations": [
+    "No new complete test-suite or formal proof pass.",
+    "No shaping, IME, accessibility tree or resize-aware layout claim.",
+    "Standalone failed run01 is preserved; corrected run02 has separate source-bound native acceptance.",
+    "Native async pending Close remains a separate unresolved issue.",
+    "Build duration is diagnostic, not application performance."
+  ]
+}

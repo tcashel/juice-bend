@@ -1,0 +1,79 @@
+min_version = "2026.9.12"
+
+[tools]
+bun = "1.4.2"
+
+[env]
+BEND_NO_TELEMETRY = "1"
+BEND_REVISION = "60ca80aedeec9d8f0629b5f10dd19457d8ad67af"
+
+[tasks.setup]
+description = "Fetch the pinned Bend compiler into .tools"
+run = "./scripts/setup"
+
+[tasks.setup-llvm]
+description = "Install pinned macOS ARM64 LLVM locally (1.57 GB download; 12 GB free required)"
+run = "./scripts/setup-llvm"
+timeout = "20m"
+
+[tasks.setup-lean]
+description = "Optionally install exact Lean 4.34.0 locally for proof kernel checks"
+run = "./scripts/setup-lean"
+
+[tasks.doctor]
+run = "./scripts/doctor"
+
+[tasks.build]
+run = "./scripts/build"
+
+[tasks.app]
+description = "Build a local unsigned .app at a new output path"
+run = "./scripts/app"
+
+[tasks.run]
+run = "./scripts/run"
+
+[tasks.demo]
+description = "Launch the existing build in a fresh synthetic library without rebuilding"
+run = "./scripts/demo"
+
+[tasks.test]
+run = "./scripts/test"
+
+[tasks.prove]
+run = "./scripts/prove"
+
+[tasks.bench]
+run = "./scripts/bench"
+
+[tasks.smoke-ui]
+run = "./scripts/smoke-ui"
+
+[tasks.build-trace]
+description = "Build the bounded native GUI callback diagnostic"
+run = "./scripts/build benchmarks/native_trace.bend build/juice-bend-native-trace"
+
+[tasks.build-vm]
+description = "Build a separate native executable targeting macOS 26"
+env.MACOSX_DEPLOYMENT_TARGET = "26.0"
+run = "./scripts/build src/main.bend build/juice-bend-vm"
+
+[tasks.vm-session]
+description = "Reserve and run the coordinated local Tart VM with explicit isolated shares"
+run = "./scripts/vm-session"
+
+[tasks.font-check]
+description = "Verify the checked-in Bend font against its pinned quantized atlas"
+run = "./scripts/font-pack --check src/font.bend"
+
+[tasks.font-pack]
+description = "Pack font data into a new build artifact without overwriting source"
+run = "./scripts/font-pack --output build/font.generated.bend"
+
+[tasks.sans-font-check]
+description = "Verify the static Inter UI atlas and generated Bend glyphs against pinned public assets"
+run = "python3 scripts/sans-font-pack.py --check src/sans_font.bend"
+
+[tasks.sans-font-pack]
+description = "Pack the pinned UI atlas into a new build artifact without replacing source"
+run = "python3 scripts/sans-font-pack.py --output build/sans-font.generated.bend"

@@ -1,0 +1,220 @@
+{
+  "schema": "juice-bend-native-jpeg-polished-v2-receipt-v1",
+  "status": "PASS: ready-image native journey, independent pixel/data/export validation, and coordinating root visual review",
+  "scope": "Synthetic native macOS arm64 Tart; exact polished candidate; ready-image interactions only.",
+  "application": {
+    "sha256": "5d67eba5de1ffa2490771e98e8294eba22192b59ed1b961130e8335e966351dc",
+    "source_files": 160,
+    "pinned_inputs": 96,
+    "manifest_sha256": "cc66cf5621845b9beb1b637aebce6bbb6d1c431c216024226351979c1c674eb8",
+    "build_receipt_sha256": "b243fcc2dad9375a2902f01316d2f395e7577b98d6f61d9cfa48d3e035f3579d"
+  },
+  "helper": {
+    "sha256": "afeb50ed9d816d96178471dd0503594d452ff705cd436eebd71f57dab0a76bb5",
+    "source_files": 59,
+    "pinned_inputs": 96,
+    "shared_application_paths_exact": 51,
+    "manifest_sha256": "7470704888637ddb3855945dd13891f23b9b4863e0d60148383aae45ef55eb03",
+    "build_receipt_sha256": "68fc450196083600010c4a38cf377251536350292760caad86c12b25e2a1edc5"
+  },
+  "step_exits": {
+    "prepare": 0,
+    "jpeg": 0,
+    "variants": 0,
+    "restart": 0,
+    "finish-ready": 0,
+    "cleanup": 0,
+    "fixture-copy": 0,
+    "guest-run": 0,
+    "display-holder": 0,
+    "display-restored": 0
+  },
+  "capture": {
+    "snapshot": "1",
+    "source": "1",
+    "generation": "1",
+    "records": 6,
+    "logical_bytes": 26497,
+    "logical_sha256": "1803063e687a928c529cc8d5c72005481b237b7a260b369c8713ac184e1c6da0",
+    "compressed_bytes": 26506,
+    "compressed_sha256": "753a0b7c00b2bd905048ccec727163481374d3daa696021bf4ae4cda2f6bf660",
+    "raw_and_archive_commitments_verified": true,
+    "sqlite_quick_check": "ok",
+    "foreign_key_violations": 0
+  },
+  "preservation": {
+    "source_archive_absent_before_first_launch_and_after_restart": true,
+    "restart_used_different_parent_pid": true,
+    "fixture_verify_before_restart_and_final_exact": true,
+    "fixture_copy_files": 8,
+    "source_before_after_and_copy_hashes_equal": true
+  },
+  "exports": [
+    {
+      "filename": "attachment-1-0-0-358415-1.bin",
+      "bytes": 9277,
+      "sha256": "63e2d58cc271cfdcba0f0c8f87821c340e3a410547987934c4be778dcf50e202",
+      "mode": "0600"
+    },
+    {
+      "filename": "attachment-1-0-0-359521-2.bin",
+      "bytes": 9277,
+      "sha256": "63e2d58cc271cfdcba0f0c8f87821c340e3a410547987934c4be778dcf50e202",
+      "mode": "0600"
+    },
+    {
+      "filename": "attachment-1-0-0-615047-1.bin",
+      "bytes": 9277,
+      "sha256": "63e2d58cc271cfdcba0f0c8f87821c340e3a410547987934c4be778dcf50e202",
+      "mode": "0600"
+    },
+    {
+      "filename": "attachment-1-1-0-391966-3.bin",
+      "bytes": 72,
+      "sha256": "abe34935a44b0714231889bd0d8768c80ec1ca4a221928956c8e5f1af914f3c9",
+      "mode": "0600"
+    }
+  ],
+  "reader": {
+    "initial_and_restarted_unicode_reader_equal_independent_template": true,
+    "visible_events": 2,
+    "reference_ids": [
+      "r0:e1",
+      "r5:e0"
+    ],
+    "selected_bookmark_equalities": 7,
+    "ready_back_escape_and_remote_inert_copy_exact": true
+  },
+  "native_pixels": {
+    "views": {
+      "jpeg-fit": {
+        "samples": 30,
+        "display_png_sha256": "8600330897665fe01cc447c9b0c94a075279964e34bed6d7ec45fa60cac05dda",
+        "pixel_receipt_sha256": "8819fb5a646c31ecfad39476fe3cfc3ab4007053a38906b1302139ad62b85091"
+      },
+      "jpeg-origin": {
+        "samples": 6,
+        "display_png_sha256": "7ea9b1193225e6dd0133dc49d16d82f965006acebefe48a00aa2344d8bc5ab76",
+        "pixel_receipt_sha256": "35fe9a991d6eef9bb2e85d4665a2ba9bf41ddde2e5049d9daf87d0475cdf3add"
+      },
+      "jpeg-right": {
+        "samples": 8,
+        "display_png_sha256": "0600373b72531ae736217df1b07152b7f72bd55144ee896d431744ece59f3c02",
+        "pixel_receipt_sha256": "c3f5249a0cef9d0a540b389e297c83a7a3286083978d4aefb26c0b2f9f2f9a86"
+      },
+      "jpeg-down": {
+        "samples": 8,
+        "display_png_sha256": "f1e7bff9c1d5779f2878cbd45f5f0eae837f936080a0e93e378e198ce3b1c5f6",
+        "pixel_receipt_sha256": "88ac59b282b0c6cf6528e2b7ac419516747d4671a466b706d19e8ee4dd3cd109"
+      },
+      "jpeg-wheel-down": {
+        "samples": 8,
+        "display_png_sha256": "fb2d75728e5062f8389b19eb850d94aa41c6a3e176512c09c5b1b1ac8c224b75",
+        "pixel_receipt_sha256": "3b9e4f69c19b4ae0457626f4142b88be95a0c323bfd60eccba26bbe176ce7bcf"
+      },
+      "jpeg-wheel-up": {
+        "samples": 8,
+        "display_png_sha256": "2114997edc942eae506c7018360b0e18108a599b5b008a885a7ab203219bbfc1",
+        "pixel_receipt_sha256": "88ac59b282b0c6cf6528e2b7ac419516747d4671a466b706d19e8ee4dd3cd109"
+      },
+      "jpeg-wheel-outside": {
+        "samples": 8,
+        "display_png_sha256": "8c6b558aea4a64053ea57c36520d0618043552d029d70b40c096d265ff15fd27",
+        "pixel_receipt_sha256": "88ac59b282b0c6cf6528e2b7ac419516747d4671a466b706d19e8ee4dd3cd109"
+      },
+      "jpeg-bottom-right": {
+        "samples": 8,
+        "display_png_sha256": "ce95ca270c1340271be20b979307d1985113e952f6739cfa72e29942bdc87211",
+        "pixel_receipt_sha256": "6f18c073d09183597d8b7d6c2329852440c11e183c12f7892fe7977051716831"
+      },
+      "jpeg-edge-clamped": {
+        "samples": 8,
+        "display_png_sha256": "435c1d59444eb832cb0043461f6022c5d8243a7c01b0e5a2d194f13e87fcf1f7",
+        "pixel_receipt_sha256": "6f18c073d09183597d8b7d6c2329852440c11e183c12f7892fe7977051716831"
+      },
+      "jpeg-fit-return": {
+        "samples": 30,
+        "display_png_sha256": "8600330897665fe01cc447c9b0c94a075279964e34bed6d7ec45fa60cac05dda",
+        "pixel_receipt_sha256": "8819fb5a646c31ecfad39476fe3cfc3ab4007053a38906b1302139ad62b85091"
+      },
+      "jpeg-reopen": {
+        "samples": 30,
+        "display_png_sha256": "8dea7cc1b775f43fafef44acb29501e5159d0dcad408d0855a0c1459cfe18e50",
+        "pixel_receipt_sha256": "8819fb5a646c31ecfad39476fe3cfc3ab4007053a38906b1302139ad62b85091"
+      },
+      "restarted-jpeg": {
+        "samples": 30,
+        "display_png_sha256": "65d852e3a5be1b269d263dd536a15fda3a0c2d696991611167b81deb7c3c60cc",
+        "pixel_receipt_sha256": "8819fb5a646c31ecfad39476fe3cfc3ab4007053a38906b1302139ad62b85091"
+      },
+      "png-fit": {
+        "samples": 8,
+        "display_png_sha256": "8d1a7cba45f7842df995baf98f95da5ce6ceba562e274875adf1412fadfaed43",
+        "pixel_receipt_sha256": "7bab0626afe5471827941cfb2d864eecd3384abf479fac9dac8c2269c7f64456"
+      },
+      "png-actual": {
+        "samples": 3,
+        "display_png_sha256": "32a0e7688c2530c68b7bc46ad1ab17dcf71bf2d2c6bce61bea5f688609894391",
+        "pixel_receipt_sha256": "4aaed1b4cdf856a22dc91102b81346840b27c16d9322d22835b19e741881c605"
+      }
+    },
+    "samples_total": 193,
+    "direct_png_reinspection": true,
+    "exact_icc_profile_zero_channel_tolerance": true,
+    "jpeg_size": [
+      1024,
+      640
+    ],
+    "png_size": [
+      2,
+      1
+    ],
+    "declared_mime_does_not_choose_decoder": true
+  },
+  "unsupported_variants": {
+    "progressive-unsupported": {
+      "source_bound_samples": 3030,
+      "display_png_sha256": "0e227d37e1532f625bcefa9d1ee238f9d4010c12c7379c493169b114be9a4d66"
+    },
+    "truncated-invalid": {
+      "source_bound_samples": 2550,
+      "display_png_sha256": "80f9cb50a8e72848b63ebc9f8addb1931c5bed124199dc655b69f3e15aa6481e"
+    }
+  },
+  "visual_review": {
+    "reviewer": "coordinating root agent",
+    "views": [
+      "jpeg-fit",
+      "jpeg-bottom-right",
+      "progressive-unsupported",
+      "restarted-jpeg"
+    ],
+    "observed": "Correct image states and readable error visible; supplied by root after actual screenshot inspection."
+  },
+  "cleanup": {
+    "candidate_parent_children_and_windows_absent": true,
+    "default_application_data_absent": true,
+    "display_and_dock_restored": true,
+    "vm_session_stopped_and_lease_released": true,
+    "wrapper_exit": 143,
+    "wrapper_exit_reason": "Root stopped the owned wrapper after guest success; root may now own a different VM session."
+  },
+  "evidence": {
+    "artifact_files_unchanged_after_validation": 1574,
+    "artifact_manifest_sha256": "b1a3ae686bac4dc2603f1be8d9111bfdb646793f964dde3ba404b6d9a8dbe667",
+    "payload_files_unchanged": 27,
+    "build_evidence_files_unchanged": 260,
+    "staging_receipt_sha256": "8d97fe08b00c692e4202e0d7a188d65d29bc723ae2ee51999853b890201319b4",
+    "collector_sha256": "bd279264d731f8b298a33c9f92d3cf656c0df8bcdbfe721927837ac898ab9c71"
+  },
+  "limitations": [
+    "This result binds only app5d67eba5 and matching helper, not later candidate changes.",
+    "No pending-input, pending cancellation, pending Close latency or general responsiveness claim.",
+    "Ready-image navigation is covered; this does not establish general JPEG or feature parity.",
+    "Exact display storage components under one ICC profile are checked, not general color fidelity.",
+    "Unavailable chrome is source-bound evidence; it is not an independent decoder oracle.",
+    "No Swift comparison or controlled performance benchmark.",
+    "Original failed date-path run and earlier pending-Close failures remain preserved."
+  ],
+  "collected_utc": "2026-10-22T15:11:45.920123+00:00"
+}

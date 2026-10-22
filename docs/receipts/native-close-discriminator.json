@@ -1,0 +1,112 @@
+{
+  "scope": "Observed Base-only Bend 2 native Close discriminator in macOS Tart. This is a runtime-boundary diagnostic, not Juice Bend application acceptance or a performance comparison.",
+  "compiler": {
+    "bend": "2.0.37",
+    "bun": "1.4.2",
+    "llvm": "23.1.4",
+    "native_optimization": "O1"
+  },
+  "binding": {
+    "source_sha256": "4bd887377d0e522ed92c18cf76e3aeb2484802324c737a67ee26d55ba190fb42",
+    "binary_sha256": "fd9d96409cc7c4c042647102e8146f7e8d52d5cc0a95a8adb22e2f6ac6dd8be0",
+    "build_receipt_sha256": "96429cb62dfd9de35a3085a72a2d806e25ced59594c7ccc453b87b8555cccc14",
+    "build_manifest_sha256": "dda2f5ee2188815624869d7e4cf2e92c610ab06986650ebe784f31f5ec49abaf",
+    "upstream_base_sha256": "2da042974826279cf216cbe009a201bf14a6875747d7f5caf43ccf200b066f26",
+    "upstream_window_sha256": "bf8d5779775ba9566d4bbeb8706a9ec993efb724dae7af8a76c38501ab4092c2"
+  },
+  "payload_manifest_sha256": "2d874ff4563c95641d175bda98ffa99c3845289d80dcbd2878975b6959821d78",
+  "independent_collection_sha256": "8799f9e3e17979ea1b2166ac3740c9448c106e90ecf454e77cc002ff13663798",
+  "procedure": "Idle control, then same exact executable with a supervised ten-second child. One AX-guarded native Close click per case; no subsequent input or external termination; twenty seconds of read-only process/window observations. PID/start/full executable/argv identity checked. Parent and window five-second thresholds evaluated independently.",
+  "guest_exit": 1,
+  "cases": {
+    "idle": {
+      "checks": {
+        "all_owned_absent_at_20s": true,
+        "complete_ordered_bend_trace": true,
+        "empty_probe_stderr": true,
+        "no_orphan_observed": true,
+        "parent_exit_within_5s": true,
+        "process_exit_zero": true,
+        "same_child_bracketed": true,
+        "window_disappearance_within_5s": true
+      },
+      "passed": true,
+      "phase_elapsed_ms_since_probe_start": {
+        "app_run_begin": 0,
+        "app_run_returned": 2392,
+        "channel_closed_returning_none": 2388,
+        "close_event_received": 2388
+      },
+      "observation_bounds_ms_since_click_started": {
+        "parent": {
+          "last_present_ms": null,
+          "first_absent_ms": 547,
+          "remained_absent_after_first_observation": true
+        },
+        "window": {
+          "last_present_ms": null,
+          "first_absent_ms": 714,
+          "remained_absent_after_first_observation": true
+        }
+      },
+      "post_click_observation_count": 53,
+      "post_click_observation_duration_ms": 20350,
+      "native_process_exit": 0,
+      "probe_stderr_bytes": 0,
+      "ax_native_close_verified": true,
+      "raw_ps_and_window_rows_independently_reconstructed": true
+    },
+    "forked": {
+      "checks": {
+        "all_owned_absent_at_20s": true,
+        "complete_ordered_bend_trace": true,
+        "empty_probe_stderr": true,
+        "no_orphan_observed": true,
+        "parent_exit_within_5s": false,
+        "process_exit_zero": true,
+        "same_child_bracketed": true,
+        "window_disappearance_within_5s": false
+      },
+      "passed": false,
+      "phase_elapsed_ms_since_probe_start": {
+        "app_run_begin": 0,
+        "app_run_returned": 963,
+        "channel_closed_returning_none": 961,
+        "close_event_received": 961,
+        "process_run_begin": 284,
+        "process_run_returned": 10299
+      },
+      "observation_bounds_ms_since_click_started": {
+        "parent": {
+          "last_present_ms": 9195,
+          "first_absent_ms": 9519,
+          "remained_absent_after_first_observation": true
+        },
+        "child": {
+          "last_present_ms": 9195,
+          "first_absent_ms": 9519,
+          "remained_absent_after_first_observation": true
+        },
+        "window": {
+          "last_present_ms": 9331,
+          "first_absent_ms": 9660,
+          "remained_absent_after_first_observation": true
+        }
+      },
+      "post_click_observation_count": 52,
+      "post_click_observation_duration_ms": 20203,
+      "native_process_exit": 0,
+      "probe_stderr_bytes": 0,
+      "ax_native_close_verified": true,
+      "raw_ps_and_window_rows_independently_reconstructed": true
+    }
+  },
+  "observed_result": "Idle control met both five-second thresholds. Pending-child case failed both. Its Close handler returned from App.run 2ms after receiving Close, while the exact parent, child and listed native window remained for about nine further seconds after the click. Both native processes ultimately exited successfully; no orphan or window resurrection was observed.",
+  "bounded_inference": "Production Gui, decoder, capture and SQLite logic are not required to reproduce delayed disappearance. This experiment does not identify the exact runtime mechanism or demonstrate a production fix. CGWindow observations show listed on-screen window presence, not a separately sampled pixel or direct Window.close completion timestamp.",
+  "limitations": [
+    "One idle and one pending-child case in this Tart guest.",
+    "Observation timestamps are bounds; Bend phase timestamps use elapsed time since probe start, while process/window observations use monotonic elapsed time since the Close click began.",
+    "Both five-second failures remain failures despite complete cleanup within the twenty-second observation.",
+    "No upstream runtime or production application changes were made. VM shutdown evidence is separate."
+  ]
+}

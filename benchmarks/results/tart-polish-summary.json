@@ -1,0 +1,99 @@
+{
+  "date": "2026-10-21",
+  "environment": {
+    "host": "macOS 27.0.1 arm64",
+    "guest": "macOS 27.0 arm64",
+    "tart": "2.40.1",
+    "network": "host-only"
+  },
+  "application": {
+    "inputs": 55,
+    "unchanged": true,
+    "bytes": 13039632,
+    "sha256": "fabcd5069359c929455412003623990927b2a2e371ade7352841b2a57844945e",
+    "generated_c_sha256": "d39f8b41a546d15483bca46e8d685bc202fabbdf7952d2fbe86900e196ffd0d1"
+  },
+  "correctness": {
+    "named_checks": 604,
+    "native_exit": 0,
+    "unchanged_inputs": 131,
+    "new_full_suite": false
+  },
+  "final_native_checks": {
+    "native-final-files-checks.json": {
+      "binary_sha256": "fabcd5069359c929455412003623990927b2a2e371ade7352841b2a57844945e",
+      "checks": {
+        "files_settings_history_copy_exact": true,
+        "exact_displayed_why_export": true,
+        "history_all_pixels_restored": true
+      },
+      "export_bytes": 14585,
+      "export_sha256": "ca45002b7709593a4a4b8770785b10191a21666153e1cd3604157e5cec952a2d",
+      "keyboard_paging": "Resolved by direct CoreGraphics events, verified in native-final-key-checks.json. Independent Bend probe observed missing page/arrow events from cliclick; no app alias added."
+    },
+    "native-final-empty-checks.json": {
+      "binary_sha256": "fabcd5069359c929455412003623990927b2a2e371ade7352841b2a57844945e",
+      "checks": {
+        "empty_library_launch_observed": true,
+        "unicode_paste_copy_exact": true,
+        "delete_selection_visibly_emptied_input": true,
+        "replacement_copy_exact": true,
+        "library_remained_empty": true,
+        "all_owned_windows_closed": true
+      },
+      "unicode": "café 中文 🙂",
+      "scope": "Native Tart clipboard and explicit synthetic key events; physical typing, IME and glyph shaping not established."
+    },
+    "native-final-heavy-checks.json": {
+      "binary_sha256": "fabcd5069359c929455412003623990927b2a2e371ade7352841b2a57844945e",
+      "records": 100001,
+      "real_usage_child_observed": true,
+      "pending_capture_hold_hint_observed": true,
+      "back_clears_hold_hint": true,
+      "back_exact_text_and_pixels_before_after_worker_exit": true,
+      "origin_bytes": 11480,
+      "origin_png_sha256": "8b6bddde8ac8b76ca4c636453851f3774de7e4b53657b5478c6402c2d2aa98f2",
+      "worker_cancelled": false
+    },
+    "native-final-key-checks.json": {
+      "binary_sha256": "fabcd5069359c929455412003623990927b2a2e371ade7352841b2a57844945e",
+      "checks": {
+        "page_down_changes_view": true,
+        "page_up_restores_pixels": true,
+        "selection_exact": true
+      },
+      "injection": "Native CoreGraphics virtual key121/116 with150ms down/up separation; independent Bend event probe observed canonical63277/63276.",
+      "cliclick_limitation": "The failing cliclick probe delivered no page/arrow Key events. Mechanism of intermittent tool delivery is not established; no app alias was added.",
+      "restored_png_sha256": "82ce57add75ca7be6add4c62e561785ed5502d8b0fdb22830f26c9ffb997220e"
+    }
+  },
+  "cleanup": {
+    "owned_windows_closed": true,
+    "vm_state": "stopped",
+    "runner_exit": 130,
+    "owned_lease_released": true,
+    "dock_autohide_after": false,
+    "dock_preference_restored": true
+  },
+  "earlier_candidate": {
+    "sha256": "149700c84f70f22adacd8e601aed9529db5e7fea1d8ff69c3e9083797e7a2a4b",
+    "checks": [
+      "Claude and Codex transcript/Usage exact copy",
+      "Why and Tools exact copy",
+      "Status inspector and Back preservation",
+      "All five saved intervals",
+      "Selected source Enable/Disable",
+      "Pinned Files page/Blame/Why after HEAD and worktree changes",
+      "Two exact mode-0600 exports",
+      "Reader/query pointer selection, Shift+Arrow and wheel restoration"
+    ],
+    "defect": "Files return lost selection; fixed and retested on final binary."
+  },
+  "limits": [
+    "Synthetic fixtures only",
+    "No physical keyboard or full IME acceptance",
+    "Unsupported CJK and emoji glyphs remain fallback boxes; underlying text copies exactly",
+    "No shaping, accessibility tree, resize, input-to-photon or sustained scroll benchmark",
+    "No Swift comparison or new performance claim"
+  ]
+}

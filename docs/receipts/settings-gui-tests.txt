@@ -1,0 +1,64 @@
+Settings GUI focused native gates — 2026-10-20 America/New_York
+
+Result: 388 named assertions passed across eight native test executables.
+Two suite-completion PASS banners are excluded. The ordinary scripts/test and
+scripts/build wrappers used mise, the pinned Bend compiler, and native clang
+at -O3 on macOS/Apple Silicon, with fresh isolated synthetic data directories.
+These assertion gates did not open a native window; Tart interaction and the
+combined application build have separate receipts.
+
+Commands and observed results
+  ./scripts/test tests/gui_settings_model.bend tests/gui_settings.bend tests/gui.bend tests/ui.bend
+  The first three executables completed: model 61, Settings integration 27,
+  GUI 87 (175 assertions). The invocation then exited 1 because the UI test
+  entry point contained an incorrectly indented settings_navigation() call.
+  This was a test-source parse failure before the UI executable was built.
+
+  ./scripts/test tests/gui_activity.bend tests/gui_repository.bend tests/gui_relations.bend tests/native_trace.bend
+  Exit 0; four executables: Tools 48, Files 54, Related 51, native_trace 10
+  (163 assertions).
+
+  ./scripts/test tests/ui.bend
+  After correcting only that test-call indentation: exit 0, 50 assertions.
+
+The application sources did not change for the test correction. Settings
+coverage includes strict preference/source protocols, durable acknowledgment,
+queued full preference pairs, Reload during capture/save, startup/error schedule
+suppression, monotonic interval deadlines, canonical source selection, bounded
+inventory paging, stale inventory replies, and exact captured-reader restoration
+with separate treatment of completed and already-pending origin requests.
+Existing Tools, Files, Related, GUI, UI and production trace-wrapper checks remain.
+
+Frozen production SHA256
+  910fb3d7d327db1b7e57d87e81cf8361f04d2218cd7912372e9f98d64b8be53e  src/gui.bend
+  1f94ae5443664ad3ecd4659e830c849324e805a3e4470a946e96c98a16fe030c  src/ui.bend
+  820d58c6db897cfc55493e69c7ede4cba74f8209197e332730600826767c3ba5  src/gui_settings.bend
+
+Input binding
+  build/settings-focused-inputs.before.json and .after.json record 54 maintained
+  transitive Bend/test imports plus build/test wrappers and mise.toml. All 54
+  were unchanged through the first two invocations, before the test-only fix.
+  This limited manifest excludes upstream compiler/Base/runtime and native/sqlite.c;
+  it is not a complete toolchain or combined-application input manifest.
+
+  build/settings-ui-inputs.before.json and .after.json separately record the
+  corrected UI test's seven maintained imports/wrapper/pin inputs; all unchanged.
+  Final test-source, generated-C, executable and log hashes were sampled after
+  execution in build/settings-focused-results.json, not asserted as before-build
+  measurements. Its SHA256 is
+  709917acb72cd93fe56385217c083bcc3b2bd9f6c7f73cf53e7f82b36d3e592b.
+
+Local full-log SHA256 (ignored build artifacts)
+  60bcbe0cedf195e89d18d65d1cc66ebfb6ab8b46c1beedc57d943d400b71ffd3  build/gui-settings-final-core.log
+  bffb8a442e8ded600e2c633264a16ed4c3388cdf2d536c70cb4f11973395d538  build/gui-settings-final-regressions.log
+  3c57aeae1e029974e386da4d85946910e846b03bfb002ecac0cc62f627a90944  build/gui-settings-final-ui.log
+
+Historical attempts remain separate
+  build/gui-settings-historical-regressions.log records the earlier late-Storage
+  response failure, fixed before the final production freeze.
+  build/gui-settings-historical-integration.log predates final source fixes and
+  is not counted again. The final-core log retains the indentation failure above;
+  its overall invocation is not reported as exit 0.
+
+No UI latency, input-to-photon, idle CPU, visual, or physical-keyboard acceptance
+claim follows from these native assertion gates.

@@ -1,0 +1,114 @@
+Whole retained-capture Usage — local macOS arm64
+
+Four separately built native gates passed. These are backend/CLI receipts, not
+a full-suite rerun or proof of native GUI, clipboard or exported-file behavior.
+All fixture and assertion logic is Bend, using isolated synthetic data only.
+
+Contract and limits
+  session-usage SNAPSHOT reads one immutable accepted capture from physical record 0.
+  The reader owns its deferred read transaction; refusal, failure, limit and
+  cancellation paths preserve any transaction it did not start.
+  Defaults: 1,000,000 physical records; 1,073,741,824 verified bytes;
+  100,000 exact Claude call keys; 16,777,216 logical UTF8 descriptor bytes.
+  Configurable descriptor maximum: 67,108,864 bytes. At most 16 raw witnesses.
+  Raw payload windows: at most 128 map candidates/about 1 MiB accounted bytes,
+  with a first-row progress exception. Header/map guards can scan the whole map.
+  JSON plus newline is bounded to 1 MiB; output is rejected rather than truncated.
+  Scan completion, required-bucket completeness and attribution completeness
+  are separate. Unknown buckets remain null/unknown, never invented zero.
+  Claude uses exact call keys and per-bucket maxima across windows. Codex keeps
+  ordinary/fork/reviewer/unknown categories separate; version-dependent fork
+  fallback is disclosed and cannot claim complete attribution. No billing,
+  quota, prices, accounts, network or cross-library usage total is asserted.
+
+Latest reader: ./scripts/test tests/session_usage.bend
+  105 named checks, exit 0; all 118 recursive inputs unchanged during build/run.
+  Covers retained source absence, append/rewrite, cross-window mirrors, exact
+  wide counters/IDs, bounded stops, corrupt typed maps/raw, temp-table shadowing,
+  transaction ownership and concurrent read-snapshot consistency.
+  Neutral heading is shared by complete and limited reports; limited reports
+  explicitly say Scan complete: false. Algorithm and limits were unchanged.
+  Reader SHA256: 1f7d5c71658075a73b2343276b65ff4a9df9d39cc7013a5dcbe92eec9dbb82df
+  Test SHA256: c17656003eca93d6d3770aa81a850ee75db6a1282b326b6bb60f5724716353f1
+  Binary SHA256: 10e68fe437ad418b4a50d96f9bf36815719b74f1f5a22763874056c9fb193b09
+  Log SHA256: 3213a086e6ab2f778c583fe47b97819fc1a096d0d02ac395d1a90396f3a179d5
+  Input manifest SHA256: 32172ec4468d32a0218ad9dcd63abff455a8c958ad10e10049182de12dc332d3
+  Ignored receipt: build/session-usage-neutral-heading-native.json
+  Receipt SHA256: 4863ae589aeef75d5d7ad56c7d3204aec790fccbc9a8b9bcbb0c0e9b45d3fdb3
+
+Codex reducer: ./scripts/test tests/session_usage_codex.bend
+  68 named checks, exit 0; all 95 inputs unchanged. Ordinary reset/duplicate,
+  inherited/starting/own fork boundaries, reviewer isolation, strict first
+  header, malformed continuity and unsupported envelopes are exercised.
+  Source SHA256: 39171954a8acc0dc52fc2da83f0af14633d938117a9efc975cf1b43b2025a54a
+  Test SHA256: 3c12d982db4b4820a783669b84fcbfd32f7435b57451d0537a21b334ddde410a
+  Binary SHA256: f306c41c1747681c448b5899b8d1b87b8f647b19d26ea86cf3176e17e4801bca
+  Log SHA256: 4f229f43f41d6210e482bba29b53e59b2d542f10cfff8cbe023d01c74c297ddd
+  Ignored receipt: build/session-usage-codex-final-native.json
+  Receipt SHA256: 11ad0529683373b2fdcf8d0706ace2196f871ec1b50622b17055ecbb077d4faa
+
+Isolated adapter: ./scripts/test tests/session_usage_cli.bend
+  85 named checks, exit 0; all 99 inputs unchanged. Direct adapter/worker tests
+  cover full/partial output, cancellation, cleanup, exact strings, escaped
+  output bounds, corruption and retained reads after source relocation.
+  Source SHA256: 4c6586905a2ae1b8b1f527e044a8d7d3a8ce0ba61f67c7b721e2e0dfa0a9193c
+  Test SHA256: 9f7db39c0c0c73413e4f85a0c30cffb0d005e7b87c2c8083037d2a92c628af72
+  Binary SHA256: f14ff21705905ec0d0aaa73e5d507bdbe2a6d8dbcefe97f7478cf0666db7eb9d
+  Log SHA256: ec6c64b554a668eb9bba4df38e22dd2750a4dbb26246db139d54c0ffd1f1ea85
+  Ignored receipt: build/session-usage-cli-final-native.json
+  Receipt SHA256: 7607635fe34ec433fe24c79ce6969f22ca039cb00f2709807e2362c25b0bee61
+
+Actual product dispatch: ./scripts/test tests/session_usage_dispatch.bend
+  48 named checks, exit 0; all 117 inputs unchanged. Child workers call the real
+  Cli.command route: whole 53-record capture, late mirror enrichment, unchanged
+  old range-only usage command/help, strict request errors and pinned reports
+  after source relocation/rewrite. Uses the latest neutral reader heading.
+  Cli source SHA256: 24479aedbfbd6390c0047889f8350c1024f6bc8faa66e38c7c50028f64000bfc
+  Test SHA256: 8acd1348e24e6ceb25771f240af9ac10eefeee440ff281ca3bdeac7ab4bcaf11
+  Binary SHA256: bbcfdb6b1f900e7c140dfd40cf01026cad5c8c455cde7d2de151ad48ab78e219
+  Log SHA256: aa06efa6e8ff2354b15f7643c8f82a257d0abe7111ab54f6ea1d036e96b97f15
+  Ignored receipt: build/session-usage-dispatch-native.json
+  Receipt SHA256: 4148bab203fb2811f803869a9ab5750dab61380059c7fea0b79900e22d5d58bb
+
+Separate memory observations: benchmarks/session_usage_memory.bend
+  Build: ./scripts/build benchmarks/session_usage_memory.bend build/session-usage-memory
+  Run fixture NEW_ROOT PROFILE, then scan ROOT PROFILE as separate fresh native
+  processes; profiles check/short/long. Darwin wait4 records ru_maxrss in bytes
+  for each exact child. Fixture generation/import is separate from scanner RSS.
+  Inputs were recorded after build and unchanged across all runs (118 inputs).
+
+  Profile  Captured/processed  Logical descriptors  Scanner peakRSS  Scan time
+  check    32/32                    33,920 bytes       6,209,536 B     0.030s
+  short    100001/100000          4,800,000 bytes     122,339,328 B     7.030s
+  long     16000/15827           16,776,620 bytes     290,422,784 B     4.261s
+
+  Short hits the 100,000-key cap. Long uses 512-byte IDs and 512-byte Unicode
+  models, 1060 descriptor bytes/call; 596 bytes remain before the next whole
+  call is refused. Both reports are explicitly scan-incomplete.
+  Short fixture/import: 39.294s, peak RSS 100,139,008 B; long: 17.616s, 83,427,328 B.
+  Source generation <=64 MiB, per-file ceiling 256 MiB, root logical size <=512 MiB.
+  Both databases passed quick_check with zero foreign-key errors and expected
+  retained record counts. No production histories or original data were used.
+  Logical bytes exclude map/object/runtime overhead. RSS includes runtime,
+  SQLite and allocator; it is not physical footprint or a memory guarantee.
+  One run/profile; times are observations, not comparative performance claims.
+  The configurable 64 MiB descriptor cap was not measured. No GUI was exercised.
+  Fixture SHA256: b6180cd319c1158cd92ae62a30dd1951eb0d62e7658ee179e47c7ae10cc5c8ec
+  Binary SHA256: 4bf92584188bc8b9d303b59e3cc55d239f05ac7be9e46de0dd3da16f148c63a4
+  Input manifest SHA256: 2188cedb3ac5ccc38663f967222d24d0f7e1a5d02bfcb68472c90e05c9335700
+  Ignored receipt: build/session-usage-memory-receipt.json
+  Receipt SHA256: 8f859375144ad0f5cf49d9920a1129f82ba0f50cd85bff3d9a2de4237c14a7cb
+
+Version separation
+  Latest reader 105 and actual dispatch 48 use Store SHA256:
+    57a4b3c75a0c4d32b12886d4d39bab1921f7cfa0fbd8df5c32ffa963d996f9e6
+  Adapter 85 and memory runs use the earlier reader/render SHA256:
+    1fca48fd4c17489e15fd51dc59377d07b871e305e168b48ff27615f533c6f855
+  and earlier Store SHA256:
+    7241d1bc5dda6a0d2187eee2b7ec671f888310befa70225e3d89b6069dac467a
+  Shared accounting helper hashes across these receipts:
+    Counts 2035de702cd050457a7e75e7aec4ad476ab88351e0eebfe16b1a1d79261c48ff
+    Claude 087d1011732496f8a679c36efb883c0174280cbd9d7d7c59c43dc8f77bd2023f
+    Codex  39171954a8acc0dc52fc2da83f0af14633d938117a9efc975cf1b43b2025a54a
+  Earlier memory results are not measurements of the latest Store or app.
+  Native GUI/build/interaction acceptance requires its separate receipt.

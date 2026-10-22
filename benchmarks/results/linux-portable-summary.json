@@ -1,0 +1,83 @@
+{
+  "scope": "Portable Linux native correctness only; no macOS UI, performance comparison, or proof verification",
+  "all_selected_tests_passed_after_harness_correction": true,
+  "total_pass_lines": 300,
+  "all_116_inputs_unchanged_local_remote": true,
+  "platform": {
+    "cpu": "Intel i7-7820HQ",
+    "os": "Linux x86_64",
+    "clang": "22.1.8",
+    "sqlite": "3.53.4 with FTS5",
+    "bun": "1.4.2",
+    "bend": "2.0.37",
+    "mise": "2026.9.14 (isolated configuration)"
+  },
+  "tests": [
+    {
+      "entry": "tests/domain.bend",
+      "bend_exit": 0,
+      "clang_exit": 0,
+      "generated_c_sha256": "6e423bf1370f2212b8bb4eb80583fd21422cce596fb469ad3e089714f2572243",
+      "binary_sha256": "1700ceec5e26f162a5f1786e08fe5e13cf85c6b8987e7cdc16e2beda425164c2",
+      "binary_size": 414680,
+      "exit": 0,
+      "pass_lines": 53,
+      "fail_lines": []
+    },
+    {
+      "entry": "tests/providers.bend",
+      "bend_exit": 0,
+      "clang_exit": 0,
+      "generated_c_sha256": "a31eb6d807ae15853add3b6f868b75d2c9b1b1fb45dc207597b21be23ff21627",
+      "binary_sha256": "070f0125fd4af105a448d743bc0998f14cc2dc5a6cd12b0208a502cdfb14f060",
+      "binary_size": 1836824,
+      "exit": 0,
+      "pass_lines": 61,
+      "fail_lines": []
+    },
+    {
+      "entry": "tests/query.bend",
+      "bend_exit": 0,
+      "clang_exit": 0,
+      "generated_c_sha256": "f8efb9bd52f158afcd7af30ec08fc625361cf1a79b7e28c4688d8a2ed8cbafbc",
+      "binary_sha256": "d99b8d6e654a7247b2ebcb06817cb4f6ffcb5ad95024a82b35c28e62810201de",
+      "binary_size": 243472,
+      "exit": 0,
+      "pass_lines": 48,
+      "fail_lines": []
+    },
+    {
+      "entry": "tests/sqlite.bend",
+      "bend_exit": 0,
+      "clang_exit": 0,
+      "generated_c_sha256": "8ae8d1c1895a1cabfeb4fd2b73b5b0f2cf498e395a3c2c2a9fd25caa751c311a",
+      "binary_sha256": "21f461b99fdaacabdffdcb9629360a490e583e040a6a4e5454d3cc5f7e6c7dc3",
+      "binary_size": 216184,
+      "exit": 0,
+      "pass_lines": 49,
+      "fail_lines": []
+    },
+    {
+      "entry": "tests/integration.bend",
+      "correction": "Diagnostic runner now uses the existing test-required fixture-name prefix and explicitly sets PWD to its actual isolated cwd. Source and binary unchanged; initial refused run preserved.",
+      "exit": 0,
+      "binary_sha256": "d8e05c105c9e3538793664fae69cde42535975c55004b878737a664322cc33ee",
+      "pass_lines": 21,
+      "fail_lines": [],
+      "log_sha256": "c3e66392cac3c9a87e84b192fa5f17dfeef5b4d7d214631840a999f101a5dace",
+      "inputs_unchanged": true
+    },
+    {
+      "entry": "tests/session_usage_codex.bend",
+      "bend_exit": 0,
+      "clang_exit": 0,
+      "generated_c_sha256": "319408f1cf269a9e51ce2021e4e07020abc05c2e491d9d75d5ddc9d1ec76e05c",
+      "binary_sha256": "f9a0ef4e94a337be06b629e9ed857f4ef96846b747042fdc1061da9aed80a873",
+      "binary_size": 1071008,
+      "exit": 0,
+      "pass_lines": 68,
+      "fail_lines": []
+    }
+  ],
+  "original_refused_integration_attempt_preserved": true
+}

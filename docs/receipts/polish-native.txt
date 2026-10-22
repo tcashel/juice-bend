@@ -1,0 +1,68 @@
+Native typography, selection and status validation — 2026-10-21
+
+Application: Bend 2.0.37, pin 60ca80aedeec9d8f0629b5f10dd19457d8ad67af.
+Compiler host: mise-pinned Bun 1.4.2. SQLite bridge unchanged (418 lines).
+Native app: 13,039,632 bytes, SHA256
+fabcd5069359c929455412003623990927b2a2e371ade7352841b2a57844945e.
+Generated C SHA256:
+d39f8b41a546d15483bca46e8d685bc202fabbdf7952d2fbe86900e196ffd0d1.
+All 55 application inputs and 88 upstream hashes unchanged before/after build.
+Input manifest: polish-build-inputs.sha256. Linked dependencies: SQLite,
+libSystem/libobjc and upstream macOS frameworks; no Lean or Bun app runtime.
+
+Focused native regression gate: 604 distinct PASS assertions, exit 0,
+131 unchanged inputs. Covers UI geometry/wrapping/status, GUI/activity/Related,
+Files/History bookmarks, Settings/model, Usage and existing UI behavior.
+Test executable: 12,209,296 bytes, SHA256
+9d7ce1e46e5ca8f5ffc18e6f9df0fd0063176caaaf8fc9088b50e6f26c288886.
+Generated C SHA256:
+1ae87a09ca45b27ace306dd71a0307f33c6e788317e34096ca7b9ab48a3d7d78.
+Test log SHA256:
+d55298545adb956bfc5889fa9103575f495c5071b299d8ccdd6de08161209eb9.
+This is a focused gate, not a new full-suite or proof run. Domain is unchanged.
+
+Final-binary native observations in Tart 2.40.1 / macOS 27.0 arm64:
+- Files → Settings → Back → History restores the exact original selection,
+  clipboard and byte-identical full-window screenshot without reselecting.
+- Displayed file Why exports its exact 14,414-byte body plus 171-byte header;
+  total 14,585 bytes, mode 0600, SHA256
+  ca45002b7709593a4a4b8770785b10191a21666153e1cd3604157e5cec952a2d.
+- A real Usage child reads a 100,001-record retained synthetic capture while
+  the UI shows Capture suspended / Back to History. Back clears the hint and
+  restores exact text/pixels; late completion changes neither. The child is
+  allowed to finish, not cancelled; saved refresh preference is unchanged.
+- Page Down changes the reader; Page Up restores byte-identical pixels, and
+  copied selection remains exact. Direct CoreGraphics virtual keys 121/116
+  with 150 ms down/up separation delivered canonical Bend codes 63277/63276.
+- Fresh empty-library window opened. Settings paste/copy returned exact
+  café 中文 🙂; Delete visibly cleared the selection and replacement copied
+  exact keyboard-ok. All five library status counts remained zero.
+- All owned windows closed, Dock autohide restored to 0, runner exited 130,
+  VM stopped and its owned lease was released. Only synthetic data was shared.
+
+Earlier native candidate 149700c8… used the same glyph definitions/geometry.
+It passed exact Claude/Codex transcript/Usage/Why/Tools copy, status inspector
+Back, all five saved intervals, selected source Enable/Disable, pinned Files
+pages/Blame/Why across HEAD/dirty-source changes, two exports, pointer/query
+selection, Shift+Arrow and wheel/pixel restoration. It exposed the Files
+selection loss fixed and retested on the final binary. Candidate 4d965df9…
+separately passed word-aware rows and effective capture-hold status.
+These earlier observations are not mislabeled as final-binary checks.
+
+Automation limits: failing cliclick page/arrow attempts delivered no Key events
+in an independent native Bend probe. Direct CoreGraphics events worked; the
+intermittent tool-delivery mechanism is unresolved. No key alias was added.
+Initial Files external expectations assumed 100 lines; actual UI contract is
+40. Immediate earlier screenshots also preceded event/render completion.
+Corrected expectations were checked without weakening application invariants.
+
+Font: JetBrains Mono v2.304, SIL OFL 1.1, 204 static glyphs. Pinned offline
+Bun packing reproduces src/font.bend; normal builds require no font parser or
+Python. CJK/emoji render fallback boxes, while retained/copied text stays exact.
+No physical typing, full IME, shaping, accessibility, resize, latency, sustained
+scroll rate, new performance result or complete feature parity is claimed.
+
+Standard build/juice-bend and build/Juice Bend Polished.app contain the verified
+binary; isolated launcher status passed. Prior named apps remain available.
+Structured summary: benchmarks/results/tart-polish-summary.json.
+Private screenshots, traces and fixture paths remain ignored under build/.

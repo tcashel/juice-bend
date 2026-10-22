@@ -1,0 +1,30 @@
+Bounded SQL publication benchmark, 2026-10-20
+Host: macOS 27.0.1 (26A434), arm64
+Base Git HEAD: b647310636e59543668ecadb27571b9a7c5ae9e4
+Working source: bounded Store/Maintenance SQL batches and final idle scheduler.
+Bend 2.0.37, pinned revision 60ca80aedeec9d8f0629b5f10dd19457d8ad67af.
+
+Command: ./scripts/bench 100000
+Exit: 0, benchmark_complete=true
+The wrapper built the benchmark and ran it in a new private temporary directory.
+Native Bend generates the synthetic fixture before operation timers start.
+The full test suite and Tart session finished before this run; no other task
+builds or tests overlapped its operation timers. The host was not isolated.
+
+All 31 source/build-input hashes were captured before build/run and verified
+unchanged after completion. Manifest:
+benchmarks/results/100000-sql-batches-sources.sha256
+Manifest SHA-256:
+6ae76ede2b7c24e6dbc04504222eb50b965b5e054a532d9cbe7e7e991698f7e6
+
+Native benchmark executable identity measured after completion:
+build/juice-bend-bench, 2335648 bytes
+SHA-256 35fe14921388db47a3965dfdbc9f6bb3742e6023f2d03ce9287ea2ffa45407aa
+Generated C SHA-256:
+8a12240d42b493f74339b1cea32a72f683e7c53febbf2dea177e4eedf0a2023a
+
+All expected-count, unchanged-identity, selected-range and scope assertions
+passed. Latest snapshot: 100016 physical records, 125020 normalized events;
+two accepted immutable snapshots. This measures backend timings, not UI latency
+or memory. Five-trial nearest-rank p95 is the observed maximum, not a population
+estimate. The approximately 40-second long-history append remains a limitation.

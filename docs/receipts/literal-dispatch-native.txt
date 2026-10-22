@@ -1,0 +1,38 @@
+Bend literal dispatch — native validation and combined-build follow-up
+
+Two application functions replace long literal-string patterns with String.eq
+dispatch. Storage reason labels and unknown fallback remain unchanged. Attachment
+classification preserves occurrence kinds, JSON paths, nested depth limits,
+ignored tool-use records and explicit partial coverage for unknown blocks.
+No compiler/runtime/SQLite bridge changes are included in this source patch.
+
+Physical Mac arm64, macOS 27.0.1 (26A434), Bun 1.4.2, Bend 2.0.37 at
+60ca80aedeec9d8f0629b5f10dd19457d8ad67af; normal native clang-O3.
+Run: 2d4b9e3f-145b-469e-aa6f-acab8d1f2816
+Storage inventory: 66 PASS. Attachment extraction: 75 PASS. Both exited 0;
+runtime stderr empty. All 34 source/test/bridge inputs and 93 pins unchanged.
+Tests were unchanged. This is a focused frozen-closure result, not a new complete
+suite for all subsequently adopted source.
+Receipt: 7e84d67ba6e863c6dd8d0244d659611f501d2ceb886b0247d19e17dd047b678f
+Manifest: c0d381af97ee49cd507d6be4d4e9b48776fff9e2a4e686fc2493e4559c30b38e
+Inventory source: 28e8f6983f6b2bf49b481d2c760f052e8f5ca0595f4edc638b0b9cdfc8c2d062
+Extraction source: bb5e7d40c025afe174d58c5ec5946fb4b62f8389541dc3bbd2d75b2802dfd0f7
+
+The isolated combined application then passed all 7,092 definition checks.
+C generation separately exposed a 260-slot continuation against the pinned
+247-slot limit. A Bend-only box before UI.event fixed that measured boundary
+and passed 8 actual-event Mac checks. That separate unadopted candidate is not
+part of these two files. Its normal Bend frontend passed. Same-C Apple clang
+-O3 and -O1 failed with “live register clobbered by inserted prologue instructions”;
+-O0 built an arm64 executable. Failed and successful receipts remain preserved.
+
+An actual Tart journey added an allowed folder and captured the exact 6,555-byte
+PNG, then failed to display preview in 12 observations. Normal close timed out;
+the app later exited. Source-loss/restart/export/ATIF stages did not run. Recovery
+saved only the guarded synthetic fixture and verified app/window absence; owned
+Tart stopped. No combined UI or performance pass follows.
+Native failed-result SHA256:
+4efe0a3a2e21f064be975fa2e0432fb5cc988693d32f0b2029b248c5dc5325ca
+
+The accepted reader executable and protected checkout index remain unchanged.
+Exact continuation is in docs/progress.md.

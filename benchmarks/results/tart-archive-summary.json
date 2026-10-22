@@ -1,0 +1,106 @@
+{
+  "date": "2026-10-21",
+  "application": "Bend 2 with unchanged 418-line SQLite bridge",
+  "app_sha256": "d06447f6d25624f2a6fc6c1ccdb1c7256e36badb516d2a61a9023f4109ee66de",
+  "app_bytes": 17834568,
+  "app_inputs": 79,
+  "upstream_hashes": 88,
+  "platform": "macOS 27.0 arm64 Tart 2.40.1",
+  "network": "host-only",
+  "native_steps": {
+    "import": "passed",
+    "filtered search": "passed",
+    "copy": "passed",
+    "full logical export": "passed",
+    "original container export": "passed",
+    "bounded export": "passed",
+    "request-first Brief": "passed",
+    "source-absent restart": "passed",
+    "plain archive-export refusal": "passed",
+    "truncated archive refusal": "passed"
+  },
+  "clipboard_comparisons": {
+    "entropy-reader": true,
+    "request-origin": true,
+    "brief-copy": true,
+    "brief-selected-all": true,
+    "brief-back": true,
+    "retained-entropy-reader": true,
+    "retained-request-reader": true,
+    "plain-origin": true,
+    "after-broken-entropy-reader": true
+  },
+  "exports": [
+    {
+      "name": "brief-export",
+      "bytes": 2949,
+      "sha256": "0b4dd2dfe43085155ca17ccd6f74689e605ec45b06446618fd35a354f40ee1a3",
+      "exact": true,
+      "mode": "0600"
+    },
+    {
+      "name": "entropy-bounded-export",
+      "bytes": 936,
+      "sha256": "ff19def6d9393febfcfe09cbbf1330914f42e9f613a94116b19d679a79012885",
+      "exact": true,
+      "mode": "0600"
+    },
+    {
+      "name": "entropy-container-export",
+      "bytes": 889,
+      "sha256": "05e94ed3b227a125b53865392b79e596a5e89877cd31e73703b3c43ab0d0698f",
+      "exact": true,
+      "mode": "0600"
+    },
+    {
+      "name": "entropy-full-export",
+      "bytes": 16104,
+      "sha256": "bb1899c2327261d722694df5fa626f722ec31d714286a7b3fc4defb45682fde4",
+      "exact": true,
+      "mode": "0600"
+    },
+    {
+      "name": "retained-entropy-container-export",
+      "bytes": 889,
+      "sha256": "05e94ed3b227a125b53865392b79e596a5e89877cd31e73703b3c43ab0d0698f",
+      "exact": true,
+      "mode": "0600"
+    },
+    {
+      "name": "retained-entropy-full-export",
+      "bytes": 16104,
+      "sha256": "bb1899c2327261d722694df5fa626f722ec31d714286a7b3fc4defb45682fde4",
+      "exact": true,
+      "mode": "0600"
+    }
+  ],
+  "brief_bytes": 2949,
+  "brief_sha256": "0b4dd2dfe43085155ca17ccd6f74689e605ec45b06446618fd35a354f40ee1a3",
+  "retained_accepted_raw_events_unchanged": true,
+  "failed_import_history_unchanged": true,
+  "final_windows": [],
+  "dock_restored": true,
+  "vm_stopped": true,
+  "lease_released": true,
+  "runner_exit": 130,
+  "guest_resume_exit": 0,
+  "build_gates": [
+    {
+      "name": "combined export/Brief/keyboard/readability",
+      "pass_lines": 251,
+      "inputs": 49
+    },
+    {
+      "name": "existing UI/polish controls",
+      "pass_lines": 162,
+      "inputs": 12
+    }
+  ],
+  "prior_attempts": "Preserved ownership-check false negatives (frontmost PID -1, transparent compositor bounds), actual Dock footer occlusion, and macOS Bash empty-array bookkeeping failure. Successful resumed steps changed no application code.",
+  "limitations": [
+    "Initial archive cap 1 MiB compressed and 4 MiB logical; no unrestricted archive parity",
+    "Fixed window footer is obscured by a visible Dock on the tested 1600x1000 guest; Dock was temporarily hidden and restored",
+    "No hardware keyboard, complete accessibility, IME, shaping, resize or latency claim",
+    "No new full-suite, proof or comparative performance claim"
+  ]
+}

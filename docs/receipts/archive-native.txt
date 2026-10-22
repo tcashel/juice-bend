@@ -1,0 +1,100 @@
+Juice Bend native archive and Brief validation — 2026-10-21
+
+Observed application
+SHA256 d06447f6d25624f2a6fc6c1ccdb1c7256e36badb516d2a61a9023f4109ee66de
+17,834,568 bytes; 79 unchanged application inputs; 88 upstream hashes verified.
+Generated C SHA256 b12d6698e78a2ae2d3cd5f99753c10bcf0e2b0bf3bb00dcda646fcf265325c07.
+Bend 2.0.37, revision 60ca80aedeec9d8f0629b5f10dd19457d8ad67af; mise Bun 1.4.2.
+All maintained application/UI/decoder behavior is Bend. The existing 418-line
+SQLite bridge is unchanged. otool shows SQLite, libSystem/libobjc and upstream
+macOS frameworks, with no Lean application dependency.
+
+The standard build/juice-bend, build/juice-bend-archive and
+build/Juice Bend Archive.app contain this observed binary. The prior Brief app
+and named binary remain preserved. Physical host: macOS 27.0.1 arm64; observed
+UI: macOS 27.0 arm64, Tart 2.40.1, 1600x1000 display, host-only networking.
+Only the synthetic payload and dedicated results were shared with the guest.
+
+Production gates
+Combined full-export/Brief/keyboard/readability: 251 PASS lines (including
+suite/fixture checks), exit 0, empty stderr, 49 unchanged inputs, 1.524 seconds.
+Binary cdd391e7844835f3a03286f3e8601857c9f79d1498da444028ea49c79be136a1.
+Existing UI/polish controls: 162 PASS lines, exit 0, empty stderr, 12 unchanged
+inputs, 0.100 seconds. Binary
+006ce72245b8756a0ae7bcd04522f40856d8093cfaaaa11927cea8a340e40731.
+These counts are not unique tests and are not a full repository-suite result.
+Build durations: combined 232.147 s, app 537.772 s, fixture 5.731 s,
+controls 18.408 s. No new proof or comparative performance verdict is claimed.
+
+The Bend fixture benchmarks/native_archive.bend built with 34 unchanged inputs:
+be6c12e3e67635559652c5e9884368e583a38a25e64bba35bcbeb202c79e0989.
+It prepares a new private synthetic root, repository, sources and independent
+expected bytes without capturing or launching the app. Its Git environment
+redirect refusal passed on the physical Mac without creating the root/index.
+The packaged app also passed empty-library launcher status with no accepted data.
+
+Native journey
+Settings imported an ordinary Huffman/FSE/checksummed archive: 889 compressed
+bytes, 16,104 independently expected logical bytes, 100 records. Searching
+"Archive record 99" role:user opened/copied the exact late user record. From
+that filtered reader, Export full JSONL and Export archive wrote every logical
+byte and the original compressed bytes, respectively. Native status explicitly
+disclosed inclusion of all records outside the filters. Bounded export retained
+the selected scope and logical-source byte labels.
+
+A second three-record archive contained an explicit synthetic repository,
+recorded request, Write call/arguments and its result. Brief displayed the request
+in its first 350 UTF-16 units, with tool evidence before the policy/citation
+footer. Whole copy, reader Select all/Copy and Export matched the checked
+2,949-byte preview exactly; the private fixture root was withheld. Back restored
+the exact original reader. Screenshots were inspected for readable ordering.
+
+The source directory was moved away, leaving original locators absent. After
+closing and relaunching the same app/library, both readers still matched and
+both full entropy exports were byte-identical. Accepted snapshots/raw bytes/
+events were unchanged. Plain JSONL capture succeeded, but its archive export
+was visibly refused without a new container file. A truncated archive import
+was visibly refused; accepted counts, raw bytes, events and complete History
+rows remained unchanged. The retained entropy reader still copied exactly.
+
+Nine exact clipboard comparisons and six mode 0600 exports passed. Export hashes:
+Brief 2949 B: 0b4dd2dfe43085155ca17ccd6f74689e605ec45b06446618fd35a354f40ee1a3
+Bounded 936 B: ff19def6d9393febfcfe09cbbf1330914f42e9f613a94116b19d679a79012885
+Container 889 B: 05e94ed3b227a125b53865392b79e596a5e89877cd31e73703b3c43ab0d0698f
+Logical 16104 B: bb1899c2327261d722694df5fa626f722ec31d714286a7b3fc4defb45682fde4
+Container/logical exports were each checked before and after source absence.
+
+Attempt history and cleanup
+This was a successful resumed workflow, not a pristine single attempt. Earlier
+attempts stopped before clicks on automation false negatives: frontmost PID -1
+despite exact executable identity, and transparent compositor window bounds.
+The driver then checked actual Accessibility hit-test ownership at each point.
+The visible Dock genuinely covered the footer; it was temporarily hidden for
+the resumed check. A macOS Bash 3.2 empty-array bookkeeping failure was corrected
+in the external driver without changing the app. Original failed receipts remain.
+
+Successful receipt root: build/archive-native-v3/artifacts/resume-2.
+Run nonce: 59a51d9e-e9aa-422b-87ed-6b1590c653af. All four resumed steps exited 0
+with empty stderr. Six driver files and all 16 read-only payload hashes remained
+unchanged. All owned windows closed; the original Dock setting was restored.
+Guest workflow exit 0; owned Tart runner exit 130 after explicit stop; VM stopped
+and lease absent. Promotion is recorded in build/archive-promotion.json.
+
+Reproduction and limits
+Build the application with mise run build and the fixture with
+./scripts/build benchmarks/native_archive.bend build/native-archive.
+Run build/native-archive fixture /private/tmp/juice-bend-native-archive-UUID
+with a new UUID root, then
+launch the app using that root's library. Import sources/entropy.jsonl.zst from
+Settings and repeat the native journey above. Fixture manifest.json records the
+actual generated paths. Never substitute personal histories or a real repository.
+
+Archive caps remain 1 MiB compressed / 4 MiB logical, with unsupported dictionaries;
+this is not unrestricted reference archive parity. The fixed 1408x896 content
+window can place its footer behind a visible Dock on this guest. That usability
+gap remains open. No hardware keyboard, arbitrary selection drag, full IME,
+shaping, accessibility, resize, input-to-photon latency or timed stale-worker
+race claim follows from this run. Broader backend checks retain the exact builds
+and boundaries in archive-backend.txt. Structured results are in
+benchmarks/results/tart-archive-summary.json; app inputs are in
+docs/receipts/archive-build-inputs.sha256.

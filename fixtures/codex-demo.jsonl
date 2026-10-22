@@ -1,0 +1,7 @@
+{"timestamp":"2026-10-20T13:00:00Z","type":"session_meta","payload":{"id":"synthetic-codex","cwd":"/synthetic/juice-bend-demo","originator":"synthetic-fixture","cli_version":"fixture-v1"}}
+{"timestamp":"2026-10-20T13:00:00Z","type":"turn_context","payload":{"cwd":"/synthetic/juice-bend-demo","model":"synthetic-model","session_id":"synthetic-codex"}}
+{"timestamp":"2026-10-20T13:00:01Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"Inspect the lemon counter and explain why it is seven."}]}}
+{"timestamp":"2026-10-20T13:00:02Z","type":"response_item","payload":{"type":"function_call","name":"exec_command","call_id":"call-1","arguments":"{\"cmd\":\"cat src/lemon.bend\"}"}}
+{"timestamp":"2026-10-20T13:00:03Z","type":"response_item","payload":{"type":"function_call_output","call_id":"call-1","output":{"content":"def lemons() -> U32:\n  7\n"}}}
+{"timestamp":"2026-10-20T13:00:04Z","type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"The captured file returns seven."},{"type":"output_text","text":"No reason for choosing seven was captured; rationale remains unknown."}]}}
+{"timestamp":"2026-10-20T13:00:04Z","type":"event_msg","payload":{"type":"agent_message","message":"The captured file returns seven."}}

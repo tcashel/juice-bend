@@ -1,0 +1,67 @@
+{
+  "date": "2026-10-21",
+  "scope": "Synthetic native macOS interaction; not complete feature, IME, accessibility or performance acceptance",
+  "environment": {
+    "vm": "macOS 27.0 (26A428) arm64",
+    "tart": "2.40.1",
+    "network": "host-only"
+  },
+  "app": {
+    "inputs": 54,
+    "unchanged": true,
+    "bytes": 13038408,
+    "sha256": "91a147f069fd68c16d30a0ddb6e403bce522aa4c92aaec2088939fec6573fb1f",
+    "generated_c_sha256": "1bd2fd8094b2384ed2295288c5a9baf88d7e990c933d9a704077b4331f7bbe7f"
+  },
+  "fixture_sha256": "0c42be73f0db815afb9609ed70a5c6658e1c29a132163b642dcd5e2fe200013d",
+  "source_transition": {
+    "initial_snapshots": 2,
+    "manual_append_snapshots": 4,
+    "automatic_rewrite_snapshots": 5,
+    "latest_codex_generation": 3,
+    "automatic_history_observation_seconds": 31
+  },
+  "exact_initial_clipboards": {
+    "origin-claude": 15261,
+    "usage-claude": 4395,
+    "origin-codex": 13743,
+    "usage-codex": 3590
+  },
+  "scope_refusal_preserves_text": true,
+  "claude_back_exact": true,
+  "exports": [
+    {
+      "provider": "claude",
+      "bytes": 4566,
+      "sha256": "389cedd2463063de07c367fd96ec2154d05bf2c72b596507a2d291071690d4b8",
+      "guest_mode": "0600"
+    },
+    {
+      "provider": "codex",
+      "bytes": 3761,
+      "sha256": "827c53859124c5d865a5579ecaa1107f858a2bccf5ea72a216b5f10194cf4d19",
+      "guest_mode": "0600"
+    }
+  ],
+  "retained_after_source_hide": true,
+  "heavy_back": {
+    "records": 100001,
+    "real_usage_child_observed": true,
+    "origin_bytes": 11480,
+    "clipboard_unchanged_before_after_child_exit": true,
+    "full_png_sha256": "fef2e145b57dbff88d7695df403ceb05eff33ed71b105d75851e6a17cf6cd671",
+    "full_png_exact_before_after_child_exit": true,
+    "worker_cancelled": false
+  },
+  "limitations": [
+    "Usage suspends automatic refresh; return to History for capture.",
+    "Back retires the view request but does not cancel the sole OS worker.",
+    "Unsupported glyph boxes, full IME/shaping/accessibility and input-to-photon latency remain unverified."
+  ],
+  "cleanup": {
+    "owned_window_closed": true,
+    "runner_exit": 130,
+    "vm_stopped_observed": true,
+    "owned_lease_released_observed": true
+  }
+}

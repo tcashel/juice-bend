@@ -1,0 +1,1077 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="799" viewBox="0 0 1680 799">
+<rect width="100%" height="100%" fill="#fbfaf7"/>
+<style>text{font-family:system-ui,sans-serif;fill:#272b30}.frame:hover{stroke:#20262c;stroke-width:1.8}</style>
+<text x="30" y="43" font-size="27" font-weight="650">Juice Bend · Native append CPU profile</text>
+<text x="30" y="74" font-size="16">100,000 retained records + 16 appended · Time Profiler · physical Mac · 42,190 resolved samples</text>
+<text x="30" y="102" font-size="15">Whole process includes startup, preflight, append and postflight. Width is sampled running CPU, not elapsed time.</text>
+<text x="30" y="128" font-size="13">Hover a frame for its complete name and weight. Frames are sorted by name, not time.</text>
+<g class="frame"><title>All sampled running CPU — 42,190 ms sampled CPU (100.00%)</title><rect x="30.000" y="635" width="1620.000" height="23" fill="#b7b9ab" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="34.000" y="651" font-size="12">All sampled running CPU</text>
+</g>
+<g class="frame"><title>start — 33,076 ms sampled CPU (78.40%)</title><rect x="30.038" y="611" width="1270.043" height="23" fill="#ddc5cc" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="34.038" y="627" font-size="12">start</text>
+</g>
+<g class="frame"><title>main — 33,072 ms sampled CPU (78.39%)</title><rect x="30.192" y="587" width="1269.890" height="23" fill="#cad5bd" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="34.192" y="603" font-size="12">main</text>
+</g>
+<g class="frame"><title>main.cold.1 — 33,071 ms sampled CPU (78.39%)</title><rect x="30.230" y="563" width="1269.851" height="23" fill="#cfd7b6" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="34.230" y="579" font-size="12">main.cold.1</text>
+</g>
+<g class="frame"><title>io_loop — 33,071 ms sampled CPU (78.39%)</title><rect x="30.230" y="539" width="1269.851" height="23" fill="#e4d6c6" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="34.230" y="555" font-size="12">io_loop</text>
+</g>
+<g class="frame"><title>io_step — 29,177 ms sampled CPU (69.16%)</title><rect x="30.230" y="515" width="1120.330" height="23" fill="#dabfc5" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="34.230" y="531" font-size="12">io_step</text>
+</g>
+<g class="frame"><title>corpus_eval — 28,954 ms sampled CPU (68.63%)</title><rect x="30.307" y="491" width="1111.768" height="23" fill="#d5d1bf" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="34.307" y="507" font-size="12">corpus_eval</text>
+</g>
+<g class="frame"><title>List_length — 47 ms sampled CPU (0.11%)</title><rect x="30.422" y="467" width="1.805" height="23" fill="#b2c8c8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_domain_scalar_string — 30 ms sampled CPU (0.07%)</title><rect x="32.880" y="467" width="1.152" height="23" fill="#bfd5a8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>work_loop — 28,856 ms sampled CPU (68.40%)</title><rect x="34.070" y="467" width="1108.005" height="23" fill="#b4c7d2" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="38.070" y="483" font-size="12">work_loop</text>
+</g>
+<g class="frame"><title>Clo_apply — 89 ms sampled CPU (0.21%)</title><rect x="34.070" y="443" width="3.417" height="23" fill="#d4d2ac" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>List_append — 152 ms sampled CPU (0.36%)</title><rect x="37.641" y="443" width="5.836" height="23" fill="#cce0bb" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>List_length — 636 ms sampled CPU (1.51%)</title><rect x="43.478" y="443" width="24.421" height="23" fill="#b2c8c8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>span_fade — 477 ms sampled CPU (1.13%)</title><rect x="43.478" y="419" width="18.316" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 312 ms sampled CPU (0.74%)</title><rect x="43.478" y="395" width="11.980" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 29 ms sampled CPU (0.07%)</title><rect x="61.793" y="419" width="1.114" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>List_replicate — 62 ms sampled CPU (0.15%)</title><rect x="67.899" y="443" width="2.381" height="23" fill="#e4c9bb" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>String_append — 4,937 ms sampled CPU (11.70%)</title><rect x="70.279" y="443" width="189.570" height="23" fill="#f2bb6f" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="74.279" y="459" font-size="12">String_append</text>
+</g>
+<g class="frame"><title>rfc_wrap — 911 ms sampled CPU (2.16%)</title><rect x="70.279" y="419" width="34.980" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>String_length — 140 ms sampled CPU (0.33%)</title><rect x="259.849" y="443" width="5.376" height="23" fill="#f2bb6f" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>U32_show_go — 41 ms sampled CPU (0.10%)</title><rect x="265.340" y="443" width="1.574" height="23" fill="#bcd1d1" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>rfc_wrap — 1,297 ms sampled CPU (3.07%)</title><rect x="266.914" y="443" width="49.802" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="270.914" y="459" font-size="12">rfc_w…</text>
+</g>
+<g class="frame"><title>span_fade — 114 ms sampled CPU (0.27%)</title><rect x="316.716" y="443" width="4.377" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_context_binding_digest_cached — 217 ms sampled CPU (0.51%)</title><rect x="321.746" y="443" width="8.332" height="23" fill="#e0d6b4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_100 — 209 ms sampled CPU (0.50%)</title><rect x="321.784" y="419" width="8.025" height="23" fill="#b1e5d2" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_101 — 205 ms sampled CPU (0.49%)</title><rect x="321.900" y="395" width="7.872" height="23" fill="#e5dbc9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>ctr_take — 90 ms sampled CPU (0.21%)</title><rect x="321.900" y="371" width="3.456" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spare_free — 21 ms sampled CPU (0.05%)</title><rect x="325.432" y="371" width="0.806" height="23" fill="#b2d0b5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_103 — 54 ms sampled CPU (0.13%)</title><rect x="326.238" y="371" width="2.073" height="23" fill="#d6bfab" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_context_binding_hex_digits — 44 ms sampled CPU (0.10%)</title><rect x="330.693" y="443" width="1.689" height="23" fill="#c8c6b8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_context_store_equality_walk — 17 ms sampled CPU (0.04%)</title><rect x="333.188" y="443" width="0.653" height="23" fill="#c0d0db" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_context_store_row_decoded — 297 ms sampled CPU (0.70%)</title><rect x="334.264" y="443" width="11.404" height="23" fill="#ddcbb6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_8 — 216 ms sampled CPU (0.51%)</title><rect x="334.532" y="419" width="8.294" height="23" fill="#c8dcba" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>span_fade — 86 ms sampled CPU (0.20%)</title><rect x="334.532" y="395" width="3.302" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 44 ms sampled CPU (0.10%)</title><rect x="334.532" y="371" width="1.689" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 74 ms sampled CPU (0.18%)</title><rect x="342.826" y="419" width="2.841" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_context_store_row_matches — 64 ms sampled CPU (0.15%)</title><rect x="345.668" y="443" width="2.457" height="23" fill="#cde1c9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>ctr_take — 40 ms sampled CPU (0.09%)</title><rect x="345.668" y="419" width="1.536" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>span_fade — 29 ms sampled CPU (0.07%)</title><rect x="345.668" y="395" width="1.114" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_context_store_scan_walk — 638 ms sampled CPU (1.51%)</title><rect x="348.279" y="443" width="24.498" height="23" fill="#d0e3d2" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 638 ms sampled CPU (1.51%)</title><rect x="348.279" y="419" width="24.498" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_domain_digest — 2,691 ms sampled CPU (6.38%)</title><rect x="372.815" y="443" width="103.328" height="23" fill="#b5d7d9" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="376.815" y="459" font-size="12">src_domain_d…</text>
+</g>
+<g class="frame"><title>ctr_take — 24 ms sampled CPU (0.06%)</title><rect x="372.815" y="419" width="0.922" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>rfc_wrap — 17 ms sampled CPU (0.04%)</title><rect x="373.736" y="419" width="0.653" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spare_free — 17 ms sampled CPU (0.04%)</title><rect x="374.543" y="419" width="0.653" height="23" fill="#b2d0b5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_101 — 2,613 ms sampled CPU (6.19%)</title><rect x="375.196" y="419" width="100.333" height="23" fill="#e5dbc9" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="379.196" y="435" font-size="12">spin_101</text>
+</g>
+<g class="frame"><title>ctr_take — 1,098 ms sampled CPU (2.60%)</title><rect x="375.196" y="395" width="42.161" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="379.196" y="411" font-size="12">ctr…</text>
+</g>
+<g class="frame"><title>span_fade — 205 ms sampled CPU (0.49%)</title><rect x="375.196" y="371" width="7.872" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 91 ms sampled CPU (0.22%)</title><rect x="375.196" y="347" width="3.494" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 35 ms sampled CPU (0.08%)</title><rect x="383.067" y="371" width="1.344" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>rfc_wrap — 43 ms sampled CPU (0.10%)</title><rect x="417.356" y="395" width="1.651" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>span_fade — 95 ms sampled CPU (0.23%)</title><rect x="419.007" y="395" width="3.648" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 25 ms sampled CPU (0.06%)</title><rect x="419.007" y="371" width="0.960" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spare_free — 283 ms sampled CPU (0.67%)</title><rect x="422.655" y="395" width="10.867" height="23" fill="#b2d0b5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_103 — 716 ms sampled CPU (1.70%)</title><rect x="433.522" y="395" width="27.493" height="23" fill="#d6bfab" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_113 — 72 ms sampled CPU (0.17%)</title><rect x="461.014" y="395" width="2.765" height="23" fill="#e3cecd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>rfc_wrap — 22 ms sampled CPU (0.05%)</title><rect x="461.014" y="371" width="0.845" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_domain_encode — 1,284 ms sampled CPU (3.04%)</title><rect x="476.143" y="443" width="49.303" height="23" fill="#d1dea8" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="480.143" y="459" font-size="12">src_…</text>
+</g>
+<g class="frame"><title>rfc_wrap — 112 ms sampled CPU (0.27%)</title><rect x="476.182" y="419" width="4.301" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_domain_hash_finish — 1,113 ms sampled CPU (2.64%)</title><rect x="525.446" y="443" width="42.737" height="23" fill="#e1beae" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="529.446" y="459" font-size="12">src_…</text>
+</g>
+<g class="frame"><title>rfc_wrap — 37 ms sampled CPU (0.09%)</title><rect x="525.446" y="419" width="1.421" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_100 — 924 ms sampled CPU (2.19%)</title><rect x="526.867" y="419" width="35.479" height="23" fill="#b1e5d2" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>rfc_wrap — 43 ms sampled CPU (0.10%)</title><rect x="526.943" y="395" width="1.651" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_113 — 874 ms sampled CPU (2.07%)</title><rect x="528.748" y="395" width="33.560" height="23" fill="#e3cecd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>&lt;deduplicated_symbol&gt; — 233 ms sampled CPU (0.55%)</title><rect x="528.748" y="371" width="8.947" height="23" fill="#d2c6bf" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>rfc_wrap — 54 ms sampled CPU (0.13%)</title><rect x="528.748" y="347" width="2.073" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>ctr_take — 27 ms sampled CPU (0.06%)</title><rect x="537.695" y="371" width="1.037" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>rfc_wrap — 161 ms sampled CPU (0.38%)</title><rect x="538.731" y="371" width="6.182" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_103 — 146 ms sampled CPU (0.35%)</title><rect x="545.489" y="371" width="5.606" height="23" fill="#d6bfab" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_148 — 75 ms sampled CPU (0.18%)</title><rect x="562.346" y="419" width="2.880" height="23" fill="#e1c5b7" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>rfc_wrap — 34 ms sampled CPU (0.08%)</title><rect x="562.346" y="395" width="1.306" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_domain_hash_padding — 34 ms sampled CPU (0.08%)</title><rect x="568.183" y="443" width="1.306" height="23" fill="#c6c0a9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_domain_scalar_string — 36 ms sampled CPU (0.09%)</title><rect x="569.488" y="443" width="1.382" height="23" fill="#bfd5a8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_json_escape_char — 8,837 ms sampled CPU (20.95%)</title><rect x="570.870" y="443" width="339.321" height="23" fill="#efa681" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="574.870" y="459" font-size="12">src_json_escape_char</text>
+</g>
+<g class="frame"><title>rfc_wrap — 108 ms sampled CPU (0.26%)</title><rect x="570.870" y="419" width="4.147" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 6,441 ms sampled CPU (15.27%)</title><rect x="575.017" y="419" width="247.320" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="579.017" y="435" font-size="12">term_drop</text>
+</g>
+<g class="frame"><title>src_json_escape_string — 556 ms sampled CPU (1.32%)</title><rect x="910.191" y="443" width="21.349" height="23" fill="#efa681" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>span_fade — 171 ms sampled CPU (0.41%)</title><rect x="910.191" y="419" width="6.566" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 98 ms sampled CPU (0.23%)</title><rect x="910.191" y="395" width="3.763" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_json_quote — 49 ms sampled CPU (0.12%)</title><rect x="931.540" y="443" width="1.881" height="23" fill="#ccc6b7" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_projection_seal_bounded — 104 ms sampled CPU (0.25%)</title><rect x="933.422" y="443" width="3.993" height="23" fill="#b7dac4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_8 — 44 ms sampled CPU (0.10%)</title><rect x="933.537" y="419" width="1.689" height="23" fill="#c8dcba" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>span_fade — 28 ms sampled CPU (0.07%)</title><rect x="933.537" y="395" width="1.075" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 26 ms sampled CPU (0.06%)</title><rect x="935.226" y="419" width="0.998" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_projection_seal_encoded — 61 ms sampled CPU (0.14%)</title><rect x="937.607" y="443" width="2.342" height="23" fill="#cacebd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_projection_seal_push — 501 ms sampled CPU (1.19%)</title><rect x="940.948" y="443" width="19.237" height="23" fill="#d0bbd3" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>span_fade — 101 ms sampled CPU (0.24%)</title><rect x="940.948" y="419" width="3.878" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 25 ms sampled CPU (0.06%)</title><rect x="940.948" y="395" width="0.960" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 358 ms sampled CPU (0.85%)</title><rect x="944.826" y="419" width="13.746" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_store_copy_event_walk — 20 ms sampled CPU (0.05%)</title><rect x="960.876" y="443" width="0.768" height="23" fill="#d7d3c3" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_122 — 20 ms sampled CPU (0.05%)</title><rect x="960.876" y="419" width="0.768" height="23" fill="#bfc3c4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 19 ms sampled CPU (0.05%)</title><rect x="960.876" y="395" width="0.730" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_store_index_search_walk — 20 ms sampled CPU (0.05%)</title><rect x="961.644" y="443" width="0.768" height="23" fill="#c4c3aa" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_122 — 18 ms sampled CPU (0.04%)</title><rect x="961.644" y="419" width="0.691" height="23" fill="#bfc3c4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 17 ms sampled CPU (0.04%)</title><rect x="961.644" y="395" width="0.653" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_store_numeric — 69 ms sampled CPU (0.16%)</title><rect x="962.412" y="443" width="2.649" height="23" fill="#b9c5cb" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_8 — 26 ms sampled CPU (0.06%)</title><rect x="962.450" y="419" width="0.998" height="23" fill="#c8dcba" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 35 ms sampled CPU (0.08%)</title><rect x="963.449" y="419" width="1.344" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_store_record_payload_valid — 674 ms sampled CPU (1.60%)</title><rect x="965.138" y="443" width="25.880" height="23" fill="#dcd7db" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>span_fade — 98 ms sampled CPU (0.23%)</title><rect x="965.138" y="419" width="3.763" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_124 — 83 ms sampled CPU (0.20%)</title><rect x="968.901" y="419" width="3.187" height="23" fill="#c9e2d0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>span_fade — 50 ms sampled CPU (0.12%)</title><rect x="968.901" y="395" width="1.920" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 19 ms sampled CPU (0.05%)</title><rect x="968.901" y="371" width="0.730" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 22 ms sampled CPU (0.05%)</title><rect x="970.821" y="395" width="0.845" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_172 — 459 ms sampled CPU (1.09%)</title><rect x="972.088" y="419" width="17.625" height="23" fill="#c9bcd5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>span_fade — 375 ms sampled CPU (0.89%)</title><rect x="972.088" y="395" width="14.399" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 188 ms sampled CPU (0.45%)</title><rect x="972.088" y="371" width="7.219" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_store_record_valid — 1,491 ms sampled CPU (3.53%)</title><rect x="991.018" y="443" width="57.251" height="23" fill="#cfd1c0" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="995.018" y="459" font-size="12">src_st…</text>
+</g>
+<g class="frame"><title>span_fade — 110 ms sampled CPU (0.26%)</title><rect x="991.018" y="419" width="4.224" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_124 — 44 ms sampled CPU (0.10%)</title><rect x="995.242" y="419" width="1.689" height="23" fill="#c9e2d0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>span_fade — 30 ms sampled CPU (0.07%)</title><rect x="995.242" y="395" width="1.152" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_172 — 1,326 ms sampled CPU (3.14%)</title><rect x="996.932" y="419" width="50.915" height="23" fill="#c9bcd5" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="1000.932" y="435" font-size="12">spin_…</text>
+</g>
+<g class="frame"><title>span_fade — 971 ms sampled CPU (2.30%)</title><rect x="996.932" y="395" width="37.284" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 523 ms sampled CPU (1.24%)</title><rect x="996.932" y="371" width="20.082" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_124 — 26 ms sampled CPU (0.06%)</title><rect x="1034.216" y="395" width="0.998" height="23" fill="#c9e2d0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>span_fade — 21 ms sampled CPU (0.05%)</title><rect x="1034.216" y="371" width="0.806" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 221 ms sampled CPU (0.52%)</title><rect x="1035.214" y="395" width="8.486" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_store_row_valid — 313 ms sampled CPU (0.74%)</title><rect x="1048.269" y="443" width="12.018" height="23" fill="#bed6c1" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_124 — 87 ms sampled CPU (0.21%)</title><rect x="1048.692" y="419" width="3.341" height="23" fill="#c9e2d0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>span_fade — 55 ms sampled CPU (0.13%)</title><rect x="1048.692" y="395" width="2.112" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 35 ms sampled CPU (0.08%)</title><rect x="1048.692" y="371" width="1.344" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_8 — 198 ms sampled CPU (0.47%)</title><rect x="1052.032" y="419" width="7.603" height="23" fill="#c8dcba" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_store_verify_batch_records — 1,106 ms sampled CPU (2.62%)</title><rect x="1060.288" y="443" width="42.468" height="23" fill="#b6e2c3" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="1064.288" y="459" font-size="12">src…</text>
+</g>
+<g class="frame"><title>span_fade — 103 ms sampled CPU (0.24%)</title><rect x="1060.288" y="419" width="3.955" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_124 — 488 ms sampled CPU (1.16%)</title><rect x="1064.243" y="419" width="18.738" height="23" fill="#c9e2d0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 471 ms sampled CPU (1.12%)</title><rect x="1064.396" y="395" width="18.085" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>spin_172 — 504 ms sampled CPU (1.19%)</title><rect x="1082.981" y="419" width="19.352" height="23" fill="#c9bcd5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>span_fade — 407 ms sampled CPU (0.96%)</title><rect x="1082.981" y="395" width="15.628" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 191 ms sampled CPU (0.45%)</title><rect x="1082.981" y="371" width="7.334" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 18 ms sampled CPU (0.04%)</title><rect x="1099.108" y="395" width="0.691" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>src_store_verify_walk — 982 ms sampled CPU (2.33%)</title><rect x="1102.756" y="443" width="37.707" height="23" fill="#dbceb0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>term_drop — 41 ms sampled CPU (0.10%)</title><rect x="1140.462" y="443" width="1.574" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>jb_sql_query_run — 215 ms sampled CPU (0.51%)</title><rect x="1142.267" y="491" width="8.256" height="23" fill="#dcdad0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>io_work — 43 ms sampled CPU (0.10%)</title><rect x="1142.804" y="467" width="1.651" height="23" fill="#e0c2d4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>pthread_cond_signal — 40 ms sampled CPU (0.09%)</title><rect x="1142.804" y="443" width="1.536" height="23" fill="#d2c1d6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>__psynch_cvsignal — 39 ms sampled CPU (0.09%)</title><rect x="1142.804" y="419" width="1.498" height="23" fill="#c1d5d8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>jb_sql_bytes — 150 ms sampled CPU (0.36%)</title><rect x="1144.456" y="467" width="5.760" height="23" fill="#c4dbb5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>io_wait — 3,894 ms sampled CPU (9.23%)</title><rect x="1150.561" y="515" width="149.521" height="23" fill="#c8c8ac" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="1154.561" y="531" font-size="12">io_wait</text>
+</g>
+<g class="frame"><title>__select — 56 ms sampled CPU (0.13%)</title><rect x="1150.561" y="491" width="2.150" height="23" fill="#c6c8c6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>file_read_bytes_pack — 548 ms sampled CPU (1.30%)</title><rect x="1153.018" y="491" width="21.042" height="23" fill="#c2e3c4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>rfc_wrap — 363 ms sampled CPU (0.86%)</title><rect x="1153.018" y="467" width="13.938" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>jb_sql_pack — 2,570 ms sampled CPU (6.09%)</title><rect x="1174.713" y="491" width="98.682" height="23" fill="#ded2ca" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="1178.713" y="507" font-size="12">jb_sql_pack</text>
+</g>
+<g class="frame"><title>_xzm_free_main — 54 ms sampled CPU (0.13%)</title><rect x="1175.558" y="467" width="2.073" height="23" fill="#b4dfd1" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>io_str — 825 ms sampled CPU (1.96%)</title><rect x="1177.631" y="467" width="31.678" height="23" fill="#dbe5cb" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>rfc_wrap — 322 ms sampled CPU (0.76%)</title><rect x="1177.631" y="443" width="12.364" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>rfc_wrap — 1,022 ms sampled CPU (2.42%)</title><rect x="1209.309" y="467" width="39.242" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>snprintf — 401 ms sampled CPU (0.95%)</title><rect x="1248.552" y="467" width="15.397" height="23" fill="#bcc3d2" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>_vsnprintf — 382 ms sampled CPU (0.91%)</title><rect x="1249.089" y="443" width="14.668" height="23" fill="#dad7c4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>__v2printf — 53 ms sampled CPU (0.13%)</title><rect x="1249.320" y="419" width="2.035" height="23" fill="#bcc1da" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>__vfprintf — 281 ms sampled CPU (0.67%)</title><rect x="1251.355" y="419" width="10.790" height="23" fill="#dfdbcb" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>__ultoa — 24 ms sampled CPU (0.06%)</title><rect x="1252.315" y="395" width="0.922" height="23" fill="#c1d2b5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>localeconv_l — 17 ms sampled CPU (0.04%)</title><rect x="1253.697" y="395" width="0.653" height="23" fill="#cfcdc5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>os_unfair_lock_lock — 23 ms sampled CPU (0.05%)</title><rect x="1254.350" y="395" width="0.883" height="23" fill="#b0bed8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>read — 19 ms sampled CPU (0.05%)</title><rect x="1273.395" y="491" width="0.730" height="23" fill="#b4daba" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>rfc_wrap — 676 ms sampled CPU (1.60%)</title><rect x="1274.125" y="491" width="25.957" height="23" fill="#dd8497" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>thread_start — 9,113 ms sampled CPU (21.60%)</title><rect x="1300.082" y="611" width="349.918" height="23" fill="#e0ddc8" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="1304.082" y="627" font-size="12">thread_start</text>
+</g>
+<g class="frame"><title>_pthread_start — 9,113 ms sampled CPU (21.60%)</title><rect x="1300.082" y="587" width="349.918" height="23" fill="#c6bdd7" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="1304.082" y="603" font-size="12">_pthread_start</text>
+</g>
+<g class="frame"><title>io_help — 9,062 ms sampled CPU (21.48%)</title><rect x="1300.082" y="563" width="347.960" height="23" fill="#e5bfc1" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="1304.082" y="579" font-size="12">io_help</text>
+</g>
+<g class="frame"><title>__psynch_cvwait — 58 ms sampled CPU (0.14%)</title><rect x="1300.120" y="539" width="2.227" height="23" fill="#b6c7c1" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>jb_sql_call — 8,934 ms sampled CPU (21.18%)</title><rect x="1302.539" y="539" width="343.045" height="23" fill="#b1c0d1" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="1306.539" y="555" font-size="12">jb_sql_call</text>
+</g>
+<g class="frame"><title>_malloc_zone_malloc — 18 ms sampled CPU (0.04%)</title><rect x="1304.305" y="515" width="0.691" height="23" fill="#dfc5c9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>_platform_memmove — 17 ms sampled CPU (0.04%)</title><rect x="1304.996" y="515" width="0.653" height="23" fill="#dbd8b8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>_realloc — 126 ms sampled CPU (0.30%)</title><rect x="1305.803" y="515" width="4.838" height="23" fill="#b2cfd4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>_malloc_zone_realloc — 112 ms sampled CPU (0.27%)</title><rect x="1305.803" y="491" width="4.301" height="23" fill="#c0cac3" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>_platform_memmove — 21 ms sampled CPU (0.05%)</title><rect x="1305.803" y="467" width="0.806" height="23" fill="#dbd8b8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>xzm_malloc_zone_malloc_type_realloc — 85 ms sampled CPU (0.20%)</title><rect x="1306.686" y="467" width="3.264" height="23" fill="#c4ccdb" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>_platform_memmove — 40 ms sampled CPU (0.09%)</title><rect x="1306.686" y="443" width="1.536" height="23" fill="#dbd8b8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>_xzm_xzone_malloc_tiny — 35 ms sampled CPU (0.08%)</title><rect x="1310.641" y="515" width="1.344" height="23" fill="#cfe2dc" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>jb_sql_utf8 — 36 ms sampled CPU (0.09%)</title><rect x="1312.446" y="515" width="1.382" height="23" fill="#b4c0cf" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3LockAndPrepare — 1,243 ms sampled CPU (2.95%)</title><rect x="1314.020" y="515" width="47.728" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="1318.020" y="531" font-size="12">sqli…</text>
+</g>
+<g class="frame"><title>sqlite3Prepare — 1,242 ms sampled CPU (2.94%)</title><rect x="1314.020" y="491" width="47.690" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="1318.020" y="507" font-size="12">sqli…</text>
+</g>
+<g class="frame"><title>sqlite3RunParser — 1,218 ms sampled CPU (2.89%)</title><rect x="1314.596" y="467" width="46.768" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="1318.596" y="483" font-size="12">sqli…</text>
+</g>
+<g class="frame"><title>sqlite3GetToken — 75 ms sampled CPU (0.18%)</title><rect x="1314.673" y="443" width="2.880" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>keywordCode — 22 ms sampled CPU (0.05%)</title><rect x="1314.673" y="419" width="0.845" height="23" fill="#d8bdaf" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>yy_reduce — 1,067 ms sampled CPU (2.53%)</title><rect x="1317.629" y="443" width="40.970" height="23" fill="#c6c2cf" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>clearSelect — 67 ms sampled CPU (0.16%)</title><rect x="1317.668" y="419" width="2.573" height="23" fill="#c6d7d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>clearSelect — 18 ms sampled CPU (0.04%)</title><rect x="1317.668" y="395" width="0.691" height="23" fill="#c6d7d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3SrcListDelete — 45 ms sampled CPU (0.11%)</title><rect x="1318.512" y="395" width="1.728" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>clearSelect — 45 ms sampled CPU (0.11%)</title><rect x="1318.512" y="371" width="1.728" height="23" fill="#c6d7d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3SrcListDelete — 41 ms sampled CPU (0.10%)</title><rect x="1318.666" y="347" width="1.574" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>clearSelect — 41 ms sampled CPU (0.10%)</title><rect x="1318.666" y="323" width="1.574" height="23" fill="#c6d7d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3SrcListDelete — 32 ms sampled CPU (0.08%)</title><rect x="1319.012" y="299" width="1.229" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>clearSelect — 29 ms sampled CPU (0.07%)</title><rect x="1319.012" y="275" width="1.114" height="23" fill="#c6d7d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3SrcListDelete — 24 ms sampled CPU (0.06%)</title><rect x="1319.204" y="251" width="0.922" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>clearSelect — 22 ms sampled CPU (0.05%)</title><rect x="1319.204" y="227" width="0.845" height="23" fill="#c6d7d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3FinishCoding — 19 ms sampled CPU (0.05%)</title><rect x="1321.546" y="419" width="0.730" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeMakeReady — 17 ms sampled CPU (0.04%)</title><rect x="1321.623" y="395" width="0.653" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3Insert — 51 ms sampled CPU (0.12%)</title><rect x="1322.314" y="419" width="1.958" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3Select — 39 ms sampled CPU (0.09%)</title><rect x="1322.698" y="395" width="1.498" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WhereBegin — 21 ms sampled CPU (0.05%)</title><rect x="1323.351" y="371" width="0.806" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3Select — 810 ms sampled CPU (1.92%)</title><rect x="1324.694" y="419" width="31.102" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3GenerateColumnNames — 28 ms sampled CPU (0.07%)</title><rect x="1325.232" y="395" width="1.075" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3Select — 468 ms sampled CPU (1.11%)</title><rect x="1326.422" y="395" width="17.970" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3ResultSetOfSelect — 45 ms sampled CPU (0.11%)</title><rect x="1326.653" y="371" width="1.728" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3SelectPrep — 18 ms sampled CPU (0.04%)</title><rect x="1327.344" y="347" width="0.691" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WalkSelect — 18 ms sampled CPU (0.04%)</title><rect x="1327.344" y="323" width="0.691" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3Select — 344 ms sampled CPU (0.82%)</title><rect x="1328.381" y="371" width="13.209" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3ResultSetOfSelect — 66 ms sampled CPU (0.16%)</title><rect x="1328.765" y="347" width="2.534" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3ColumnsFromExprList — 20 ms sampled CPU (0.05%)</title><rect x="1328.765" y="323" width="0.768" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3SelectPrep — 29 ms sampled CPU (0.07%)</title><rect x="1329.609" y="323" width="1.114" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WalkSelect — 29 ms sampled CPU (0.07%)</title><rect x="1329.609" y="299" width="1.114" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3Select — 211 ms sampled CPU (0.50%)</title><rect x="1331.299" y="347" width="8.102" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>selectInnerLoop — 23 ms sampled CPU (0.05%)</title><rect x="1331.414" y="323" width="0.883" height="23" fill="#cbd3ca" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3ExprCodeExprList — 21 ms sampled CPU (0.05%)</title><rect x="1331.414" y="299" width="0.806" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3ExprCodeTarget — 21 ms sampled CPU (0.05%)</title><rect x="1331.414" y="275" width="0.806" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3Select — 156 ms sampled CPU (0.37%)</title><rect x="1332.412" y="323" width="5.990" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>selectInnerLoop — 28 ms sampled CPU (0.07%)</title><rect x="1332.758" y="299" width="1.075" height="23" fill="#cbd3ca" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3ExprCodeExprList — 28 ms sampled CPU (0.07%)</title><rect x="1332.758" y="275" width="1.075" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3ExprCodeTarget — 28 ms sampled CPU (0.07%)</title><rect x="1332.758" y="251" width="1.075" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3ExprCodeTemp — 19 ms sampled CPU (0.05%)</title><rect x="1332.758" y="227" width="0.730" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3ExprCodeTarget — 19 ms sampled CPU (0.05%)</title><rect x="1332.758" y="203" width="0.730" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3ExprCodeTemp — 19 ms sampled CPU (0.05%)</title><rect x="1332.758" y="179" width="0.730" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3Select — 45 ms sampled CPU (0.11%)</title><rect x="1333.872" y="299" width="1.728" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>multiSelectByMerge — 19 ms sampled CPU (0.05%)</title><rect x="1333.872" y="275" width="0.730" height="23" fill="#afc9ae" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WhereBegin — 66 ms sampled CPU (0.16%)</title><rect x="1335.599" y="299" width="2.534" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WhereCodeOneLoopStart — 19 ms sampled CPU (0.05%)</title><rect x="1336.214" y="275" width="0.730" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WalkExprNN — 39 ms sampled CPU (0.09%)</title><rect x="1341.666" y="371" width="1.498" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>selectWindowRewriteExprCb — 38 ms sampled CPU (0.09%)</title><rect x="1341.666" y="347" width="1.459" height="23" fill="#d2c3b2" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>exprDup — 20 ms sampled CPU (0.05%)</title><rect x="1341.666" y="323" width="0.768" height="23" fill="#cacdd4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WalkSelect — 20 ms sampled CPU (0.05%)</title><rect x="1343.164" y="371" width="0.768" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3SelectPrep — 262 ms sampled CPU (0.62%)</title><rect x="1344.431" y="395" width="10.060" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WalkSelect — 262 ms sampled CPU (0.62%)</title><rect x="1344.431" y="371" width="10.060" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>resolveSelectStep — 97 ms sampled CPU (0.23%)</title><rect x="1344.431" y="347" width="3.725" height="23" fill="#cbcccf" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WalkSelect — 80 ms sampled CPU (0.19%)</title><rect x="1345.084" y="323" width="3.072" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>resolveSelectStep — 80 ms sampled CPU (0.19%)</title><rect x="1345.084" y="299" width="3.072" height="23" fill="#cbcccf" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3ResolveExprListNames — 28 ms sampled CPU (0.07%)</title><rect x="1345.084" y="275" width="1.075" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WalkExprNN — 28 ms sampled CPU (0.07%)</title><rect x="1345.084" y="251" width="1.075" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>resolveExprStep — 28 ms sampled CPU (0.07%)</title><rect x="1345.084" y="227" width="1.075" height="23" fill="#d6d9d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WalkSelect — 51 ms sampled CPU (0.12%)</title><rect x="1346.197" y="275" width="1.958" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>resolveSelectStep — 51 ms sampled CPU (0.12%)</title><rect x="1346.197" y="251" width="1.958" height="23" fill="#cbcccf" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3ResolveExprListNames — 35 ms sampled CPU (0.08%)</title><rect x="1346.312" y="227" width="1.344" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WalkExprNN — 35 ms sampled CPU (0.08%)</title><rect x="1346.312" y="203" width="1.344" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WalkExprNN — 25 ms sampled CPU (0.06%)</title><rect x="1346.658" y="179" width="0.960" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WalkExprNN — 20 ms sampled CPU (0.05%)</title><rect x="1346.850" y="155" width="0.768" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>selectExpander — 134 ms sampled CPU (0.32%)</title><rect x="1348.578" y="347" width="5.145" height="23" fill="#e2bfb6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3ColumnsFromExprList — 17 ms sampled CPU (0.04%)</title><rect x="1348.578" y="323" width="0.653" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WalkSelect — 109 ms sampled CPU (0.26%)</title><rect x="1349.538" y="323" width="4.185" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>selectExpander — 104 ms sampled CPU (0.25%)</title><rect x="1349.576" y="299" width="3.993" height="23" fill="#e2bfb6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3SrcItemAttachSubquery — 39 ms sampled CPU (0.09%)</title><rect x="1350.459" y="275" width="1.498" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3SelectDup — 39 ms sampled CPU (0.09%)</title><rect x="1350.459" y="251" width="1.498" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3ExprListDup — 33 ms sampled CPU (0.08%)</title><rect x="1350.459" y="227" width="1.267" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>exprDup — 32 ms sampled CPU (0.08%)</title><rect x="1350.498" y="203" width="1.229" height="23" fill="#cacdd4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3ExprListDup — 17 ms sampled CPU (0.04%)</title><rect x="1351.074" y="179" width="0.653" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>exprDup — 17 ms sampled CPU (0.04%)</title><rect x="1351.074" y="155" width="0.653" height="23" fill="#cacdd4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WalkSelect — 42 ms sampled CPU (0.10%)</title><rect x="1351.957" y="275" width="1.613" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>selectExpander — 32 ms sampled CPU (0.08%)</title><rect x="1351.957" y="251" width="1.229" height="23" fill="#e2bfb6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WalkSelect — 18 ms sampled CPU (0.04%)</title><rect x="1353.723" y="347" width="0.691" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WhereBegin — 24 ms sampled CPU (0.06%)</title><rect x="1354.683" y="395" width="0.922" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>tokenExpr — 24 ms sampled CPU (0.06%)</title><rect x="1356.104" y="419" width="0.922" height="23" fill="#dacbdb" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3_column_bytes — 24 ms sampled CPU (0.06%)</title><rect x="1361.863" y="515" width="0.922" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3_column_int64 — 22 ms sampled CPU (0.05%)</title><rect x="1362.823" y="515" width="0.845" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3_column_text — 18 ms sampled CPU (0.04%)</title><rect x="1363.668" y="515" width="0.691" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3_column_type — 54 ms sampled CPU (0.13%)</title><rect x="1364.359" y="515" width="2.073" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>os_unfair_recursive_lock_unlock — 18 ms sampled CPU (0.04%)</title><rect x="1364.705" y="491" width="0.691" height="23" fill="#d8dcb0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3_finalize — 40 ms sampled CPU (0.09%)</title><rect x="1366.433" y="515" width="1.536" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeDelete — 29 ms sampled CPU (0.07%)</title><rect x="1366.433" y="491" width="1.114" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3_step — 7,215 ms sampled CPU (17.10%)</title><rect x="1367.969" y="515" width="277.040" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="1371.969" y="531" font-size="12">sqlite3_step</text>
+</g>
+<g class="frame"><title>unresolved native frame — 29 ms sampled CPU (0.07%)</title><rect x="1368.046" y="491" width="1.114" height="23" fill="#c8dfa7" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeExec — 6,958 ms sampled CPU (16.49%)</title><rect x="1371.540" y="491" width="267.171" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+<text x="1375.540" y="507" font-size="12">sqlite3VdbeExec</text>
+</g>
+<g class="frame"><title>_platform_memmove — 196 ms sampled CPU (0.46%)</title><rect x="1371.808" y="467" width="7.526" height="23" fill="#dbd8b8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>btreeBeginTrans — 142 ms sampled CPU (0.34%)</title><rect x="1379.872" y="467" width="5.452" height="23" fill="#cee3a7" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getPageNormal — 124 ms sampled CPU (0.29%)</title><rect x="1379.910" y="443" width="4.761" height="23" fill="#e3d9dd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>purgeableCacheFetch — 118 ms sampled CPU (0.28%)</title><rect x="1380.102" y="419" width="4.531" height="23" fill="#d0c2c4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>_platform_memset — 67 ms sampled CPU (0.16%)</title><rect x="1380.102" y="395" width="2.573" height="23" fill="#c7d6b4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>vm_allocate — 42 ms sampled CPU (0.10%)</title><rect x="1382.944" y="395" width="1.613" height="23" fill="#d3d5c4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>mach_vm_allocate — 42 ms sampled CPU (0.10%)</title><rect x="1382.944" y="371" width="1.613" height="23" fill="#b4d5b0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>_kernelrpc_mach_vm_allocate_trap — 41 ms sampled CPU (0.10%)</title><rect x="1382.944" y="347" width="1.574" height="23" fill="#baddcf" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>btreeLast — 38 ms sampled CPU (0.09%)</title><rect x="1385.324" y="467" width="1.459" height="23" fill="#c8c5dc" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>moveToRoot — 33 ms sampled CPU (0.08%)</title><rect x="1385.324" y="443" width="1.267" height="23" fill="#bfbcc4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getAndInitPage — 22 ms sampled CPU (0.05%)</title><rect x="1385.324" y="419" width="0.845" height="23" fill="#dbe1b5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getPageNormal — 19 ms sampled CPU (0.05%)</title><rect x="1385.324" y="395" width="0.730" height="23" fill="#e3d9dd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>btreeNext — 122 ms sampled CPU (0.29%)</title><rect x="1386.937" y="467" width="4.685" height="23" fill="#e3c1ad" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeTableMoveto — 94 ms sampled CPU (0.22%)</title><rect x="1387.436" y="443" width="3.609" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>moveToRoot — 28 ms sampled CPU (0.07%)</title><rect x="1387.475" y="419" width="1.075" height="23" fill="#bfbcc4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getAndInitPage — 24 ms sampled CPU (0.06%)</title><rect x="1387.475" y="395" width="0.922" height="23" fill="#dbe1b5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getPageNormal — 20 ms sampled CPU (0.05%)</title><rect x="1387.475" y="371" width="0.768" height="23" fill="#e3d9dd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>checkTreePage — 85 ms sampled CPU (0.20%)</title><rect x="1392.543" y="467" width="3.264" height="23" fill="#e2c6b8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>checkTreePage — 85 ms sampled CPU (0.20%)</title><rect x="1392.543" y="443" width="3.264" height="23" fill="#e2c6b8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>checkTreePage — 85 ms sampled CPU (0.20%)</title><rect x="1392.543" y="419" width="3.264" height="23" fill="#e2c6b8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>checkTreePage — 38 ms sampled CPU (0.09%)</title><rect x="1392.543" y="395" width="1.459" height="23" fill="#e2c6b8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getPageNormal — 47 ms sampled CPU (0.11%)</title><rect x="1394.002" y="395" width="1.805" height="23" fill="#e3d9dd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>readDbPage — 34 ms sampled CPU (0.08%)</title><rect x="1394.502" y="371" width="1.306" height="23" fill="#b1d7ad" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>unixRead — 33 ms sampled CPU (0.08%)</title><rect x="1394.502" y="347" width="1.267" height="23" fill="#b7c8c0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>seekAndRead — 33 ms sampled CPU (0.08%)</title><rect x="1394.502" y="323" width="1.267" height="23" fill="#e1b9af" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>pread — 33 ms sampled CPU (0.08%)</title><rect x="1394.502" y="299" width="1.267" height="23" fill="#e0d9c8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5ColumnMethod — 33 ms sampled CPU (0.08%)</title><rect x="1395.999" y="467" width="1.267" height="23" fill="#e2ddd0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3_column_value — 20 ms sampled CPU (0.05%)</title><rect x="1396.114" y="443" width="0.768" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5IntegrityMethod — 250 ms sampled CPU (0.59%)</title><rect x="1397.305" y="467" width="9.599" height="23" fill="#d0dec1" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3Fts5StorageIntegrity — 231 ms sampled CPU (0.55%)</title><rect x="1398.034" y="443" width="8.870" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5MultiIterNext — 24 ms sampled CPU (0.06%)</title><rect x="1398.764" y="419" width="0.922" height="23" fill="#afe2ad" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5UnicodeTokenize — 28 ms sampled CPU (0.07%)</title><rect x="1399.954" y="419" width="1.075" height="23" fill="#becdc6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5UnicodeTokenize — 17 ms sampled CPU (0.04%)</title><rect x="1400.261" y="395" width="0.653" height="23" fill="#becdc6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3Fts5PoslistNext64 — 21 ms sampled CPU (0.05%)</title><rect x="1401.375" y="419" width="0.806" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3Fts5StorageDocsize — 74 ms sampled CPU (0.18%)</title><rect x="1402.181" y="419" width="2.841" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeReset — 23 ms sampled CPU (0.05%)</title><rect x="1402.719" y="395" width="0.883" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3_step — 36 ms sampled CPU (0.09%)</title><rect x="1403.602" y="395" width="1.382" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeExec — 34 ms sampled CPU (0.08%)</title><rect x="1403.679" y="371" width="1.306" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeTableMoveto — 27 ms sampled CPU (0.06%)</title><rect x="1403.794" y="347" width="1.037" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3Fts5StorageIntegrity — 22 ms sampled CPU (0.05%)</title><rect x="1405.023" y="419" width="0.845" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3_step — 23 ms sampled CPU (0.05%)</title><rect x="1406.021" y="419" width="0.883" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeExec — 21 ms sampled CPU (0.05%)</title><rect x="1406.059" y="395" width="0.806" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5NextMethod — 95 ms sampled CPU (0.23%)</title><rect x="1406.904" y="467" width="3.648" height="23" fill="#dcdada" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3_step — 93 ms sampled CPU (0.22%)</title><rect x="1406.942" y="443" width="3.571" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeExec — 89 ms sampled CPU (0.21%)</title><rect x="1407.058" y="419" width="3.417" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeNext — 40 ms sampled CPU (0.09%)</title><rect x="1407.480" y="395" width="1.536" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>moveToChild — 40 ms sampled CPU (0.09%)</title><rect x="1407.480" y="371" width="1.536" height="23" fill="#caced5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getAndInitPage — 40 ms sampled CPU (0.09%)</title><rect x="1407.480" y="347" width="1.536" height="23" fill="#dbe1b5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getPageNormal — 39 ms sampled CPU (0.09%)</title><rect x="1407.518" y="323" width="1.498" height="23" fill="#e3d9dd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>readDbPage — 28 ms sampled CPU (0.07%)</title><rect x="1407.941" y="299" width="1.075" height="23" fill="#b1d7ad" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>unixRead — 27 ms sampled CPU (0.06%)</title><rect x="1407.941" y="275" width="1.037" height="23" fill="#b7c8c0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>seekAndRead — 27 ms sampled CPU (0.06%)</title><rect x="1407.941" y="251" width="1.037" height="23" fill="#e1b9af" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>pread — 26 ms sampled CPU (0.06%)</title><rect x="1407.941" y="227" width="0.998" height="23" fill="#e0d9c8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5UpdateMethod — 638 ms sampled CPU (1.51%)</title><rect x="1411.013" y="467" width="24.498" height="23" fill="#dbd3c2" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3Fts5StorageContentInsert — 157 ms sampled CPU (0.37%)</title><rect x="1411.013" y="443" width="6.028" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3_step — 117 ms sampled CPU (0.28%)</title><rect x="1412.356" y="419" width="4.493" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeExec — 109 ms sampled CPU (0.26%)</title><rect x="1412.587" y="395" width="4.185" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeInsert — 80 ms sampled CPU (0.19%)</title><rect x="1412.740" y="371" width="3.072" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>balance — 60 ms sampled CPU (0.14%)</title><rect x="1412.817" y="347" width="2.304" height="23" fill="#b6c0c9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>allocateBtreePage — 45 ms sampled CPU (0.11%)</title><rect x="1412.856" y="323" width="1.728" height="23" fill="#c5c3da" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>pager_write — 28 ms sampled CPU (0.07%)</title><rect x="1412.894" y="299" width="1.075" height="23" fill="#c3c2dc" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>subjournalPageIfRequired — 27 ms sampled CPU (0.06%)</title><rect x="1412.894" y="275" width="1.037" height="23" fill="#dbcacb" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>unixWrite — 27 ms sampled CPU (0.06%)</title><rect x="1412.894" y="251" width="1.037" height="23" fill="#d0e5ba" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>seekAndWrite — 27 ms sampled CPU (0.06%)</title><rect x="1412.894" y="227" width="1.037" height="23" fill="#b5ccc0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>guarded_pwrite_np — 27 ms sampled CPU (0.06%)</title><rect x="1412.894" y="203" width="1.037" height="23" fill="#c6d5b6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>subjournalPageIfRequired — 18 ms sampled CPU (0.04%)</title><rect x="1415.121" y="347" width="0.691" height="23" fill="#dbcacb" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>unixWrite — 18 ms sampled CPU (0.04%)</title><rect x="1415.121" y="323" width="0.691" height="23" fill="#d0e5ba" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>seekAndWrite — 18 ms sampled CPU (0.04%)</title><rect x="1415.121" y="299" width="0.691" height="23" fill="#b5ccc0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>guarded_pwrite_np — 18 ms sampled CPU (0.04%)</title><rect x="1415.121" y="275" width="0.691" height="23" fill="#c6d5b6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3Fts5StorageDelete — 332 ms sampled CPU (0.79%)</title><rect x="1417.041" y="443" width="12.748" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5StorageGetStmt — 24 ms sampled CPU (0.06%)</title><rect x="1417.463" y="419" width="0.922" height="23" fill="#d4d9ac" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>checkProfileCallback — 17 ms sampled CPU (0.04%)</title><rect x="1417.463" y="395" width="0.653" height="23" fill="#c6c2ae" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5UnicodeTokenize — 61 ms sampled CPU (0.14%)</title><rect x="1418.423" y="419" width="2.342" height="23" fill="#becdc6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5StorageInsertCallback — 37 ms sampled CPU (0.09%)</title><rect x="1418.423" y="395" width="1.421" height="23" fill="#cbd5d8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3Fts5HashWrite — 36 ms sampled CPU (0.09%)</title><rect x="1418.423" y="371" width="1.382" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5UnicodeTokenize — 19 ms sampled CPU (0.05%)</title><rect x="1419.844" y="395" width="0.730" height="23" fill="#becdc6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3_step — 198 ms sampled CPU (0.47%)</title><rect x="1421.918" y="419" width="7.603" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeExec — 179 ms sampled CPU (0.42%)</title><rect x="1422.455" y="395" width="6.873" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeDelete — 101 ms sampled CPU (0.24%)</title><rect x="1422.762" y="371" width="3.878" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>balance — 77 ms sampled CPU (0.18%)</title><rect x="1422.762" y="347" width="2.957" height="23" fill="#b6c0c9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getAndInitPage — 22 ms sampled CPU (0.05%)</title><rect x="1423.415" y="323" width="0.845" height="23" fill="#dbe1b5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getPageNormal — 22 ms sampled CPU (0.05%)</title><rect x="1423.415" y="299" width="0.845" height="23" fill="#e3d9dd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>pager_write — 19 ms sampled CPU (0.05%)</title><rect x="1424.298" y="323" width="0.730" height="23" fill="#c3c2dc" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>subjournalPageIfRequired — 19 ms sampled CPU (0.05%)</title><rect x="1424.298" y="299" width="0.730" height="23" fill="#dbcacb" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>unixWrite — 18 ms sampled CPU (0.04%)</title><rect x="1424.298" y="275" width="0.691" height="23" fill="#d0e5ba" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>seekAndWrite — 18 ms sampled CPU (0.04%)</title><rect x="1424.298" y="251" width="0.691" height="23" fill="#b5ccc0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>guarded_pwrite_np — 18 ms sampled CPU (0.04%)</title><rect x="1424.298" y="227" width="0.691" height="23" fill="#c6d5b6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeTableMoveto — 39 ms sampled CPU (0.09%)</title><rect x="1426.640" y="371" width="1.498" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3Fts5StorageIndexInsert — 143 ms sampled CPU (0.34%)</title><rect x="1429.789" y="443" width="5.491" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5StorageInsertDocsize — 70 ms sampled CPU (0.17%)</title><rect x="1429.789" y="419" width="2.688" height="23" fill="#b0c9c1" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3_step — 45 ms sampled CPU (0.11%)</title><rect x="1430.749" y="395" width="1.728" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeExec — 38 ms sampled CPU (0.09%)</title><rect x="1430.941" y="371" width="1.459" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeInsert — 17 ms sampled CPU (0.04%)</title><rect x="1431.018" y="347" width="0.653" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5UnicodeTokenize — 66 ms sampled CPU (0.16%)</title><rect x="1432.515" y="419" width="2.534" height="23" fill="#becdc6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5StorageInsertCallback — 32 ms sampled CPU (0.08%)</title><rect x="1432.515" y="395" width="1.229" height="23" fill="#cbd5d8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3Fts5HashWrite — 29 ms sampled CPU (0.07%)</title><rect x="1432.515" y="371" width="1.114" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5UnicodeTokenize — 22 ms sampled CPU (0.05%)</title><rect x="1433.744" y="395" width="0.845" height="23" fill="#becdc6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getCellInfo — 29 ms sampled CPU (0.07%)</title><rect x="1435.549" y="467" width="1.114" height="23" fill="#c8e5ca" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>lengthFunc — 17 ms sampled CPU (0.04%)</title><rect x="1437.161" y="467" width="0.653" height="23" fill="#c8c8a9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>pragmaVtabFilter — 94 ms sampled CPU (0.22%)</title><rect x="1438.006" y="467" width="3.609" height="23" fill="#b8e5dd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3_step — 94 ms sampled CPU (0.22%)</title><rect x="1438.006" y="443" width="3.609" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeExec — 94 ms sampled CPU (0.22%)</title><rect x="1438.006" y="419" width="3.609" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeNext — 45 ms sampled CPU (0.11%)</title><rect x="1438.160" y="395" width="1.728" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>moveToChild — 42 ms sampled CPU (0.10%)</title><rect x="1438.160" y="371" width="1.613" height="23" fill="#caced5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getAndInitPage — 42 ms sampled CPU (0.10%)</title><rect x="1438.160" y="347" width="1.613" height="23" fill="#dbe1b5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getPageNormal — 42 ms sampled CPU (0.10%)</title><rect x="1438.160" y="323" width="1.613" height="23" fill="#e3d9dd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>readDbPage — 33 ms sampled CPU (0.08%)</title><rect x="1438.467" y="299" width="1.267" height="23" fill="#b1d7ad" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>unixRead — 31 ms sampled CPU (0.07%)</title><rect x="1438.467" y="275" width="1.190" height="23" fill="#b7c8c0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>seekAndRead — 31 ms sampled CPU (0.07%)</title><rect x="1438.467" y="251" width="1.190" height="23" fill="#e1b9af" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>pread — 31 ms sampled CPU (0.07%)</title><rect x="1438.467" y="227" width="1.190" height="23" fill="#e0d9c8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeTableMoveto — 32 ms sampled CPU (0.08%)</title><rect x="1439.888" y="395" width="1.229" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeNext — 27 ms sampled CPU (0.06%)</title><rect x="1439.926" y="371" width="1.037" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>moveToChild — 27 ms sampled CPU (0.06%)</title><rect x="1439.926" y="347" width="1.037" height="23" fill="#caced5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getAndInitPage — 27 ms sampled CPU (0.06%)</title><rect x="1439.926" y="323" width="1.037" height="23" fill="#dbe1b5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getPageNormal — 27 ms sampled CPU (0.06%)</title><rect x="1439.926" y="299" width="1.037" height="23" fill="#e3d9dd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>readDbPage — 25 ms sampled CPU (0.06%)</title><rect x="1440.003" y="275" width="0.960" height="23" fill="#b1d7ad" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>unixRead — 25 ms sampled CPU (0.06%)</title><rect x="1440.003" y="251" width="0.960" height="23" fill="#b7c8c0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>seekAndRead — 25 ms sampled CPU (0.06%)</title><rect x="1440.003" y="227" width="0.960" height="23" fill="#e1b9af" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>pread — 25 ms sampled CPU (0.06%)</title><rect x="1440.003" y="203" width="0.960" height="23" fill="#e0d9c8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>setResultStrOrError — 41 ms sampled CPU (0.10%)</title><rect x="1442.345" y="467" width="1.574" height="23" fill="#bcdfcf" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeMemSetText — 22 ms sampled CPU (0.05%)</title><rect x="1442.384" y="443" width="0.845" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeDelete — 134 ms sampled CPU (0.32%)</title><rect x="1445.187" y="467" width="5.145" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>dropCell — 33 ms sampled CPU (0.08%)</title><rect x="1446.108" y="443" width="1.267" height="23" fill="#bbc2ba" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>freeSpace — 23 ms sampled CPU (0.05%)</title><rect x="1446.262" y="419" width="0.883" height="23" fill="#d4cec5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>saveCursorsOnList — 51 ms sampled CPU (0.12%)</title><rect x="1447.644" y="443" width="1.958" height="23" fill="#d2e4b5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>btreeReleaseAllCursorPages — 19 ms sampled CPU (0.05%)</title><rect x="1447.951" y="419" width="0.730" height="23" fill="#bacdc4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeIndexMoveto — 292 ms sampled CPU (0.69%)</title><rect x="1450.332" y="467" width="11.212" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getAndInitPage — 52 ms sampled CPU (0.12%)</title><rect x="1450.332" y="443" width="1.997" height="23" fill="#dbe1b5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getPageNormal — 43 ms sampled CPU (0.10%)</title><rect x="1450.332" y="419" width="1.651" height="23" fill="#e3d9dd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>purgeableCacheFetch — 25 ms sampled CPU (0.06%)</title><rect x="1450.332" y="395" width="0.960" height="23" fill="#d0c2c4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>moveToRoot — 30 ms sampled CPU (0.07%)</title><rect x="1452.405" y="443" width="1.152" height="23" fill="#bfbcc4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeIndexMoveto — 95 ms sampled CPU (0.23%)</title><rect x="1453.557" y="443" width="3.648" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeRecordCompareWithSkip — 95 ms sampled CPU (0.23%)</title><rect x="1453.557" y="419" width="3.648" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeRecordCompareWithSkip — 18 ms sampled CPU (0.04%)</title><rect x="1457.205" y="443" width="0.691" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>vdbeRecordCompareInt — 28 ms sampled CPU (0.07%)</title><rect x="1457.896" y="443" width="1.075" height="23" fill="#c7d9c4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeInsert — 874 ms sampled CPU (2.07%)</title><rect x="1461.544" y="467" width="33.560" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>_platform_memmove — 38 ms sampled CPU (0.09%)</title><rect x="1461.582" y="443" width="1.459" height="23" fill="#dbd8b8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>allocateSpace — 33 ms sampled CPU (0.08%)</title><rect x="1463.080" y="443" width="1.267" height="23" fill="#bcceba" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>balance — 417 ms sampled CPU (0.99%)</title><rect x="1464.347" y="443" width="16.012" height="23" fill="#b6c0c9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>allocateBtreePage — 22 ms sampled CPU (0.05%)</title><rect x="1464.654" y="419" width="0.845" height="23" fill="#c5c3da" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>editPage — 19 ms sampled CPU (0.05%)</title><rect x="1465.729" y="419" width="0.730" height="23" fill="#dfe4d2" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>subjournalPageIfRequired — 314 ms sampled CPU (0.74%)</title><rect x="1467.380" y="419" width="12.057" height="23" fill="#dbcacb" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>unixWrite — 310 ms sampled CPU (0.73%)</title><rect x="1467.457" y="395" width="11.903" height="23" fill="#d0e5ba" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>seekAndWrite — 309 ms sampled CPU (0.73%)</title><rect x="1467.496" y="371" width="11.865" height="23" fill="#b5ccc0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>guarded_pwrite_np — 308 ms sampled CPU (0.73%)</title><rect x="1467.496" y="347" width="11.826" height="23" fill="#c6d5b6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>saveCursorsOnList — 22 ms sampled CPU (0.05%)</title><rect x="1480.666" y="443" width="0.845" height="23" fill="#d2e4b5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeIndexMoveto — 86 ms sampled CPU (0.20%)</title><rect x="1481.511" y="443" width="3.302" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeRecordCompareWithSkip — 50 ms sampled CPU (0.12%)</title><rect x="1482.240" y="419" width="1.920" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>_platform_memcmp — 30 ms sampled CPU (0.07%)</title><rect x="1482.240" y="395" width="1.152" height="23" fill="#b0dddd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeRecordCompareWithSkip — 18 ms sampled CPU (0.04%)</title><rect x="1483.392" y="395" width="0.691" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>subjournalPageIfRequired — 208 ms sampled CPU (0.49%)</title><rect x="1485.120" y="443" width="7.987" height="23" fill="#dbcacb" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>unixWrite — 201 ms sampled CPU (0.48%)</title><rect x="1485.312" y="419" width="7.718" height="23" fill="#d0e5ba" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>seekAndWrite — 201 ms sampled CPU (0.48%)</title><rect x="1485.312" y="395" width="7.718" height="23" fill="#b5ccc0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>guarded_pwrite_np — 200 ms sampled CPU (0.47%)</title><rect x="1485.312" y="371" width="7.680" height="23" fill="#c6d5b6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeNext — 113 ms sampled CPU (0.27%)</title><rect x="1495.104" y="467" width="4.339" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>moveToChild — 97 ms sampled CPU (0.23%)</title><rect x="1495.104" y="443" width="3.725" height="23" fill="#caced5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getAndInitPage — 97 ms sampled CPU (0.23%)</title><rect x="1495.104" y="419" width="3.725" height="23" fill="#dbe1b5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getPageNormal — 97 ms sampled CPU (0.23%)</title><rect x="1495.104" y="395" width="3.725" height="23" fill="#e3d9dd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>purgeableCacheFetch — 24 ms sampled CPU (0.06%)</title><rect x="1495.142" y="371" width="0.922" height="23" fill="#d0c2c4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>_platform_memset — 19 ms sampled CPU (0.05%)</title><rect x="1495.142" y="347" width="0.730" height="23" fill="#c7d6b4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>readDbPage — 71 ms sampled CPU (0.17%)</title><rect x="1496.064" y="371" width="2.726" height="23" fill="#b1d7ad" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>unixRead — 66 ms sampled CPU (0.16%)</title><rect x="1496.064" y="347" width="2.534" height="23" fill="#b7c8c0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>pread — 64 ms sampled CPU (0.15%)</title><rect x="1496.064" y="323" width="2.457" height="23" fill="#e0d9c8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeOpen — 26 ms sampled CPU (0.06%)</title><rect x="1499.443" y="467" width="0.998" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeTableMoveto — 192 ms sampled CPU (0.46%)</title><rect x="1500.441" y="467" width="7.372" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>moveToChild — 25 ms sampled CPU (0.06%)</title><rect x="1500.594" y="443" width="0.960" height="23" fill="#caced5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getAndInitPage — 25 ms sampled CPU (0.06%)</title><rect x="1500.594" y="419" width="0.960" height="23" fill="#dbe1b5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getPageNormal — 24 ms sampled CPU (0.06%)</title><rect x="1500.594" y="395" width="0.922" height="23" fill="#e3d9dd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeNext — 127 ms sampled CPU (0.30%)</title><rect x="1501.900" y="443" width="4.877" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>moveToChild — 126 ms sampled CPU (0.30%)</title><rect x="1501.900" y="419" width="4.838" height="23" fill="#caced5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getAndInitPage — 126 ms sampled CPU (0.30%)</title><rect x="1501.900" y="395" width="4.838" height="23" fill="#dbe1b5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getPageNormal — 125 ms sampled CPU (0.30%)</title><rect x="1501.938" y="371" width="4.800" height="23" fill="#e3d9dd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>readDbPage — 113 ms sampled CPU (0.27%)</title><rect x="1502.361" y="347" width="4.339" height="23" fill="#b1d7ad" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>unixRead — 112 ms sampled CPU (0.27%)</title><rect x="1502.361" y="323" width="4.301" height="23" fill="#b7c8c0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>pread — 112 ms sampled CPU (0.27%)</title><rect x="1502.361" y="299" width="4.301" height="23" fill="#e0d9c8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeFinishMoveto — 139 ms sampled CPU (0.33%)</title><rect x="1509.426" y="467" width="5.337" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeTableMoveto — 136 ms sampled CPU (0.32%)</title><rect x="1509.503" y="443" width="5.222" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeNext — 103 ms sampled CPU (0.24%)</title><rect x="1510.386" y="419" width="3.955" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>moveToChild — 101 ms sampled CPU (0.24%)</title><rect x="1510.386" y="395" width="3.878" height="23" fill="#caced5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getAndInitPage — 101 ms sampled CPU (0.24%)</title><rect x="1510.386" y="371" width="3.878" height="23" fill="#dbe1b5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getPageNormal — 101 ms sampled CPU (0.24%)</title><rect x="1510.386" y="347" width="3.878" height="23" fill="#e3d9dd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>readDbPage — 88 ms sampled CPU (0.21%)</title><rect x="1510.847" y="323" width="3.379" height="23" fill="#b1d7ad" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>unixRead — 88 ms sampled CPU (0.21%)</title><rect x="1510.847" y="299" width="3.379" height="23" fill="#b7c8c0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>seekAndRead — 87 ms sampled CPU (0.21%)</title><rect x="1510.847" y="275" width="3.341" height="23" fill="#e1b9af" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>pread — 87 ms sampled CPU (0.21%)</title><rect x="1510.847" y="251" width="3.341" height="23" fill="#e0d9c8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeFreeCursorNN — 20 ms sampled CPU (0.05%)</title><rect x="1514.763" y="467" width="0.768" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeHalt — 220 ms sampled CPU (0.52%)</title><rect x="1515.531" y="467" width="8.447" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeFreeCursorNN — 134 ms sampled CPU (0.32%)</title><rect x="1515.608" y="443" width="5.145" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeClose — 111 ms sampled CPU (0.26%)</title><rect x="1516.146" y="419" width="4.262" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3PagerClose — 108 ms sampled CPU (0.26%)</title><rect x="1516.261" y="395" width="4.147" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>purgeableCacheDestroy — 90 ms sampled CPU (0.21%)</title><rect x="1516.453" y="371" width="3.456" height="23" fill="#cedec9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>_kernelrpc_mach_vm_deallocate_trap — 82 ms sampled CPU (0.19%)</title><rect x="1516.453" y="347" width="3.149" height="23" fill="#d5d2c4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>vdbeCommit — 76 ms sampled CPU (0.18%)</title><rect x="1520.792" y="443" width="2.918" height="23" fill="#b2e0bf" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeCommitPhaseOne — 71 ms sampled CPU (0.17%)</title><rect x="1520.792" y="419" width="2.726" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3PagerCommitPhaseOne — 71 ms sampled CPU (0.17%)</title><rect x="1520.792" y="395" width="2.726" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>pagerWalFrames — 60 ms sampled CPU (0.14%)</title><rect x="1520.792" y="371" width="2.304" height="23" fill="#d8bead" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>unixWrite — 49 ms sampled CPU (0.12%)</title><rect x="1520.792" y="347" width="1.881" height="23" fill="#d0e5ba" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>seekAndWrite — 49 ms sampled CPU (0.12%)</title><rect x="1520.792" y="323" width="1.881" height="23" fill="#b5ccc0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>guarded_pwrite_np — 49 ms sampled CPU (0.12%)</title><rect x="1520.792" y="299" width="1.881" height="23" fill="#c6d5b6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeHandleMovedCursor — 145 ms sampled CPU (0.34%)</title><rect x="1523.979" y="467" width="5.568" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeTableMoveto — 130 ms sampled CPU (0.31%)</title><rect x="1524.209" y="443" width="4.992" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>moveToRoot — 39 ms sampled CPU (0.09%)</title><rect x="1524.286" y="419" width="1.498" height="23" fill="#bfbcc4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getAndInitPage — 36 ms sampled CPU (0.09%)</title><rect x="1524.286" y="395" width="1.382" height="23" fill="#dbe1b5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>getPageNormal — 27 ms sampled CPU (0.06%)</title><rect x="1524.286" y="371" width="1.037" height="23" fill="#e3d9dd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeMemCast — 30 ms sampled CPU (0.07%)</title><rect x="1529.930" y="467" width="1.152" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeMemMakeWriteable — 284 ms sampled CPU (0.67%)</title><rect x="1531.850" y="467" width="10.905" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeMemGrow — 19 ms sampled CPU (0.05%)</title><rect x="1531.850" y="443" width="0.730" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>vdbeMemAddTerminator — 232 ms sampled CPU (0.55%)</title><rect x="1532.580" y="443" width="8.908" height="23" fill="#afbdc8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeMemGrow — 196 ms sampled CPU (0.46%)</title><rect x="1533.079" y="419" width="7.526" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>_platform_memmove — 85 ms sampled CPU (0.20%)</title><rect x="1533.079" y="395" width="3.264" height="23" fill="#dbd8b8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3DbFreeNN — 19 ms sampled CPU (0.05%)</title><rect x="1536.343" y="395" width="0.730" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3DbMallocRawNNTyped — 33 ms sampled CPU (0.08%)</title><rect x="1537.072" y="395" width="1.267" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeSerialGet — 20 ms sampled CPU (0.05%)</title><rect x="1542.909" y="467" width="0.768" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VtabSavepoint — 818 ms sampled CPU (1.94%)</title><rect x="1543.753" y="467" width="31.409" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5SavepointMethod — 818 ms sampled CPU (1.94%)</title><rect x="1543.753" y="443" width="31.409" height="23" fill="#c9c0ab" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3Fts5StorageSync — 818 ms sampled CPU (1.94%)</title><rect x="1543.753" y="419" width="31.409" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5IndexFlush — 807 ms sampled CPU (1.91%)</title><rect x="1543.830" y="395" width="30.987" height="23" fill="#b8cab4" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5IndexMerge — 508 ms sampled CPU (1.20%)</title><rect x="1544.368" y="371" width="19.506" height="23" fill="#dbc9bc" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5IndexMergeLevel — 490 ms sampled CPU (1.16%)</title><rect x="1544.829" y="347" width="18.815" height="23" fill="#d8d9be" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>_platform_memcmp — 24 ms sampled CPU (0.06%)</title><rect x="1545.558" y="323" width="0.922" height="23" fill="#b0dddd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5ChunkIterate — 98 ms sampled CPU (0.23%)</title><rect x="1546.787" y="323" width="3.763" height="23" fill="#b5cca8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5MergeChunkCallback — 59 ms sampled CPU (0.14%)</title><rect x="1547.056" y="299" width="2.265" height="23" fill="#c8c0d5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5WriteFlushLeaf — 27 ms sampled CPU (0.06%)</title><rect x="1547.440" y="275" width="1.037" height="23" fill="#d4ddbb" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5DataWrite — 27 ms sampled CPU (0.06%)</title><rect x="1547.440" y="251" width="1.037" height="23" fill="#d9e4c8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3_step — 26 ms sampled CPU (0.06%)</title><rect x="1547.478" y="227" width="0.998" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeExec — 26 ms sampled CPU (0.06%)</title><rect x="1547.478" y="203" width="0.998" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeInsert — 22 ms sampled CPU (0.05%)</title><rect x="1547.593" y="179" width="0.845" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>balance — 22 ms sampled CPU (0.05%)</title><rect x="1547.593" y="155" width="0.845" height="23" fill="#b6c0c9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5DataDelete — 19 ms sampled CPU (0.05%)</title><rect x="1550.550" y="323" width="0.730" height="23" fill="#d7cfdd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3_step — 19 ms sampled CPU (0.05%)</title><rect x="1550.550" y="299" width="0.730" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeExec — 19 ms sampled CPU (0.05%)</title><rect x="1550.550" y="275" width="0.730" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5MultiIterNext — 211 ms sampled CPU (0.50%)</title><rect x="1551.894" y="323" width="8.102" height="23" fill="#afe2ad" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>_platform_memcmp — 34 ms sampled CPU (0.08%)</title><rect x="1551.894" y="299" width="1.306" height="23" fill="#b0dddd" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5SegIterNext — 88 ms sampled CPU (0.21%)</title><rect x="1553.660" y="299" width="3.379" height="23" fill="#b3d0cf" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5DataRead — 18 ms sampled CPU (0.04%)</title><rect x="1553.660" y="275" width="0.691" height="23" fill="#c2d2db" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5SegIterLoadTerm — 25 ms sampled CPU (0.06%)</title><rect x="1554.505" y="275" width="0.960" height="23" fill="#cebcda" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5WriteAppendTerm — 24 ms sampled CPU (0.06%)</title><rect x="1560.457" y="323" width="0.922" height="23" fill="#e0c8af" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5IndexMergeLevel — 153 ms sampled CPU (0.36%)</title><rect x="1563.874" y="371" width="5.875" height="23" fill="#d8d9be" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5ChunkIterate — 32 ms sampled CPU (0.08%)</title><rect x="1564.373" y="347" width="1.229" height="23" fill="#b5cca8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5MergeChunkCallback — 19 ms sampled CPU (0.05%)</title><rect x="1564.450" y="323" width="0.730" height="23" fill="#c8c0d5" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5MultiIterNext — 47 ms sampled CPU (0.11%)</title><rect x="1566.178" y="347" width="1.805" height="23" fill="#afe2ad" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5SegIterNext — 18 ms sampled CPU (0.04%)</title><rect x="1566.792" y="323" width="0.691" height="23" fill="#b3d0cf" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5WriteAppendTerm — 21 ms sampled CPU (0.05%)</title><rect x="1568.059" y="347" width="0.806" height="23" fill="#e0c8af" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>fts5WriteAppendTerm — 22 ms sampled CPU (0.05%)</title><rect x="1570.171" y="371" width="0.845" height="23" fill="#e0c8af" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3Fts5HashScanInit — 52 ms sampled CPU (0.12%)</title><rect x="1572.629" y="371" width="1.997" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>vdbeMemAddTerminator — 22 ms sampled CPU (0.05%)</title><rect x="1575.777" y="467" width="0.845" height="23" fill="#afbdc8" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>vdbeSorterSort — 38 ms sampled CPU (0.09%)</title><rect x="1576.852" y="467" width="1.459" height="23" fill="#cdd7d6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeMemMakeWriteable — 27 ms sampled CPU (0.06%)</title><rect x="1639.057" y="491" width="1.037" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3VdbeSerialGet — 41 ms sampled CPU (0.10%)</title><rect x="1640.093" y="491" width="1.574" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WalDefaultHook — 83 ms sampled CPU (0.20%)</title><rect x="1641.668" y="491" width="3.187" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3_wal_checkpoint_v2 — 83 ms sampled CPU (0.20%)</title><rect x="1641.668" y="467" width="3.187" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3BtreeCheckpoint — 83 ms sampled CPU (0.20%)</title><rect x="1641.668" y="443" width="3.187" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>sqlite3WalCheckpoint — 83 ms sampled CPU (0.20%)</title><rect x="1641.668" y="419" width="3.187" height="23" fill="#91c3d9" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>unixWrite — 65 ms sampled CPU (0.15%)</title><rect x="1642.320" y="395" width="2.496" height="23" fill="#d0e5ba" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>seekAndWrite — 64 ms sampled CPU (0.15%)</title><rect x="1642.320" y="371" width="2.457" height="23" fill="#b5ccc0" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>guarded_pwrite_np — 63 ms sampled CPU (0.15%)</title><rect x="1642.359" y="347" width="2.419" height="23" fill="#c6d5b6" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>jb_sql_utf8 — 37 ms sampled CPU (0.09%)</title><rect x="1645.584" y="539" width="1.421" height="23" fill="#b4c0cf" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<g class="frame"><title>write — 51 ms sampled CPU (0.12%)</title><rect x="1648.042" y="563" width="1.958" height="23" fill="#b3e1ac" stroke="#fbfaf7" stroke-width="0.5"/>
+</g>
+<text x="30" y="689" font-size="13">29.124 s instrumented append; 19.337 s to staged. Diagnostic timing only; concurrent work and profiler overhead apply.</text>
+<text x="30" y="713" font-size="13">Bend tail calls flatten logical ancestry. This graph shows native stacks; generic runtime frames cannot identify all logical callers.</text>
+<text x="30" y="737" font-size="13">Self: term_drop 24.18% · rfc_wrap 12.49% · String.append 9.55% · JSON escape_char 5.42% · SQLite library total 13.38%.</text>
+<text x="30" y="761" font-size="13">14 samples had no stack and are excluded. No allocation byte/count measurements. Original trace and folded stacks retained.</text>
+</svg>
