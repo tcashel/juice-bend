@@ -245,22 +245,13 @@ def to_json(value: Report) -> String:
     "\"database_consistency\":\"single_read_transaction\",\"file_consistency\":\"separate_non_atomic_samples\"," ++
     "\"accounting\":\"logical_file_lengths_and_reusable_sqlite_pages\"}"
 
-def reason_text(reason: String) -> String:
-  match reason:
-    case "not_file_backed":
-      "this library is not stored in a file"
-    case "invalid_database_path":
-      "invalid database path"
-    case "missing_or_inaccessible":
-      "file is absent or inaccessible"
-    case "not_regular_file":
-      "path is a link or nonregular file"
-    case "invalid_stat_metadata":
-      "invalid file metadata"
-    case "stat_failed":
-      "file metadata request failed or timed out"
-    case other:
-      other
+def reason_text(+reason: String) -> String:
+  Bool.pick(String,String.eq(reason,"not_file_backed"),"this library is not stored in a file",
+    Bool.pick(String,String.eq(reason,"invalid_database_path"),"invalid database path",
+      Bool.pick(String,String.eq(reason,"missing_or_inaccessible"),"file is absent or inaccessible",
+        Bool.pick(String,String.eq(reason,"not_regular_file"),"path is a link or nonregular file",
+          Bool.pick(String,String.eq(reason,"invalid_stat_metadata"),"invalid file metadata",
+            Bool.pick(String,String.eq(reason,"stat_failed"),"file metadata request failed or timed out",reason))))))
 
 def file_summary(label: String,value: FileSize) -> String:
   match value:

@@ -101,22 +101,27 @@ def nested_checked(valid: Bool,state: State,jobs: List<&2,Job>,value: Json.Json,
 def nested(state: State,jobs: List<&2,Job>,value: Json.Json,path: String,+depth: U32) -> Step:
   nested_checked(U32.is_lt(depth,8),state,jobs,value,path,depth)
 
-def block_type(+kind: String,+value: Json.Json,+path: String,depth: U32,+state: State,jobs: List<&2,Job>) -> Step:
-  match kind:
-    case "image":
+def block_kind(+kind: String) -> U32:
+  Bool.pick(U32,String.eq(kind,"image") || String.eq(kind,"document"),0,
+    Bool.pick(U32,String.eq(kind,"input_image") || String.eq(kind,"image_url"),1,
+      Bool.pick(U32,String.eq(kind,"tool_result"),2,
+        Bool.pick(U32,String.eq(kind,"tool_use"),3,4))))
+
+def block_routed(route: U32,kind: String,+value: Json.Json,+path: String,depth: U32,+state: State,jobs: List<&2,Job>) -> Step:
+  match route:
+    case 0:
       Step{add(state,source_path(value,path),kind,Ref.source(Json.field(value,"source"))),jobs}
-    case "document":
-      Step{add(state,source_path(value,path),kind,Ref.source(Json.field(value,"source"))),jobs}
-    case "input_image":
+    case 1:
       Step{add(state,image_url_path(value,path),kind,image_url(value)),jobs}
-    case "image_url":
-      Step{add(state,image_url_path(value,path),kind,image_url(value)),jobs}
-    case "tool_result":
+    case 2:
       nested(state,jobs,Json.field(value,"content"),path ++ "/content",depth)
-    case "tool_use": Step{state,jobs}
+    case 3: Step{state,jobs}
     case _:
       Step{Bool.pick(State,known_text(kind),state,
         issue(state,"unsupported_content_block; total unknown")),jobs}
+
+def block_type(+kind: String,value: Json.Json,path: String,depth: U32,state: State,jobs: List<&2,Job>) -> Step:
+  block_routed(block_kind(kind),kind,value,path,depth,state,jobs)
 
 def block(value: Json.Json,path: String,depth: U32,state: State,jobs: List<&2,Job>) -> Step:
   match value:

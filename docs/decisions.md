@@ -138,3 +138,18 @@
   Known context/relay/meta records remain readable; uncertainty before the first
   request stays ineligible. Why distinguishes exact request suffix previews
   from bounded retained excerpts and makes no human-authorship claim.
+
+## Bend compiler representation boundaries
+
+Long string patterns in a multi-case match expand into character/bit constructor
+trees in the pinned compiler. For command/type labels, use String.eq and separate
+bounded numeric/operand matching when measurements show pathological expansion.
+Keep exact accepted strings, arity, fallback and coverage behavior; do not weaken
+validation or patch the compiler to make the build pass.
+
+The native compiler also flattens nonrecursive records across continuations.
+An observed 260-slot preview input join exceeded its fixed 247-slot limit.
+Boxing the exact pending value before UI.event with a persistent List resolved
+the full-app code-generation error without changing schemas or state semantics.
+Native optimized clang failures remain a separate issue; -O0 correctness builds
+are not optimized performance evidence.
