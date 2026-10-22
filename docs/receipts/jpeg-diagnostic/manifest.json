@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "files": {
+    "README.md": "344aef3a84744a425c996361bf5e332d9f8d7ec244336e5095b8efc6b55dd7c9",
+    "jpeg-diagnostic.json": "80b57be247968281f374f5ea39eb548cd7042333722ea0b733b9b17b80858d76",
+    "jpeg-sampled-stacks.svg": "add1eceb4242399491e89f86b27c38a75051aa1477b075f02e55371daac07309"
+  },
+  "checks": {
+    "source_manifest_and_logs_rechecked": true,
+    "only_pixels_source_differs": true,
+    "fixture_header_and_hash_rechecked": true,
+    "svg_rectangle_geometry_and_weights_preserved": true,
+    "private_path_hostname_process_identifier_scan_passed": true
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "scope": "Synthetic JPEG profile and one paired fixture diagnostic; no native UI acceptance or general performance claim.",
+  "profile": {
+    "environment": "macOS ARM64 guest in Tart",
+    "native_optimization": "-O0",
+    "optimization_evidence": "Successful native build receipt; the sample header itself does not encode compiler flags.",
+    "raw_sample_sha256": "1b0ba071893c9c71fd2a73d6ed80e06f16a02b1c9700a41cde0f13b7949141ec",
+    "app_build_receipt_sha256": "185a3f79dcb46aed32aae63a6f2f50d0d81d382b670b3c47c4c727b9047e6ebf",
+    "reported_sample_interval_ms": 1,
+    "main_thread_samples": 2362,
+    "excluded_waiting_helper_thread_samples": 2362,
+    "exclusive_main_families": [
+      {
+        "family": "runtime / EXIT",
+        "exclusive_samples": 689,
+        "percent_main_samples": 29.17
+      },
+      {
+        "family": "jpeg.pixels.dot",
+        "exclusive_samples": 448,
+        "percent_main_samples": 18.967
+      },
+      {
+        "family": "runtime / Result.bind family",
+        "exclusive_samples": 304,
+        "percent_main_samples": 12.87
+      },
+      {
+        "family": "runtime / Clo.apply",
+        "exclusive_samples": 253,
+        "percent_main_samples": 10.711
+      },
+      {
+        "family": "jpeg.pixels.unpack",
+        "exclusive_samples": 119,
+        "percent_main_samples": 5.038
+      },
+      {
+        "family": "jpeg.pixels.pass_walk",
+        "exclusive_samples": 82,
+        "percent_main_samples": 3.472
+      },
+      {
+        "family": "runtime / generated spin helpers",
+        "exclusive_samples": 81,
+        "percent_main_samples": 3.429
+      }
+    ],
+    "dot_family_inclusive_samples": 576,
+    "conversion": "Printed weighted call tree; self weight equals parent inclusive weight minus direct children. All thread totals and 52 reported top-of-stack rows reconcile. Graph groups generated continuations/islands, preserving weights.",
+    "limitations": [
+      "One sampled window, not a complete decode or a timeline.",
+      "Weights are stack observations, not function calls or exact CPU milliseconds.",
+      "Generated work-loop dispatch does not preserve the full logical Bend call chain. Generic runtime samples cannot all be attributed to IDCT.",
+      "No optimized latency, Swift comparison, or cross-host timing comparison."
+    ]
+  },
+  "paired_fixture": {
+    "environment": "Same Linux x86_64 host for both variants",
+    "native_compiler": "Clang 22.1.8",
+    "native_optimization": "-O0",
+    "bend_version": "2.0.37",
+    "bend_revision": "60ca80aedeec9d8f0629b5f10dd19457d8ad67af",
+    "bun_version": "1.4.2",
+    "fixture": "1024 x 640 baseline JPEG, 4:4:4, only end-of-block symbols in its selected AC Huffman tables; DC-only admitted blocks.",
+    "fixture_sha256": "63e2d58cc271cfdcba0f0c8f87821c340e3a410547987934c4be778dcf50e202",
+    "fixture_bytes": 9277,
+    "test_entry": "tests/jpeg_native_fixture.bend",
+    "only_source_difference": "src/jpeg/pixels.bend",
+    "baseline_source_sha256": "c919b132d9a41c3ed527cbd167f2d44687a029fb81b5a82bbfc552a0910e9d7c",
+    "candidate_source_sha256": "3ce94b58bcd1f14c5b0f02c89bf157bb0c02fde20997853f1746f5564ecb7a53",
+    "measurement": "First-invocation monitored process wall time, including fixture assertions; baseline then candidate.",
+    "baseline_seconds": 44.833,
+    "candidate_seconds": 5.84,
+    "passes_per_variant": 52,
+    "exit_per_variant": 0,
+    "stderr_bytes_per_variant": 0,
+    "oracle": "Independent input SHA, geometry, 24 exact selected pixels and explicit progressive refusal; not full raster equality.",
+    "receipt_sha256": "24d32f09a0dbf282407de1504d3c70ce67501de0bffda9e96139d28373bc714a",
+    "manifest_sha256": "87840bd45c30f5e05f4e01df9e5d32bef15fb785279f765089ce8bd3acb9575f",
+    "verified_collection_summary_sha256": "03e09c788a883bd3344e2db45362a5664e8177698e84a89a8b6738601bf12b5b",
+    "baseline_stdout_sha256": "2de408c10cea0bd9a0c21a6e280de89ef5f0eaa93382d7e8f3147a401a3160c4",
+    "candidate_stdout_sha256": "2de408c10cea0bd9a0c21a6e280de89ef5f0eaa93382d7e8f3147a401a3160c4",
+    "frozen_inputs_unchanged_during_run": 145,
+    "tool_evidence": "Clang and mise binary hashes match before/after. Bun version checked before builds; one isolated installation; Bun binary hash recorded only at postflight.",
+    "limitations": [
+      "One run per variant; no warmup, cache reset, repetition, variance estimate or statistical claim.",
+      "The fixture is DC-only; this does not measure arbitrary JPEG inputs.",
+      "The timed process also checks decoding inputs, selected pixels and unsupported progressive input.",
+      "This is not a macOS, Swift, UI, optimized-build, or end-to-end import timing."
+    ]
+  },
+  "publication_sanitization": "Derived counts and hashes only; raw traces, machine names, absolute paths, process identifiers and reference source are omitted."
+}

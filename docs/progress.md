@@ -4,168 +4,186 @@
 
 Functional and pleasant native UX parity with SwiftUI Juice, excluding embeddings
 and models, remains **in progress**. No user answer or approval is pending.
-Application/UI/parser/policy stay Bend 2; the narrow SQLite bridge is 454 lines.
-Lean is an optional development proof checker, never an app dependency.
-Mise pins Bun 1.4.2 and Bend 2.0.37 revision
-`60ca80aedeec9d8f0629b5f10dd19457d8ad67af`. Use synthetic isolated data only.
-Original Juice/provider data remain read-only. Update the implementation branch
-and draft PR #1; never merge. Preserve the protected checkout index and edits.
-Publication uses explicit paths and a separate index in `build/publication.git`.
+Application, UI, parsing, policy and tests remain Bend 2. SQLite's narrow bridge
+is the native exception. Lean is an optional development proof checker only.
+Use synthetic isolated data; original Juice and provider histories are read-only.
+Update the implementation branch and draft PR #1; never merge. Preserve the
+checkout index and edits. Publication uses explicit paths and a separate index
+in `build/publication.git`.
 
-## Working executable and source
+Mise pins Bun 1.4.2, Bend 2.0.37 revision
+`60ca80aedeec9d8f0629b5f10dd19457d8ad67af`, and repository-local LLVM 23.1.4.
+Apple clang 21 failed optimized generated C with a backend register error.
+Official LLVM 23 compiled the same C at -O1 with required ABI attributes intact.
+Agentbox Clang 22 passed an ABI/cross-target probe; GCC lacks required
+`preserve_most` support and was not forced. No Bend runtime/ABI override exists.
 
-The accepted `build/juice-bend`, `build/juice-bend-reader` and
-`build/Juice Bend Reader.app` remain SHA256 `fcbbbfbde90ad072c26fb20ab044522487a6ee4bbe9890f72300765a18518701`.
-`mise run run -- --demo` opens an isolated demo. Its native reader journey passed
-cross-wrap copy, paging/wheel movement, inert entry and exact Back restoration.
-See `docs/receipts/native-validation-followup.txt`; native result `c61781c0…`.
-The 97-assertion production replay is adopted. Earlier executables and failed
-input-delivery experiments remain preserved; no runtime patch was made.
+## Published and working source
 
-Maintained source includes reviewed reader/Connections/archive/worker changes,
-the recorded-title backend (650 Linux checks and 49 Mac checks), worker equality
-dispatch (55 Mac checks), and two literal dispatch rewrites (141 Mac checks).
-Adoption manifests: `build/reader-attachments-adoption`,
-`build/provider-title-adoption`, `build/worker-dispatch-adoption` and
-`build/literal-dispatch-adoption`. Later source changes are not automatically in
-the accepted executable. Combined capture/PNG/ATIF/discovery remains isolated;
-its full app does not include title-v5 yet.
+Latest verified published head: `1a9ca8b8d7809300748c4cc7aae1f8ae951434fd`,
+retained attachments/images/ATIF/discovery, tree `1802a6901d4d3815b0606730750430c0b496f027`.
+PR #1 was verified open, draft and unmerged. Publication record:
+`build/llvm-pin-publication.json`; exact remote object
+`build/llvm-pin-remote.json`; bare ref `codex/published-llvm-pin`.
+Do not reset the protected checkout to it.
 
-Latest verified published head: `cb65333fae78b52cd7d379aafcba7f7473e60ec4`,
-tree `ba308d7e208ba7f4121dbbbf5d24e7c35defbb4d`, open/draft/unmerged.
-Remote object: `build/literal-dispatch-remote.json`; bare ref
-`codex/published-literal-dispatch`. Do not reset the protected checkout to it.
+Combined capture/PNG/JPEG/ATIF/discovery and the JPEG DC shortcut are adopted in
+maintained source, retaining title-v5. `build/root-image-adoption/receipt.json`
+(`fbe7e24b…`) binds 129 paths. The separate corrected `tests/polish.bend` expects
+ATIF at (16,568) and Archive at (120,568); application geometry is unchanged.
+This feature slice is published on top of the LLVM commit. Exact manifest and
+remote objects: `build/image-feature-publication.json` and
+`build/image-feature-remote-commit.json`; bare ref `codex/published-images`.
 
-## Current native result
+The accepted `build/juice-bend`, `build/juice-bend-reader` and reader app remain
+SHA256 `fcbbbfbde90ad072c26fb20ab044522487a6ee4bbe9890f72300765a18518701`.
+`mise run run -- --demo` opens an isolated demo. Its prior native reader journey
+passed wrap selection/copy, paging, wheel movement and exact Back restoration;
+see `docs/receipts/native-validation-followup.txt`. Do not confuse that accepted
+executable with later source or image candidates.
 
-The full combined app now builds. Long literal-pattern expansion was reduced
-using Bend equality dispatch. A typed observation then located one 260-slot
-continuation against the pinned 247-slot limit: UI.event returns 29 slots while
-retaining Gui (97) and pending preview (134). Final Bend wrapper `8f7894fc…`
-boxes pending **before UI.event**, restoring it afterward without changing
-schemas, channels or bookmarks. Eight actual A.event Mac checks passed. The
-earlier box around Gui.event was too late and remains a failed experiment.
-No compiler/runtime limit changed.
+A fresh **maintained-wrapper build passed** in
+`build/current-native/1dd7456a-c762-45ad-9385-163fb5c2f787`: 785.670s,
+binary `455179e67f30104c6473446418fa1184d3a616239abe7b903171efc1856f5e8d`,
+C `ca8abd542610ad6c5a4cd141ffd746f828313b34d53d6e10ac3c1d1a32757598`.
+All 167 maintained inputs, 88 pinned Bend files, compiler and protected state
+remained unchanged. Normal scripts/build, LLVM23 -O1, no compiler diagnostics;
+stderr contains its expected Built line. This exact binary has **not run UI**.
+`docs/receipts/current-image-build.json` records build-only scope.
 
-Normal frontend `92de6110` passed in 157.615s. Same C `a46e9a6a…` compiled at
-native -O0 in 351.906s (`42930ca1`), producing `e0be4e4b…` (268,058,776 bytes).
-All 143 app files and 93 pins stayed unchanged. Apple clang 21 -O3 and -O1 both
-failed with `live register clobbered by inserted prologue instructions`; exact
-reproducers and the earlier missing-SDK failure remain preserved. These are
-build results, not performance acceptance. Matching helper `787b104d` passed
--O3, prepare/guard/no-clobber; all 70 shared paths match. Build chain:
-`build/preview-input-box-integration/native-build-binding.json`.
+## Current native evidence
 
-**Actual integrated Tart v4 failed.** Run `build/integrated-assets-native-v4-run`,
-nonce `35c2b432-a95a-427c-b3e0-00c539980347`: actual GUI folder add/select and
-exact PNG capture (6,555 bytes, SHA `2fadba06…`) passed with original occurrence
-and policy revision. All 12 image checks remained on “Opening verified retained
-image” across about 16 seconds. Normal close timed out while the app remained
-alive. Source deletion, restart, retained exports and ATIF were **not run**.
-The app later exited; recovery verified no app/window and saved the guarded
-unchanged synthetic fixture. Original failed receipts remain intact. Owned
-wrapper ended 143 after stopping only its own Tart child; VM stopped and lease
-released. Root inspected five screenshots. Result SHA `4efe0a3a…`, full record
-`native-result.json` in that run. A macOS Tips overlay and missing CJK/emoji glyphs
-remain visual limitations.
+The optimized image candidate `e6bf90ee…` predates the current title/DC overlay.
+Its unchanged-C LLVM23 receipt is `docs/receipts/llvm23-native.json`.
 
-Source shows pure PNG decoding on the parent UI path after bytes arrive. This
-is a plausible cause of the pending/close delay; no live sample was obtained
-before exit, so the exact cause is not proven.
+**JPEG Tart v3: partial pass, preserved terminal failures.**
+`build/jpeg-native-v3-plan/run-01`, nonce
+`b261027d-3f7b-4bd7-a4ed-720b730858fc`, result SHA `2938e0c1…`.
+Actual JPEG Fit/actual size/pan/clamps/reopen, pending Escape and Back with exact
+restored selection, PNG viewing/export, readable unsupported/truncated errors,
+and source-absent second-process restart with exact JPEG exports passed.
+The close-during-pending step stopped before clicking because its ps executable
+field was truncated. Cleanup termination briefly left a decoder child; later
+read-only recovery found no owned app/child/window and recovered the unchanged
+synthetic fixture. Display resolution restored, but visible-frame height shifted
+three points; the original restoration failure remains recorded. VM stopped and
+lease released. No native Close-during-pending pass is claimed.
+Public scope: `docs/receipts/optimized-image-native.json`.
 
-**Async JPEG Tart v2 also failed its image check, with clean exit.** The new
-app `876aab5a…` ran in `build/jpeg-native-v2-plan/run-native-1` using isolated
-source-absent synthetic captures. Native launch, role-filtered transcript/copy
-and attachment selection passed. The JPEG child reached its 120-second limit;
-all 140 Fit pixel observations failed. The app displayed an explicit unavailable
-message, then accepted normal application termination. Fixture verification,
-unchanged copy, payload hashes and display restoration passed; app/window absent,
-VM stopped and lease released. Root inspected four screenshots. Actual native
-Close during pending decode, cancellation, PNG, exports and restart did not run.
-A three-second sample of the exact decoder child shows Bend JPEG pixel-transform
-and runtime-evaluation work; this -O0 result is not optimized performance evidence.
-Result `7a9c691b…`; public scope: `docs/receipts/async-image-native.txt`.
+**External PNG/ATIF run: notification-contaminated pixel oracle.**
+`build/external-async-native-v2-plan/run-01`, nonce
+`cf9dd950-9816-4cef-83cb-697416375764`, result SHA `3f504d69…`.
+Actual folder approval/Use/capture passed: exact 6,555 bytes, original immutable
+occurrence and policy revision. The original fullscreen Fit oracle failed.
+Root inspection found two macOS notification banners/shadows over the matte.
+The contemporaneous owned-window screenshot passes all **1,085 exact pixel
+samples** using the unchanged oracle geometry and zero tolerance. Decoder child
+was present in only the first seven observations. This is not evidence of a
+150-second render delay; the original fullscreen failure remains failed.
+Later pan/source-loss/restart/export/ATIF stages were not run. Cleanup, fixture
+verification/copy, payload integrity and display restoration passed.
+Public scope: `docs/receipts/external-image-native.json`.
 
-## Exact continuation
+**Fresh external workflow passed.**
+`build/external-notification-native-plan/run-01`, result `01b4c748…`, uses the
+same optimized e6 app/helper with a new synthetic root and guarded banner dismissal.
+Actual folder approval/capture, PNG Fit/actual size/pan/wheel/Back, GUI disable to
+revision2, original removal, different-PID restart, retained display/Escape,
+two exact 6,555-byte 0600 exports and full ATIF export passed. Seven pixel stages
+checked 7,595 samples at zero tolerance. Official pinned ATIF 1.8 validation passed
+16,310bytes/10steps, with 37 independent checks including hidden assistant records.
+All guest/cleanup/fixture/display checks passed. Root inspected actual screens.
+Wrapper13034 ended143 on requested stop; VM stopped and its lease was released.
+`docs/receipts/external-image-native-followup.json` is the sanitized record.
+A 3s parent sample accidentally preceded Open; it does not profile admission.
+Observed child absence preceded first retained pixels by about 53s, so actual
+parent admission/presentation remains a responsiveness concern, not a decoder claim.
 
-1. Same-C optimized diagnostic `669b85cf` (session 80312) ended with the same
-   clang error after 216.638s, without timeout. Disabling shrink wrapping did
-   not fix it; receipt `6f4ac57a…`, sources/C/pins unchanged, processes absent.
-   A locally isolated LLVM 23.1.4 passed a tiny ABI/Objective-C/SQLite probe.
-   Root authorized a bounded same-C -O1 experiment for the new 158-input app
-   after Tart stopped. Agentbox clang 22 also passes a cross-target ABI probe;
-   GCC fails the required-attribute gate and must not silently drop attributes.
-   No full-app alternate-compiler success is claimed yet.
-2. Build the full app with supervised PNG/JPEG decode and exact startup routes.
-   `build/jpeg-wrapper-integration/HANDOFF.md` binds 31 files and 21 native Linux
-   wrapper checks, preserving its initial compile timeout and successful same-C
-   retry. Child decode and bounded parent raster admission replace UI-path
-   decoding. Cancellation retains channel ownership until drain. JPEG owner is
-   assembled against exact final 143-file source; no title/G15/polish overlay.
-   New full-app run `build/jpeg-final-app-integration/mac/70e59948-cb3a-4949-a096-58952285601f/app`
-   passed: normal Bend frontend 279.597s, explicit-SDK native -O0 373.934s,
-   empty diagnostics. App binary `876aab5a…`, receipt `185a3f79…`.
-   Matching helper passed frontend/native -O3, binary `e9f772ee…`, receipt
-   `6a8f6c5b…`. All 158 app inputs, 59 helper inputs, 51 shared paths and 93 pins
-   match; compiler processes exited. `BUILT-EVIDENCE.json` at the integration
-   root binds both builds (`1b0c341d…`). Both ran in the failed v2 test above.
-3. Run actual capture/retained preview/export/ATIF and prepared JPEG cancellation/
-   restart journeys. Revised `build/jpeg-native-v2-plan/HANDOFF.md` binds the
-   successful app/helper and adds terminal-error and actual Close observations.
-   Independent review found no blocker; run-native-1 failed as recorded above.
-   The separately prepared external capture/source-loss/export/ATIF plan is at
-   `build/external-async-native-plan/HANDOFF.md`; it has not run. Prefer retesting
-   the unchanged source with a successful optimized build before more -O0 image
-   runs; keep every earlier result intact.
-   Cancellation checks remain read-only until child exit so clipboard cannot
-   mask ignored Escape/Back. The original native plan/failure remain preserved.
-4. Reconcile root preimages before adoption, rebuild with title-v5 and run affected
-   tests. Never blindly apply candidate-relative patches over root. Keep PR #1
-   current with failed and unrun scopes. Default executable stays unchanged.
+**Native Close during decode failed its latency gate.**
+`build/jpeg-native-close-plan/artifacts/close-observations.json` records the
+same child around the real AX-guarded native Close click: child exit 36,778ms,
+parent 39,781ms, window 39,984ms, no orphan. Parent/window exceed the original 5s
+threshold. A shell AND-list mistakenly bypassed errexit when its first threshold
+check failed; original guest exit0 remains preserved and is NOT acceptance.
+Future harness uses independent required assertions. Cleanup/fixture/display
+checks passed; optional post-close window screenshot returned 2. Root inspected
+immediate/final screenshots. Wrapper23106 ended143 on requested stop; VM stopped,
+lease released. `docs/receipts/native-close-latency.json` records the failure.
+A small Bend App+fork/process close probe is being prepared to distinguish the
+application from runtime scheduling; no runtime or native adapter patch is allowed.
 
-## Other slices and evidence
+Earlier integrated PNG v4 and unoptimized async JPEG v2 failures remain intact;
+see their separate native-result receipts and `docs/receipts/async-image-native.txt`.
+They are not overwritten by later compiler, component or pixel results.
 
-- Worker/storage/capture checks include 120 finite path-race observations and
-  16 actual Capture.run composition assertions. Streaming publication includes
-  30 abrupt interruptions. Standalone PNG passed 175 Mac checks and 21 actual
-  Tart checks/70,253 pixel samples; this is not combined-app acceptance.
-- ATIF core passed 69 Mac checks; CLI/UI passed 204 Linux checks; six actual
-  exports passed official v1.8 schema. Actual combined ATIF UI remains pending.
-- Resumable discovery passed 169 Mac checks, then 145 affected checks including
-  Unicode-child starvation. Six-file handoff is in the combined candidate;
-  full-app refresh interaction and aliases remain open.
-- JPEG decoder/transport passed scoped tests for real source-deleted captures,
-  exact receipt binding, incremental hashing/array assembly and cooperative
-  yields. Async wrapper passed 21 Linux checks. Progressive and other JPEG/PNG
-  formats remain unfinished; no broad format or actual UI acceptance.
-- Recorded successful-commit evidence: 15-file handoff at
-  `build/recorded-commit-integration/HANDOFF.md`, 106 Linux checks including real
-  Git, retained Claude/Codex records, source loss and bounded/path uncertainty.
-  Mac app/Why acceptance pending.
-- Child-result navigation is isolated in `build/result-link-ui-integration`.
-  Worker/protocol checks passed; actual GUI/CLI gates remain in progress.
-- `build/reader-hierarchy-candidate` prepares shorter reader headings with exact
-  metadata retained in details: 37 native Linux assertions passed. Scoped CLI
-  validation remains unverified after a compiler memory guard. A separate
-  `build/reader-chrome-candidate` adds a typed palette and clearer selection;
-  static review passed, compilation and actual visuals remain untested. Neither
-  presentation candidate is adopted in the accepted executable.
+## Focused tests and profiling
 
-## Remaining goal and measured limits
+Current-root Linux regression plus corrected polish: **720 checks / 16 suites**.
+Receipts `4ba9945d…` and `a57ea9ce…`; original stale-coordinate failure retained.
+A bounded 12GiB rerun then passed capture UI38 and ATIF UI171 checks; those
+entrypoints include imported checks and are not 209 additional unique laws.
+Receipt `d27a26f2…`, run
+`build/root-guarded-linux-regression/linux/41916e09-48a8-44d3-a968-4b08a667911d`.
+All inputs/tools unchanged; no owned Linux process remains from those runs.
+ATIF CLI and preview wrapper hit the Linux frontend memory guard. Their unchanged
+Mac tests subsequently passed **11 + 21 assertions**, exit0/empty runtime stderr,
+using the maintained LLVM wrapper; neither hit its 16GiB guard. Receipt
+`c28da5e6…`, run `build/current-root-two-tests-mac/runs/89cef2d7-9f82-4c9d-9783-6f4b86c1ceb7`.
+All155 inputs/96pins/2compiler binaries unchanged; owned processes absent.
+
+Mac tests through the new maintained LLVM wrapper passed 71 DC/pixel checks;
+logs are in `build/root-image-adoption/llvm-dc-tests.*`.
+Earlier 159 distinct decoder checks passed on Linux. One same-host Linux -O0
+fixture pair changed only the DC shortcut: 44.833s to 5.840s, 52 checks on both.
+This is not Mac/UI/Swift timing or arbitrary-JPEG performance. Full coefficient
+validation and exact sequential F32 arithmetic remain; dense blocks keep their
+original algorithm. Sanitized sampled-stack SVG and scoped evidence are in
+`docs/receipts/jpeg-diagnostic/`. It is a sampled weighted tree, not a timeline.
+
+## Next implementation and acceptance
+
+1. Reader polish v3 passed 364 native Linux checks across 10 suites; all 15 app/test
+   delta paths remain exact except the repaired affine test binding. The earlier
+   scoped-reader 12GiB frontend guard remains unrun, not a test pass.
+   `build/reader-ui-polish-v3-integration/HANDOFF.md` binds manifest `93cd7ed1…`
+   and patch `07868916…`. Root has not adopted it. The Mac frontend passed;
+   reader_release_diagnostic owns maintained LLVM23-O1 build session32371 at
+   `build/reader-ui-polish-v3-mac/runs/2a7a7feb-49da-4f39-a1f6-204550afacc6`.
+   Do not mutate root/polish closure or start a second Mac compiler before collection.
+2. Prefer one polished-app native journey rather than repeating the full e6
+   acceptance for the intermediate455 build. Attachment owner is adapting the
+   existing exact bytes/pixel/coverage tests to the tested new toolbar mappings
+   and shorter canonical reader text. Required helpers are prepared at
+   `build/polished-native-acceptance-helpers-v2`; build after the app slot releases.
+   Include a correctly bracketed live parent sample after Open/child absence.
+3. Archive decoder owns a small same-host Linux production raster-admission A/B
+   with 128 versus 512-element chunks and concurrent heartbeat. This cannot prove
+   native Metal/UI latency. A separate minimal native Close discriminator is
+   prepared without changing production/runtime code. Preserve the actual 39.984s
+   native window-close failure and fix future harness threshold enforcement.
+4. The 129-path image/capture/ATIF/discovery/DC slice and corrected export target
+   test are published in `1a9ca8b8…`; update remaining sanitized receipts and PR
+   after each concrete result. Accepted default executable remains unchanged.
+5. remaining_parity_audit is reconciling existing recorded successful-commit
+   evidence (`build/recorded-commit-integration`, 106 prior Linux checks) onto
+   polished v3 in a new isolated candidate. Actual Mac Why remains open.
+   Child-result navigation remains at `build/result-link-ui-integration`.
+
+## Remaining parity and measured limits
 
 `build/parity-gap-audit/GAPS.md` records 18 journeys against read-only Juice
-`829ff9b5…`. Remaining work includes aliases, provider presentation, installed
-quota clients, per-window history, read-only agent Connect/MCP, library usage/
-pricing, multi-source Briefs, deliberate excluded-content removal and comfortable
-formatted reading. Missing features are not excluded from the goal. CJK/emoji/
-combining glyphs, shaping/IME, accessibility, resizing and measured input latency
+`829ff9b5…`. Aliases/provider presentation, installed quota clients, per-window
+history, read-only agent Connect/MCP, library usage/pricing, multi-source Briefs,
+deliberate excluded-content removal and comfortable formatted reading remain.
+Missing CJK/emoji glyphs are visible; Unicode byte preservation is not shaping,
+IME or accessibility acceptance. Resizing/input latency and broader image formats
 remain open. Functional and visual parity both remain required.
 
 Historical broad evidence: 40 executables/2,960 checks and 12 production laws
 checked by BendTT/Lean. Focused checks do not replace a fresh complete suite.
-Physical-Mac 100k: import 36.194s, unchanged 3.910s, append 16 records 23.816s;
-search/late/scoped-late p95 = 42/7/17ms. Marginal tuning is deferred per owner.
-Separate streaming-archive 100k: 26,936,113 logical / 7,654,948 compressed bytes
-captured in 139.055s; retained verify/read/search/dual exports after source removal
-took 44.475s combined. Different workloads; no Swift comparison. Future comparisons
+Physical-Mac 100k: import36.194s, unchanged3.910s, append16records23.816s;
+search/late/scoped-late p95=42/7/17ms. Marginal tuning is deferred per owner.
+Separate streaming-archive100k: 26,936,113 logical / 7,654,948 compressed bytes
+captured in139.055s; retained verify/read/search/dual exports after removal took
+44.475s combined. Different workloads; no Swift comparison. Future comparisons
 must use equivalent work on the same host.

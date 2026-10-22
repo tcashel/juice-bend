@@ -1,0 +1,50 @@
+{
+  "status": "failed fullscreen pixel check; no later journey stages ran",
+  "scope": "Actual external PNG GUI capture; optimized e6bf90ee app, no DC shortcut",
+  "app_sha256": "e6bf90ee9cbd98389d61c805d86e88e16933ea17440690c2eb42dc5c96575743",
+  "steps": {
+    "prepare": 0,
+    "capture": 1,
+    "cleanup": 0,
+    "fixture-copy": 0,
+    "guest-run": 1,
+    "display-holder": 0,
+    "display-restored": 0
+  },
+  "observed_pass": [
+    "explicit GUI approved folder and external capture of6555bytes bound to original occurrence and policy revision",
+    "PNG visibly rendered in native window",
+    "post-run analysis of original owned-window screenshot matches all1085expected pixel samples exactly; original fullscreen assertion unchanged",
+    "normalcleanup app/children/windows absent; guardedfixture unchangedcopy; payloadhashes and displayrestoration pass"
+  ],
+  "observed_failure": [
+    "unchanged fullscreen pixel test never passed within150s; macOS JPEG-background and Tips notifications and shadows overlap expectedmatte",
+    "readiness-timeout wording did not distinguish visibleimage pixel contamination from pendingdecode; not evidence of a150s renderingfailure"
+  ],
+  "not_run": [
+    "actual-size/pan/Back after firstFitgate",
+    "rootdisable and originalremoval",
+    "secondprocessrestart withretainedexternalPNG",
+    "retained externalbyteexports",
+    "completeATIFexport/schema check"
+  ],
+  "posthoc_pixel_check_sha256": "eea1442036e97639a49a7945ff768bf64d633e1589255960dbf926c20e4a1f39",
+  "root_reviewed": [
+    "captured-fit-attempt-108.png",
+    "captured-fit-attempt-108-display.png"
+  ],
+  "artifacts": {
+    "captured-fit-attempt-108-pixels.stderr": "83c8ac53c5c8b53ebd03f0a70230601b01a25bc7150d333c1914d549c07bce45",
+    "captured-fit-not-ready.txt": "aeb658906f252e6ca3a30ca69af063d7f9f6141c47225f944c2e388e5f91707e",
+    "captured-fit-attempt-108.png": "3ea613946560bf1d51353fd8f02177327e28894f05170d1d84db56b19153b113",
+    "captured-fit-attempt-108-display.png": "2958930922870fe84442ad560f2dd3e239c0f96ed000f4eddd958ba437cc6b9d",
+    "fixture-source-before.sha256": "1b0bd2763eb8def3ba5ee75fd3107382e7c872dfa9edbcc1f07c8e738c498008",
+    "fixture-source-after.sha256": "1b0bd2763eb8def3ba5ee75fd3107382e7c872dfa9edbcc1f07c8e738c498008",
+    "fixture-copy.sha256": "1b0bd2763eb8def3ba5ee75fd3107382e7c872dfa9edbcc1f07c8e738c498008",
+    "payload-after.txt": "d943931327882cbd89f642b0d21f08e6b451c538512948222a7fed376ea6fa76",
+    "final-candidate-processes.tsv": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "final-windows.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  "vm_status": "root wrapper still held at receipt creation; stop recorded separately",
+  "native_result_sha256": "3f504d695b72406a4518592bd8e74ca0c53463fee60482297ea1ed5b1fe4ce58"
+}

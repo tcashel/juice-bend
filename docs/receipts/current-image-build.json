@@ -1,0 +1,33 @@
+{
+  "exit": 0,
+  "timeout": false,
+  "elapsed_seconds": 785.67,
+  "inputs_unchanged": true,
+  "pins_unchanged": true,
+  "compiler_unchanged": true,
+  "protected_unchanged": true,
+  "manifest_sha256": "f51815f2a4bfd73163b304c1085826133c5fed3c2a4c99bc5bc36266166e394f",
+  "native_app_executed": false,
+  "juice-bend": {
+    "sha256": "455179e67f30104c6473446418fa1184d3a616239abe7b903171efc1856f5e8d",
+    "bytes": 24192792
+  },
+  "juice-bend.c": {
+    "sha256": "ca8abd542610ad6c5a4cd141ffd746f828313b34d53d6e10ac3c1d1a32757598",
+    "bytes": 108847100
+  },
+  "stdout.txt": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "stderr.txt": {
+    "sha256": "a6406c6a985739a7f911d365e4573431f87656e610d77e6117fbea2d5399a534",
+    "bytes": 114
+  },
+  "passed": true,
+  "scope": "Maintained source compiled through scripts/build and repository-local mise LLVM23.1.4 at -O1. Build only; this exact binary has not run native UI.",
+  "maintained_inputs": 167,
+  "pinned_Bend_files": 88,
+  "runner_receipt_sha256": "113444a490377053ed70f06b2daf6f36d0dfbfd24407773f66e4f4508770dca8",
+  "wrapper_stderr": "One expected Built path line; no compiler diagnostic."
+}

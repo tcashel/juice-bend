@@ -1,0 +1,725 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="486" viewBox="0 0 1600 486">
+<style>text{font-family:ui-monospace,SFMono-Regular,Menlo,monospace} .frame:hover rect{stroke:#111;stroke-width:1.4} .frame:hover text{font-weight:bold}</style>
+<rect width="1600" height="486" fill="#fbfaf7"/>
+<text x="18" y="29" font-size="21" font-weight="bold" fill="#202b36">Synthetic JPEG decoder — unoptimized (-O0) sample</text>
+<text x="18" y="53" font-size="12" fill="#455566">Same 2362 main-thread observations. Only generated continuation/island variants and repeated adjacent family names are grouped.</text>
+<text x="18" y="73" font-size="12" fill="#455566">Width = sampled stack weight; sorted x-axis, not time. Hover frames for full symbols/counts.</text>
+<text x="18" y="94" font-size="12" fill="#455566">Orange: JPEG frames · blue: generated runtime/control · gray: OS/wait/startup. No optimized or Swift comparison.</text>
+<g class="frame"><title>decoder main thread
+Inclusive weight: 2362/2362 (100.000%)
+Self weight: 0
+Stack: decoder main thread</title><rect x="18.000000" y="380" width="1564.000000" height="23" fill="#d6d9db" stroke="#fbfaf7" stroke-width="0.35"/>
+<text x="21.000000" y="396" font-size="11" fill="#172534">decoder main thread</text>
+</g>
+<g class="frame"><title>start
+Inclusive weight: 2362/2362 (100.000%)
+Self weight: 0
+Stack: decoder main thread → start</title><rect x="18.000000" y="356" width="1564.000000" height="23" fill="#d6d9db" stroke="#fbfaf7" stroke-width="0.35"/>
+<text x="21.000000" y="372" font-size="11" fill="#172534">start</text>
+</g>
+<g class="frame"><title>main
+Inclusive weight: 2362/2362 (100.000%)
+Self weight: 0
+Stack: decoder main thread → start → main</title><rect x="18.000000" y="332" width="1564.000000" height="23" fill="#d6d9db" stroke="#fbfaf7" stroke-width="0.35"/>
+<text x="21.000000" y="348" font-size="11" fill="#172534">main</text>
+</g>
+<g class="frame"><title>io_loop
+Inclusive weight: 2362/2362 (100.000%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop</title><rect x="18.000000" y="308" width="1564.000000" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+<text x="21.000000" y="324" font-size="11" fill="#172534">io_loop</text>
+</g>
+<g class="frame"><title>io_step
+Inclusive weight: 2362/2362 (100.000%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop → io_step</title><rect x="18.000000" y="284" width="1564.000000" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+<text x="21.000000" y="300" font-size="11" fill="#172534">io_step</text>
+</g>
+<g class="frame"><title>corpus_eval
+Inclusive weight: 2362/2362 (100.000%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval</title><rect x="18.000000" y="260" width="1564.000000" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+<text x="21.000000" y="276" font-size="11" fill="#172534">corpus_eval</text>
+</g>
+<g class="frame"><title>jpeg.pixels.coefficients
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → jpeg.pixels.coefficients</title><rect x="18.000000" y="236" width="0.662151" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.raster.copy_block
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → jpeg.raster.copy_block</title><rect x="18.662151" y="236" width="0.662151" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>runtime / Clo.apply
+Inclusive weight: 4/2362 (0.169%)
+Self weight: 4
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → runtime / Clo.apply</title><rect x="19.324301" y="236" width="2.648603" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>runtime / EXIT
+Inclusive weight: 3/2362 (0.127%)
+Self weight: 3
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → runtime / EXIT</title><rect x="21.972904" y="236" width="1.986452" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>runtime / Result.bind family
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → runtime / Result.bind family</title><rect x="23.959356" y="236" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>work_loop
+Inclusive weight: 2352/2362 (99.577%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop</title><rect x="24.621507" y="236" width="1557.378493" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+<text x="27.621507" y="252" font-size="11" fill="#172534">work_loop</text>
+</g>
+<g class="frame"><title>jpeg.entropy.bit
+Inclusive weight: 2/2362 (0.085%)
+Self weight: 2
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.entropy.bit</title><rect x="24.621507" y="212" width="1.324301" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.entropy.block
+Inclusive weight: 9/2362 (0.381%)
+Self weight: 8
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.entropy.block</title><rect x="25.945809" y="212" width="5.959356" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>ctr_take
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.entropy.block → ctr_take</title><rect x="31.243014" y="188" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.entropy.codes
+Inclusive weight: 4/2362 (0.169%)
+Self weight: 4
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.entropy.codes</title><rect x="31.905165" y="212" width="2.648603" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.entropy.counts
+Inclusive weight: 8/2362 (0.339%)
+Self weight: 6
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.entropy.counts</title><rect x="34.553768" y="212" width="5.297206" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>runtime / generated spin helpers
+Inclusive weight: 2/2362 (0.085%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.entropy.counts → runtime / generated spin helpers</title><rect x="38.526672" y="188" width="1.324301" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_peek
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.entropy.counts → runtime / generated spin helpers → term_peek</title><rect x="39.188823" y="164" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.entropy.fields
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.entropy.fields</title><rect x="39.850974" y="212" width="0.662151" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.entropy.read
+Inclusive weight: 3/2362 (0.127%)
+Self weight: 3
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.entropy.read</title><rect x="40.513124" y="212" width="1.986452" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.entropy.symbol
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.entropy.symbol</title><rect x="42.499577" y="212" width="0.662151" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.entropy.symbols
+Inclusive weight: 5/2362 (0.212%)
+Self weight: 5
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.entropy.symbols</title><rect x="43.161727" y="212" width="3.310754" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.entropy.unpack
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.entropy.unpack</title><rect x="46.472481" y="212" width="0.662151" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.entropy.validate
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.entropy.validate</title><rect x="47.134632" y="212" width="0.662151" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.pixels.block
+Inclusive weight: 8/2362 (0.339%)
+Self weight: 6
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.block</title><rect x="47.796782" y="212" width="5.297206" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>blk_new
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.block → blk_new</title><rect x="51.769687" y="188" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>blk_write
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.block → blk_new → blk_write</title><rect x="51.769687" y="164" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>blk_ptr
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.block → blk_new → blk_write → blk_ptr</title><rect x="51.769687" y="140" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>task_node
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.block → task_node</title><rect x="52.431837" y="188" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>cls_fit
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.block → task_node → cls_fit</title><rect x="52.431837" y="164" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.pixels.coefficients
+Inclusive weight: 50/2362 (2.117%)
+Self weight: 38
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.coefficients</title><rect x="53.093988" y="212" width="33.107536" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+<text x="56.093988" y="228" font-size="11" fill="#172534">jpe…</text>
+</g>
+<g class="frame"><title>blk_half
+Inclusive weight: 4/2362 (0.169%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.coefficients → blk_half</title><rect x="78.255715" y="188" width="2.648603" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>blk_cls
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.coefficients → blk_half → blk_cls</title><rect x="78.255715" y="164" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>blk_fill
+Inclusive weight: 2/2362 (0.085%)
+Self weight: 2
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.coefficients → blk_half → blk_fill</title><rect x="78.917866" y="164" width="1.324301" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>heap_alloc
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.coefficients → blk_half → heap_alloc</title><rect x="80.242168" y="164" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>blk_node
+Inclusive weight: 4/2362 (0.169%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.coefficients → blk_node</title><rect x="80.904318" y="188" width="2.648603" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>blk_fill
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.coefficients → blk_node → blk_fill</title><rect x="80.904318" y="164" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>blk_free
+Inclusive weight: 2/2362 (0.085%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.coefficients → blk_node → blk_free</title><rect x="81.566469" y="164" width="1.324301" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>blk_span
+Inclusive weight: 2/2362 (0.085%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.coefficients → blk_node → blk_free → blk_span</title><rect x="81.566469" y="140" width="1.324301" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>blk_wcls
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.coefficients → blk_node → blk_free → blk_span → blk_wcls</title><rect x="82.228620" y="116" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_blk
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.coefficients → blk_node → term_blk</title><rect x="82.890771" y="164" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>runtime / generated spin helpers
+Inclusive weight: 2/2362 (0.085%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.coefficients → runtime / generated spin helpers</title><rect x="83.552921" y="188" width="1.324301" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_peek
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.coefficients → runtime / generated spin helpers → term_peek</title><rect x="83.552921" y="164" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_sink
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.coefficients → runtime / generated spin helpers → term_sink</title><rect x="84.215072" y="164" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_triv
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.coefficients → runtime / generated spin helpers → term_sink → term_triv</title><rect x="84.215072" y="140" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>task_node
+Inclusive weight: 2/2362 (0.085%)
+Self weight: 2
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.coefficients → task_node</title><rect x="84.877223" y="188" width="1.324301" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.pixels.dequantize
+Inclusive weight: 31/2362 (1.312%)
+Self weight: 30
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dequantize</title><rect x="86.201524" y="212" width="20.526672" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>f32_rewrap
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dequantize → f32_rewrap</title><rect x="106.066046" y="188" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.pixels.dot
+Inclusive weight: 576/2362 (24.386%)
+Self weight: 448
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot</title><rect x="106.728196" y="212" width="381.398815" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+<text x="109.728196" y="228" font-size="11" fill="#172534">jpeg.pixels.dot</text>
+</g>
+<g class="frame"><title>___chkstk_darwin
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → ___chkstk_darwin</title><rect x="403.371719" y="188" width="0.662151" height="23" fill="#d6d9db" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>cls_fit
+Inclusive weight: 3/2362 (0.127%)
+Self weight: 3
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → cls_fit</title><rect x="404.033870" y="188" width="1.986452" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>ctr_take
+Inclusive weight: 7/2362 (0.296%)
+Self weight: 2
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → ctr_take</title><rect x="406.020322" y="188" width="4.635055" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>a32_load_acq
+Inclusive weight: 4/2362 (0.169%)
+Self weight: 4
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → ctr_take → a32_load_acq</title><rect x="407.344623" y="164" width="2.648603" height="23" fill="#d6d9db" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_peek
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → ctr_take → term_peek</title><rect x="409.993226" y="164" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>f32_rewrap
+Inclusive weight: 9/2362 (0.381%)
+Self weight: 9
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → f32_rewrap</title><rect x="410.655377" y="188" width="5.959356" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>f32_unbox
+Inclusive weight: 5/2362 (0.212%)
+Self weight: 5
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → f32_unbox</title><rect x="416.614733" y="188" width="3.310754" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>heap_alloc
+Inclusive weight: 6/2362 (0.254%)
+Self weight: 6
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → heap_alloc</title><rect x="419.925487" y="188" width="3.972904" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>rfc_seal
+Inclusive weight: 3/2362 (0.127%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → rfc_seal</title><rect x="423.898391" y="188" width="1.986452" height="23" fill="#d6d9db" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>rfc_wrap
+Inclusive weight: 2/2362 (0.085%)
+Self weight: 2
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → rfc_seal → rfc_wrap</title><rect x="423.898391" y="164" width="1.324301" height="23" fill="#d6d9db" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_tag
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → rfc_seal → term_tag</title><rect x="425.222693" y="164" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>runtime / generated spin helpers
+Inclusive weight: 75/2362 (3.175%)
+Self weight: 67
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → runtime / generated spin helpers</title><rect x="425.884843" y="188" width="49.661304" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+<text x="428.884843" y="204" font-size="11" fill="#172534">runti…</text>
+</g>
+<g class="frame"><title>term_peek
+Inclusive weight: 3/2362 (0.127%)
+Self weight: 3
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → runtime / generated spin helpers → term_peek</title><rect x="470.248942" y="164" width="1.986452" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_sink
+Inclusive weight: 5/2362 (0.212%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → runtime / generated spin helpers → term_sink</title><rect x="472.235394" y="164" width="3.310754" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_triv
+Inclusive weight: 4/2362 (0.169%)
+Self weight: 3
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → runtime / generated spin helpers → term_sink → term_triv</title><rect x="472.897544" y="140" width="2.648603" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_tag
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → runtime / generated spin helpers → term_sink → term_triv → term_tag</title><rect x="474.883997" y="116" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>spare_free
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → spare_free</title><rect x="475.546147" y="188" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>task_node
+Inclusive weight: 11/2362 (0.466%)
+Self weight: 5
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → task_node</title><rect x="476.208298" y="188" width="7.283658" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>cls_fit
+Inclusive weight: 3/2362 (0.127%)
+Self weight: 3
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → task_node → cls_fit</title><rect x="479.519052" y="164" width="1.986452" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>heap_alloc
+Inclusive weight: 3/2362 (0.127%)
+Self weight: 3
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → task_node → heap_alloc</title><rect x="481.505504" y="164" width="1.986452" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_peek
+Inclusive weight: 7/2362 (0.296%)
+Self weight: 2
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → term_peek</title><rect x="483.491956" y="188" width="4.635055" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_loc
+Inclusive weight: 4/2362 (0.169%)
+Self weight: 4
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → term_peek → term_loc</title><rect x="484.816257" y="164" width="2.648603" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_rfc
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.dot → term_peek → term_rfc</title><rect x="487.464860" y="164" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.pixels.pass_walk
+Inclusive weight: 92/2362 (3.895%)
+Self weight: 82
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.pass_walk</title><rect x="488.127011" y="212" width="60.917866" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+<text x="491.127011" y="228" font-size="11" fill="#172534">jpeg.pi…</text>
+</g>
+<g class="frame"><title>blk_read
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.pass_walk → blk_read</title><rect x="542.423370" y="188" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>cls_fit
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.pass_walk → cls_fit</title><rect x="543.085521" y="188" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>heap_alloc
+Inclusive weight: 2/2362 (0.085%)
+Self weight: 2
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.pass_walk → heap_alloc</title><rect x="543.747671" y="188" width="1.324301" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>rfc_seal
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.pass_walk → rfc_seal</title><rect x="545.071973" y="188" width="0.662151" height="23" fill="#d6d9db" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>runtime / generated spin helpers
+Inclusive weight: 3/2362 (0.127%)
+Self weight: 3
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.pass_walk → runtime / generated spin helpers</title><rect x="545.734124" y="188" width="1.986452" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>task_node
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.pass_walk → task_node</title><rect x="547.720576" y="188" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>cls_fit
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.pass_walk → task_node → cls_fit</title><rect x="547.720576" y="164" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_peek
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.pass_walk → term_peek</title><rect x="548.382727" y="188" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_rfc
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.pass_walk → term_peek → term_rfc</title><rect x="548.382727" y="164" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.pixels.quantizers
+Inclusive weight: 7/2362 (0.296%)
+Self weight: 5
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.quantizers</title><rect x="549.044877" y="212" width="4.635055" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>ctr_take
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.quantizers → ctr_take</title><rect x="552.355631" y="188" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_peek
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.quantizers → ctr_take → term_peek</title><rect x="552.355631" y="164" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>runtime / generated spin helpers
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.quantizers → runtime / generated spin helpers</title><rect x="553.017782" y="188" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.pixels.shift
+Inclusive weight: 22/2362 (0.931%)
+Self weight: 17
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.shift</title><rect x="553.679932" y="212" width="14.567316" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>heap_alloc
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.shift → heap_alloc</title><rect x="564.936494" y="188" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>runtime / generated spin helpers
+Inclusive weight: 3/2362 (0.127%)
+Self weight: 3
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.shift → runtime / generated spin helpers</title><rect x="565.598645" y="188" width="1.986452" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>task_node
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.shift → task_node</title><rect x="567.585097" y="188" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.pixels.unpack
+Inclusive weight: 126/2362 (5.334%)
+Self weight: 119
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.unpack</title><rect x="568.247248" y="212" width="83.430991" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+<text x="571.247248" y="228" font-size="11" fill="#172534">jpeg.pixel…</text>
+</g>
+<g class="frame"><title>___chkstk_darwin
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.unpack → ___chkstk_darwin</title><rect x="647.043184" y="188" width="0.662151" height="23" fill="#d6d9db" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>task_node
+Inclusive weight: 6/2362 (0.254%)
+Self weight: 5
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.unpack → task_node</title><rect x="647.705334" y="188" width="3.972904" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>heap_alloc
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.pixels.unpack → task_node → heap_alloc</title><rect x="651.016088" y="164" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.raster.blocks
+Inclusive weight: 3/2362 (0.127%)
+Self weight: 2
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.raster.blocks</title><rect x="651.678239" y="212" width="1.986452" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>ctr_take
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.raster.blocks → ctr_take</title><rect x="653.002540" y="188" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>span_fade
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.raster.blocks → ctr_take → span_fade</title><rect x="653.002540" y="164" width="0.662151" height="23" fill="#d6d9db" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.raster.copy_block
+Inclusive weight: 37/2362 (1.566%)
+Self weight: 35
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.raster.copy_block</title><rect x="653.664691" y="212" width="24.499577" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>runtime / generated spin helpers
+Inclusive weight: 2/2362 (0.085%)
+Self weight: 2
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.raster.copy_block → runtime / generated spin helpers</title><rect x="676.839966" y="188" width="1.324301" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.raster.mcus
+Inclusive weight: 3/2362 (0.127%)
+Self weight: 3
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.raster.mcus</title><rect x="678.164268" y="212" width="1.986452" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.raster.one
+Inclusive weight: 6/2362 (0.254%)
+Self weight: 5
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.raster.one</title><rect x="680.150720" y="212" width="3.972904" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_sink
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.raster.one → term_sink</title><rect x="683.461473" y="188" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_triv
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.raster.one → term_sink → term_triv</title><rect x="683.461473" y="164" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>jpeg.raster.paint
+Inclusive weight: 18/2362 (0.762%)
+Self weight: 9
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.raster.paint</title><rect x="684.123624" y="212" width="11.918713" height="23" fill="#efaf63" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>ctr_take
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.raster.paint → ctr_take</title><rect x="690.082981" y="188" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_peek
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.raster.paint → ctr_take → term_peek</title><rect x="690.082981" y="164" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>runtime / generated spin helpers
+Inclusive weight: 6/2362 (0.254%)
+Self weight: 4
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.raster.paint → runtime / generated spin helpers</title><rect x="690.745131" y="188" width="3.972904" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>f32_rewrap
+Inclusive weight: 2/2362 (0.085%)
+Self weight: 2
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.raster.paint → runtime / generated spin helpers → f32_rewrap</title><rect x="693.393734" y="164" width="1.324301" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>task_node
+Inclusive weight: 2/2362 (0.085%)
+Self weight: 0
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.raster.paint → task_node</title><rect x="694.718036" y="188" width="1.324301" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>heap_alloc
+Inclusive weight: 2/2362 (0.085%)
+Self weight: 2
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → jpeg.raster.paint → task_node → heap_alloc</title><rect x="694.718036" y="164" width="1.324301" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>runtime / Clo.apply
+Inclusive weight: 272/2362 (11.516%)
+Self weight: 249
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Clo.apply</title><rect x="696.042337" y="212" width="180.104996" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+<text x="699.042337" y="228" font-size="11" fill="#172534">runtime / Clo.apply</text>
+</g>
+<g class="frame"><title>___chkstk_darwin
+Inclusive weight: 3/2362 (0.127%)
+Self weight: 3
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Clo.apply → ___chkstk_darwin</title><rect x="860.917866" y="188" width="1.986452" height="23" fill="#d6d9db" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>cls_fit
+Inclusive weight: 3/2362 (0.127%)
+Self weight: 3
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Clo.apply → cls_fit</title><rect x="862.904318" y="188" width="1.986452" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>spare_free
+Inclusive weight: 8/2362 (0.339%)
+Self weight: 5
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Clo.apply → spare_free</title><rect x="864.890771" y="188" width="5.297206" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>heap_free
+Inclusive weight: 3/2362 (0.127%)
+Self weight: 3
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Clo.apply → spare_free → heap_free</title><rect x="868.201524" y="164" width="1.986452" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_aux
+Inclusive weight: 7/2362 (0.296%)
+Self weight: 7
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Clo.apply → term_aux</title><rect x="870.187976" y="188" width="4.635055" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_loc
+Inclusive weight: 2/2362 (0.085%)
+Self weight: 2
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Clo.apply → term_loc</title><rect x="874.823031" y="188" width="1.324301" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>runtime / EXIT
+Inclusive weight: 733/2362 (31.033%)
+Self weight: 686
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / EXIT</title><rect x="876.147333" y="212" width="485.356478" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+<text x="879.147333" y="228" font-size="11" fill="#172534">runtime / EXIT</text>
+</g>
+<g class="frame"><title>___chkstk_darwin
+Inclusive weight: 4/2362 (0.169%)
+Self weight: 4
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / EXIT → ___chkstk_darwin</title><rect x="1330.382727" y="188" width="2.648603" height="23" fill="#d6d9db" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>cls_fit
+Inclusive weight: 3/2362 (0.127%)
+Self weight: 3
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / EXIT → cls_fit</title><rect x="1333.031329" y="188" width="1.986452" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>heap_free
+Inclusive weight: 10/2362 (0.423%)
+Self weight: 10
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / EXIT → heap_free</title><rect x="1335.017782" y="188" width="6.621507" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>task_tail
+Inclusive weight: 14/2362 (0.593%)
+Self weight: 6
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / EXIT → task_tail</title><rect x="1341.639289" y="188" width="9.270110" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_aux
+Inclusive weight: 3/2362 (0.127%)
+Self weight: 3
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / EXIT → task_tail → term_aux</title><rect x="1345.612193" y="164" width="1.986452" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_loc
+Inclusive weight: 5/2362 (0.212%)
+Self weight: 5
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / EXIT → task_tail → term_loc</title><rect x="1347.598645" y="164" width="3.310754" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_aux
+Inclusive weight: 9/2362 (0.381%)
+Self weight: 9
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / EXIT → term_aux</title><rect x="1350.909399" y="188" width="5.959356" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_loc
+Inclusive weight: 7/2362 (0.296%)
+Self weight: 7
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / EXIT → term_loc</title><rect x="1356.868755" y="188" width="4.635055" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>runtime / Result.bind family
+Inclusive weight: 333/2362 (14.098%)
+Self weight: 303
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Result.bind family</title><rect x="1361.503810" y="212" width="220.496190" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+<text x="1364.503810" y="228" font-size="11" fill="#172534">runtime / Result.bind family</text>
+</g>
+<g class="frame"><title>___chkstk_darwin
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Result.bind family → ___chkstk_darwin</title><rect x="1562.135478" y="188" width="0.662151" height="23" fill="#d6d9db" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>cls_fit
+Inclusive weight: 2/2362 (0.085%)
+Self weight: 2
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Result.bind family → cls_fit</title><rect x="1562.797629" y="188" width="1.324301" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>ctr_take
+Inclusive weight: 13/2362 (0.550%)
+Self weight: 5
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Result.bind family → ctr_take</title><rect x="1564.121931" y="188" width="8.607959" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_peek
+Inclusive weight: 8/2362 (0.339%)
+Self weight: 7
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Result.bind family → ctr_take → term_peek</title><rect x="1567.432684" y="164" width="5.297206" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_loc
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Result.bind family → ctr_take → term_peek → term_loc</title><rect x="1572.067739" y="140" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>heap_alloc
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Result.bind family → heap_alloc</title><rect x="1572.729890" y="188" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>spare_free
+Inclusive weight: 3/2362 (0.127%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Result.bind family → spare_free</title><rect x="1573.392041" y="188" width="1.986452" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>heap_free
+Inclusive weight: 2/2362 (0.085%)
+Self weight: 2
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Result.bind family → spare_free → heap_free</title><rect x="1574.054191" y="164" width="1.324301" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>task_node
+Inclusive weight: 8/2362 (0.339%)
+Self weight: 5
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Result.bind family → task_node</title><rect x="1575.378493" y="188" width="5.297206" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>cls_fit
+Inclusive weight: 1/2362 (0.042%)
+Self weight: 1
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Result.bind family → task_node → cls_fit</title><rect x="1578.689246" y="164" width="0.662151" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>heap_alloc
+Inclusive weight: 2/2362 (0.085%)
+Self weight: 2
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Result.bind family → task_node → heap_alloc</title><rect x="1579.351397" y="164" width="1.324301" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<g class="frame"><title>term_aux
+Inclusive weight: 2/2362 (0.085%)
+Self weight: 2
+Stack: decoder main thread → start → main → io_loop → io_step → corpus_eval → work_loop → runtime / Result.bind family → term_aux</title><rect x="1580.675699" y="188" width="1.324301" height="23" fill="#9ac4dd" stroke="#fbfaf7" stroke-width="0.35"/>
+</g>
+<text x="18" y="437" font-size="12" fill="#455566">Total denominator: 2362 stack observations. Self weights recovered as parent minus direct children.</text>
+<text x="18" y="457" font-size="11" fill="#455566">Raw trace SHA256: 1b0ba071893c9c71fd2a73d6ed80e06f16a02b1c9700a41cde0f13b7949141ec</text>
+</svg>
