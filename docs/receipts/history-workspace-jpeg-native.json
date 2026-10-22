@@ -1,0 +1,368 @@
+{
+  "schema": "juice-bend-native-history-workspace-jpeg-receipt-v1",
+  "status": "PASS: exact History reader copies, native image pixels/navigation/export, bracketed pending Escape/Back and ready-reader Close",
+  "scope": "Synthetic native macOS arm64 Tart; exact History workspace candidate. Pending Close remains outside this journey.",
+  "application": {
+    "sha256": "981e84fd4f5a77f3e778cc98ee7d0aa65f276bb10dccd52b46fb51a96fa0c633",
+    "source_files": 171,
+    "pinned_inputs": 96,
+    "source_binding_sha256": "ac9dab2eb3ec88e0b1167d9b241614772d19f9af3707da205dbad269ab1b8b30",
+    "build_receipt_sha256": "270f6f876e440fd66ed38315f23184fa1843a2debdb232d9cb4cda04024b5087"
+  },
+  "helper": {
+    "sha256": "afeb50ed9d816d96178471dd0503594d452ff705cd436eebd71f57dab0a76bb5",
+    "source_files": 59,
+    "pinned_inputs": 96,
+    "shared_application_paths_exact": 50,
+    "shared_application_paths_compatible_exception": 1,
+    "compatibility_sha256": "996595e9d86497dbd1d390a870aebf1681c6d77ed637a1f31023aeae69c08541",
+    "exception": "Only file_evidence.commit_why_message and its import changed; frozen helper fixture/verification modes do not invoke this route. No G15 validation is claimed.",
+    "manifest_sha256": "7470704888637ddb3855945dd13891f23b9b4863e0d60148383aae45ef55eb03",
+    "build_receipt_sha256": "68fc450196083600010c4a38cf377251536350292760caad86c12b25e2a1edc5"
+  },
+  "step_exits": {
+    "prepare": 0,
+    "history": 0,
+    "jpeg": 0,
+    "pending": 0,
+    "variants": 0,
+    "restart": 0,
+    "finish-ready": 0,
+    "normal-close": 0,
+    "cleanup": 0,
+    "fixture-copy": 0,
+    "guest-run": 0,
+    "display-holder": 0,
+    "display-restored": 0
+  },
+  "capture": {
+    "snapshot": "1",
+    "source": "1",
+    "generation": "1",
+    "records": 6,
+    "logical_bytes": 26497,
+    "logical_sha256": "1803063e687a928c529cc8d5c72005481b237b7a260b369c8713ac184e1c6da0",
+    "compressed_bytes": 26506,
+    "compressed_sha256": "753a0b7c00b2bd905048ccec727163481374d3daa696021bf4ae4cda2f6bf660",
+    "raw_and_archive_commitments_verified": true,
+    "sqlite_quick_check": "ok",
+    "foreign_key_violations": 0
+  },
+  "preservation": {
+    "source_archive_absent_before_first_launch_and_after_restart": true,
+    "restart_used_different_parent_pid": true,
+    "fixture_verify_before_restart_and_final_exact": true,
+    "fixture_copy_files": 8,
+    "source_before_after_and_copy_hashes_equal": true
+  },
+  "exports": [
+    {
+      "filename": "attachment-1-0-0-292755-1.bin",
+      "bytes": 9277,
+      "sha256": "63e2d58cc271cfdcba0f0c8f87821c340e3a410547987934c4be778dcf50e202",
+      "mode": "0600"
+    },
+    {
+      "filename": "attachment-1-0-0-293992-2.bin",
+      "bytes": 9277,
+      "sha256": "63e2d58cc271cfdcba0f0c8f87821c340e3a410547987934c4be778dcf50e202",
+      "mode": "0600"
+    },
+    {
+      "filename": "attachment-1-0-0-1057584-1.bin",
+      "bytes": 9277,
+      "sha256": "63e2d58cc271cfdcba0f0c8f87821c340e3a410547987934c4be778dcf50e202",
+      "mode": "0600"
+    },
+    {
+      "filename": "attachment-1-1-0-870162-4.bin",
+      "bytes": 72,
+      "sha256": "abe34935a44b0714231889bd0d8768c80ec1ca4a221928956c8e5f1af914f3c9",
+      "mode": "0600"
+    }
+  ],
+  "reader": {
+    "initial_and_restarted_unicode_reader_equal_independent_template": true,
+    "visible_events": 2,
+    "reference_ids": [
+      "r0:e1",
+      "r5:e0"
+    ],
+    "selected_bookmark_equalities": 7,
+    "ready_back_escape_and_remote_inert_copy_exact": true
+  },
+  "history": {
+    "synthetic_sessions": 1,
+    "user_events": 2,
+    "history_control_and_filter_help_exercised": true,
+    "claude_provider_reader_exact": true,
+    "all_provider_restored_reader_exact": true,
+    "literal_search_result_reader_exact": true,
+    "codex_empty_state": "Screenshot only; root reported visually observed. No automated empty-list assertion."
+  },
+  "native_pixels": {
+    "views": {
+      "jpeg-fit": {
+        "samples": 30,
+        "display_png_sha256": "1f9f6d2bbe70ec20b79a10f2b660c1eb1c4c671c3251f73537f2d7b9e722925d",
+        "pixel_receipt_sha256": "8819fb5a646c31ecfad39476fe3cfc3ab4007053a38906b1302139ad62b85091"
+      },
+      "jpeg-origin": {
+        "samples": 6,
+        "display_png_sha256": "ce896aeca57d977a1fa3156aef93f25e506136f42f80ff7dc0ed474da9590e1d",
+        "pixel_receipt_sha256": "35fe9a991d6eef9bb2e85d4665a2ba9bf41ddde2e5049d9daf87d0475cdf3add"
+      },
+      "jpeg-right": {
+        "samples": 8,
+        "display_png_sha256": "12ddbbae160898c98ef361dbbb7843b50d1de2effbb541c3322a087ca6525a13",
+        "pixel_receipt_sha256": "c3f5249a0cef9d0a540b389e297c83a7a3286083978d4aefb26c0b2f9f2f9a86"
+      },
+      "jpeg-down": {
+        "samples": 8,
+        "display_png_sha256": "4fe06cb1d42e9df09d7f224adf3a59f46139a5eab06f912a053b45d81e67cd9d",
+        "pixel_receipt_sha256": "88ac59b282b0c6cf6528e2b7ac419516747d4671a466b706d19e8ee4dd3cd109"
+      },
+      "jpeg-wheel-down": {
+        "samples": 8,
+        "display_png_sha256": "baf0d2352a26984a488421c72c94d9d163678f9cc3b3074b3d8f0785554d8927",
+        "pixel_receipt_sha256": "3b9e4f69c19b4ae0457626f4142b88be95a0c323bfd60eccba26bbe176ce7bcf"
+      },
+      "jpeg-wheel-up": {
+        "samples": 8,
+        "display_png_sha256": "4fe06cb1d42e9df09d7f224adf3a59f46139a5eab06f912a053b45d81e67cd9d",
+        "pixel_receipt_sha256": "88ac59b282b0c6cf6528e2b7ac419516747d4671a466b706d19e8ee4dd3cd109"
+      },
+      "jpeg-wheel-outside": {
+        "samples": 8,
+        "display_png_sha256": "7ef196d1dc172b2cfdd62b86b1678b18ab6dc10ef7538a76d758a81b6a61b999",
+        "pixel_receipt_sha256": "88ac59b282b0c6cf6528e2b7ac419516747d4671a466b706d19e8ee4dd3cd109"
+      },
+      "jpeg-bottom-right": {
+        "samples": 8,
+        "display_png_sha256": "ca42dbd898fe33d3c59efa72c90319aadabab6d2368d7bce0aee5a39638069b9",
+        "pixel_receipt_sha256": "6f18c073d09183597d8b7d6c2329852440c11e183c12f7892fe7977051716831"
+      },
+      "jpeg-edge-clamped": {
+        "samples": 8,
+        "display_png_sha256": "fd4e2e3cfd470ca87df4b8a551a974e624f3c569527ec7b39a01d24bdb2381d5",
+        "pixel_receipt_sha256": "6f18c073d09183597d8b7d6c2329852440c11e183c12f7892fe7977051716831"
+      },
+      "jpeg-fit-return": {
+        "samples": 30,
+        "display_png_sha256": "82476cf6cc14155ecd4c0641e587694210742627ba67b6ba35e2675afbf1a586",
+        "pixel_receipt_sha256": "8819fb5a646c31ecfad39476fe3cfc3ab4007053a38906b1302139ad62b85091"
+      },
+      "jpeg-reopen": {
+        "samples": 30,
+        "display_png_sha256": "04a48b0c0df9d4af8daf8ef0a5c3476185d05bcfaade682c7864ccb664232952",
+        "pixel_receipt_sha256": "8819fb5a646c31ecfad39476fe3cfc3ab4007053a38906b1302139ad62b85091"
+      },
+      "restarted-jpeg": {
+        "samples": 30,
+        "display_png_sha256": "6dbc8876f2e085e7166c1a2967409f1c9aba618d4f075dba7ddf848d0d1666d4",
+        "pixel_receipt_sha256": "8819fb5a646c31ecfad39476fe3cfc3ab4007053a38906b1302139ad62b85091"
+      },
+      "after-canceled-workers": {
+        "samples": 30,
+        "display_png_sha256": "d12cc5bd5a62db9bbec1de79eee9803cd4c9a817b3b3b672b82ada2bc40f8638",
+        "pixel_receipt_sha256": "8819fb5a646c31ecfad39476fe3cfc3ab4007053a38906b1302139ad62b85091"
+      },
+      "png-fit": {
+        "samples": 8,
+        "display_png_sha256": "7c5a71f86f58302e5d770fe7576d42dcb3b68d70b520930b4c05205fe6d17692",
+        "pixel_receipt_sha256": "7bab0626afe5471827941cfb2d864eecd3384abf479fac9dac8c2269c7f64456"
+      },
+      "png-actual": {
+        "samples": 3,
+        "display_png_sha256": "19e8bab4ba3c98e88a74a251891c4e2f54cd291878b21c226f9efb378bd4caf3",
+        "pixel_receipt_sha256": "4aaed1b4cdf856a22dc91102b81346840b27c16d9322d22835b19e741881c605"
+      }
+    },
+    "samples_total": 223,
+    "direct_png_reinspection": true,
+    "exact_icc_profile_zero_channel_tolerance": true,
+    "jpeg_size": [
+      1024,
+      640
+    ],
+    "png_size": [
+      2,
+      1
+    ],
+    "declared_mime_does_not_choose_decoder": true
+  },
+  "unsupported_variants": {
+    "progressive-unsupported": {
+      "source_bound_samples": 3030,
+      "display_png_sha256": "7148b6d0b314650287dd6921540e6c57039a7b8ee507df3a6d54ad15c57fd632"
+    },
+    "truncated-invalid": {
+      "source_bound_samples": 2550,
+      "display_png_sha256": "fb9e7394ced54b98ccae238a0a2eebaab3626031ee4b5716357e57ae3ca93082"
+    }
+  },
+  "pending_navigation": {
+    "pending-escape": {
+      "pending_pixels": {
+        "pending_observed": true,
+        "samples": 4096,
+        "png_sha256": "1abdfb9944a2bfae897b1e185ef96e6afae863ea06c62f9c93debb548c998360"
+      },
+      "same_owned_child_before_and_after_single_gesture": true,
+      "child_parent_pid": 844,
+      "child_pid": 4541,
+      "eventual_child_absence": true,
+      "bookmark_pixel_observations": 12,
+      "bookmark_samples_rechecked": 1017600,
+      "post_child_absence_input_free_observations": 10,
+      "selected_clipboard_restored_exact": true,
+      "gesture_bracket_seconds": "1.293251000",
+      "post_gesture_observation_seconds": "248.965480000",
+      "timing_limit": "Observation includes expensive screenshot/pixel checks; not cancellation latency or a performance benchmark."
+    },
+    "pending-back": {
+      "pending_pixels": {
+        "pending_observed": true,
+        "samples": 4096,
+        "png_sha256": "1abdfb9944a2bfae897b1e185ef96e6afae863ea06c62f9c93debb548c998360"
+      },
+      "same_owned_child_before_and_after_single_gesture": true,
+      "child_parent_pid": 844,
+      "child_pid": 5031,
+      "eventual_child_absence": true,
+      "bookmark_pixel_observations": 12,
+      "bookmark_samples_rechecked": 875520,
+      "post_child_absence_input_free_observations": 10,
+      "selected_clipboard_restored_exact": true,
+      "gesture_bracket_seconds": "1.136789000",
+      "post_gesture_observation_seconds": "219.427278000",
+      "timing_limit": "Observation includes expensive screenshot/pixel checks; not cancellation latency or a performance benchmark."
+    }
+  },
+  "observed_open_times": [
+    {
+      "open": "after-canceled-workers",
+      "first_verified_view": "after-canceled-workers",
+      "before_open_monotonic_seconds": "824.890391000",
+      "after_open_monotonic_seconds": "824.949602000",
+      "verified_monotonic_seconds": "834.351289000",
+      "before_open_to_verified_seconds": "9.460898000",
+      "after_post_to_verified_seconds": "9.401687000",
+      "first_observation_reported_pending": true,
+      "scope": "Observed upper bound including automation, notifications, screenshots and polling; no isolated decoder timing."
+    },
+    {
+      "open": "jpeg-initial",
+      "first_verified_view": "jpeg-fit",
+      "before_open_monotonic_seconds": "210.952011000",
+      "after_open_monotonic_seconds": "211.024829000",
+      "verified_monotonic_seconds": "221.149934000",
+      "before_open_to_verified_seconds": "10.197923000",
+      "after_post_to_verified_seconds": "10.125105000",
+      "first_observation_reported_pending": true,
+      "scope": "Observed upper bound including automation, notifications, screenshots and polling; no isolated decoder timing."
+    },
+    {
+      "open": "jpeg-reopen",
+      "first_verified_view": "jpeg-reopen",
+      "before_open_monotonic_seconds": "276.200570000",
+      "after_open_monotonic_seconds": "276.308334000",
+      "verified_monotonic_seconds": "289.165519000",
+      "before_open_to_verified_seconds": "12.964949000",
+      "after_post_to_verified_seconds": "12.857185000",
+      "first_observation_reported_pending": true,
+      "scope": "Observed upper bound including automation, notifications, screenshots and polling; no isolated decoder timing."
+    },
+    {
+      "open": "png",
+      "first_verified_view": "png-fit",
+      "before_open_monotonic_seconds": "862.404338000",
+      "after_open_monotonic_seconds": "862.509440000",
+      "verified_monotonic_seconds": "864.478931000",
+      "before_open_to_verified_seconds": "2.074593000",
+      "after_post_to_verified_seconds": "1.969491000",
+      "first_observation_reported_pending": false,
+      "scope": "Observed upper bound including automation, notifications, screenshots and polling; no isolated decoder timing."
+    },
+    {
+      "open": "restarted-jpeg",
+      "first_verified_view": "restarted-jpeg",
+      "before_open_monotonic_seconds": "1044.010567000",
+      "after_open_monotonic_seconds": "1044.077121000",
+      "verified_monotonic_seconds": "1053.901104000",
+      "before_open_to_verified_seconds": "9.890537000",
+      "after_post_to_verified_seconds": "9.823983000",
+      "first_observation_reported_pending": true,
+      "scope": "Observed upper bound including automation, notifications, screenshots and polling; no isolated decoder timing."
+    }
+  ],
+  "normal_close": {
+    "scope": "ready reader native Close only",
+    "parent_exit_observed_ms": 454,
+    "window_exit_observed_ms": 277,
+    "threshold_ms": 5000,
+    "pending_close_tested": false,
+    "times_are_observation_upper_bounds": true
+  },
+  "visual_review": {
+    "reviewer": "coordinating root agent",
+    "actual_full_display_screenshots": {
+      "history-selected": "3ea0a55c56822335508f7c58002dd9be1a86f6b065f274c2c822040756584229",
+      "history-filter-help": "3b109a2e8443613e3380429311d25b18b01a066a5faf237bd10c565923e8e253",
+      "history-claude": "ab3e882cfd80dbd5f04036f980b289e1282f4aac02e09b31e1f1e48a75acb273",
+      "history-codex-empty": "4e683743c58bb20a44651f114e5032db1efe9626a242294f8bdd483bab226566",
+      "history-search": "b7c73709ab3c1d0affa31ac2b72316fcd47d288960d01205ab06a14a423a1e45",
+      "jpeg-fit": "1f9f6d2bbe70ec20b79a10f2b660c1eb1c4c671c3251f73537f2d7b9e722925d",
+      "jpeg-bottom-right": "ca42dbd898fe33d3c59efa72c90319aadabab6d2368d7bce0aee5a39638069b9",
+      "pending-escape-before-input": "73dd7b8e569ef1f04118d282a71ba4301ca8bc904661a3c6c795e124f998fbde",
+      "pending-escape-stale-readonly-10": "17af3662d85b0b4aed02fb44e86cd7b37ebbff40824ced6ddeb4877c9bda10db",
+      "pending-back-before-input": "dabca924cc8f5f273a67ca915c7549ad6fdbc59578101eef0128fe42ec483d31",
+      "pending-back-stale-readonly-10": "d84c5d18288093f8f20c3598aa118044f51f8dd3877b2c18c50a7d0cb5cb9545",
+      "after-canceled-workers": "d12cc5bd5a62db9bbec1de79eee9803cd4c9a817b3b3b672b82ada2bc40f8638",
+      "png-fit": "7c5a71f86f58302e5d770fe7576d42dcb3b68d70b520930b4c05205fe6d17692",
+      "progressive-unsupported": "7148b6d0b314650287dd6921540e6c57039a7b8ee507df3a6d54ad15c57fd632",
+      "truncated-invalid": "fb9e7394ced54b98ccae238a0a2eebaab3626031ee4b5716357e57ae3ca93082",
+      "restarted-jpeg": "6dbc8876f2e085e7166c1a2967409f1c9aba618d4f075dba7ddf848d0d1666d4",
+      "normal-close-ready": "65e0b7a0f08230ae953a5c18bf5b63bd5131156147cf13cf95e85c36ebbf5f0c"
+    },
+    "observed": "History navigation, provider states/search, pending Escape/Back bookmarks, successful JPEG/PNG previews, progressive/invalid messages, restart and ready-close screen inspected. Sans chrome hierarchy is legible. Mono transcript remains dense and unsupported CJK/emoji glyphs remain visible; no general UX parity or shaping claim."
+  },
+  "cleanup": {
+    "candidate_parent_children_and_windows_absent": true,
+    "default_application_data_absent": true,
+    "display_and_dock_restored": true,
+    "vm_stop": {
+      "wrapper_exit": 143,
+      "exact_wrapper_pid": 26654,
+      "exact_tart_pid": 27379,
+      "nonce": "0eefcc3c-92e4-441c-8771-20833365e35d",
+      "state": "stopped",
+      "lease_absence_observed_before_next_run": true,
+      "terminal_state_sha256": "5c5eadf4dda13e1931b0cf7f1ba5a56cea0b3e1befdbfcfb0ef4c31a52f3757f",
+      "no_live_children_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "evidence": {
+    "artifact_files_unchanged_after_validation": 1000,
+    "artifact_manifest_sha256": "48786fd02b6e9e856a0aa939e566dcd4b959d7a26e6edfb1a60195f590bbaeb4",
+    "payload_files_unchanged": 31,
+    "build_evidence_files_unchanged": 267,
+    "staging_receipt_sha256": "0b7afaed6fb8b344cdcfc8029e3c75997cd11b996ebfb41335a617938ee5ab44",
+    "collector_sha256": "fbcffd99cd257a2d691b9c23cc0ad6b6ba31b1dc794e635c4fe29c73b66dbfdf",
+    "collector_receipt_sha256": "2c209afceec91b77650195cdaa7f56c0989327616645b4e3b92f6e97cf769558",
+    "terminal_artifact_files": 1001,
+    "terminal_artifact_manifest_sha256": "1bca693f40ca5a22c5cca62c6cda67439219f4db082b15848f19e359e681da03",
+    "shutdown_delta": "After collector success, owned wrapper shutdown changed only live-children.txt and vm-state.json and added session-exit-code. All other collected files remain byte-identical."
+  },
+  "limitations": [
+    "This result binds only app981e84fd and the documented independently frozen helper, not later candidate changes.",
+    "Pending Escape and Back retirement are covered; pending Close is not tested or claimed fixed.",
+    "Observed Open and gesture times include costly automation/pixel checks and are not decoder, event-handling or general responsiveness benchmarks.",
+    "The one-session synthetic History gallery does not establish large-library usability or general feature parity.",
+    "Exact display storage components under one ICC profile are checked, not general color fidelity.",
+    "Unavailable/pending chrome is source-bound evidence; it is not an independent decoder oracle.",
+    "No Swift comparison or controlled performance benchmark.",
+    "Original failed date-path run and earlier pending-Close failures remain preserved."
+  ],
+  "collected_utc": "2026-10-22T16:09:03.227885+00:00"
+}

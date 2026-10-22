@@ -11,6 +11,8 @@ import ./gui_brief.bend as Brief
 import ./window_layout.bend as Window
 import ./tab_readability.bend as Tiles
 import ./polish.bend as Polish
+import ./ui_attachments.bend as A
+import ../src/ui_palette.bend as Palette
 
 def require(ok: Bool,label: String) -> IO(Unit):
   match ok:
@@ -50,12 +52,12 @@ def wrong(key: String,value: J.Json,label: String) -> IO(Unit):
 def routes() -> IO(Unit):
   +canvas = UI.draw_canvas_capture(F.origin_ui(),"Pause",False{})
   do IO<Unit>:
-    require(String.eq(pointer(8,560),"atif") && String.eq(pointer(87,591),"atif"),"ATIF button accepts its full visible32px target including edge pixels")
-    require(String.eq(pointer(96,560),"archive") && String.eq(pointer(167,591),"archive"),"Archive button retains its own visible32px target")
-    require(String.eq(pointer(7,568),"none") && String.eq(pointer(88,568),"none") && String.eq(pointer(95,568),"none") && String.eq(pointer(168,568),"none"),"split export row padding and eight-pixel gap are inert")
-    require(String.eq(pointer(24,536),"jsonl") && String.eq(Full.action(UI.top_action(F.origin_ui(),4)),"bounded"),"full JSONL and bounded evidence export routes remain distinct and reachable")
-    require(Window.glyph(canvas,16,568,65,UI.panel()) && Window.glyph(canvas,104,568,65,UI.panel()) && Tiles.tile.empty(Tiles.tile.at(8n,canvas,11,71),UI.rail()),"actual painter shows both format labels with matching inert gap")
-    require(String.eq(UI.selection(Full.next_ui(UI.event(Mouse{24,568,0,True{}},F.origin_ui()))),UI.selection(F.origin_ui())),"ATIF pointer does not alter canonical text selection")
+    require(String.eq(pointer(8,464),"atif") && String.eq(pointer(87,495),"atif"),"ATIF button accepts its full visible32px target including edge pixels")
+    require(String.eq(pointer(96,464),"archive") && String.eq(pointer(167,495),"archive"),"Archive button retains its own visible32px target")
+    require(String.eq(pointer(7,472),"none") && String.eq(pointer(88,472),"none") && String.eq(pointer(95,472),"none") && String.eq(pointer(168,472),"none"),"split export row padding and eight-pixel gap are inert")
+    require(String.eq(pointer(24,440),"jsonl") && String.eq(Full.action(UI.top_action(F.origin_ui(),4)),"bounded"),"full JSONL and bounded evidence export routes remain distinct and reachable")
+    require(A.chrome_glyph(canvas,16,464,65,0,Palette.navigation_ink(),Palette.navigation_paper()) && A.chrome_glyph(canvas,104,464,65,0,Palette.navigation_ink(),Palette.navigation_paper()) && Tiles.tile.empty(Tiles.tile.at(8n,canvas,11,59),Palette.navigation_paper()),"actual painter shows both format labels with matching inert gap")
+    require(String.eq(UI.selection(Full.next_ui(UI.event(Mouse{24,472,0,True{}},F.origin_ui()))),UI.selection(F.origin_ui())),"ATIF pointer does not alter canonical text selection")
     require(String.eq(Full.request_text(request()),"41|export-atif|7|" ++ path() ++ "|7|0|" ++ path()),"ATIF queues exact snapshot and unique application-data path with no page or filter arguments")
     require(String.eq(Full.request_text(Gui.atif_export_request(Full.listing_newer(F.origin()),123n)),Full.request_text(request())),"refreshed newer listing cannot replace the opened export snapshot")
     require(Bool.not(String.eq(Full.request_text(Gui.atif_export_request(Full.with_serial(F.origin(),1),123n)),Full.request_text(request()))),"same-millisecond ATIF requests use distinct no-clobber serial destinations")

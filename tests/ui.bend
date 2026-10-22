@@ -82,8 +82,8 @@ def buttons() -> IO(Unit):
   +settings = UI.set_results(UI.select_all(UI.set_query(UI.init(),"café 中文 🙂")),UI.SettingsResults{0,0,"Resume",True{}})
   do IO<Unit>:
     Unit <- require(String.eq(copied(UI.event(Mouse{824,136,0,True{}},reader)),"é 漢字 🙂"),"pointer Copy retains selected reader Unicode")
-    Unit <- require(String.eq(button_export(UI.event(Mouse{16,536,0,True{}},query)),"full-jsonl"),"normal sidebar pointer requests full JSONL export")
-    Unit <- require(String.eq(button_export(UI.event(Mouse{120,568,0,True{}},reader)),"archive") && String.eq(UI.selection(changed(UI.event(Mouse{120,568,0,True{}},reader))),"é 漢字 🙂"),"normal sidebar pointer requests archive export without changing reader selection")
+    Unit <- require(String.eq(button_export(UI.event(Mouse{16,U32.add(G.sidebar_y(10),8),0,True{}},query)),"full-jsonl"),"normal sidebar pointer requests full JSONL export")
+    Unit <- require(String.eq(button_export(UI.event(Mouse{120,U32.add(G.sidebar_y(11),8),0,True{}},reader)),"archive") && String.eq(UI.selection(changed(UI.event(Mouse{120,U32.add(G.sidebar_y(11),8),0,True{}},reader))),"é 漢字 🙂"),"normal sidebar pointer requests archive export without changing reader selection")
     Unit <- require(button_paste(UI.event(Mouse{920,136,0,True{}},query)),"reader toolbar pointer Paste requests clipboard input")
     Unit <- require(String.eq(UI.selection(changed(UI.event(Mouse{920,136,0,True{}},query))),"replace me"),"reader toolbar pointer Paste preserves query replacement selection")
     Unit <- require(String.eq(UI.query(changed(UI.event(Mouse{1016,136,0,True{}},query))),""),"pointer Clear empties query")
@@ -139,8 +139,8 @@ def related_navigation() -> IO(Unit):
   +original = UI.set_edit(UI.set_position(UI.set_reader(UI.init(),"title","Unicode café 🙂"),3,8),UI.Edit{2,8,2,True{},4})
   +restored = UI.restore(UI.init(),UI.bookmark(UI.set_modifiers(original,True{},True{})))
   do IO<Unit>:
-    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,344,0,True{}},state)),13) &&
-      U32.is_eq(navigation_kind(UI.event(Mouse{32,600,0,True{}},state)),14),"Related and Back have dedicated nonoverlapping pointer controls")
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,U32.add(G.sidebar_y(6),8),0,True{}},state)),13) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{32,U32.add(G.sidebar_y(15),8),0,True{}},state)),14),"Related and Back have dedicated nonoverlapping pointer controls")
     require(U32.is_eq(navigation_kind(UI.event(Key{103,True{}},UI.set_modifiers(state,True{},False{}))),13) &&
       U32.is_eq(navigation_kind(UI.event(Key{91,True{}},UI.set_modifiers(state,True{},False{}))),14),"Command-G and Command-left-bracket navigate Related and Back")
     require(String.eq(UI.result_label(UI.RelatedResults{2,0,True{},True{}}),"Page 2 | 0 links") &&
@@ -176,32 +176,35 @@ def result_navigation() -> IO(Unit):
     require(String.eq(UI.result_label(UI.Results{100,100,True{},True{}}),"101-200 + more") &&
       String.eq(UI.result_label(UI.Results{200,1,False{},True{}}),"201-201 / end"),
       "result range labels use global ordinal ranges")
-    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,376,0,True{}},first)),6) &&
-      U32.is_eq(navigation_kind(UI.event(Mouse{32,408,0,True{}},first)),7),
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,U32.add(G.sidebar_y(7),8),0,True{}},first)),6) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{32,U32.add(G.sidebar_y(8),8),0,True{}},first)),7),
       "saved versions and explicit latest have distinct pointer actions")
-    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,472,0,True{}},first)),8),
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,U32.add(G.sidebar_y(13),8),0,True{}},first)),8),
       "Storage inventory has a dedicated Settings action")
 
 def files_navigation() -> IO(Unit):
   +files = UI.set_files(UI.init(),True{})
   do IO<Unit>:
-    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,128,0,True{}},UI.init())),9) &&
-      U32.is_eq(navigation_kind(UI.event(Mouse{32,128,0,True{}},files)),9),
-      "Files and History share a dedicated sidebar target")
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,U32.add(G.sidebar_y(1),16),0,True{}},UI.init())),9) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{32,U32.add(G.sidebar_y(0),16),0,True{}},files)),9),
+      "Files destination and History return have distinct sidebar targets")
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,U32.add(G.sidebar_y(1),16),0,True{}},files)),0) &&
+      UI.is_files(changed(UI.event(Mouse{32,U32.add(G.sidebar_y(1),16),0,True{}},files))),
+      "active Files destination focuses its list without toggling to History")
     require(U32.is_eq(navigation_kind(UI.event(Mouse{24,96,0,True{}},files)),10),
       "Files exposes explicit Open repo instead of capture Refresh")
     require(U32.is_eq(navigation_kind(UI.event(Mouse{208,128,0,True{}},files)),11) &&
       U32.is_eq(navigation_kind(UI.event(Mouse{208,128,0,True{}},UI.init())),0),
       "Up folder occupies only the Files list header")
-    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,472,0,True{}},files)),8) &&
-      U32.is_eq(navigation_kind(UI.event(Mouse{32,376,0,True{}},files)),6),
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,U32.add(G.sidebar_y(13),8),0,True{}},files)),8) &&
+      U32.is_eq(navigation_kind(UI.event(Mouse{32,U32.add(G.sidebar_y(7),8),0,True{}},files)),6),
       "Files controls preserve Storage and Versions hit targets")
 
 def tools_navigation() -> IO(Unit):
   +state = UI.set_query(UI.init(),"literal query")
   do IO<Unit>:
-    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,280,0,True{}},state)),12),
-      "Tools has a distinct sidebar row below Scope")
+    require(U32.is_eq(navigation_kind(UI.event(Mouse{32,U32.add(G.sidebar_y(5),8),0,True{}},state)),12),
+      "Tools has a distinct sidebar row in the capture group")
     require(U32.is_eq(navigation_kind(UI.event(Key{116,True{}},UI.set_modifiers(state,True{},False{}))),12),
       "Command-T opens recorded Tools")
     require(String.eq(UI.query(changed(UI.event(Key{116,True{}},UI.set_modifiers(state,True{},False{})))),"literal query") &&

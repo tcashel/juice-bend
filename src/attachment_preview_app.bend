@@ -285,8 +285,8 @@ def pending_active(value: Maybe<&2,Pending>) -> Bool:
 
 def paced(state: State,had_events: Bool) -> State & U32:
   match state:
-    case Browsing{+gui,+pending}:
-      (Browsing{gui,pending},Bool.pick(U32,pending_active(pending),1,Gui.sleep_ms(gui,had_events)))
+    case Browsing{+gui,pending}:
+      (Browsing{gui,pending},Gui.sleep_ms(gui,had_events))
     case Showing{Preview.State{bookmark,raster,view,image,+dirty},caption}:
       (Showing{Preview.State{bookmark,raster,view,image,dirty},caption},Bool.pick(U32,had_events || dirty,1,80))
     case Unavailable{bookmark,caption,message}:

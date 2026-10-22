@@ -1,0 +1,206 @@
+{
+  "schema": "juice-bend-native-history-workspace-external-receipt-v1",
+  "status": "passed independent data/pixel/ATIF postflight, root native visual review and exact owned VM shutdown",
+  "checked_at_utc": "2026-10-22T16:14:56.609234+00:00",
+  "app_sha256": "981e84fd4f5a77f3e778cc98ee7d0aa65f276bb10dccd52b46fb51a96fa0c633",
+  "helper_sha256": "1d389af43d348b7d2154c8d53d599f651248b6c7939eca443c939dcbff1850c7",
+  "application": {
+    "sha256": "981e84fd4f5a77f3e778cc98ee7d0aa65f276bb10dccd52b46fb51a96fa0c633",
+    "source_files": 171,
+    "pinned_inputs": 96,
+    "source_binding_sha256": "ac9dab2eb3ec88e0b1167d9b241614772d19f9af3707da205dbad269ab1b8b30",
+    "build_receipt_sha256": "270f6f876e440fd66ed38315f23184fa1843a2debdb232d9cb4cda04024b5087"
+  },
+  "helper": {
+    "sha256": "1d389af43d348b7d2154c8d53d599f651248b6c7939eca443c939dcbff1850c7",
+    "source_files": 81,
+    "pinned_inputs": 96,
+    "shared_application_paths_exact": 69,
+    "shared_application_paths_compatible_exception": 1,
+    "compatibility_sha256": "996595e9d86497dbd1d390a870aebf1681c6d77ed637a1f31023aeae69c08541",
+    "exception": "Only file_evidence.commit_why_message and its import changed; invoked frozen fixture/verification modes do not invoke this route. No G15 validation.",
+    "manifest_sha256": "0fcb8b85a5406fb21ee4aebfe0d848f284b208680d13c43fac04517e5c01a46d",
+    "build_receipt_sha256": "e21e8d75519fdb7feea45229e754c6c5327f1a3f26c125d9369c220ec57979f2"
+  },
+  "payload_files_unchanged": 25,
+  "build_evidence_files_unchanged": 291,
+  "fixture_files_unchanged": 8,
+  "artifact_files_unchanged": 504,
+  "artifact_manifest_sha256": "d5abce15a543c520599bc88be0ab38d9a218949964a6315e7c9e6573001d73b4",
+  "steps": {
+    "prepare": 0,
+    "capture": 0,
+    "retained": 0,
+    "atif": 0,
+    "cleanup": 0,
+    "cleanup-shot": 0,
+    "fixture-copy": 0,
+    "guest-run": 0,
+    "display-holder": 0,
+    "display-restored": 0
+  },
+  "guest_final_app_children_windows_absent": true,
+  "vm_stop_not_inferred_from_guest_cleanup": true,
+  "restart_pids": {
+    "before": 803,
+    "after": 2870
+  },
+  "observed_same_app_children": {
+    "captured": {
+      "pid": 1812,
+      "parent": 803,
+      "started": "Thu Oct 22 16:12:38 2026"
+    },
+    "retained": {
+      "pid": 3318,
+      "parent": 2870,
+      "started": "Thu Oct 22 16:13:49 2026"
+    }
+  },
+  "capture": {
+    "snapshot": "1",
+    "source": "1",
+    "generation": "1",
+    "provider": "claude",
+    "records": 3,
+    "events": 10,
+    "logical_bytes": 1656,
+    "logical_sha256": "3a0b4a1dbb23718061e47d99e45da566b55113c13675a11bac5b243b3408c068",
+    "compressed_bytes": 1665,
+    "compressed_sha256": "3c47ee2d93bd3e92dc39ebdcfcaa55330b345e6bbb14646fc9c01f44ba109af4",
+    "complete_verify_before_after": true,
+    "status_before_after_exact": true
+  },
+  "retained_receipt_exact_before_restart_final": true,
+  "root_enabled_revision": "1",
+  "current_disabled_revision": "2",
+  "source_png_and_archive_absent": true,
+  "sqlite_quick_check": "ok",
+  "sqlite_foreign_key_violations": 0,
+  "two_distinct_png_exports": [
+    {
+      "filename": "attachment-1-0-0-248030-2.bin",
+      "bytes": 6555,
+      "sha256": "2fadba069c92c7b9981c87e6d05b7251de6e6ec8c72afc571eaadad49578d64f",
+      "mode": "0600"
+    },
+    {
+      "filename": "attachment-1-0-0-252252-3.bin",
+      "bytes": 6555,
+      "sha256": "2fadba069c92c7b9981c87e6d05b7251de6e6ec8c72afc571eaadad49578d64f",
+      "mode": "0600"
+    }
+  ],
+  "bookmark_copy_restoration_exact": true,
+  "pixel_checks": {
+    "captured-fit": {
+      "samples": 1085,
+      "pixel_receipt_sha256": "c3f9e083bdb2368b8bff17b0df3b773de12cda343ac39e922dba6ea50df9b655",
+      "display_png_sha256": "2327a15fe21763e9e5f37aa6926787c016aa5c4f172f9622f7c8ba3f3c64d323"
+    },
+    "captured-actual": {
+      "samples": 1085,
+      "pixel_receipt_sha256": "a95a1e5cf67672e5f7c7ba7f0fb83647b2d1b1c8ed66bc189f5f260c067f7f35",
+      "display_png_sha256": "1000e6abdaea93741353b59c90bb9187baa0065056eb7c3e07b39f1e8bc4a50b"
+    },
+    "captured-pan": {
+      "samples": 1085,
+      "pixel_receipt_sha256": "daccc72eca7c986a516258c98e3ee2ba62d426e55351844c6f19a3d41a9c4d71",
+      "display_png_sha256": "efb3b180e2d3cb6739ea63cc7e1de9661f474224627f94192fcfaf9095ff0d34"
+    },
+    "captured-wheel": {
+      "samples": 1085,
+      "pixel_receipt_sha256": "38fbcb104139c7a4ae47a0d89b26bcda69e870f6197fa2923862ba90d3de4bb7",
+      "display_png_sha256": "7d95ac78a5b80931a5dd2d89c1ad0c929bb38d51b7cab13ddba384a92f2a085f"
+    },
+    "retained-fit": {
+      "samples": 1085,
+      "pixel_receipt_sha256": "2fd68a94e0d87ea3df87180696625fa17432b2497597d207d5994a1e02be2446",
+      "display_png_sha256": "f926cf15de77dbdeee06330b05ecdf7b0cc9f80d697a2f1d1b565562096eebc3"
+    },
+    "retained-actual": {
+      "samples": 1085,
+      "pixel_receipt_sha256": "a9ff25bf1bcbc663a0562c660e9b0b844170758bb517870b8702dd1c8abd955e",
+      "display_png_sha256": "5319fd9125596ef3c6512be1a251f136195ef98ed0d2103688238c37e164acf2"
+    },
+    "retained-right": {
+      "samples": 1085,
+      "pixel_receipt_sha256": "e19e4f1dbd0c2fb87fe10f22e141d7d52de9fea33a3476d1b515ded0419bc8da",
+      "display_png_sha256": "f5f02fa756f95d420ef1f9890581ccda2878202df45080c7a86e0d618bf39f3b"
+    }
+  },
+  "pixel_samples_total": 7595,
+  "profile_bound_zero_tolerance": true,
+  "pixels_independently_reinspected": true,
+  "asset_receipt_commitment_recomputed": true,
+  "observed_open_times": [
+    {
+      "open": "captured",
+      "before_open_monotonic_seconds": "153.578233000",
+      "after_open_monotonic_seconds": "153.695406000",
+      "verified_monotonic_seconds": "168.224221000",
+      "before_open_to_verified_seconds": "14.645988000",
+      "after_post_to_verified_seconds": "14.528815000",
+      "scope": "Observed upper bound including notification, route, screenshot and polling checks; not an isolated decoder benchmark."
+    },
+    {
+      "open": "retained",
+      "before_open_monotonic_seconds": "224.666102000",
+      "after_open_monotonic_seconds": "224.957812000",
+      "verified_monotonic_seconds": "238.716926000",
+      "before_open_to_verified_seconds": "14.050824000",
+      "after_post_to_verified_seconds": "13.759114000",
+      "scope": "Observed upper bound including notification, route, screenshot and polling checks; not an isolated decoder benchmark."
+    }
+  ],
+  "atif": {
+    "sha256": "e64c094fa296a6d4500a84c14f69f12a3afccbeec98ffb774c121c713f9e819b",
+    "bytes": 16310,
+    "mode": "0600",
+    "steps": 10,
+    "source_records": 3,
+    "independent_checks": 37,
+    "official_checker_accepts_both_actual_copies": true,
+    "official_commit": "09f5b964f8e5075f7e52fd08c9994dfc80ad5d24",
+    "official_checker_sha256": "f09046f86b900e0cca45c0fdd39f2e3d0cd67c390ed8513432ce6e80220ff4e1",
+    "postflight_sha256": "30cdecd243a99ef7048c9dae8436a2697757a7b75efe4b56d70957799b1bd74d"
+  },
+  "no_app_vm_compiler_or_network_execution_by_postflight": true,
+  "limitations": [
+    "This result binds only app981e84fd and the independent helper with the documented file_evidence compatibility exception. It does not validate G15.",
+    "Observed Open times include automation/polling; no isolated decode, cancellation, pending Close or controlled performance claim.",
+    "Only selected local PNG capture is exercised here; no general attachment/JPEG/full-parity claim.",
+    "Pixel checks compare unmanaged display components under one exact ICC profile, not general sRGB fidelity.",
+    "Root visual review covers eight actual screenshots; no general visual parity claim."
+  ],
+  "visual_review": {
+    "reviewer": "coordinating root agent",
+    "actual_full_display_screenshots": {
+      "initial-uncaptured": "b463405f48998976140555a358eadbf4ce2d9979dea80ae1d7d454c002d26e0b",
+      "folder-enabled": "9dccbbf27e5838742b93527a532688f4c34cf349f4a86426b9b5305b26dca4a1",
+      "captured-fit": "2327a15fe21763e9e5f37aa6926787c016aa5c4f172f9622f7c8ba3f3c64d323",
+      "folder-disabled": "2800706e0fd0cd32ec46e6ecf5c38dd79df1807b03e1047e00a6b177a8140981",
+      "restarted-filtered": "e14749718a2484cc3499d5271a7e56b6a5f882200e3ef9046c31f69df5a31727",
+      "retained-fit": "f926cf15de77dbdeee06330b05ecdf7b0cc9f80d697a2f1d1b565562096eebc3",
+      "atif-complete-filtered-reader": "afe1dadc7bf099cd6a2b677b75bdec797e2067bc6fcfc0af3c867967baa78d85",
+      "atif-completed-expanded-1": "7fe45614c6f58a73a7f4929700e62e205ac418d218cc96bd5fb96433f1b6c0d8"
+    },
+    "observed": "Inspected capture-folder approval and disabling, retained PNG before/after source-loss restart, preserved filtered reader and explicit full-snapshot ATIF success. Sans chrome is legible; dense canonical transcript remains to polish. Capture-folders Paste query label should say Paste path in a subsequent slice."
+  },
+  "vm_shutdown": {
+    "wrapper_exit": 143,
+    "exact_wrapper_pid": 38043,
+    "exact_tart_pid": 39973,
+    "nonce": "f6073e7b-4001-459e-b1ac-9256ac91a5cd",
+    "state": "stopped",
+    "lease_absent": true,
+    "terminal_state_sha256": "1f7a61157da0b5a7094e5c45613751813c7e4836fb6ed366e67b82762cefffd6",
+    "no_live_children_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "terminal_evidence": {
+    "collector_receipt_sha256": "5a8eae281c7426ce79e0ee2a9b53e60e14411698f6cea2fad99fdbca777c91a2",
+    "artifact_files": 505,
+    "artifact_manifest_sha256": "d7a806fe0a7118325f53a8291378d62b7ffe8e9541a57482fe57a40634409119",
+    "delta": "After collector success, owned wrapper shutdown changed only live-children.txt and vm-state.json and added session-exit-code. All other collected files remain byte-identical."
+  }
+}

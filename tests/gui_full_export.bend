@@ -32,8 +32,8 @@ def rail(index: U32) -> String:
 
 def routes() -> IO(Unit):
   do IO<Unit>:
-    require(String.eq(rail(13),"whole") && String.eq(UI.side_label(False{},14,False{}),"Export full JSONL"),"native compact sidebar row13 points to full JSONL export")
-    require(String.eq(action(UI.event(Mouse{120,U32.add(G.sidebar_y(14),8),0,True{}},Fixture.origin_ui())),"container") && String.eq(UI.side_label(False{},16,False{}),"Export archive"),"native compact sidebar row14 points to compressed container export")
+    require(String.eq(rail(10),"whole") && String.eq(UI.workspace_side_label(14),"Export full JSONL"),"History sidebar row10 points to full JSONL export")
+    require(String.eq(action(UI.event(Mouse{120,U32.add(G.sidebar_y(11),8),0,True{}},Fixture.origin_ui())),"container") && String.eq(UI.side_label(False{},16,False{}),"Export archive"),"History split export row11 retains the compressed container action")
     require(String.eq(action(UI.top_action(Fixture.origin_ui(),4)),"bounded") && String.eq(action(UI.key_down(Fixture.origin_ui(),101,True{})),"bounded"),"toolbar and Command E retain bounded evidence export")
     require(String.eq(action(UI.key_down(UI.set_edit(Fixture.origin_ui(),UI.Edit{0,0,0,False{},0}),118,True{})),"paste"),"Command V remains the ordinary native paste action")
     require(String.eq(UI.selection(next_ui(UI.key_down(Fixture.origin_ui(),97,True{}))),UI.reader(Fixture.origin_ui())),"Command A still selects the entire reader independently of sidebar export")

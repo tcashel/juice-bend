@@ -46,29 +46,28 @@ def painting() -> IO(Unit):
   +moved = UI.draw_canvas_capture(UI.set_position(origin,1,0),"Pause",False{})
   +long = UI.draw_canvas_capture(UI.set_reader(origin,String.repeat("W",30n),UI.reader(origin)),"Pause",False{})
   do IO<Unit>:
-    check(Attachments.glyph(canvas,536,128,84,UI.heading_ink(),UI.paper()) &&
-      Tiles.tile.empty(Tiles.tile.at(8n,canvas,78,16),UI.paper()),
-      "actual painter shows a complete Transcript heading without the clipped pinned suffix")
-    check(Attachments.glyph(long,672,128,8230,UI.heading_ink(),UI.paper()) &&
-      U32.is_ne(Font.row(Font.half(Font.glyph(8230),False{}),1),0) &&
-      Tiles.tile.row(Tiles.tile.at(8n,long,84,17),1,Font.row(Font.half(Font.glyph(8230),False{}),1),UI.paper()) &&
-      Attachments.glyph(long,704,128,65,UI.accent(),UI.paper()) &&
-      Attachments.glyph(long,816,128,67,UI.accent(),UI.paper()),
-      "long heading ends in a real ellipsis and leaves Attachments and Copy intact")
-    check(Attachments.glyph(canvas,192,128,83,UI.heading_ink(),UI.panel()) &&
-      Attachments.glyph(canvas,192,152,82,UI.muted(),UI.panel()),
-      "list heading and secondary loading label use distinct presentation roles")
-    check(Tiles.tile.empty(Tiles.tile.at(8n,canvas,1,18),UI.accent()) &&
-      Tiles.tile.empty(Tiles.tile.at(8n,canvas,1,14),UI.rail()),
-      "only the active provider row receives a visible selection marker")
+    check(Attachments.chrome_glyph(canvas,536,120,84,1,UI.heading_ink(),UI.paper()) &&
+      Attachments.blank(Tiles.tile.at(8n,canvas,81,16),UI.paper()),
+      "actual painter shows a complete sans Transcript heading without the pinned suffix")
+    check(Attachments.chrome_glyph(long,536,120,87,1,UI.heading_ink(),UI.paper()) &&
+      Bool.not(Attachments.blank(Tiles.tile.at(8n,long,83,16),UI.paper())) &&
+      Attachments.chrome_glyph(long,704,120,65,0,UI.accent(),UI.paper()) &&
+      Attachments.chrome_glyph(long,816,120,67,0,UI.accent(),UI.paper()),
+      "long sans heading visibly reaches its bounded ellipsis and leaves Attachments and Copy intact")
+    check(Attachments.chrome_glyph(canvas,192,120,72,2,UI.heading_ink(),UI.panel()) &&
+      Attachments.chrome_glyph(canvas,200,152,65,1,UI.ink(),UI.selected_bg()),
+      "History has a large sans heading and an active source chip")
+    check(Attachments.blank(Tiles.tile.at(8n,canvas,1,14),Palette.navigation_current()) &&
+      Attachments.blank(Tiles.tile.at(8n,canvas,1,18),Palette.navigation_paper()),
+      "the selected History destination is distinct from the repository destination")
     check(Tiles.tile.empty(Tiles.tile.at(8n,canvas,23,23),UI.accent()) &&
       Tiles.tile.empty(Tiles.tile.at(8n,canvas,23,31),UI.panel()) &&
       Tiles.tile.empty(Tiles.tile.at(8n,moved,23,23),UI.panel()) &&
       Tiles.tile.empty(Tiles.tile.at(8n,moved,23,31),UI.accent()),
       "selected capture marker follows exact list selection without changing card layout")
-    check(Tiles.tile.empty(Tiles.tile.at(8n,canvas,2,3),Palette.ink(Palette.Brand{})) &&
-      Attachments.glyph(canvas,32,24,74,UI.heading_ink(),UI.rail()),
-      "warm brand mark is confined to the application identity area")
+    check(Attachments.chrome_glyph(canvas,16,16,74,2,Palette.navigation_ink(),Palette.navigation_paper()) &&
+      Tiles.tile.empty(Tiles.tile.at(8n,canvas,0,3),Palette.navigation_paper()),
+      "the larger sans identity belongs to the persistent green rail")
 
 def unchanged_interaction() -> IO(Unit):
   +origin = state()

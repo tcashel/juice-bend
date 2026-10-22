@@ -33,6 +33,10 @@ run = "./scripts/app"
 [tasks.run]
 run = "./scripts/run"
 
+[tasks.demo]
+description = "Launch the existing build in a fresh synthetic library without rebuilding"
+run = "./scripts/demo"
+
 [tasks.test]
 run = "./scripts/test"
 
@@ -65,3 +69,11 @@ run = "./scripts/font-pack --check src/font.bend"
 [tasks.font-pack]
 description = "Pack font data into a new build artifact without overwriting source"
 run = "./scripts/font-pack --output build/font.generated.bend"
+
+[tasks.sans-font-check]
+description = "Verify the static Inter UI atlas and generated Bend glyphs against pinned public assets"
+run = "python3 scripts/sans-font-pack.py --check src/sans_font.bend"
+
+[tasks.sans-font-pack]
+description = "Pack the pinned UI atlas into a new build artifact without replacing source"
+run = "python3 scripts/sans-font-pack.py --output build/sans-font.generated.bend"

@@ -115,8 +115,8 @@ def top_action(index: U32) -> String: action(UI.top_action(Fixture.ui(entered())
 
 def routes() -> IO(Unit):
   do IO<Unit>:
-    require(String.eq(UI.side_label(False{},12,False{}),"Prepare brief") &&
-      String.eq(action(UI.event(Mouse{24,U32.add(G.sidebar_y(12),8),0,True{}},Fixture.ui(origin()))),"brief"),"normal rail pointer reaches Prepare brief")
+    require(String.eq(UI.workspace_side_label(12),"Prepare brief") &&
+      String.eq(action(UI.event(Mouse{24,U32.add(G.sidebar_y(9),8),0,True{}},Fixture.ui(origin()))),"brief"),"normal rail pointer reaches Prepare brief")
     require(String.eq(rail_action(0),"back") &&
       String.eq(rail_action(1),"prepare") &&
       String.eq(rail_action(2),"copy") &&

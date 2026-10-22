@@ -1,5 +1,18 @@
 # Reference parity
 
+Native History workspace acceptance (2026-10-22): green navigation, provider
+filters, static Inter labels and exact transcript selection/copy now pass in the
+combined app981e84fd. Retained JPEG/PNG, pending Escape/Back, source-loss restart,
+external capture and complete ATIF passed. See `history-workspace-jpeg-native.json`,
+`history-workspace-external-native.json` and `history-workspace-build-tests.json`.
+This is incomplete visual parity; message cards, Unicode shaping and pending Close
+remain open. Community UI components are isolated work, not an adopted framework.
+
+Current adopted source and exact continuation are in [progress.md](progress.md).
+Recorded commit-result evidence has native positive acceptance; see
+[receipt](receipts/recorded-commit-native.json). The dated evidence below retains
+its original binary/scope and must not be read as a new complete-parity run.
+
 ## Connections native validation — 2026-10-21
 
 Current app `0d4839d9…` adds explicit local Claude quota collection under
@@ -190,7 +203,7 @@ not established by the current bitmap reader.
 | Per-region evidence | Same | File evidence matches individual commit diff hunks using original-line coordinates; unmatched regions never borrow a neighboring match. Unique eligible final session trailers provide exact identity association; standalone body IDs remain probable | `tests/file_evidence.bend` and `tests/git_diff.bend`; final integration receipts are in `acceptance.md`. Exact identity association does not prove sole authorship or tool success |
 | Child attribution/model | Same | Claude nested-path and Codex recorded-parent identities retain the child actor; parent requests receive separate citations for navigation | No parent event ordinal or model replaces the child. Missing, ambiguous, cyclic or unsupported parent identity makes attribution ineligible. Final integrated child/orphan receipts are in `acceptance.md` |
 | Related capture navigation | Reference parent/subagent links | Fixed accepted-ID watermark, exact snapshot references, bounded verified metadata, distinct recorded-parent/path association labels, preserved target filters and original reader | 163 backend/CLI checks. Native app `784d48c4…` passed two pages, scoped target/Tools, both Back levels, concurrent native capture, retained rereads after source removal and exact exports. Role/date scope applies to target readers, not metadata discovery. Self/direct two-way cycles only; incomplete or page-local evidence does not prove global absence/uniqueness |
-| Why | `Juice/Packages/Sources/JuiceXPC/WhyBuilder.swift` | Transcript, file/range and exact-commit entry points quote captured requests/tool intent with immutable descriptors; no generated rationale | Descriptor consumption verifies provider, locator, generation, snapshot, extent, record and event. File evidence inspects at most 64 generation snapshots, the first 16 actor records, newest 256 edit events and eight commits per selected range. Recorded commit-command SHA mapping and time-only probable attribution are not implemented |
+| Why | `Juice/Packages/Sources/JuiceXPC/WhyBuilder.swift` | Transcript, file/range and exact-commit entry points quote captured requests/tool intent with immutable descriptors; no generated rationale | Descriptor consumption verifies provider, locator, generation, snapshot, extent, record and event. File evidence inspects at most 64 generation snapshots, the first 16 actor records, newest 256 edit events and eight commits per selected range. Recorded successful commit-command mapping now requires a unique ordered call/result, typed success, selected-root ownership, resolved object and adequate coverage; native positive copy/export/source-loss/restart passed. Time-only probable attribution remains excluded |
 | Origin and repository eligibility | Same | Verified raw metadata excludes explicit non-user-work/excluded origins, synthetic markers and unsupported orphan actors. Explicit Git checkout/worktree roots map to a shared canonical repository | Recorded-request-v1 selects supported request suffixes after known context, skips relay/meta, and keeps malformed frames ineligible. Diagnostic-style Markdown requests remain held for review. Native cases and 423 checks passed; first 16 actor records and64 generations remain bounded. No normalization/rebuild change or full origin-classification claim |
 | Evidence exports | Preserve/search ADRs | Full JSONL export verifies all retained logical bytes; archive export verifies the exact retained compressed container. Bounded transcript/Why exports retain selected scope and snapshot. GUI file evidence and Usage export the exact displayed text | Non-replacing private publication protects original locators and existing paths. New History full exports explicitly include records outside filters and remain pinned to the opened capture; native filtered-reader full exports and source-absent restart passed. Displayed-text exports explicitly say they are not reverified and do not rerun mutable Git attribution |
 | Native reading/search | Reference native History and transcript views | Native Bend UI; no Swift process, webview or inference dependency | Native interaction evidence recorded in `acceptance.md` |

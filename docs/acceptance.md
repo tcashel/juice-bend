@@ -1,5 +1,25 @@
 # Acceptance evidence
 
+Latest combined app981e84fd passed native History/JPEG and external/ATIF journeys
+on2026-10-22. Source-bound receipts: `receipts/history-workspace-build-tests.json`,
+`receipts/history-workspace-jpeg-native.json`, and
+`receipts/history-workspace-external-native.json`. The promoted executable matches
+all171 source inputs. Pending Escape/Back passed; pending Close remains defective.
+The34-check pacing/lifecycle unit entry remains unrun after frontend memory guards.
+Historical sections below retain their original scope.
+
+## Current validation — 2026-10-22
+
+Recorded-commit Why passed native form, exact copy/three private exports, source
+removal and different-process restart; negative GUI branches remain unrun.
+[Receipt](receipts/recorded-commit-native.json). Current polished image journeys
+also passed [external/ATIF](receipts/polished-external-native.json) and
+[JPEG](receipts/polished-jpeg-native.json) acceptance. These focused receipts do
+not close the pending-Close runtime defect or establish complete Swift parity.
+The combined History/pacing app is under native validation; consult
+[progress.md](progress.md) for its exact current state. Older dated sections
+below preserve historical outcomes, including failures.
+
 ## Adopted reader and attachment source — 2026-10-21
 
 The adopted source adds readable transcripts, inline attachment inventory/export,

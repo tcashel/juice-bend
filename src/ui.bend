@@ -4,6 +4,7 @@ import Base
 import ./font.bend as Font
 import ./ui_geometry.bend as G
 import ./ui_palette.bend as Palette
+import ./ui_chrome.bend as Chrome
 
 type Line is Data:
   Line{start: U32, text: String}
@@ -684,9 +685,36 @@ def paste_query(+s: State) -> State & Action:
   State{content,Input{selected,scroll,Edit{focus,caret,anchor,drag, viewport},command,shift},image,dirty} = s
   paste_query_at(s,focus)
 
+def focus_list(+s: State) -> State:
+  State{content,Input{selected,scroll,Edit{focus,caret,anchor,drag,viewport},command,shift},image,dirty} = s
+  set_edit(s,Edit{1,caret,anchor,False{},0})
+
+def history_action_mode(+s: State,+files: Bool,+usage: Bool) -> State & Action:
+  match files usage:
+    case True{} _: (s,Files{})
+    case False{} True{}: (s,Back{})
+    case False{} False{}: (focus_list(s),NoAction{})
+
+def history_has_origin(+s: State) -> Bool:
+  State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
+  match results:
+    case RelatedResults{_,_,_,_}: True{}
+    case _: String.starts_with(title(s),"Usage |")
+
+def history_action(+s: State) -> State & Action:
+  history_action_mode(s,is_files(s),history_has_origin(s))
+
+def files_destination_mode(+s: State,+files: Bool) -> State & Action:
+  match files:
+    case True{}: (focus_list(s),NoAction{})
+    case False{}: (s,Files{})
+
+def files_destination(+s: State) -> State & Action:
+  files_destination_mode(s,is_files(s))
+
 def sidebar_normal(+s: State,index: U32) -> State & Action:
   match index:
-    case 0: (s,Files{})
+    case 0: files_destination(s)
     case 1: (set_scope(s,"all"),Scope{"all"})
     case 2: (set_scope(s,"claude"),Scope{"claude"})
     case 3: (set_scope(s,"codex"),Scope{"codex"})
@@ -704,6 +732,7 @@ def sidebar_normal(+s: State,index: U32) -> State & Action:
     case 15: (set_query(s,""),Search{})
     case 16: (s,ContainerExport{})
     case 17: (s,Back{})
+    case 18: history_action(s)
     case _: (s,NoAction{})
 
 def sidebar_settings(+s: State,index: U32) -> State & Action:
@@ -875,10 +904,33 @@ def mouse_attachment_entry(+s: State,+x: U32,+y: U32,inside: Bool) -> State & Ac
     case True{}: (s,Bool.pick(Action,attachment_entry_visible(s),Attachments{},NoAction{}))
     case False{}: mouse_text(s,x,y,G.rect(x,y,G.text_actions_x(),G.text_actions_y(),G.text_action_x(4),U32.add(G.text_actions_y(),G.control_height())))
 
+def history_workspace(+s: State) -> Bool:
+  Bool.not(is_settings(s) || is_brief(s) || is_quota(s) || is_attachments(s) || is_attachment_folders(s))
+
+def provider_chips_visible(+s: State) -> Bool:
+  State{Content{_,_,_,_,_,_,_,results,_},_,_,_} = s
+  match results:
+    case Results{_,_,_,_}: history_workspace(s) && Bool.not(is_files(s))
+    case _: False{}
+
+def sidebar_index(+s: State,+y: U32) -> U32:
+  +visual = G.side_index(y)
+  Bool.pick(U32,is_quota(s) || is_attachments(s) || is_attachment_folders(s),visual,
+    G.sidebar_action_index(visual,is_settings(s),is_brief(s)))
+
+def provider_click_mode(+s: State,+x: U32,+y: U32,+index: U32,+available: Bool) -> State & Action:
+  match available:
+    case True{}: sidebar_normal(s,U32.add(index,1))
+    case False{}: list_click(s,U32.div(x,G.cell()),U32.div(y,G.cell()))
+
+def provider_click(+s: State,+x: U32,+y: U32) -> State & Action:
+  +index = G.provider_index(x,y)
+  provider_click_mode(s,x,y,index,U32.is_lt(index,3) && provider_chips_visible(s))
+
 def mouse_body(+s: State,+x: U32,+y: U32,+col: U32,+row: U32,+sidebar: Bool,+list: Bool) -> State & Action:
   match sidebar list:
-    case True{} _: sidebar_click(s,x,G.sidebar_action_index(G.side_index(y),is_settings(s),is_brief(s)))
-    case False{} True{}: list_click(s,col,row)
+    case True{} _: sidebar_click(s,x,sidebar_index(s,y))
+    case False{} True{}: provider_click(s,x,y)
     case False{} False{}: mouse_attachment_entry(s,x,y,G.attachment_entry_contains(x,y))
 
 def top_normal(+s: State, +group: U32) -> State & Action:
@@ -1221,6 +1273,25 @@ def selected_mark(c: Canvas,selected: Bool,x: U32,y: U32,height: U32) -> Canvas:
 def text(c: Canvas,label: String,x: U32,y: U32,count: U32,fg: U32,bg: U32) -> Canvas:
   write(U32.to_nat(count),c,label,U32.div(x,G.cell()),U32.div(y,G.cell()),fg,bg)
 
+def chrome_tiles(+fuel: Nat,+c: Canvas,+runs: List<&2,Chrome.Placed>,+column: U32,+left: U32,+top: U32,+x: U32,+y: U32,+fg: U32,+bg: U32) -> Canvas:
+  match fuel:
+    case 0n: c
+    case 1n+n:
+      nearby = Chrome.nearby(runs,left)
+      next = canvas.set(8n,c,U32.add(x,column),y,Tile{Chrome.tile(nearby,left,top),fg,bg})
+      chrome_tiles(n,next,runs,U32.add(column,1),U32.add(left,8),top,x,y,fg,bg)
+
+def chrome_rows(+fuel: Nat,+c: Canvas,+runs: List<&2,Chrome.Placed>,+columns: Nat,+top: U32,+x: U32,+y: U32,+fg: U32,+bg: U32) -> Canvas:
+  match fuel:
+    case 0n: c
+    case 1n+n:
+      next = chrome_tiles(columns,c,runs,0,0,top,x,y,fg,bg)
+      chrome_rows(n,next,runs,columns,U32.add(top,8),x,U32.add(y,1),fg,bg)
+
+def chrome_text(+c: Canvas,+label: String,+x: U32,+y: U32,+width: U32,+face: U32,+fg: U32,+bg: U32) -> Canvas:
+  runs = Chrome.layout(128n,face,label,0,width)
+  chrome_rows(Bool.pick(Nat,U32.is_eq(face,2),4n,3n),c,runs,U32.to_nat(U32.div(width,8)),0,U32.div(x,8),U32.div(y,8),fg,bg)
+
 def blend.channel(+fg: U32,+bg: U32,+coverage: U32) -> U32:
   U32.div(U32.add(U32.mul(fg,coverage),U32.mul(bg,U32.sub(15,coverage))),15)
 
@@ -1292,20 +1363,29 @@ def card_mode(+text: String,long: Bool) -> Card:
 def card(+text: String) -> Card:
   card_mode(text,U32.is_gt(length(text),38))
 
+def history_card(+row: String) -> Card:
+  Bool.pick(Card,String.starts_with(row,"claude  "),Card{String.drop(row,8n),"Claude"},
+    Bool.pick(Card,String.starts_with(row,"codex  "),Card{String.drop(row,7n),"Codex"},card(row)))
+
+def display_card(row: String,session: Bool) -> Card:
+  match session:
+    case True{}: history_card(row)
+    case False{}: card(row)
+
 def card_draw(c: Canvas,card: Card,+y: U32,+bg: U32) -> Canvas:
   Card{first,second} = card
-  line1 = text(c,first,192,U32.add(y,8),38,ink(),bg)
-  text(line1,second,192,U32.add(y,32),38,muted(),bg)
+  line1 = chrome_text(c,first,200,U32.add(y,0),296,1,ink(),bg)
+  chrome_text(line1,second,200,U32.add(y,24),296,0,muted(),bg)
 
-def draw_rows(+fuel: Nat,+c: Canvas,rows: List<&2,String>,+at: U32,+selected: U32) -> Canvas:
+def draw_rows(+fuel: Nat,+c: Canvas,rows: List<&2,String>,+at: U32,+selected: U32,+session: Bool) -> Canvas:
   match fuel rows:
     case 1n+n +row <> rest:
       +y = U32.add(G.list_y(),U32.mul(at,G.list_pitch()))
       +bg = Bool.pick(U32,U32.is_eq(at,selected),selected_bg(),panel())
       base = box(c,184,y,320,56,bg)
       marked = selected_mark(base,U32.is_eq(at,selected),184,y,56)
-      second = card_draw(marked,card(row),y,bg)
-      draw_rows(n,second,rest,U32.add(at,1),selected)
+      second = card_draw(marked,display_card(row,session),y,bg)
+      draw_rows(n,second,rest,U32.add(at,1),selected,session)
     case _ _: c
 
 def list_heading(results: Results,files: Bool) -> String:
@@ -1409,6 +1489,84 @@ def draw_side(fuel: Nat,c: Canvas,+index: U32,+files: Bool,+settings: Bool,+scop
         U32.is_eq(logical,16) && Bool.not(settings || brief))
       draw_side(n,selected_mark(label,active,8,y,32),U32.add(index,1),files,settings,scope,brief)
 
+def workspace_side_label(index: U32) -> String:
+  match index:
+    case 18: "History"
+    case 0: "Repository files"
+    case 6: "Session usage"
+    case 10: "Settings"
+    case 5: "Tools"
+    case 7: "Related captures"
+    case 8: "Saved versions"
+    case 9: "Open latest"
+    case 12: "Prepare brief"
+    case 14: "Export full JSONL"
+    case 11: "Storage"
+    case 4: "Search filters"
+    case 17: "Back"
+    case _: ""
+
+def workspace_side_active(+s: State,+index: U32) -> Bool:
+  Bool.pick(Bool,is_files(s),U32.is_eq(index,0),
+    Bool.pick(Bool,String.starts_with(title(s),"Usage |"),U32.is_eq(index,6),U32.is_eq(index,18)))
+
+def workspace_export(+c: Canvas,+y: U32) -> Canvas:
+  left = box(c,atif_left(),y,U32.sub(atif_right(),atif_left()),32,Palette.navigation_paper())
+  named = chrome_text(left,"ATIF 1.8",16,y,72,0,Palette.navigation_ink(),Palette.navigation_paper())
+  right = box(named,archive_left(),y,U32.sub(archive_right(),archive_left()),32,Palette.navigation_paper())
+  chrome_text(right,"Archive",104,y,64,0,Palette.navigation_ink(),Palette.navigation_paper())
+
+def workspace_side_item(+c: Canvas,+s: State,+index: U32,+y: U32,+logical: U32) -> Canvas:
+  match logical:
+    case 99:
+      chrome_text(c,Bool.pick(String,U32.is_eq(index,4),"THIS CAPTURE","LIBRARY"),16,U32.add(y,8),144,0,Palette.navigation_muted(),Palette.navigation_paper())
+    case 16: workspace_export(c,y)
+    case _:
+      +active = workspace_side_active(s,logical)
+      +bg = Bool.pick(U32,active,Palette.navigation_current(),Palette.navigation_paper())
+      +fg = Bool.pick(U32,active,Palette.navigation_current_ink(),Palette.navigation_ink())
+      base = box(c,8,y,160,32,bg)
+      chrome_text(base,workspace_side_label(logical),16,U32.add(y,0),144,Bool.pick(U32,U32.is_lt(index,4),1,0),fg,bg)
+
+def draw_workspace_side(+fuel: Nat,+c: Canvas,+s: State,+index: U32) -> Canvas:
+  match fuel:
+    case 0n: c
+    case 1n+n:
+      next = workspace_side_item(c,s,index,G.sidebar_y(index),G.sidebar_action_index.normal(index))
+      draw_workspace_side(n,next,s,U32.add(index,1))
+
+def provider_label(index: U32) -> String:
+  match index:
+    case 0: "All sources"
+    case 1: "Claude"
+    case _: "Codex"
+
+def provider_selected(+scope: String,+index: U32) -> Bool:
+  String.eq(scope,Bool.pick(String,U32.is_eq(index,0),"all",Bool.pick(String,U32.is_eq(index,1),"claude","codex")))
+
+def draw_providers(+fuel: Nat,+c: Canvas,+scope: String,+index: U32) -> Canvas:
+  match fuel:
+    case 0n: c
+    case 1n+n:
+      +active = provider_selected(scope,index)
+      +bg = Bool.pick(U32,active,selected_bg(),panel())
+      base = box(c,G.provider_x(index),G.provider_y(),G.provider_width(),24,bg)
+      next = chrome_text(base,provider_label(index),U32.add(G.provider_x(index),8),G.provider_y(),U32.sub(G.provider_width(),16),Bool.pick(U32,active,1,0),ink(),bg)
+      draw_providers(n,next,scope,U32.add(index,1))
+
+def draw_list_header_mode(+c: Canvas,+s: State,+results: Results,+files: Bool,+visible: Bool) -> Canvas:
+  match visible:
+    case True{}:
+      heading = chrome_text(c,"History",192,120,144,2,heading_ink(),panel())
+      count = chrome_text(heading,result_label(results),344,128,160,0,muted(),panel())
+      draw_providers(3n,count,scope(s),0)
+    case False{}:
+      heading = chrome_text(c,list_heading(results,files),192,120,304,1,heading_ink(),panel())
+      chrome_text(heading,result_label(results),192,152,304,0,muted(),panel())
+
+def draw_list_header(+c: Canvas,+s: State,+results: Results,+files: Bool) -> Canvas:
+  draw_list_header_mode(c,s,results,files,provider_chips_visible(s))
+
 def whole_usage(s: State) -> Bool:
   String.starts_with(title(s),"Usage | whole captured session")
 
@@ -1437,7 +1595,7 @@ def draw_top(fuel: Nat,c: Canvas,+index: U32,+files: Bool,+settings: Bool,+whole
       +x = G.top_x(index)
       +w = G.top_width(index)
       base = box(c,x,80,w,32,panel())
-      label = text(base,Bool.pick(String,brief,brief_top_label(index),top_label(index,files,settings,whole,automatic)),U32.add(x,8),88,U32.sub(U32.div(w,8),2),accent(),panel())
+      label = chrome_text(base,Bool.pick(String,brief,brief_top_label(index),top_label(index,files,settings,whole,automatic)),U32.add(x,8),80,U32.sub(w,16),0,accent(),panel())
       draw_top(n,label,U32.add(index,1),files,settings,whole,automatic,brief)
 
 def quota_side_label(index: U32) -> String:
@@ -1578,6 +1736,14 @@ def draw_attachment_side_context(attachments: Bool,quota: Bool,c: Canvas,results
     case True{}: draw_attachment_side(c,results)
     case False{}: draw_side_context(quota,c,results,files,settings,scope,brief)
 
+def draw_navigation_mode(+c: Canvas,+s: State,+results: Results,+files: Bool,+scope: String,+workspace: Bool) -> Canvas:
+  match workspace:
+    case True{}: draw_workspace_side(U32.to_nat(G.sidebar_rows()),c,s,0)
+    case False{}: draw_attachment_side_context(is_attachments(s) || is_attachment_folders(s),is_quota(s),c,results,files,is_settings(s),scope,is_brief(s))
+
+def draw_navigation(+c: Canvas,+s: State,+results: Results,+files: Bool,+scope: String) -> Canvas:
+  draw_navigation_mode(c,s,results,files,scope,history_workspace(s))
+
 def draw_attachment_top_context(attachments: Bool,quota: Bool,c: Canvas,results: Results,files: Bool,settings: Bool,whole: Bool,automatic: String,brief: Bool) -> Canvas:
   match attachments:
     case True{}: draw_attachment_top(7n,c,0,results)
@@ -1587,7 +1753,7 @@ def draw_attachment_entry(c: Canvas,visible: Bool) -> Canvas:
   match visible:
     case False{}: c
     case True{}:
-      text(c,"Attachments",U32.add(G.attachment_entry_x(),8),U32.add(G.text_actions_y(),8),G.attachment_entry_columns(),accent(),paper())
+      chrome_text(c,"Attachments",U32.add(G.attachment_entry_x(),8),G.text_actions_y(),U32.mul(G.attachment_entry_columns(),8),0,accent(),paper())
 
 def query_label_normal(+s: State) -> String:
   Bool.pick(String,is_attachments(s),"Captured record scope",Bool.pick(String,is_quota(s),"Selected Juice Bend data directory",Bool.pick(String,is_brief(s),"Repository folder for this brief",
@@ -1635,38 +1801,38 @@ def draw_list_pager(hidden: Bool,c: Canvas,+results: Results) -> Canvas:
       prev = text(c,"Previous",192,G.list_pager_y(),16,Bool.pick(U32,result_available(results,False{}),accent(),muted()),panel())
       text(prev,"Next",360,G.list_pager_y(),16,Bool.pick(U32,result_available(results,True{}),accent(),muted()),panel())
 
-def draw_query_actions(attachments: Bool,c: Canvas) -> Canvas:
+def draw_query_actions(+attachments: Bool,+c: Canvas,+s: State) -> Canvas:
   match attachments:
     case True{}: c
     case False{}:
-      paste = text(c,"Paste",U32.add(G.text_action_x(1),8),U32.add(G.text_actions_y(),8),10,accent(),paper())
-      text(paste,"Clear",U32.add(G.text_action_x(2),8),U32.add(G.text_actions_y(),8),10,accent(),paper())
+      paste = chrome_text(c,Bool.pick(String,is_files(s) || is_settings(s) || is_brief(s),"Paste path","Paste query"),U32.add(G.text_action_x(1),8),G.text_actions_y(),88,0,accent(),paper())
+      chrome_text(paste,Bool.pick(String,is_files(s) || is_settings(s) || is_brief(s),"Clear path","Clear query"),U32.add(G.text_action_x(2),8),G.text_actions_y(),88,0,accent(),paper())
 
 def draw_canvas_capture(+s: State,automatic: String,suspended: Bool) -> Canvas:
   State{Content{+q,rows,reader,lines,title,status,+scope,+results,+files},Input{+selected,scroll,Edit{+focus,+caret,+anchor,drag,viewport},command,shift},image,dirty} = s
   base = box(Flat{paper()},0,0,G.width(),G.header_height(),rail())
-  side = box(base,0,G.header_height(),G.sidebar_end(),G.body_height(),rail())
+  side = box(base,0,0,G.sidebar_end(),G.footer_y(),Bool.pick(U32,history_workspace(s),Palette.navigation_paper(),rail()))
   list = box(side,G.sidebar_end(),G.header_height(),U32.sub(G.list_end(),G.sidebar_end()),G.body_height(),panel())
   foot = box(list,0,G.footer_y(),G.width(),40,rail())
-  brand_mark = box(foot,16,24,8,16,Palette.ink(Palette.Brand{}))
-  brand = text(brand_mark,"Juice Bend",32,24,16,heading_ink(),rail())
-  tagline = text(brand,"Your captured work",16,48,18,muted(),rail())
-  input_label = text(tagline,query_label(s),192,8,60,muted(),rail())
+  +brand_bg = Bool.pick(U32,history_workspace(s),Palette.navigation_paper(),rail())
+  +brand_fg = Bool.pick(U32,history_workspace(s),Palette.navigation_ink(),heading_ink())
+  brand = chrome_text(foot,"Juice Bend",16,16,144,2,brand_fg,brand_bg)
+  tagline = chrome_text(brand,"Your captured work",16,48,144,0,Bool.pick(U32,history_workspace(s),Palette.navigation_muted(),muted()),brand_bg)
+  input_label = chrome_text(tagline,query_label(s),192,0,480,0,muted(),rail())
   query_bg = box(input_label,G.query_left(),24,U32.sub(G.query_right(),G.query_left()),40,paper())
   query = draw_scope_field(is_attachments(s),query_bg,s,q,focus,caret,anchor)
   top = draw_attachment_top_context(is_attachments(s) || is_attachment_folders(s),is_quota(s),query,results,files,is_settings(s),whole_usage(s),automatic_label(results,automatic),is_brief(s))
   capture = draw_capture_context(is_quota(s),top,suspended)
-  navigation = draw_attachment_side_context(is_attachments(s) || is_attachment_folders(s),is_quota(s),capture,results,files,is_settings(s),scope,is_brief(s))
-  heading = text(navigation,list_heading(results,files),192,128,38,heading_ink(),panel())
-  range = text(heading,result_label(results),192,152,38,muted(),panel())
+  navigation = draw_navigation(capture,s,results,files,scope)
+  range = draw_list_header(navigation,s,results,files)
   next = draw_list_pager(is_attachments(s) || is_attachment_folders(s),range,results)
-  title = text(next,Palette.fit_heading(Palette.heading(title),reader_title_columns(s)),G.reader_x(),128,reader_title_columns(s),heading_ink(),paper())
+  title = chrome_text(next,Palette.heading(title),G.reader_x(),120,U32.mul(reader_title_columns(s),8),1,heading_ink(),paper())
   entry = draw_attachment_entry(title,attachment_entry_visible(s))
-  copy = text(entry,"Copy",U32.add(G.text_action_x(0),8),U32.add(G.text_actions_y(),8),10,accent(),paper())
-  clear = draw_query_actions(is_attachments(s),copy)
-  all = text(clear,"Select all",U32.add(G.text_action_x(3),8),U32.add(G.text_actions_y(),8),11,accent(),paper())
+  copy = chrome_text(entry,"Copy",U32.add(G.text_action_x(0),8),G.text_actions_y(),80,0,accent(),paper())
+  clear = draw_query_actions(is_attachments(s),copy,s)
+  all = chrome_text(clear,"Select all",U32.add(G.text_action_x(3),8),G.text_actions_y(),88,0,accent(),paper())
   +offset = minus(selected,U32.sub(G.list_rows(),1))
-  items = draw_rows(U32.to_nat(G.list_rows()),all,List.drop(&2,String,rows,U32.to_nat(offset)),0,minus(selected,offset))
+  items = draw_rows(U32.to_nat(G.list_rows()),all,List.drop(&2,String,rows,U32.to_nat(offset)),0,minus(selected,offset),provider_chips_visible(s))
   body = draw_reader(U32.to_nat(G.reader_rows()),items,List.drop(&2,Line,lines,U32.to_nat(scroll)),U32.div(G.reader_y(),G.cell()),Bool.pick(U32,U32.is_eq(focus,2),U32.min(caret,anchor),0),Bool.pick(U32,U32.is_eq(focus,2),U32.max(caret,anchor),0))
   +summary = String.join(String.lines(status)," ")
   status1 = text(body,String.take(summary,U32.to_nat(G.footer_columns())),8,G.footer_y(),G.footer_columns(),muted(),rail())

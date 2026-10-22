@@ -4,6 +4,7 @@ import Base
 import ../src/ui.bend as UI
 import ../src/ui_geometry.bend as G
 import ../src/font.bend as Font
+import ../src/sans_font.bend as Sans
 import ./tab_readability.bend as Tiles
 
 def require(ok: Bool,label: String) -> IO(Unit):
@@ -163,6 +164,28 @@ def tile_glyph(c: UI.Canvas,code: U32,foreground: U32,background: U32) -> Bool:
 def glyph(c: UI.Canvas,x: U32,y: U32,code: U32,foreground: U32,background: U32) -> Bool:
   tile_glyph(Tiles.tile.at(8n,c,U32.div(x,8),U32.div(y,8)),code,foreground,background)
 
+# Chrome uses proportional static sans glyphs; first-cell coverage is checked
+# against the pinned atlas independently of the production label layout.
+def chrome_tile(c: UI.Canvas,+code: U32,+face: U32,foreground: U32,background: U32) -> Bool:
+  match c:
+    case UI.Tile{+bits,fg,bg}:
+      U32.is_eq(Font.row(bits,5),Sans.row_word(Sans.glyph(face,code),0,5)) &&
+      U32.is_eq(Font.row(bits,7),Sans.row_word(Sans.glyph(face,code),0,7)) &&
+      U32.is_eq(fg,foreground) && U32.is_eq(bg,background)
+    case _: False{}
+
+def chrome_glyph(c: UI.Canvas,x: U32,y: U32,code: U32,face: U32,foreground: U32,background: U32) -> Bool:
+  chrome_tile(Tiles.tile.at(8n,c,U32.div(x,8),U32.div(y,8)),code,face,foreground,background)
+
+def blank(c: UI.Canvas,color: U32) -> Bool:
+  match c:
+    case UI.Flat{actual}: U32.is_eq(actual,color)
+    case UI.Tile{+bits,fg,bg}:
+      U32.is_eq(bg,color) && U32.is_eq(Font.row(bits,0),0) && U32.is_eq(Font.row(bits,1),0) &&
+      U32.is_eq(Font.row(bits,2),0) && U32.is_eq(Font.row(bits,3),0) && U32.is_eq(Font.row(bits,4),0) &&
+      U32.is_eq(Font.row(bits,5),0) && U32.is_eq(Font.row(bits,6),0) && U32.is_eq(Font.row(bits,7),0)
+    case _: False{}
+
 def label_bounds(fuel: Nat,+index: U32) -> Bool:
   match fuel:
     case 0n: True{}
@@ -183,11 +206,11 @@ def painting() -> IO(Unit):
     require(Tiles.tile.empty(Tiles.tile.at(8n,canvas,2,27),UI.rail()) && glyph(canvas,160,88,69,UI.accent(),UI.panel()),"eligible Export bytes paints once at its toolbar target")
     require(Tiles.tile.empty(Tiles.tile.at(8n,pending,2,27),UI.rail()) && glyph(pending,160,88,69,UI.muted(),UI.panel()),"pending Export bytes remains muted at its sole toolbar target")
     require(glyph(pending,856,88,80,UI.muted(),UI.panel()) && Tiles.tile.empty(Tiles.tile.at(8n,pending,24,74),UI.panel()) && Tiles.tile.empty(Tiles.tile.at(8n,pending,45,74),UI.panel()),"pending toolbar Previous remains muted while duplicate list paging is absent")
-    require(glyph(canvas,704,128,97,UI.heading_ink(),UI.paper()) && glyph(normal,704,128,65,UI.accent(),UI.paper()),"attachment panel reclaims its title while captured reader paints the entry")
-    require(glyph(normal,784,128,115,UI.accent(),UI.paper()) &&
-      Tiles.tile.empty(Tiles.tile.at(8n,normal,99,16),UI.paper()) &&
+    require(chrome_glyph(canvas,536,120,76,1,UI.heading_ink(),UI.paper()) && chrome_glyph(normal,704,120,65,0,UI.accent(),UI.paper()),"attachment panel reclaims its title while captured reader paints the entry")
+    require(Bool.not(blank(Tiles.tile.at(8n,normal,98,16),UI.paper())) &&
+      blank(Tiles.tile.at(8n,normal,99,16),UI.paper()) &&
       Tiles.tile.empty(Tiles.tile.at(8n,normal,100,16),UI.paper()),"complete Attachments label ends before its trailing padding and Copy gap")
-    require(glyph(normal,816,128,67,UI.accent(),UI.paper()) && glyph(normal,1104,128,83,UI.accent(),UI.paper()),"long reader title leaves Copy and Select all unobscured")
+    require(chrome_glyph(normal,816,120,67,0,UI.accent(),UI.paper()) && chrome_glyph(normal,1104,120,83,0,UI.accent(),UI.paper()),"long reader title leaves Copy and Select all unobscured")
     require(Tiles.tile.empty(Tiles.tile.at(8n,canvas,114,16),UI.paper()) && Tiles.tile.empty(Tiles.tile.at(8n,canvas,126,16),UI.paper()),"inapplicable Paste and Clear are absent from the read-only attachment toolbar")
     require(glyph(canvas,208,32,65,UI.muted(),UI.paper()),"attachment scope paints instructions without an editable caret")
     require(Tiles.tile.empty(Tiles.tile.at(8n,canvas,2,47),UI.rail()),"unused attachment sidebar rows below new controls contain no hidden old controls")
@@ -195,7 +218,7 @@ def painting() -> IO(Unit):
 
 def other_modes() -> IO(Unit):
   do IO<Unit>:
-    click(content(),16,472,11,"normal History Storage remains reachable")
+    click(content(),16,536,11,"normal History Storage remains reachable")
     click(UI.set_results(content(),UI.QuotaResults{2,True{},True{},2,0,0,False{}}),312,88,10,"quota Disconnect retains its own header mapping")
     click(UI.set_results(content(),UI.BriefResults{0}),16,152,12,"Brief Prepare retains sidebar behavior")
     click(UI.set_results(content(),UI.SettingsResults{0,1,"Pause",True{}}),312,88,13,"Settings Add folder retains header behavior")

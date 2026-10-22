@@ -160,7 +160,62 @@ def lifecycle() -> IO(Unit):
     check(retired(A.retire(True{},Some{A.Pending{A.InlinePreview{expected()},F.picked(),channel,True{}}})),"retirement marks exact existing child stale")
     Chan.close(A.Reply,channel)
 
+# Pacing is a pure policy check. These channels have no worker and receive no
+# messages: the fixture only supplies the same presence flags as real jobs.
+# Build one coordinator per check rather than retaining many wide states across
+# IO continuations. Existing lifecycle checks above exercise actual draining.
+def pacing_request() -> G.Request:
+  G.Request{1,["history","",""],"",0,"Synthetic pacing request"}
+
+def pacing_jobs(kind: U32,channel: Chan(G.Reply)) -> G.Jobs:
+  match kind:
+    case 1: G.Jobs{0,Some{pacing_request()},None{},None{},False{}}
+    case 2: G.Jobs{0,None{},Some{G.Pending{1,pacing_request(),channel}},None{},False{}}
+    case 3: G.Jobs{0,None{},None{},Some{G.Pending{1,pacing_request(),channel}},False{}}
+    case _: G.Jobs{0,None{},None{},None{},False{}}
+
+def pacing_gui_from(state: G.State,dirty: Bool,job_kind: U32,channel: Chan(G.Reply)) -> G.State:
+  G.State{db,dir,program,UI.State{content,input,image,_},selection,form,_,refresh_at,serial} = state
+  G.State{db,dir,program,UI.State{content,input,image,dirty},selection,form,pacing_jobs(job_kind,channel),refresh_at,serial}
+
+def pacing_gui(dirty: Bool,job_kind: U32,channel: Chan(G.Reply)) -> G.State:
+  pacing_gui_from(F.picked(),dirty,job_kind,channel)
+
+def pacing_pending(kind: U32,channel: Chan(A.Reply)) -> Maybe<&2,A.Pending>:
+  match kind:
+    case 1: Some{A.Pending{A.InlinePreview{expected()},F.picked(),channel,True{}}}
+    case 2: Some{A.Pending{A.InlinePreview{expected()},F.picked(),channel,False{}}}
+    case _: None{}
+
+def pacing_delay(value: A.State & U32,want: U32) -> Bool:
+  (state,delay) = value
+  U32.is_eq(delay,want)
+
+def pacing_check(preview_channel: Chan(A.Reply),job_channel: Chan(G.Reply),pending_kind: U32,had_events: Bool,dirty: Bool,job_kind: U32,want: U32,label: String) -> IO(Unit):
+  check(pacing_delay(A.paced(A.Browsing{pacing_gui(dirty,job_kind,job_channel),pacing_pending(pending_kind,preview_channel)},had_events),want),label)
+
+def pacing() -> IO(Unit):
+  do IO<Unit>:
+    +preview_channel : Chan(A.Reply) <- Chan.new(A.Reply,1)
+    +job_channel : Chan(G.Reply) <- Chan.new(G.Reply,1)
+    pacing_check(preview_channel,job_channel,0,False{},False{},0,80,"settled browsing without image work uses 80 ms pacing")
+    pacing_check(preview_channel,job_channel,1,False{},False{},0,80,"settled active image work uses 80 ms pacing")
+    pacing_check(preview_channel,job_channel,2,False{},False{},0,80,"settled retired image work uses 80 ms pacing")
+    pacing_check(preview_channel,job_channel,1,True{},False{},0,1,"active image work preserves 1 ms pacing after input")
+    pacing_check(preview_channel,job_channel,2,True{},False{},0,1,"retired image work preserves 1 ms pacing after input")
+    pacing_check(preview_channel,job_channel,1,False{},True{},0,1,"active image work preserves 1 ms pacing for dirty UI")
+    pacing_check(preview_channel,job_channel,2,False{},True{},0,1,"retired image work preserves 1 ms pacing for dirty UI")
+    pacing_check(preview_channel,job_channel,1,False{},False{},1,1,"active image work preserves 1 ms pacing for wanted work")
+    pacing_check(preview_channel,job_channel,2,False{},False{},1,1,"retired image work preserves 1 ms pacing for wanted work")
+    pacing_check(preview_channel,job_channel,1,False{},False{},2,1,"active image work preserves 1 ms pacing for a pending reader")
+    pacing_check(preview_channel,job_channel,2,False{},False{},2,1,"retired image work preserves 1 ms pacing for a pending reader")
+    pacing_check(preview_channel,job_channel,1,False{},False{},3,1,"active image work preserves 1 ms pacing for a pending writer")
+    pacing_check(preview_channel,job_channel,2,False{},False{},3,1,"retired image work preserves 1 ms pacing for a pending writer")
+    Chan.close(A.Reply,preview_channel)
+    Chan.close(G.Reply,job_channel)
+
 def main() -> IO(Unit):
   do IO<Unit>:
     lifecycle()
     pending_lifecycle()
+    pacing()

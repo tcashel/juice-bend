@@ -6,6 +6,8 @@ import ../src/ui_geometry.bend as G
 import ../src/font.bend as Font
 import ./polish.bend as Polish
 import ./tab_readability.bend as Tiles
+import ./ui_attachments.bend as A
+import ../src/ui_palette.bend as Palette
 
 def require(ok: Bool,label: String) -> IO(Unit):
   match ok:
@@ -29,12 +31,12 @@ def painting() -> IO(Unit):
   do IO<Unit>:
     require(U32.is_eq(G.width(),1200) && U32.is_eq(G.height(),664),"compact native content requests 1200 by 664")
     require(U32.is_eq(G.cell(),8) && U32.is_eq(G.line_pitch(),24) && U32.is_eq(G.control_height(),32),"compact layout retains text advance line spacing and control target height")
-    require(glyph(canvas,16,536,69,UI.rail()) && glyph(canvas,16,568,65,UI.panel()) && glyph(canvas,104,568,65,UI.panel()) && glyph(canvas,16,600,66,UI.rail()),"production painter shows JSONL ATIF Archive and Back above the footer")
+    require(A.chrome_glyph(canvas,16,432,69,0,Palette.navigation_ink(),Palette.navigation_paper()) && A.chrome_glyph(canvas,16,464,65,0,Palette.navigation_ink(),Palette.navigation_paper()) && A.chrome_glyph(canvas,104,464,65,0,Palette.navigation_ink(),Palette.navigation_paper()) && A.chrome_glyph(canvas,16,592,66,0,Palette.navigation_ink(),Palette.navigation_paper()),"production painter shows JSONL ATIF Archive and Back above the footer")
     require(glyph(settings,16,600,82,UI.rail()) && glyph(settings,16,568,82,UI.rail()),"Settings paints Rebuild and daily Refresh above footer")
     require(glyph(brief,16,312,83,UI.rail()) && Tiles.tile.empty(Tiles.tile.at(8n,brief,2,43),UI.rail()),"Brief paints Select all and leaves later navigation blank")
     require(glyph(canvas,536,600,114,UI.paper()) && Tiles.tile.empty(Tiles.tile.at(8n,canvas,67,77),UI.paper()),"nineteenth reader line paints completely with eight pixels clear before footer")
-    require(glyph(canvas,816,128,67,UI.paper()) && glyph(canvas,1104,128,83,UI.paper()),"long reader title cannot paint over Copy or Select all")
-    require(glyph(canvas,688,80,67,UI.rail()) && glyph(canvas,1032,88,78,UI.panel()),"capture hint and Next button both remain fully visible")
+    require(A.chrome_glyph(canvas,816,120,67,0,UI.accent(),UI.paper()) && A.chrome_glyph(canvas,1104,120,83,0,UI.accent(),UI.paper()),"long reader title cannot paint over Copy or Select all")
+    require(glyph(canvas,688,80,67,UI.rail()) && A.chrome_glyph(canvas,1032,80,78,0,UI.accent(),UI.panel()),"capture hint and Next button both remain fully visible")
     require(glyph(canvas,992,640,67,UI.rail()) && Tiles.tile.empty(Tiles.tile.at(8n,canvas,1,82),UI.rail()),"status detail hint and bottom padding remain inside content height")
     require(Tiles.tile.empty(Tiles.tile.at(8n,canvas,150,80),UI.paper()) && Tiles.tile.empty(Tiles.tile.at(8n,canvas,1,83),UI.paper()),"actual production painter does not extend footer beyond 1200 by 664")
 

@@ -1,6 +1,6 @@
 # Compact fixed native content area. The pinned upstream Window API does not
-# expose resizing or a display visible frame. Keep 8x16 type and 32px targets;
-# consolidate only duplicate sidebar text actions into the reader toolbar.
+# expose resizing or a display visible frame. Canonical transcript/query text
+# retains the 8px grid; proportional chrome uses the same bounded targets.
 import Base
 
 def width() -> U32: 1200
@@ -58,14 +58,36 @@ def attachment_entry_contains(x: U32,y: U32) -> Bool:
 def sidebar_y(index: U32) -> U32:
   U32.add(112,U32.mul(index,control_height()))
 
-# Logical action identities stay stable; only redundant visible rows disappear.
-# Every remaining row uses this same mapping for painting and pointer dispatch.
+# The History workspace groups destinations, capture actions, and library
+# controls. Logical action IDs remain the coordinator's existing contract.
 def sidebar_action_index.normal(index: U32) -> U32:
   match index:
-    case 13: 14
-    case 14: 16
+    case 0: 18
+    case 1: 0
+    case 2: 6
+    case 3: 10
+    case 4: 99
+    case 5: 5
+    case 6: 7
+    case 7: 8
+    case 8: 9
+    case 9: 12
+    case 10: 14
+    case 11: 16
+    case 12: 99
+    case 13: 11
+    case 14: 4
     case 15: 17
-    case _: index
+    case _: 99
+
+def provider_x(index: U32) -> U32:
+  U32.add(192,U32.mul(index,104))
+def provider_y() -> U32: 152
+def provider_width() -> U32: 96
+def provider_contains(x: U32,y: U32,+index: U32) -> Bool:
+  rect(x,y,provider_x(index),provider_y(),U32.add(provider_x(index),provider_width()),U32.add(provider_y(),24))
+def provider_index(+x: U32,+y: U32) -> U32:
+  Bool.pick(U32,provider_contains(x,y,0),0,Bool.pick(U32,provider_contains(x,y,1),1,Bool.pick(U32,provider_contains(x,y,2),2,99)))
 
 def sidebar_action_index.valid(+index: U32,inside: Bool,settings: Bool,brief: Bool) -> U32:
   match inside settings brief:

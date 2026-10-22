@@ -11,8 +11,12 @@
 - **macOS SDK/frameworks and command-line utilities**: supplied by the host.
   Upstream Bend uses AppKit/Metal for its window/rendering primitives.
   Application layout, text state and interactions remain Bend.
-- **Font glyphs**: compact first-party bitmap patterns in `src/font.bend`.
-  No system font file or third-party font asset was copied.
+- **Transcript font**: JetBrains Mono 2.304, SIL Open Font License 1.1.
+  Source font, license and pinned static atlas are in `assets/fonts/jetbrains-mono`.
+- **Application chrome font**: Inter 4.1 regular and semibold, SIL Open Font
+  License 1.1. Source fonts, complete license, hashes and static raster recipe
+  are in `assets/fonts/inter-ui`. `src/sans_font.bend` contains generated static
+  glyph data; rendering and layout remain Bend. No system font is redistributed.
 - **Juice reference**: inspected read-only at the specification's pinned
   revision for behavior. No private source snapshot or assets are included.
 

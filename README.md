@@ -18,7 +18,7 @@ mise run setup
 mise run setup-llvm
 mise run doctor
 mise run build
-mise run run -- --demo
+mise run demo
 ```
 
 LLVM setup downloads 1.57 GB and requires about 12 GB free for extraction.
@@ -26,7 +26,9 @@ It installs only in this repository's ignored tool directories; build selects
 that verified compiler explicitly without changing global PATH or the system
 compiler. Ordinary build never downloads LLVM or falls back to Apple clang.
 
-The demo uses a new private temporary directory and entirely synthetic history.
+`mise run demo` launches the existing build without compiling it again.
+`mise run run -- --demo` rebuilds first. Each demo uses a new private temporary
+directory and entirely synthetic history.
 Search for `preservation`, open a result, scroll its transcript, and use Why or
 Export. The exported Markdown identifies the selected snapshot and verification
 extent. Unsupported glyphs display boxes; copy and export retain original Unicode.
@@ -42,16 +44,19 @@ Choose an unused bundle path: packaging refuses to overwrite a running or
 existing bundle. Direct GUI launch needs a desktop session. Restricted shell
 agents may lack display access even on a Mac.
 
-The fixed native window uses a bundled grayscale font atlas, grouped controls,
-word-wrapped result cards, and a selectable reader. Click the footer status to
+The fixed native window uses a green History navigation rail, yellow selection,
+provider filters, proportional UI labels and a selectable monospace transcript. Click the footer status to
 read or copy its full message; Escape closes it. Wheel and Page Up/Down scroll
 the reader. Usage and Related show when automatic capture is suspended until
 you return to History; the saved Pause/Resume preference remains separate.
 
-Font data is pinned to JetBrains Mono 2.304 under its included SIL OFL license.
-`mise run font-check` verifies the checked-in Bend atlas. The offline packer
-uses the existing pinned Bun; it adds no application runtime. See
-[`assets/fonts/jetbrains-mono/README.md`](assets/fonts/jetbrains-mono/README.md).
+Font data is pinned to JetBrains Mono 2.304 for selectable text and Inter 4.1
+for UI labels, with their SIL OFL licenses included. `mise run font-check` and
+`mise run sans-font-check` verify the checked-in Bend atlases. These are static
+Latin-1/punctuation glyph sets, not general Unicode shaping or font fallback.
+Offline font packing adds no application runtime. See the
+[mono](assets/fonts/jetbrains-mono/README.md) and
+[UI font](assets/fonts/inter-ui/README.md) asset records.
 
 ## Local quota observations
 
@@ -85,9 +90,12 @@ unchanged and do not establish full archive parity.
 Transcript pages show readable event text and citations, with word wrapping that
 preserves the original copied text. **Attachments** opens the retained occurrence
 inventory for the selected page. Supported inline base64 bytes can be exported to
-a new private file; local and remote references retain explicit coverage and are
-not fetched. External file capture and image viewing are still being integrated.
-Back restores the opened transcript and its selection.
+a new private file. A selected local file can also be captured under an explicitly approved
+folder; its retained bytes remain available after that folder is disabled or
+the source disappears. Remote references are never fetched. Basic PNG and
+baseline JPEG previews support Fit, actual pixels and panning. Unsupported
+formats retain explicit coverage and byte export. Back restores the opened
+transcript and its selection.
 
 Pause/Resume and the 30-second, 2-hour, 4-hour, 8-hour or daily interval are saved
 in the owned library. The UI distinguishes pending changes from acknowledged
