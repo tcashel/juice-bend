@@ -5,9 +5,15 @@
 Read the [scoped receipt](receipts/reader-attachments-native.txt) before treating
 the newly adopted source as accepted. Earlier combined-app transcript, inline
 attachment and Connections journeys passed. The newest optimized executable
-reproduced changed selection when moving to Copy; diagnostic tracing is active.
+initially changed selection when moving to Copy. Native tracing found the
+endpoint release absent before first-party handling; a trailing automation wait
+made all ten diagnostic cycles pass. The uninstrumented full reader journey then
+passed, including exact copies, paging, Back restoration and unchanged captures.
+See the [follow-up receipt](receipts/native-validation-followup.txt) for exact
+scope, earlier failures and the remaining native-cause uncertainty.
 Its confined file worker passed actual native boundary and finite race checks.
-The previous working executable remains the default. No IME, accessibility,
+The accepted reader executable is now the default; its predecessor is preserved.
+No IME, accessibility,
 general resizing or comparative timing claim follows from these results.
 
 ## Connections native validation — 2026-10-21

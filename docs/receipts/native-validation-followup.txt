@@ -1,0 +1,103 @@
+Native validation follow-up — synthetic isolated data only
+
+Scope
+Application/runtime source is unchanged by these observations. The new maintained
+tests/reader_release_replay.bend exercises the actual production UI/Gui event
+fold. No complete-suite, performance or full-parity claim.
+
+Reader event replay: PASS, physical Mac, normal pinned Bend/native -O3
+- 97 assertions; runtime exit0 and empty stderr.
+- Positive release retains exact21-character selection across single/split event
+  batches, service and view/drop boundaries. Missing-release negative control
+  produces the exact473-character clipboard from the native failure.
+- 46 production dependency/bridge files and93 runtime/build pins match the root
+  checkout. New test SHA256:
+  093b8db94f6d4c4c3705d0786787fdae292e9c75ab302d6097c9b99b60712788
+- Native binary: cba9e458d6d1c077420163dbe9deab20e8f2f144082cea08da00e2fd2d60891b
+- Receipt: 07e3d98d3f2453897f7aa87cff8362c7a6ebf9fde3f200012a754ac8360ae1b6
+- Input manifest: 39c1ca4f63e73023dbe18d8e63fef6bfe04955a1eef8525b46e9c0e8aeb4d37d
+- Local evidence: build/reader-release-replay-integration/NATIVE_RECEIPT.md.
+  No Window or OS event injection in this replay.
+
+Optimized full-Gui native diagnostic: FAIL on second selection cycle
+- Binary: 9daaed9ccf9197ba4ad2eabf6029a7044060c71fa44270a3bbe9a591b2daa76d
+- First cycle copied21bytes correctly; second copied473bytes. Later8cycles unrun.
+- All62 returned native events match the per-event handler trace. The failing
+  cycle has no endpoint Mouse-up before the toolbar Move. All11 received
+  Mouse-up events cleared dragging. No state resurrection across499 service
+  results and498 view boundaries.
+- This places the missing release before first-party event handling. It does
+  not distinguish automation injection, macOS/AppKit or upstream Window delivery.
+- Root inspected both failure screenshots. Guest exit1; cleanup/display/wrapper
+  exits0; final windows empty and owned Tart VM verified stopped.
+- Result: 37656250aa224554e85fd0d2bbbaf21a92a200c9e3b835d6013c8cda6f62668d
+- Local evidence: build/reader-connections-o3-v2-plan/native-result.json and
+  native-trace-analysis.json. Earlier failed/navigation attempts remain intact.
+
+Input-delivery discriminator: PASS, same optimized diagnostic binary
+- The only gesture change was a trailing same-process cliclick w:250 after du;
+  no release or gesture replay. Guest tool is cliclick5.1. Making du nonfinal
+  also adds that tool's normal minimum100ms inter-action wait.
+- All10cycles received endpoint Mouse-up and copied exactly21bytes.850 paired
+  frames/160events agree;37downs/37ups, every received Up cleared dragging,
+  no service/view edit changes or drag resurrection.
+- Guest/cleanup/display/wrapper exits0; final windows empty; VM verified stopped.
+  Root independently checked all10clipboards and selection screenshots2/10.
+- Analysis: f5f78f345c34771b2376410f19571ca0c412dc7b58df94c73895b7ad5417b21f
+- Local evidence: build/reader-connections-o3-v3-plan/completed-result.json.
+- This supports an input-delivery timing hypothesis, not proof of the exact
+  native cause. The original failures remain failures. No application/runtime
+  fix was made. The separate uninstrumented reader journey is recorded next.
+
+Uninstrumented optimized reader: PASS, actual native Tart interaction
+- Exact production binary:
+  fcbbbfbde90ad072c26fb20ab044522487a6ee4bbe9890f72300765a18518701
+- Transcript32-byte and Connections21-byte cross-wrap selections copied exactly.
+  Page Down/Up and wheel movement observed; physical Next/Previous pages matched
+  independent Bend oracles. Inert entries preserved body/clipboard. Settings Back
+  and four reader bookmarks restored exact pixels. Captured counts, scoped pages
+  and quota state stayed unchanged; retained raw verification succeeded.
+- Normal --gui launch, no logging instrumentation or runtime/application change.
+  All17payload files and196source/build-pin manifest entries unchanged.
+- Root inspected16relevant window/display images. The full-display image has an
+  incidental Tips notification over unused path-field space; tested controls are
+  unobscured. CJK/emoji glyphs and visual polish remain incomplete.
+- Guest, app cleanup and display restoration exited0; no app windows remained.
+  Root then sent TERM only to the verified owned Tart child9330/parent9173.
+  Wrapper95138 propagated143; VM stopped and its lease was released.
+- Result: c61781c0ef8904afc0f1a140ab397ca2215772ca0e6f46a5ce5384102b0d8320
+- Local evidence: build/reader-polish-native-v4-plan/native-result.json.
+- Promoted exact binary to build/juice-bend and build/Juice Bend Reader.app.
+  Previous Connections executable/bundle remain preserved. Promotion receipt:
+  build/reader-polish-promotion/receipt.json.
+- This is reader acceptance, not full quota/attachment/export/restart workflows,
+  accessibility/IME, general resizing or performance acceptance.
+
+Standalone PNG preview: PASS, actual native Tart interaction
+- Binary: 057e37579a0c897366dd7eae842d2371dac642fd783e74f5777ab7e95f0d52a3
+- Fit/100percent, arrows/wheel, viewport/edge limits, Back/Escape, unsupported
+  JPEG and reopening all passed.21 screenshot checks compared70,253 samples;
+  root inspected all9 required screenshots. Dock visible and window within
+  desktop. An incidental macOS Tips notification covered unused top-right space.
+- Exact zero-tolerance components bound to current guest/screenshot Apple Virtual
+  ICC. No general color-fidelity claim. Original sRGB-conversion oracle failure
+  preserved; independent offline PNG decoding explained the test mismatch.
+- All43 payload entries unchanged; guest/cleanup/display/wrapper exits0; final
+  windows empty and owned VM verified stopped.
+- Result: 92e8a150165873122c5d026a42357702835479f751bd1f9a53d4612d1d4037ed
+- Local evidence: build/attachment-preview-native-v2-run/native-result.json.
+- This is an isolated preview component. Full-app retained-asset loading,
+  source-loss image display, JPEG decoding and image performance remain untested.
+
+ATIF exporter core: PASS, physical Mac, native -O3
+- 69 assertions (22 formatting,47 export); exits0, empty runtime stderr.
+- All49 source/bridge files and93 runtime/build pins unchanged.
+- Receipt: 4a54ef198571a3427822428424247170e9b242ccdd2193742df47e67884dce68
+- Local run: build/atif-export-mac-stage/mac/b8e9f577-52d9-43c6-bb99-5e0f0cb659ad.
+- CLI/UI integration remains a separate acceptance scope. The earlier missing
+  bridge staging attempt stopped before compilation and is not a test pass.
+
+Standalone modules and native diagnostic inputs remain in isolated build trees.
+The accepted reader executable is now the default; combined attachment/ATIF/image
+acceptance remains open. Lean is a development-only proof checker; first-party app/UI,
+test assertions, parsing and policy are Bend2.
