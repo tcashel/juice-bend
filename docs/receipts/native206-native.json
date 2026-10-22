@@ -1,0 +1,137 @@
+{
+  "schema": 1,
+  "scope": "Focused native Tart observations for the adopted 206-input executable; previous 201-input acceptance remains historical and separately bound.",
+  "application_inputs": 206,
+  "binary_sha256": "4ffb49037779e361a4d501e205d5023b18d42adc28e611456b44aa0b148f9c13",
+  "candidate_binding_sha256": "0ca25c339a8ba857c7b170bf5d7fecbd293682066ea5a2bddccf8ed2df840a69",
+  "source_adopted_or_default_promoted": true,
+  "usage": {
+    "native_result_sha256": "b31321dc4a2c649a412ae343619b6b6c4fa25701289440138efc7ba9789db96d",
+    "root_visual_review_sha256": "81f5119a4f24c9fc17b1b4a84f9aab455c05c6377d921629e690a6d95a436340",
+    "scripted_checks_passed": true,
+    "root_reviewed_image_count": 15,
+    "root_reviewed_image_hashes": {
+      "usage-overview.png": "1a8d625dc581e8bc820719fde802bef57627576f0a2be81eb119ee10554345df",
+      "usage-report.png": "e022c7d302dc4d00a081eb53d61d286f644c6df4c0a2f69c88ff2ba247de2a5c",
+      "usage-overview-return.png": "1a8d625dc581e8bc820719fde802bef57627576f0a2be81eb119ee10554345df",
+      "usage-command-all-report.png": "2b5f694a7cc0ec7ea8749700dd92829ed239a87c3015d8b8090bbd852e645099",
+      "usage-codex-overview.png": "85bf94b3bfc314c4d586bdddad3038cddde9cf8a48bbd29ca9f2f4c658779c4f",
+      "usage-empty-open.png": "85bf94b3bfc314c4d586bdddad3038cddde9cf8a48bbd29ca9f2f4c658779c4f",
+      "usage-claude-overview.png": "25add357a752a997571bf643c1cfbeba7cffb762428e140b534a4796446e6312",
+      "usage-all-overview.png": "1a8d625dc581e8bc820719fde802bef57627576f0a2be81eb119ee10554345df",
+      "usage-prose-capture.png": "17949c518c695328d013470f646e28f0efc5cd1a696bb742fce2a4d339c7ac43",
+      "usage-back-overview.png": "d1fcf86d960441c427c7037e5c30f3ea63ee0b772f9f7078474288963b5403cd",
+      "origin-initial.png": "3de303bcc540a622c2da214536359bd50a488f88dbd9a12b8bf9240a84e0455d",
+      "source-absent-origin-selection.png": "5ad852fc8f28cd6d0b33c783d2a489c8b3067e99248387a3ecfcb03512dc7e25",
+      "usage-second-back-overview.png": "d1fcf86d960441c427c7037e5c30f3ea63ee0b772f9f7078474288963b5403cd",
+      "usage-origin-restored.png": "5ad852fc8f28cd6d0b33c783d2a489c8b3067e99248387a3ecfcb03512dc7e25",
+      "normal-close-ready.png": "5ad852fc8f28cd6d0b33c783d2a489c8b3067e99248387a3ecfcb03512dc7e25"
+    },
+    "visual_observations": [
+      "Six metric cards have legible labels and values; Claude input123/cached2/output7; Codex says Not observed.",
+      "Provider filters, report view and overview return agree with the recorded scripted states.",
+      "Third capture remains selected on Back; second Back visibly restores original partial selection.",
+      "Accounting notice is bounded with ellipsis and points to the report; footer fits.",
+      "Source-absent and final restored reader images agree."
+    ],
+    "remaining_polish": [
+      "Flat rectangular controls and dense toolbar/metadata remain.",
+      "Singular count reads 1 contributing sessions.",
+      "Generic Selected Unicode copied status remains after report copy.",
+      "CJK and emoji missing glyph boxes remain; exact clipboard preservation is a separate scripted result."
+    ],
+    "exact_clipboard_comparisons": 17,
+    "canonical_report_comparisons": 10,
+    "canonical_export_comparisons": 1,
+    "partial_unicode_drags": 1,
+    "missing_explicit_root_negatives": 4,
+    "overview_captured_before_command_a": true,
+    "selected_capture_reopened_without_row_click": true,
+    "two_back_restores_original_partial_selection": true,
+    "original_three_sources_deleted_before_different_pid_restart": true,
+    "fourth_known_capture_imported_then_source_deleted_after_restart": true,
+    "fourth_capture_second_restart_tested": false,
+    "scope": "Native Overview/Report copy, provider filter, selected capture/Back and retained source-loss workflow. Visual glyph coverage is separate from exact clipboard text."
+  },
+  "pending_close": {
+    "status": "PASS for one live inline-JPEG Close fixture",
+    "native_result_sha256": "2592bff637d34019495c7e7f5db13a7f7ad6dba6504f721419580b01ad51586c",
+    "root_visual_review_sha256": "24a9085da944e0e1a87e49d14ff4deecea61578412112881a4d55eba91613c12",
+    "root_reviewed_image_count": 3,
+    "root_reviewed_image_hashes": {
+      "initial-reader.png": "65d203ad2007d9d59b56b09d87d4b172376d1f4a1c0246609bae008866365521",
+      "close-pending-details.png": "f43d82acab3c695b61fdfd8678330a5dab78a78af8da7f4791ff64c89ed944de",
+      "close-final-display.png": "1e1190486e95a6358a35fa7fec1979a34552deddccd0ef9bdf2278ca7b5482eb"
+    },
+    "live_child_before_click": true,
+    "live_child_after_click": true,
+    "observation_upper_bounds_ms": {
+      "window": 394,
+      "parent": 762,
+      "child": 762
+    },
+    "orphan_observed": false,
+    "exact_nonce_spool_removed_before_harness_cleanup": true,
+    "guest_exit": 0,
+    "cleanup_exit": 0,
+    "wrapper_exit": 143,
+    "vm_stopped": true,
+    "lease_released": true,
+    "scope": "One native Close request after a fresh live inline JPEG child observation. Decoder checkpoint phase was not observed. OS absence and no orphan were observed; this is not an OS waitpid trace or a global cancellation bound. Retained PNG and generic workers are outside this fixture."
+  },
+  "inline_png": {
+    "status": "PASS for the functional-only profile",
+    "functional_result_sha256": "b258bb6b9997759d76ba7201fa83bb43050549e4648449453775dd47afe5fccb",
+    "root_visual_review_sha256": "720aa8c1d28f6bb61f396bfda171cc50807ccbd2ef346deefb58d290534b69a2",
+    "root_reviewed_image_count": 6,
+    "root_reviewed_image_hashes": {
+      "initial-reader.png": "65d203ad2007d9d59b56b09d87d4b172376d1f4a1c0246609bae008866365521",
+      "normal-close-ready.png": "8402567e19545268e3b97abd23ad66f92ca331c1dc16374054541c137b9557bd",
+      "png-actual.png": "6bb8f166c77cbe6fccaa109489515ee3d2eca347c6b59c58b4c866aafcc6ae20",
+      "png-details.png": "9cee12084942d65d1533cb84f77646516a861a3e81969e140cd14d5a0ca4a6fa",
+      "png-escape.png": "9cee12084942d65d1533cb84f77646516a861a3e81969e140cd14d5a0ca4a6fa",
+      "png-fit.png": "68fce3674335fc155d48c275a98b62be96c8a31a60091a94eb3aecc9c7f47473"
+    },
+    "exact_pixel_samples": {
+      "fit": 8,
+      "actual": 3
+    },
+    "pixel_tolerance_per_channel": 0,
+    "original_export_bytes": 72,
+    "escape_restored_selection": true,
+    "source_loss_verified": true,
+    "ready_close_observation_upper_bounds_ms": {
+      "parent": 424,
+      "window": 237
+    },
+    "guest_exit": 0,
+    "cleanup_exit": 0,
+    "wrapper_exit": 143,
+    "vm_stopped": true,
+    "lease_released": true,
+    "strict_combined_jpeg_png_profile_passed": false,
+    "worker_creation_observation_accepted": false,
+    "collector_correction": {
+      "original_collector_failure_sha256": "5635c36ba8904a5e9a18f900b14229dda37f87ea7b44af195fa85a2c3e9fd67d",
+      "sealed_png_collector_sha256": "43c46260207efc78aa9da7d15c7321b1f29abe01fe3d73864f2c7431b194934e",
+      "scope": "Generic staged collector expected jpeg-fit from a complete JPEG/PNG run. The additive wrapper invoked the already sealed functional PNG collector against unchanged run artifacts; no app/VM rerun, plan or assertion changes. The original collector and failure remain preserved."
+    },
+    "scope": "PNG exact pixels, original export and reader restoration only. No strict combined JPEG/PNG profile, fast-worker creation observation, pending PNG cancellation or broad performance acceptance."
+  },
+  "limits": [
+    "No global cancellation or Close bound; PNG/container allocation, synchronous retained hashing and generic nonimage workers remain separate.",
+    "No fresh full suite, kernel proof, UI latency, accessibility, resize or complete Unicode shaping/IME acceptance.",
+    "No Usage date charts, estimated costs or account features added by this slice.",
+    "All 201-input native results retain their earlier executable binding and are not counted as fresh206 validation."
+  ],
+  "publication_safety": "Synthetic technical metadata and image hashes only; no screenshots, transcripts, databases, private source, advisor logs or host paths.",
+  "root_adoption": {
+    "receipt_sha256": "808b2736cf17d0a584948f09cd88b45ed36b286f2591fd598256875b51ffec73",
+    "application_inputs": 206,
+    "exact_adoption_paths": 30,
+    "all_application_inputs_match_tested_executable": true,
+    "default_executables_promoted": 3,
+    "previous_sources_and_executables_preserved": true,
+    "root_head_and_index_unchanged": true
+  }
+}

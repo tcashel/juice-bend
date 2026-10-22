@@ -10,6 +10,8 @@ import ./reader_document.bend as ReaderDoc
 import ./reader_projection.bend as Projection
 import ./reader_cards.bend as ReaderCards
 import ./bend_ui/text_line.bend as Prose
+import ./library_usage_view_types.bend as LibraryView
+import ./library_usage_summary.bend as LibrarySummary
 
 type Line is Data:
   Line{start: U32, text: String}
@@ -20,7 +22,7 @@ type Content is Data:
 
 type Results is Data:
   Results{offset: U32, count: U32, has_more: Bool, ready: Bool}
-  LibraryUsageResults{phase: U32,count: U32}
+  LibraryUsageResults{phase: U32,count: U32,summary: List<&2,LibraryView.Summary>}
   ChildResults{phase: U32,count: U32,has_more: Bool,has_previous: Bool}
   RelatedResults{page: U32, count: U32, has_more: Bool, has_previous: Bool}
   SettingsResults{offset: U32,total: U32,automatic: String,ready: Bool}
@@ -207,11 +209,28 @@ def is_attachments(s: State) -> Bool:
 def library_phase(s: State) -> U32:
   State{Content{_,_,_,_,_,_,_,results,_,_},_,_,_} = s
   match results:
-    case LibraryUsageResults{phase,_}: phase
+    case LibraryUsageResults{phase,_,_}: phase
     case _: 0
 
 def is_library_usage(s: State) -> Bool:
   U32.is_ne(library_phase(s),0)
+
+def library_summary(s: State) -> Maybe<&2,LibraryView.Summary>:
+  State{Content{_,_,_,_,_,_,_,results,_,_},_,_,_} = s
+  match results:
+    case LibraryUsageResults{2,_,[value]}: Some{value}
+    case _: None{}
+
+def library_summary_overview(value: Maybe<&2,LibraryView.Summary>) -> Bool:
+  match value:
+    case Some{LibraryView.Summary{_,_,_,_,report}}: Bool.not(report)
+    case _: False{}
+
+def library_overview(s: State) -> Bool:
+  library_summary_overview(library_summary(s))
+
+def library_has_summary(s: State) -> Bool:
+  Maybe.is_some(&2,LibraryView.Summary,library_summary(s))
 
 def is_attachment_folders(s: State) -> Bool:
   State{Content{_,_,_,_,_,_,_,results,_,_},_,_,_} = s
@@ -412,7 +431,7 @@ def ordinary_result_label(+offset: U32,+count: U32,more: Bool,ready: Bool) -> St
 def result_label(results: Results) -> String:
   match results:
     case ChildResults{phase,count,_,_}: U32.show(count) ++ Bool.pick(String,U32.is_eq(phase,0)," recorded results"," candidates on this page")
-    case LibraryUsageResults{+phase,count}: Bool.pick(String,U32.is_eq(phase,2),U32.show(count) ++ " captured sources",Bool.pick(String,U32.is_eq(phase,1),"Reading retained captures","All-time recorded usage"))
+    case LibraryUsageResults{+phase,count,_}: Bool.pick(String,U32.is_eq(phase,2),U32.show(count) ++ " captured sources",Bool.pick(String,U32.is_eq(phase,1),"Reading retained captures","All-time recorded usage"))
     case AttachmentCaptureResults{phase,_,_,_,_,_}: Bool.pick(String,U32.is_eq(phase,2),"Choose a reference for details","Checking attachment evidence")
     case AttachmentFoldersResults{phase,_,_,_,_,_}: Bool.pick(String,U32.is_eq(phase,2),"Explicit capture folder policy","Updating folder policy")
     case AttachmentResults{phase,_,_,_}:
@@ -435,7 +454,7 @@ def result_label(results: Results) -> String:
 def result_available(results: Results,forward: Bool) -> Bool:
   match results:
     case ChildResults{_,_,more,previous}: Bool.pick(Bool,forward,more,previous)
-    case LibraryUsageResults{_,_}: False{}
+    case LibraryUsageResults{_,_,_}: False{}
     case AttachmentResults{phase,_,previous,next}: U32.is_eq(phase,2) && Bool.pick(Bool,forward,next,previous)
     case AttachmentCaptureResults{phase,_,previous,next,_,_}: U32.is_eq(phase,2) && Bool.pick(Bool,forward,next,previous)
     case AttachmentFoldersResults{phase,_,_,_,previous,next}: U32.is_eq(phase,2) && Bool.pick(Bool,forward,next,previous)
@@ -769,12 +788,17 @@ def paste_focused(+s: State) -> State & Action:
   State{content, Input{selected, scroll, Edit{focus, caret, anchor, drag, viewport}, command, shift}, image, dirty} = s
   paste_action(s, focus)
 
+def wheel_reader(overview: Bool,s: State,down: Bool) -> State & Action:
+  match overview:
+    case True{}: (s,NoAction{})
+    case False{}: (scroll_by(s,down,3),NoAction{})
+
 def wheel_in(+s: State, down: Bool, list: Bool) -> State & Action:
   match list:
     case True{}:
       arrow(set_edit(s, Edit{1, 0, 0, False{}, 0}), down)
     case False{}:
-      (scroll_by(s, down, 3), NoAction{})
+      wheel_reader(library_overview(s),s,down)
 
 def wheel(s: State,+x: U32,down: Bool) -> State & Action:
   wheel_in(s,down,(x >= G.sidebar_end() && x < G.list_end() : U32))
@@ -821,6 +845,43 @@ def attachment_copy_selection(+s: State) -> State & Action:
 
 def attachment_select_all(s: State) -> State:
   select_all(set_edit(s,Edit{2,0,0,False{},0}))
+
+def focus_list(+s: State) -> State:
+  State{content,Input{selected,scroll,Edit{focus,caret,anchor,drag,viewport},command,shift},image,dirty} = s
+  set_edit(s,Edit{1,caret,anchor,False{},0})
+
+def library_show_report(+s: State,report: Bool) -> State:
+  State{Content{_,_,_,_,_,_,_,results,_,_},_,_,_} = s
+  match results:
+    case LibraryUsageResults{2,count,[LibraryView.Summary{available,providers,notices,selected,_}]}:
+      set_results(s,LibraryUsageResults{2,count,[LibraryView.Summary{available,providers,notices,selected,report}]})
+    case _: s
+
+def library_toggle_mode(available: Bool,+s: State) -> State:
+  match available:
+    case False{}: s
+    case True{}: focus_list(library_show_report(s,library_overview(s)))
+
+def library_toggle(+s: State) -> State:
+  library_toggle_mode(library_has_summary(s),s)
+
+def library_select_all(s: State) -> State:
+  attachment_select_all(library_show_report(s,True{}))
+
+def library_copy_mode(overview: Bool,+s: State) -> State & Action:
+  match overview:
+    case True{}: (s,Copy{reader(s)})
+    case False{}: attachment_copy_selection(s)
+
+def library_copy_selection(+s: State) -> State & Action:
+  library_copy_mode(library_overview(s),s)
+
+def library_text_action(+s: State,index: U32) -> State & Action:
+  match index:
+    case 0: library_copy_mode(library_has_summary(s),s)
+    case 1: (library_toggle(s),NoAction{})
+    case 3: (library_select_all(s),NoAction{})
+    case _: (s,NoAction{})
 
 def attachment_tab(+s: State) -> State & Action:
   (set_edit(s,Edit{Bool.pick(U32,U32.is_eq(focus(s),1),2,1),0,0,False{},0}),NoAction{})
@@ -895,20 +956,30 @@ def key_down_mode(s: State,code: U32,command: Bool,attachments: Bool) -> State &
     case True{}: attachment_key(s,code,command)
     case False{}: key_down_editable(s,code,command)
 
+def library_page_key_mode(overview: Bool,s: State,code: U32) -> State & Action:
+  match overview:
+    case True{}: (s,NoAction{})
+    case False{}: key_down_editable(s,code,False{})
+
+def library_page_key(+s: State,code: U32) -> State & Action:
+  library_page_key_mode(library_overview(s),s,code)
+
 def library_key(+s: State,+code: U32,+command: Bool) -> State & Action:
   match code command:
     case 113 True{}: (s,Quit{})
     case 114 True{}: (s,Refresh{})
     case 101 True{}: (s,Export{})
-    case 97 True{}: (attachment_select_all(s),NoAction{})
-    case 99 True{}: attachment_copy_selection(s)
+    case 97 True{}: (library_select_all(s),NoAction{})
+    case 99 True{}: library_copy_selection(s)
     case 91 True{}: (s,Back{})
     case _ True{}: (s,NoAction{})
     case 27 False{}: (s,Back{})
     case 13 False{}: (s,Submit{})
     case 127 False{}: (s,NoAction{})
     case 8 False{}: (s,NoAction{})
-    case 9 False{}: attachment_tab(s)
+    case 9 False{}: attachment_tab(library_show_report(s,True{}))
+    case 63276 False{}: library_page_key(s,code)
+    case 63277 False{}: library_page_key(s,code)
     case _ False{}: key_down_editable(s,code,False{})
 
 def key_library(+s: State,code: U32,command: Bool,library: Bool) -> State & Action:
@@ -951,10 +1022,6 @@ def paste_query(+s: State) -> State & Action:
   State{content,Input{selected,scroll,Edit{focus,caret,anchor,drag, viewport},command,shift},image,dirty} = s
   paste_query_at(s,focus)
 
-def focus_list(+s: State) -> State:
-  State{content,Input{selected,scroll,Edit{focus,caret,anchor,drag,viewport},command,shift},image,dirty} = s
-  set_edit(s,Edit{1,caret,anchor,False{},0})
-
 def history_action_mode(+s: State,+files: Bool,+usage: Bool) -> State & Action:
   match files usage:
     case True{} _: (s,Files{})
@@ -965,7 +1032,7 @@ def history_has_origin(+s: State) -> Bool:
   State{Content{_,_,_,_,_,_,_,results,_,_},_,_,_} = s
   match results:
     case RelatedResults{_,_,_,_}: True{}
-    case LibraryUsageResults{_,_}: True{}
+    case LibraryUsageResults{_,_,_}: True{}
     case _: String.starts_with(title(s),"Usage |")
 
 def history_action(+s: State) -> State & Action:
@@ -1152,8 +1219,13 @@ def text_action_attachment(attachments: Bool,+s: State,index: U32) -> State & Ac
         case 3: (attachment_select_all(s),NoAction{})
         case _: (s,NoAction{})
 
+def text_action_library(library: Bool,+s: State,index: U32) -> State & Action:
+  match library:
+    case True{}: library_text_action(s,index)
+    case False{}: text_action_attachment(is_attachments(s),s,index)
+
 def text_action(+s: State,index: U32) -> State & Action:
-  text_action_attachment(is_attachments(s) || is_library_usage(s),s,index)
+  text_action_library(is_library_usage(s),s,index)
 
 def mouse_reader_mode(+s: State,+x: U32,+y: U32,value: Maybe<&2,ReaderCards.Model>) -> State & Action:
   State{_,Input{_,_,_,_,shift},_,_} = s
@@ -1163,11 +1235,17 @@ def mouse_reader_mode(+s: State,+x: U32,+y: U32,value: Maybe<&2,ReaderCards.Mode
       +pos = reader_at(s,x,y)
       (set_edit(s,Edit{2,pos,pos,True{},0}),NoAction{})
 
+def mouse_reader_summary(overview: Bool,+s: State,x: U32,y: U32) -> State & Action:
+  match overview:
+    case True{}: (s,NoAction{})
+    case False{}: mouse_reader_mode(s,x,y,card_model(s))
+
 def mouse_reader(+s: State,+x: U32,+y: U32,inside: Bool) -> State & Action:
   match inside:
-    case True{}: mouse_reader_mode(s,x,y,card_model(s))
+    case True{}: mouse_reader_summary(library_overview(s),s,x,y)
     case False{}: (s,NoAction{})
 
+# Metric tiles are displays, not a second mapping into canonical report text.
 def mouse_text(+s: State,+x: U32,+y: U32,actions: Bool) -> State & Action:
   match actions:
     case True{}: text_action(s,U32.div(U32.sub(x,G.text_actions_x()),G.text_action_width()))
@@ -1184,7 +1262,7 @@ def history_workspace(+s: State) -> Bool:
 def provider_chips_visible(+s: State) -> Bool:
   State{Content{_,_,_,_,_,_,_,results,_,_},_,_,_} = s
   match results:
-    case LibraryUsageResults{phase,_}: U32.is_le(phase,4)
+    case LibraryUsageResults{phase,_,_}: U32.is_le(phase,4)
     case Results{_,_,_,_}: history_workspace(s) && Bool.not(is_files(s))
     case _: False{}
 
@@ -1633,8 +1711,19 @@ def draw_reader_value(c: C.Canvas,lines: List<&2,Line>,scroll: U32,low: U32,high
     case None{}: draw_reader(U32.to_nat(G.reader_rows()),c,List.drop(&2,Line,lines,U32.to_nat(scroll)),U32.div(G.reader_y(),G.cell()),low,high)
     case Some{+model}: draw_card_rows(U32.to_nat(G.reader_rows()),c,List.drop(&2,ReaderCards.Row,ReaderCards.rows(model),U32.to_nat(scroll)),G.reader_y(),low,high,ReaderCards.focus(model))
 
+def draw_library_summary_result(value: Result<&2,&2,C.Failure,C.Canvas>,fallback: C.Canvas) -> C.Canvas:
+  match value:
+    case Done{canvas}: canvas
+    case Fail{_}: chrome_text(fallback,"Overview unavailable. Choose Report to inspect the complete evidence.",536,168,640,0,muted(),paper())
+
+def draw_library_reader(+s: State,+c: C.Canvas,lines: List<&2,Line>,scroll: U32,low: U32,high: U32,value: Maybe<&2,LibraryView.Summary>) -> C.Canvas:
+  match value:
+    case Some{LibraryView.Summary{available,providers,notices,selected,False{}}}:
+      draw_library_summary_result(LibrarySummary.draw(c,LibraryView.Summary{available,providers,notices,selected,False{}}),c)
+    case _: draw_reader_value(c,lines,scroll,low,high,card_model(s))
+
 def draw_reader_context(+s: State,c: C.Canvas,lines: List<&2,Line>,scroll: U32,low: U32,high: U32) -> C.Canvas:
-  draw_reader_value(c,lines,scroll,low,high,card_model(s))
+  draw_library_reader(s,c,lines,scroll,low,high,library_summary(s))
 
 # Result cards are a display projection. The original row and transcript remain
 # unchanged. Keep a short trailing token with its preceding word when possible.
@@ -1667,8 +1756,26 @@ def card_mode(+text: String,long: Bool) -> Card:
     case False{}: Card{text,""}
     case True{}: card_long(text,U32.min(38,minus(length(text),8)))
 
+# Explicit title/subtitle rows have separate visual lines. Inspect only a
+# bounded display prefix: Usage rows have at most 80 + 1 + 240 scalars, plus
+# two ellipses. Later lines never reach the single-line label painter. Keep
+# the original wrapping path for rows without a separator in this prefix.
+# This projection never changes canonical text or typed row identities.
+def card_uncr_reversed(text: String) -> String:
+  match text:
+    case SCon{Chr{13},rest}: String.reverse(rest)
+    case _: String.reverse(text)
+
+def card_uncr(text: String) -> String:
+  card_uncr_reversed(String.reverse(text))
+
+def card_lines(+text: String,parts: List<&2,String>) -> Card:
+  match parts:
+    case first <> second <> _: Card{card_uncr(first),card_tail(card_uncr(second))}
+    case _: card_mode(text,U32.is_gt(length(text),38))
+
 def card(+text: String) -> Card:
-  card_mode(text,U32.is_gt(length(text),38))
+  card_lines(text,String.lines(String.take(text,384n)))
 
 def history_card(+row: String) -> Card:
   Bool.pick(Card,String.starts_with(row,"claude  "),Card{String.drop(row,8n),"Claude"},
@@ -1698,7 +1805,7 @@ def draw_rows(+fuel: Nat,+c: C.Canvas,rows: List<&2,String>,+at: U32,+selected: 
 def list_heading(results: Results,files: Bool) -> String:
   match results:
     case ChildResults{phase,_,_,_}: Bool.pick(String,U32.is_eq(phase,0),"Recorded child results","Retained child candidates")
-    case LibraryUsageResults{_,_}: "Captured sessions"
+    case LibraryUsageResults{_,_,_}: "Captured sessions"
     case AttachmentResults{_,_,_,_}: "Captured attachments"
     case AttachmentCaptureResults{_,_,_,_,_,_}: "Captured attachments"
     case AttachmentFoldersResults{_,_,_,_,_,_}: "Capture folders"
@@ -1864,10 +1971,13 @@ def draw_providers(+fuel: Nat,+c: C.Canvas,+scope: String,+index: U32) -> C.Canv
       next = chrome_text(base,provider_label(index),U32.add(G.provider_x(index),8),G.provider_y(),U32.sub(G.provider_width(),16),Bool.pick(U32,active,1,0),ink(),bg)
       draw_providers(n,next,scope,U32.add(index,1))
 
+def provider_list_heading(s: State) -> String:
+  Bool.pick(String,is_library_usage(s),"Usage","History")
+
 def draw_list_header_mode(+c: C.Canvas,+s: State,+results: Results,+files: Bool,+visible: Bool) -> C.Canvas:
   match visible:
     case True{}:
-      heading = chrome_text(c,Bool.pick(String,is_library_usage(s),"Library usage","History"),192,120,144,2,heading_ink(),panel())
+      heading = chrome_text(c,provider_list_heading(s),192,120,144,2,heading_ink(),panel())
       count = chrome_text(heading,result_label(results),344,128,160,0,muted(),panel())
       draw_providers(3n,count,scope(s),0)
     case False{}:
@@ -2163,6 +2273,12 @@ def draw_query_actions(+attachments: Bool,+c: C.Canvas,+s: State) -> C.Canvas:
       paste = chrome_text(c,query_action_label(s,True{}),U32.add(G.text_action_x(1),8),G.text_actions_y(),88,0,accent(),paper())
       chrome_text(paste,query_action_label(s,False{}),U32.add(G.text_action_x(2),8),G.text_actions_y(),88,0,accent(),paper())
 
+def draw_library_mode(visible: Bool,+s: State,c: C.Canvas) -> C.Canvas:
+  match visible:
+    case False{}: c
+    case True{}:
+      chrome_text(c,Bool.pick(String,library_overview(s),"Report","Overview"),U32.add(G.text_action_x(1),8),G.text_actions_y(),88,0,accent(),paper())
+
 def draw_child_entry(c: C.Canvas,visible: Bool) -> C.Canvas:
   match visible:
     case True{}: chrome_text(box(c,1008,0,168,24,panel()),"Child results",1016,0,152,0,accent(),panel())
@@ -2189,9 +2305,10 @@ def draw_canvas_capture(+s: State,automatic: String,suspended: Bool) -> C.Canvas
   next = draw_list_pager(is_attachments(s) || is_attachment_folders(s) || is_library_usage(s),range,results)
   title = chrome_text(next,Palette.heading(title),G.reader_x(),120,U32.mul(reader_title_columns(s),8),1,heading_ink(),paper())
   entry = draw_attachment_entry(title,attachment_entry_visible(s))
-  copy = chrome_text(entry,"Copy",U32.add(G.text_action_x(0),8),G.text_actions_y(),80,0,accent(),paper())
+  copy = chrome_text(entry,Bool.pick(String,library_has_summary(s),"Copy report","Copy"),U32.add(G.text_action_x(0),8),G.text_actions_y(),80,0,accent(),paper())
   clear = draw_query_actions(is_attachments(s) || is_library_usage(s),copy,s)
-  all = chrome_text(clear,"Select all",U32.add(G.text_action_x(3),8),G.text_actions_y(),88,0,accent(),paper())
+  mode = draw_library_mode(library_has_summary(s),s,clear)
+  all = chrome_text(mode,"Select all",U32.add(G.text_action_x(3),8),G.text_actions_y(),88,0,accent(),paper())
   +offset = minus(selected,U32.sub(G.list_rows(),1))
   items = draw_rows(U32.to_nat(G.list_rows()),all,List.drop(&2,String,rows,U32.to_nat(offset)),0,minus(selected,offset),provider_chips_visible(s))
   body = draw_reader_context(s,items,lines,scroll,Bool.pick(U32,U32.is_eq(focus,2),U32.min(caret,anchor),0),Bool.pick(U32,U32.is_eq(focus,2),U32.max(caret,anchor),0))

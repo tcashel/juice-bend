@@ -77,7 +77,7 @@ def selection_expected(value: Packet.Expected) -> Bool:
 
 def retired(value: Maybe<&2,A.Pending>) -> Bool:
   match value:
-    case Some{A.Pending{_,_,_,active}}: Bool.not(active)
+    case Some{A.Pending{_,_,_,active,_}}: Bool.not(active)
     case _: False{}
 
 def sticky(+gui: G.State) -> G.State:
@@ -119,11 +119,11 @@ def drained(value: Maybe<A.State>) -> IO(String):
 def pending_lifecycle() -> IO(Unit):
   do IO<Unit>:
     +channel : Chan(A.Reply) <- Chan.new(A.Reply,1)
-    escaped : Maybe<A.State> <- A.event(Key{27,True{}},A.Browsing{sticky(F.picked()),Some{A.Pending{A.InlinePreview{expected()},F.picked(),channel,True{}}}})
+    escaped : Maybe<A.State> <- A.event(Key{27,True{}},A.Browsing{sticky(F.picked()),Some{A.Pending{A.InlinePreview{expected()},F.picked(),channel,True{},None{}}}})
     check(pending_restored(escaped,S.observation(F.picked())),"Escape while image work is pending preserves exact pre-Open selection and retires its original channel")
-    backed : Maybe<A.State> <- A.event(Mouse{20,88,0,True{}},A.Browsing{F.picked(),Some{A.Pending{A.InlinePreview{expected()},F.picked(),channel,True{}}}})
+    backed : Maybe<A.State> <- A.event(Mouse{20,88,0,True{}},A.Browsing{F.picked(),Some{A.Pending{A.InlinePreview{expected()},F.picked(),channel,True{},None{}}}})
     check(pending_restored(backed,S.observation(F.origin())),"Back navigation remains active while the image child is pending and restores the exact filtered parent reader")
-    refused : Maybe<A.State> <- A.begin(F.origin(),Some{A.Pending{A.InlinePreview{expected()},F.picked(),channel,False{}}})
+    refused : Maybe<A.State> <- A.begin(F.origin(),Some{A.Pending{A.InlinePreview{expected()},F.picked(),channel,False{},None{}}})
     again : Maybe<A.State> <- reopen(refused)
     delivered : Result<&1,&1,A.Reply,Unit> <- Chan.send(A.Reply,channel,A.Reply{ImageDecode.decode(PNG.rgb())})
     check(sent(delivered),"one original channel accepts a completed affine raster after cancellation")
@@ -157,7 +157,7 @@ def lifecycle() -> IO(Unit):
     check(A.retires(Mouse{1,1,0,True{}}) && A.retires(Key{27,True{}}) && A.retires(Text{"x"}) && A.retires(Scroll{1,1,0.0,1.0}),"new navigation and editing retire in-flight result")
     check(Bool.not(A.retires(Move{1,1})) && Bool.not(A.retires(Key{27,False{}})),"idle movement and key release do not spuriously cancel preview")
     +channel : Chan(A.Reply) <- Chan.new(A.Reply,1)
-    check(retired(A.retire(True{},Some{A.Pending{A.InlinePreview{expected()},F.picked(),channel,True{}}})),"retirement marks exact existing child stale")
+    check(retired(A.retire(True{},Some{A.Pending{A.InlinePreview{expected()},F.picked(),channel,True{},None{}}})),"retirement marks exact existing child stale")
     Chan.close(A.Reply,channel)
 
 # Pacing is a pure policy check. These channels have no worker and receive no
@@ -183,8 +183,8 @@ def pacing_gui(dirty: Bool,job_kind: U32,channel: Chan(G.Reply)) -> G.State:
 
 def pacing_pending(kind: U32,channel: Chan(A.Reply)) -> Maybe<&2,A.Pending>:
   match kind:
-    case 1: Some{A.Pending{A.InlinePreview{expected()},F.picked(),channel,True{}}}
-    case 2: Some{A.Pending{A.InlinePreview{expected()},F.picked(),channel,False{}}}
+    case 1: Some{A.Pending{A.InlinePreview{expected()},F.picked(),channel,True{},None{}}}
+    case 2: Some{A.Pending{A.InlinePreview{expected()},F.picked(),channel,False{},None{}}}
     case _: None{}
 
 def pacing_delay(value: A.State & U32,want: U32) -> Bool:

@@ -38,7 +38,7 @@ def state(value: UI.State & UI.Action) -> UI.State:
 
 def panel(phase: U32) -> UI.State:
   UI.set_results(UI.set_rows(UI.set_reader(UI.set_query(UI.init(),"needle repo:/synthetic role:user"),
-    "Library usage | all time","Partial coverage\nKnown input: 9007199254740993\nCached input: unknown\ncafé 中文 🙂"),["Claude session","Codex session"]),UI.LibraryUsageResults{phase,2})
+    "Library usage | all time","Partial coverage\nKnown input: 9007199254740993\nCached input: unknown\ncafé 中文 🙂"),["Claude session","Codex session"]),UI.LibraryUsageResults{phase,2,[]})
 
 def click(+s: UI.State,x: U32,y: U32) -> U32:
   action(UI.event(Mouse{x,y,0,True{}},s))
@@ -52,7 +52,7 @@ def overview() -> IO(Unit):
     check(U32.is_eq(action(UI.top_action(s,2)),5) && U32.is_eq(action(UI.top_action(s,3)),6) && U32.is_eq(action(UI.top_action(s,4)),7),"provider controls return explicit All Claude Codex actions")
     check(U32.is_eq(action(UI.top_action(s,5)),8) && U32.is_eq(action(UI.top_action(s,6)),9),"overview Back and selected-capture Open stay separate")
     check(UI.provider_chips_visible(s) && Bool.not(UI.attachment_entry_visible(s)),"overview shows provider choice without a duplicate attachment shortcut")
-    check(Bool.not(UI.result_available(UI.LibraryUsageResults{2,256},True{})),"capture rows use the existing bounded list rather than a false extra-page control")
+    check(Bool.not(UI.result_available(UI.LibraryUsageResults{2,256,[]},True{})),"capture rows use the existing bounded list rather than a false extra-page control")
 
 def target() -> IO(Unit):
   +s = panel(6)

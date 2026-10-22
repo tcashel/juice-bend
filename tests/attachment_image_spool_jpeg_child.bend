@@ -1,4 +1,5 @@
 import Base
+import ../src/attachment_image_cancel.bend as Cancel
 import ../src/attachment_image_spool_worker.bend as W
 import ../src/attachment_preview_packet.bend as P
 import ../src/attachment_inline.bend as Inline
@@ -70,6 +71,13 @@ def suite(+self: String) -> IO(Unit):
     source_loss()
     bytes : Result<&2,&1,String,Image.Raster> <- child(self,root,identity)
     check(good(bytes),"fresh private-file archive-backed child returns independently specified exact JPEG pixels from deliberately wrong PNG MIME after source deletion")
+    +cancel : Chan(Unit) <- Chan.new(Unit,1)
+    Cancel.signal(cancel)
+    canceled : Result<&2,&1,String,Image.Raster> <- W.read_control(self,root,H.ExpectedInline{identity},cancel)
+    check(refused(canceled),"prequeued real parent cancellation reaps the retained JPEG child and refuses its raster")
+    check(True{},"supervisor and cancellation watcher returned before continuing the library test")
+    failed_launch : Result<&2,&1,String,Image.Raster> <- W.read(root ++ "/missing-test-executable",root,H.ExpectedInline{identity})
+    check(refused(failed_launch),"failed child launch joins its watcher and cleans the exact request before returning")
     +again : U32 <- Store.open(root ++ "/juice-bend.sqlite")
     +after : List<&2,List<&2,Sql.Cell>> <- Store.status(again)
     check(String.eq(Store.field(Store.first(before),3n),Store.field(Store.first(after),3n)) && String.eq(Store.field(Store.first(before),4n),Store.field(Store.first(after),4n)),"preview preserves raw byte and event counts")

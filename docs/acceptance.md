@@ -1,6 +1,35 @@
 # Acceptance evidence
 
-## Current native app — 2026-10-22
+## Current native app206 — 2026-10-22
+
+Adopted native app `4ffb4903…` has 206 exact inputs and builds through the original
+pinned Bend CLI/main with the maintained minimal GC512 preload, then LLVM 23.1.4
+at -O1. This closes the full-app maintained-compiler validation gap. The runner
+uses the maintained setup; it did not literally invoke `scripts/build`.
+
+Usage passed 17 exact clipboard comparisons, 10 canonical reports, one canonical
+export, provider filtering, selected-capture reopen, two Back levels and restored
+partial selection. Root reviewed 15 native images. The first three captures survived
+source-loss restart; the fourth was imported afterward, with no second restart.
+Pending JPEG Close passed one fixture with a child observed before and after the
+click: window 394ms, parent/child 762ms, no orphan and exact request-spool removal
+before harness cleanup. These are observation upper bounds, not a global Close
+guarantee. Root reviewed three images. Inline-PNG functional checks passed 8 Fit/3
+actual pixels, the original 72-byte export, Escape selection restoration, source
+loss and ready Close; root reviewed six images. The wrong generic JPEG collector
+failure is preserved. Additive collection used the already sealed PNG checker
+without a rerun or artifact edits. Strict combined JPEG/PNG and worker-creation
+observation remain unaccepted.
+
+Separately bound component tests passed Usage 130, actual cancellation App12,
+event-seal 73 and preservation 1,611 including 27 crash cuts. The original crash
+collector failed on an unchanged footer; additive read-only collection accepted
+existing output. Its fourth C/binary hashes are post-run only. The combined Child
+fixture constructor adapter remains unrun. No fresh full suite, proof or broader
+performance acceptance is claimed. See `receipts/native206-build-tests.json` and
+`receipts/native206-native.json`. Earlier201 results below remain historical.
+
+## Historical app201 — 2026-10-22
 
 Adopted native executable `943eee7e…` has 201 exact application inputs. Its
 reader/Usage and Child-result journeys passed in Tart, including exact copy and
@@ -27,7 +56,7 @@ C output through the actual pinned CLI/font test. The full maintained-preload
 Mac app has not yet been built; that gate belongs to the next combined candidate.
 Current focused tests are not a fresh full suite or proof pass.
 
-Latest app 8d424301 adopts Library Usage and proportional message prose; its
+Earlier app 8d424301 adopts Library Usage and proportional message prose; its
 189 application inputs match the promoted executable. The combined native Tart
 run passed 32 exact clipboard comparisons, three summary checks, four proportional
 drags, 24 key pairs and three canonical exports. It exercised wrapped Unicode/tab

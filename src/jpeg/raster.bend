@@ -12,6 +12,10 @@ type Mcu is Type:
   Mcu{cursor: Entropy.Cursor,predictors: Array<F32>,samples: Array<U32>}
 type Painted is Type:
   Painted{samples: Array<U32>,pixels: Array<U32>}
+type Advanced is Type:
+  Advanced{mcu: Mcu,pixels: Array<U32>}
+type Prepared is Data:
+  Prepared{frame: T.Frame,jobs: List<&2,Job>,interval: U32,entropy: List<&2,U32>,mode: T.ColorMode,notice: Bool}
 
 def plane(items: List<&2,T.Component>,+id: U32,+index: U32) -> Result<&2,&2,T.Failure,U32>:
   match items:
@@ -138,16 +142,30 @@ def maybe_restart(needed: Bool,mcu: Mcu,index: U32) -> Result<&2,&1,T.Failure,Mc
         after : Entropy.Cursor <- T.widen(Entropy.Cursor,Entropy.restart(cursor,index))
         Done{Mcu{after,Array.new(F32,2n,0.0),samples}}
 
-def painted(value: Painted,cursor: Entropy.Cursor,predictors: Array<F32>,next: Mcu -> Array<U32> -> Result<&2,&1,T.Failure,Image.Raster>) -> Result<&2,&1,T.Failure,Image.Raster>:
+def painted(value: Painted,cursor: Entropy.Cursor,predictors: Array<F32>) -> Result<&2,&1,T.Failure,Advanced>:
   Painted{samples,pixels} = value
-  next(Mcu{cursor,predictors,samples},pixels)
+  Done{Advanced{Mcu{cursor,predictors,samples},pixels}}
 
-def draw(mcu: Mcu,pixels: Array<U32>,+index: U32,frame: T.Frame,mode: T.ColorMode,next: Mcu -> Array<U32> -> Result<&2,&1,T.Failure,Image.Raster>) -> Result<&2,&1,T.Failure,Image.Raster>:
+def draw(mcu: Mcu,pixels: Array<U32>,+index: U32,frame: T.Frame,mode: T.ColorMode) -> Result<&2,&1,T.Failure,Advanced>:
   Mcu{cursor,predictors,samples} = mcu
   T.Frame{+width,+height,_,+h,+v,+columns,_} = frame
-  do Result<&2,&1,T.Failure,Image.Raster>:
+  do Result<&2,&1,T.Failure,Advanced>:
     value : Painted <- paint(U32.to_nat(U32.mul(U32.mul(h,v),64)),samples,pixels,0,U32.mul(U32.mod(index,columns),U32.mul(h,8)),U32.mul(U32.div(index,columns),U32.mul(v,8)),width,height,h,v,mode)
-    painted(value,cursor,predictors,next)
+    painted(value,cursor,predictors)
+
+def unpack(-R: Type,value: Advanced,next: Mcu -> Array<U32> -> R) -> R:
+  Advanced{mcu,pixels} = value
+  next(mcu,pixels)
+
+# Both pure and cooperative rendering use this exact transition. Restart marker
+# fill remains a synchronous scan bounded by the admitted one-MiB input.
+def step(mcu: Mcu,pixels: Array<U32>,+index: U32,frame: T.Frame,jobs: List<&2,Job>,+interval: U32,mode: T.ColorMode) -> Result<&2,&1,T.Failure,Advanced>:
+  +needed : Bool = U32.is_gt(index,0) && U32.is_gt(interval,0) && U32.is_eq(U32.mod(index,interval),0)
+  +restart_index : U32 = U32.and(U32.sub(U32.div(index,interval),1),7)
+  do Result<&2,&1,T.Failure,Advanced>:
+    ready : Mcu <- maybe_restart(needed,mcu,restart_index)
+    decoded : Mcu <- blocks(jobs,ready)
+    draw(decoded,pixels,index,frame,mode)
 
 def finish(mcu: Mcu,pixels: Array<U32>,frame: T.Frame,notice: Bool) -> Result<&2,&1,T.Failure,Image.Raster>:
   Mcu{cursor,_,_} = mcu
@@ -161,17 +179,31 @@ def mcus(fuel: Nat,mcu: Mcu,pixels: Array<U32>,+index: U32,+frame: T.Frame,+jobs
   match fuel:
     case 0n: finish(mcu,pixels,frame,notice)
     case 1n+rest:
-      +needed : Bool = U32.is_gt(index,0) && U32.is_gt(interval,0) && U32.is_eq(U32.mod(index,interval),0)
-      +restart_index : U32 = U32.and(U32.sub(U32.div(index,interval),1),7)
       do Result<&2,&1,T.Failure,Image.Raster>:
-        ready : Mcu <- maybe_restart(needed,mcu,restart_index)
-        decoded : Mcu <- blocks(jobs,ready)
-        draw(decoded,pixels,index,frame,mode,after => updated => mcus(rest,after,updated,U32.inc(index),frame,jobs,interval,mode,notice))
+        advanced : Advanced <- step(mcu,pixels,index,frame,jobs,interval,mode)
+        unpack(Result<&2,&1,T.Failure,Image.Raster>,advanced,after => updated => mcus(rest,after,updated,U32.inc(index),frame,jobs,interval,mode,notice))
+
+def prepare(document: T.Document) -> Result<&2,&2,T.Failure,Prepared>:
+  T.Document{+frame,scan,quants,tables,interval,entropy,mode,notice} = document
+  T.Frame{+width,+height,components,_,_,_,_} = frame
+  do Result<&2,&2,T.Failure,Prepared>:
+    _ : Unit <- T.require(U32.is_gt(width,0) && U32.is_gt(height,0) && U32.is_le(width,T.max_dimension()) && U32.is_le(height,T.max_dimension()) && U32.is_le(width,U32.div(T.max_pixels(),height)),"image_resource_limit","JPEG raster dimensions exceed the bounded allocation profile")
+    jobs : List<&2,Job> <- jobs(scan,components,quants,tables)
+    Done{Prepared{frame,jobs,interval,entropy,mode,notice}}
+
+# The pinned native Array.new fills its allocation synchronously. The output
+# has at most 1,048,576 cells; this is not a per-MCU cooperative operation.
+def initial(frame: T.Frame,entropy: List<&2,U32>) -> Advanced:
+  T.Frame{width,height,_,_,_,_,_} = frame
+  Advanced{Mcu{Entropy.start(entropy),Array.new(F32,2n,0.0),Array.new(U32,10n,0)},Array.new(U32,T.depth(U32.mul(width,height)),0)}
+
+def render_prepared(value: Prepared) -> Result<&2,&1,T.Failure,Image.Raster>:
+  Prepared{+frame,jobs,interval,entropy,mode,notice} = value
+  T.Frame{_,_,_,_,_,columns,rows} = frame
+  unpack(Result<&2,&1,T.Failure,Image.Raster>,initial(frame,entropy),mcu => pixels =>
+    mcus(U32.to_nat(U32.mul(columns,rows)),mcu,pixels,0,frame,jobs,interval,mode,notice))
 
 def render(document: T.Document) -> Result<&2,&1,T.Failure,Image.Raster>:
-  T.Document{+frame,scan,quants,tables,interval,entropy,mode,notice} = document
-  T.Frame{+width,+height,components,_,_,columns,rows} = frame
   do Result<&2,&1,T.Failure,Image.Raster>:
-    _ : Unit <- T.widen(Unit,T.require(U32.is_gt(width,0) && U32.is_gt(height,0) && U32.is_le(width,T.max_dimension()) && U32.is_le(height,T.max_dimension()) && U32.is_le(width,U32.div(T.max_pixels(),height)),"image_resource_limit","JPEG raster dimensions exceed the bounded allocation profile"))
-    jobs : List<&2,Job> <- T.widen(List<&2,Job>,jobs(scan,components,quants,tables))
-    mcus(U32.to_nat(U32.mul(columns,rows)),Mcu{Entropy.start(entropy),Array.new(F32,2n,0.0),Array.new(U32,10n,0)},Array.new(U32,T.depth(U32.mul(width,height)),0),0,frame,jobs,interval,mode,notice)
+    value : Prepared <- T.widen(Prepared,prepare(document))
+    render_prepared(value)

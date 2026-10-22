@@ -87,8 +87,69 @@ def encoded(cells: List<&2,Sql.Cell>) -> String:
     case head <> tail:
       encoded_cell(head) ++ ":" ++ encoded(tail)
 
+# Keep encoded/encoded_cell above unchanged as the historical scalar codec.
+# These suffix constructors emit the SAME preimage directly as UTF-8 bytes.
+# Every recursive step consumes one scalar/cell and attaches a fixed-size
+# prefix to its suffix; no append traverses an already-built prefix or suffix.
+# Scalar validity and SQLite storage classes retain their existing callers.
+def text_bytes_onto(text: String,tail: List<&2,U32>) -> List<&2,U32>:
+  match text:
+    case SNil{}:
+      tail
+    case SCon{Chr{+cp},rest}:
+      Domain.encode_scalar(cp,text_bytes_onto(rest,tail),Domain.encode_width(cp))
+
+def escape_hex_byte(+value: U32) -> U32:
+  Bool.pick(U32,U32.is_lt(value,10),U32.add(value,48),U32.add(value,87))
+
+def escaped_other_onto(+cp: U32,tail: List<&2,U32>,control: Bool) -> List<&2,U32>:
+  match control:
+    case True{}:
+      92 <> 117 <> 48 <> 48 <> escape_hex_byte(U32.div(cp,16)) <>
+        escape_hex_byte(U32.mod(cp,16)) <> tail
+    case False{}:
+      Domain.encode_scalar(cp,tail,Domain.encode_width(cp))
+
+def escaped_scalar_onto(+cp: U32,tail: List<&2,U32>) -> List<&2,U32>:
+  match cp:
+    case 34:
+      92 <> 34 <> tail
+    case 92:
+      92 <> 92 <> tail
+    case _:
+      escaped_other_onto(cp,tail,U32.is_lt(cp,32))
+
+def escaped_bytes_onto(text: String,tail: List<&2,U32>) -> List<&2,U32>:
+  match text:
+    case SNil{}:
+      tail
+    case SCon{Chr{cp},rest}:
+      escaped_scalar_onto(cp,escaped_bytes_onto(rest,tail))
+
+def quoted_bytes_onto(text: String,tail: List<&2,U32>) -> List<&2,U32>:
+  34 <> escaped_bytes_onto(text,34 <> tail)
+
+def cell_bytes_onto(value: Sql.Cell,tail: List<&2,U32>) -> List<&2,U32>:
+  match value:
+    case Sql.Cell.Integer{number}:
+      text_bytes_onto("integer:",quoted_bytes_onto(number,tail))
+    case Sql.Cell.Text{text}:
+      text_bytes_onto("text:",quoted_bytes_onto(text,tail))
+    case _:
+      text_bytes_onto("invalid",tail)
+
+def encoded_bytes_onto(cells: List<&2,Sql.Cell>,tail: List<&2,U32>) -> List<&2,U32>:
+  match cells:
+    case []:
+      tail
+    case head <> rest:
+      cell_bytes_onto(head,58 <> encoded_bytes_onto(rest,tail))
+
+def preimage_bytes(domain: String,cells: List<&2,Sql.Cell>) -> List<&2,U32>:
+  text_bytes_onto(format(),124 <> text_bytes_onto(domain,124 <> encoded_bytes_onto(cells,[])))
+
 def digest(domain: String,cells: List<&2,Sql.Cell>) -> String:
-  Domain.digest(Domain.encode(format() ++ "|" ++ domain ++ "|" ++ encoded(cells)))
+  Domain.digest(preimage_bytes(domain,cells))
 
 def seed(parser: String) -> String:
   digest("seed",[Sql.Cell.Text{parser}])

@@ -229,7 +229,7 @@ def cleanup_checked(value: Result<&2,&2,String,Request>) -> IO(Result<&2,&2,Stri
     case Fail{message}: IO.pure(Result<&2,&2,String,Unit>,Fail{message})
     case Done{+request}:
       do IO<Result<&2,&2,String,Unit>>:
-        result : Result<&2,&2,String,String> <- command("/bin/rm",["-f","--",output(request)])
+        result : Result<&2,&2,String,String> <- command("/bin/rm",["-f","--",output(request),directory(request) ++ "/cancel.control"])
         removed(result,request)
 
 # Call only after Process.run returned: its direct child has been reaped. Never

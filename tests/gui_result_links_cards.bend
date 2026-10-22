@@ -133,7 +133,7 @@ def chrome_checks() -> IO(Unit):
   do IO<Unit>:
     T.require(export_action(UI.mouse(Plain.origin_ui(),552,96,True{})),"Child entry preserves the existing Export captured page hit target")
     T.require(U32.is_eq(Route.read_kind("result-link-events"),4) && U32.is_eq(Route.read_kind("result-link-page"),4),"both Child workers use the existing bounded scoped read lane")
-    T.require(Bool.not(UI.child_entry_visible(UI.set_results(Plain.origin_ui(),UI.LibraryUsageResults{6,1}))),"Library capture chrome does not advertise an unavailable nested Child action")
+    T.require(Bool.not(UI.child_entry_visible(UI.set_results(Plain.origin_ui(),UI.LibraryUsageResults{6,1,[]}))),"Library capture chrome does not advertise an unavailable nested Child action")
 
 def navigation_checks() -> IO(Unit):
   do IO<Unit>:

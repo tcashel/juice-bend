@@ -1,5 +1,27 @@
 # Performance observations
 
+## Event-seal byte encoder — matched physical-Mac pair
+
+The byte-oriented event-seal candidate was compared with the original codec on
+the same physical Apple M2 Pro Mac (32 GiB, macOS 27.0.1 arm64), with Tart stopped.
+Both LLVM 23.1.4 -O1 builds completed before measurement and used the same runtime
+path and synthetic 35,607,307-byte fixture. This is one pair, baseline first.
+
+| Operation | Baseline | Candidate |
+|---|---:|---:|
+| First 100k-record import |45.304s|42.028s|
+| Unchanged refresh |4.405s|5.570s|
+| Append 16 raw records |28.252s|26.535s|
+| Warm scoped-search p95 |49ms|51ms|
+| Warm late-page p95 |11ms|12ms|
+| Repository late-page p95 |28ms|31ms|
+
+Both runs passed database checks; fixture bytes, snapshot seals, typed prefixes
+and 100,000 previous raw IDs matched. Append was modestly faster while unchanged
+refresh was slower. This single pair does not establish significance or solve
+slow append. It is a backend component comparison, not UI performance or a Swift
+comparison. Receipt details are in `receipts/native206-build-tests.json`.
+
 Measured on 2026-10-20 with Bend 2.0.37 at
 `60ca80aedeec9d8f0629b5f10dd19457d8ad67af`, native Apple clang `-O3`.
 Backend benchmarks ran on the macOS 27.0.1 (26A434), arm64 host; the separately

@@ -1,6 +1,18 @@
 # Reference parity
 
-## Current native app — 2026-10-22
+## Current native app206 — 2026-10-22
+
+Adopted app `4ffb4903…` adds readable Usage metric cards and Overview/Report views
+with canonical copying, provider filters and selected-capture/Back restoration.
+Actual native review confirmed legible values and explicit unknown counters.
+The original retained history workflow remains; date charts and costs are open.
+One native pending-JPEG Close fixture passed with exact worker/request cleanup.
+This is not a global cancellation bound. Inline-PNG functional checks passed;
+strict combined JPEG/PNG and worker-creation observation remain unaccepted.
+Dense controls/metadata, singular-count wording, generic copy status and missing
+glyphs remain visible. See `receipts/native206-native.json`.
+
+## Historical app201 — 2026-10-22
 
 Adopted native app `943eee7e…` now has observed recorded Child-result navigation
 through a retained candidate to its transcript, tool expansion, canonical export

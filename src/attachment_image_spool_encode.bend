@@ -1,4 +1,5 @@
 import Base
+import ./attachment_image_cancel.bend as Cancel
 import ./attachment_image_binding.bend as Header
 import ./attachment_image_encode.bend as Legacy
 import ./attachment_image_types.bend as Image
@@ -27,7 +28,7 @@ def hash_chunk(fuel: Nat,value: Hashing) -> Hashing:
       Hashing{pixels,+index,hash} = value
       hash_value(Array.get(U32,pixels,index),index,hash,v => hash_chunk(rest,v))
 
-def hash_turn(done: Bool,count: U32,value: Hashing,next: Hashing -> IO(Array<U32> & String)) -> IO(Array<U32> & String):
+def hash_turn_checked(+mode: Cancel.Mode,done: Bool,count: U32,value: Hashing,next: Hashing -> IO(Array<U32> & String)) -> IO(Array<U32> & String):
   match done:
     case True{}:
       Hashing{pixels,_,hash} = value
@@ -35,17 +36,17 @@ def hash_turn(done: Bool,count: U32,value: Hashing,next: Hashing -> IO(Array<U32
     case False{}:
       Hashing{pixels,+index,hash} = value
       do IO<Array<U32> & String>:
-        IO.sleep(0)
+        Cancel.check(mode)
         next(hash_chunk(U32.to_nat(U32.min(128,U32.sub(count,index))),Hashing{pixels,index,hash}))
 
-def hash_loop(fuel: Nat,+count: U32,value: Hashing) -> IO(Array<U32> & String):
+def hash_loop_checked(+mode: Cancel.Mode,fuel: Nat,+count: U32,value: Hashing) -> IO(Array<U32> & String):
   match fuel:
     case 0n: IO.die(Array<U32> & String,2,"image_spool_hash_limit")
     case 1n+left:
       Hashing{pixels,+index,hash} = value
-      hash_turn(U32.is_ge(index,count),count,Hashing{pixels,index,hash},v => hash_loop(left,count,v))
+      hash_turn_checked(mode,U32.is_ge(index,count),count,Hashing{pixels,index,hash},v => hash_loop_checked(mode,left,count,v))
 
-def hash_all(count: U32,value: Hashing) -> IO(Array<U32> & String): hash_loop(8193n,count,value)
+def hash_all_checked(+mode: Cancel.Mode,count: U32,value: Hashing) -> IO(Array<U32> & String): hash_loop_checked(mode,8193n,count,value)
 
 def hex_value(pair: Array<U32> & U32,index: U32,text: String,next: Batch -> Batch) -> Batch:
   (pixels,value) = pair
@@ -68,7 +69,7 @@ def write_result(pair: File & Result<&1,&1,U32 & String,Unit>,next: File -> IO(F
 
 # File.write_bytes handles short writes in upstream Base; every effect receives
 # at most1024bytes. The final File.size independently checks the complete count.
-def write_blocks(fuel: Nat,bytes: List<&2,U32>,file: File,count: U32) -> IO(File & Result<&2,&2,String,U32>):
+def write_blocks_checked(+mode: Cancel.Mode,fuel: Nat,bytes: List<&2,U32>,file: File,count: U32) -> IO(File & Result<&2,&2,String,U32>):
   match fuel bytes:
     case _ Nil{}: IO.pure(File & Result<&2,&2,String,U32>,(file,Done{count}))
     case 0n _: IO.pure(File & Result<&2,&2,String,U32>,(file,Fail{"image_spool_write_limit"}))
@@ -77,11 +78,12 @@ def write_blocks(fuel: Nat,bytes: List<&2,U32>,file: File,count: U32) -> IO(File
       +chunk = List.take(&2,U32,all,1024n)
       size = U32.from_nat(List.length(&2,U32,chunk))
       do IO<File & Result<&2,&2,String,U32>>:
+        Cancel.check(mode)
         written : File & Result<&1,&1,U32 & String,Unit> <- File.write_bytes(file,chunk)
-        write_result(written,f => write_blocks(left,List.drop(&2,U32,all,1024n),f,U32.add(count,size)))
+        write_result(written,f => write_blocks_checked(mode,left,List.drop(&2,U32,all,1024n),f,U32.add(count,size)))
 
-def write_bytes(file: File,bytes: List<&2,U32>,count: U32) -> IO(File & Result<&2,&2,String,U32>):
-  write_blocks(67n,bytes,file,count)
+def write_bytes_checked(+mode: Cancel.Mode,file: File,bytes: List<&2,U32>,count: U32) -> IO(File & Result<&2,&2,String,U32>):
+  write_blocks_checked(mode,67n,bytes,file,count)
 
 def emitted(pair: File & Result<&2,&2,String,U32>,pixels: Array<U32>,index: U32,next: File -> Array<U32> -> U32 -> U32 -> IO(File & Result<&2,&2,String,U32>)) -> IO(File & Result<&2,&2,String,U32>):
   (file,result) = pair
@@ -89,28 +91,28 @@ def emitted(pair: File & Result<&2,&2,String,U32>,pixels: Array<U32>,index: U32,
     case Fail{message}: IO.pure(File & Result<&2,&2,String,U32>,(file,Fail{message}))
     case Done{bytes}: next(file,pixels,index,bytes)
 
-def emit_batch(file: File,value: Batch,bytes: U32,next: File -> Array<U32> -> U32 -> U32 -> IO(File & Result<&2,&2,String,U32>)) -> IO(File & Result<&2,&2,String,U32>):
+def emit_batch_checked(+mode: Cancel.Mode,file: File,value: Batch,bytes: U32,next: File -> Array<U32> -> U32 -> U32 -> IO(File & Result<&2,&2,String,U32>)) -> IO(File & Result<&2,&2,String,U32>):
   Batch{pixels,index,text} = value
   do IO<File & Result<&2,&2,String,U32>>:
-    written : File & Result<&2,&2,String,U32> <- write_bytes(file,D.encode(text),bytes)
+    written : File & Result<&2,&2,String,U32> <- write_bytes_checked(mode,file,D.encode(text),bytes)
     emitted(written,pixels,index,next)
 
-def emit_turn(done: Bool,file: File,pixels: Array<U32>,+index: U32,count: U32,bytes: U32,next: File -> Array<U32> -> U32 -> U32 -> IO(File & Result<&2,&2,String,U32>)) -> IO(File & Result<&2,&2,String,U32>):
+def emit_turn_checked(+mode: Cancel.Mode,done: Bool,file: File,pixels: Array<U32>,+index: U32,count: U32,bytes: U32,next: File -> Array<U32> -> U32 -> U32 -> IO(File & Result<&2,&2,String,U32>)) -> IO(File & Result<&2,&2,String,U32>):
   match done:
     case True{}: IO.pure(File & Result<&2,&2,String,U32>,(file,Done{bytes}))
     case False{}:
       do IO<File & Result<&2,&2,String,U32>>:
-        IO.sleep(0)
-        emit_batch(file,hex_chunk(U32.to_nat(U32.min(128,U32.sub(count,index))),Batch{pixels,index,""}),bytes,next)
+        Cancel.check(mode)
+        emit_batch_checked(mode,file,hex_chunk(U32.to_nat(U32.min(128,U32.sub(count,index))),Batch{pixels,index,""}),bytes,next)
 
-def emit_loop(fuel: Nat,file: File,pixels: Array<U32>,+index: U32,+count: U32,bytes: U32) -> IO(File & Result<&2,&2,String,U32>):
+def emit_loop_checked(+mode: Cancel.Mode,fuel: Nat,file: File,pixels: Array<U32>,+index: U32,+count: U32,bytes: U32) -> IO(File & Result<&2,&2,String,U32>):
   match fuel:
     case 0n: IO.pure(File & Result<&2,&2,String,U32>,(file,Fail{"image_spool_pixel_limit"}))
     case 1n+left:
-      emit_turn(U32.is_ge(index,count),file,pixels,index,count,bytes,f => p => i => b => emit_loop(left,f,p,i,count,b))
+      emit_turn_checked(mode,U32.is_ge(index,count),file,pixels,index,count,bytes,f => p => i => b => emit_loop_checked(mode,left,f,p,i,count,b))
 
-def emit_pixels(file: File,pixels: Array<U32>,index: U32,count: U32,bytes: U32) -> IO(File & Result<&2,&2,String,U32>):
-  emit_loop(8193n,file,pixels,index,count,bytes)
+def emit_pixels_checked(+mode: Cancel.Mode,file: File,pixels: Array<U32>,index: U32,count: U32,bytes: U32) -> IO(File & Result<&2,&2,String,U32>):
+  emit_loop_checked(mode,8193n,file,pixels,index,count,bytes)
 
 def size_result(result: Result<&1,&1,U32 & String,U32>,expected: U32,digest: String) -> Result<&2,&2,String,Receipt>:
   match result:
@@ -136,60 +138,66 @@ def finish(pair: File & Result<&2,&2,String,U32>,digest: String) -> IO(Result<&2
         measured : File & Result<&1,&1,U32 & String,U32> <- File.size(file)
         sized(measured,count,digest)
 
-def header_written(pair: File & Result<&2,&2,String,U32>,pixels: Array<U32>,count: U32,digest: String) -> IO(Result<&2,&2,String,Receipt>):
+def header_written_checked(+mode: Cancel.Mode,pair: File & Result<&2,&2,String,U32>,pixels: Array<U32>,count: U32,digest: String) -> IO(Result<&2,&2,String,Receipt>):
   (file,result) = pair
   match result:
     case Fail{message}: finish((file,Fail{message}),digest)
     case Done{bytes}:
       do IO<Result<&2,&2,String,Receipt>>:
-        written : File & Result<&2,&2,String,U32> <- emit_pixels(file,pixels,0,count,bytes)
+        written : File & Result<&2,&2,String,U32> <- emit_pixels_checked(mode,file,pixels,0,count,bytes)
         finish(written,digest)
 
-def opened(result: Result<&1,&1,U32 & String,File>,header: String,pixels: Array<U32>,count: U32,digest: String) -> IO(Result<&2,&2,String,Receipt>):
+def opened_checked(+mode: Cancel.Mode,result: Result<&1,&1,U32 & String,File>,header: String,pixels: Array<U32>,count: U32,digest: String) -> IO(Result<&2,&2,String,Receipt>):
   match result:
     case Fail{_}: IO.pure(Result<&2,&2,String,Receipt>,Fail{"image_spool_open_failed"})
     case Done{file}:
       do IO<Result<&2,&2,String,Receipt>>:
-        written : File & Result<&2,&2,String,U32> <- write_bytes(file,D.encode(header ++ "\n"),0)
-        header_written(written,pixels,count,digest)
+        written : File & Result<&2,&2,String,U32> <- write_bytes_checked(mode,file,D.encode(header ++ "\n"),0)
+        header_written_checked(mode,written,pixels,count,digest)
 
-def header_ready(value: Result<&2,&2,String,String>,path: String,pixels: Array<U32>,count: U32,digest: String) -> IO(Result<&2,&2,String,Receipt>):
+def header_ready_checked(+mode: Cancel.Mode,value: Result<&2,&2,String,String>,path: String,pixels: Array<U32>,count: U32,digest: String) -> IO(Result<&2,&2,String,Receipt>):
   match value:
     case Fail{message}: IO.pure(Result<&2,&2,String,Receipt>,Fail{message})
     case Done{header}:
       do IO<Result<&2,&2,String,Receipt>>:
         result : Result<&1,&1,U32 & String,File> <- File.open(path,"w")
-        opened(result,header,pixels,count,digest)
+        opened_checked(mode,result,header,pixels,count,digest)
 
-def raster_hashed(pair: Array<U32> & String,binding: J.Json,path: String,w: U32,h: U32,+count: U32,capacity: U32,notice: Bool) -> IO(Result<&2,&2,String,Receipt>):
+def raster_hashed_checked(+mode: Cancel.Mode,pair: Array<U32> & String,binding: J.Json,path: String,w: U32,h: U32,+count: U32,capacity: U32,notice: Bool) -> IO(Result<&2,&2,String,Receipt>):
   (pixels,+digest) = pair
-  header_ready(Header.success(binding,w,h,count,capacity,notice,digest),path,pixels,count,digest)
+  header_ready_checked(mode,Header.success(binding,w,h,count,capacity,notice,digest),path,pixels,count,digest)
 
-def raster_valid(valid: Bool,binding: J.Json,path: String,w: U32,h: U32,+count: U32,capacity: U32,pixels: Array<U32>,notice: Bool) -> IO(Result<&2,&2,String,Receipt>):
+def raster_valid_checked(+mode: Cancel.Mode,valid: Bool,binding: J.Json,path: String,w: U32,h: U32,+count: U32,capacity: U32,pixels: Array<U32>,notice: Bool) -> IO(Result<&2,&2,String,Receipt>):
   match valid:
     case False{}: IO.pure(Result<&2,&2,String,Receipt>,Fail{"image_child_raster_limit"})
     case True{}:
       do IO<Result<&2,&2,String,Receipt>>:
-        pair : Array<U32> & String <- hash_all(count,Hashing{pixels,0,D.HashContext{D.hash_initial(),[],0,0}})
-        raster_hashed(pair,binding,path,w,h,count,capacity,notice)
+        pair : Array<U32> & String <- hash_all_checked(mode,count,Hashing{pixels,0,D.HashContext{D.hash_initial(),[],0,0}})
+        raster_hashed_checked(mode,pair,binding,path,w,h,count,capacity,notice)
 
-def raster_sized(pair: Array<U32> & U32,binding: J.Json,path: String,w: U32,h: U32,count: U32,+capacity: U32,notice: Bool) -> IO(Result<&2,&2,String,Receipt>):
+def raster_sized_checked(+mode: Cancel.Mode,pair: Array<U32> & U32,binding: J.Json,path: String,w: U32,h: U32,count: U32,+capacity: U32,notice: Bool) -> IO(Result<&2,&2,String,Receipt>):
   (pixels,actual) = pair
-  raster_valid(U32.is_eq(actual,capacity),binding,path,w,h,count,capacity,pixels,notice)
+  raster_valid_checked(mode,U32.is_eq(actual,capacity),binding,path,w,h,count,capacity,pixels,notice)
 
-def raster_geometry(valid: Bool,binding: J.Json,path: String,w: U32,h: U32,count: U32,capacity: U32,pixels: Array<U32>,notice: Bool) -> IO(Result<&2,&2,String,Receipt>):
+def raster_geometry_checked(+mode: Cancel.Mode,valid: Bool,binding: J.Json,path: String,w: U32,h: U32,count: U32,capacity: U32,pixels: Array<U32>,notice: Bool) -> IO(Result<&2,&2,String,Receipt>):
   match valid:
     case False{}: IO.pure(Result<&2,&2,String,Receipt>,Fail{"image_child_raster_limit"})
-    case True{}: raster_sized(Array.size(U32,pixels),binding,path,w,h,count,capacity,notice)
+    case True{}: raster_sized_checked(mode,Array.size(U32,pixels),binding,path,w,h,count,capacity,notice)
 
-def raster(binding: J.Json,path: String,value: Image.Raster) -> IO(Result<&2,&2,String,Receipt>):
+def raster_checked(+mode: Cancel.Mode,binding: J.Json,path: String,value: Image.Raster) -> IO(Result<&2,&2,String,Receipt>):
   Image.Raster{+w,+h,+count,+capacity,pixels,notice} = value
-  raster_geometry(Header.geometry(w,h,count,capacity),binding,path,w,h,count,capacity,pixels,notice)
+  raster_geometry_checked(mode,Header.geometry(w,h,count,capacity),binding,path,w,h,count,capacity,pixels,notice)
 
-def decoded(binding: J.Json,path: String,value: Result<&2,&1,String,Image.Raster>) -> IO(Result<&2,&2,String,Receipt>):
+def decoded_checked(+mode: Cancel.Mode,binding: J.Json,path: String,value: Result<&2,&1,String,Image.Raster>) -> IO(Result<&2,&2,String,Receipt>):
   match value:
-    case Fail{message}: header_ready(Header.failure(binding,message),path,ALeaf{0},0,"none")
-    case Done{value}: raster(binding,path,value)
+    case Fail{message}: header_ready_checked(mode,Header.failure(binding,message),path,ALeaf{0},0,"none")
+    case Done{value}: raster_checked(mode,binding,path,value)
 
-def encode(binding: J.Json,path: String,bytes: List<&2,U32>) -> IO(Result<&2,&2,String,Receipt>):
-  decoded(binding,path,Decode.decode(bytes))
+def encode_checked(+mode: Cancel.Mode,binding: J.Json,path: String,bytes: List<&2,U32>) -> IO(Result<&2,&2,String,Receipt>):
+  decoded_checked(mode,binding,path,Decode.decode(bytes))
+
+# The uncancelled API remains available to existing transport callers/tests.
+def hash_all(count: U32,value: Hashing) -> IO(Array<U32> & String): hash_all_checked(Cancel.Unchecked{},count,value)
+def raster(binding: J.Json,path: String,value: Image.Raster) -> IO(Result<&2,&2,String,Receipt>): raster_checked(Cancel.Unchecked{},binding,path,value)
+def decoded(binding: J.Json,path: String,value: Result<&2,&1,String,Image.Raster>) -> IO(Result<&2,&2,String,Receipt>): decoded_checked(Cancel.Unchecked{},binding,path,value)
+def encode(binding: J.Json,path: String,bytes: List<&2,U32>) -> IO(Result<&2,&2,String,Receipt>): encode_checked(Cancel.Unchecked{},binding,path,bytes)

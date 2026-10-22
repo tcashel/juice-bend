@@ -1986,7 +1986,7 @@ def library_items(rows: List<&2,LibraryView.CaptureItem>) -> List<&2,Item>:
       Item{snap,0,title,provider,"",gen,empty_filters()} <> library_items(rest)
 
 def library_selection_view(value: LibraryScreen.Screen) -> Selection:
-  LibraryScreen.Screen{_,_,_,_,_,rows} = value
+  LibraryScreen.Screen{_,_,_,_,_,rows,_} = value
   Selection{library_items(rows),"",0,44,[],empty_filters(),empty_listing()}
 
 def library_selection(model: Library.Model) -> Selection:
@@ -1994,9 +1994,9 @@ def library_selection(model: Library.Model) -> Selection:
 
 def library_render_screen(state: State,screen: LibraryScreen.Screen) -> State:
   State{db,dir,program,ui,selection,form,jobs,deadline,serial} = state
-  LibraryScreen.Screen{title,text,message,+provider,phase,+rows} = screen
+  LibraryScreen.Screen{title,text,message,+provider,phase,+rows,overview} = screen
   State{db,dir,program,UI.set_status(UI.set_reader(UI.set_results(UI.set_scope(UI.set_files(UI.focus_list(UI.set_rows(ui,LibraryScreen.titles(rows))),False{}),
-    Bool.pick(String,String.is_empty(provider),"all",provider)),UI.LibraryUsageResults{phase,U32.from_nat(List.length(&2,LibraryView.CaptureItem,rows))}),title,text),message),
+    Bool.pick(String,String.is_empty(provider),"all",provider)),UI.LibraryUsageResults{phase,U32.from_nat(List.length(&2,LibraryView.CaptureItem,rows)),overview}),title,text),message),
     Selection{library_items(rows),"",0,44,[],empty_filters(),empty_listing()},form,jobs,deadline,serial}
 
 def library_render_value(state: State,model: Library.Model) -> State:
@@ -2077,7 +2077,7 @@ def library_open_ready(+state: State,+capture: SessionUsage.Capture,+first: U32,
     case LibraryUsageNavigation{origin,prior,[model],view,_,_,+phase}:
       +saved = {Bool.pick(List<&2,UI.Bookmark>,U32.is_eq(phase,2),[UI.bookmark(ui)],view) : List<&2,UI.Bookmark>}
       +request = {Request{45,["library-usage-capture-v1",U32.show(U32.add(revision,1)),SessionUsage.capture_text(capture),U32.show(first)],snapshot,first,"Transcript | captured session " ++ snapshot} : Request}
-      queue(State{db,dir,program,UI.set_results(UI.set_status(ui,"Opening the exact retained capture. Back restores the Usage report."),UI.LibraryUsageResults{5,0}),selection,
+      queue(State{db,dir,program,UI.set_results(UI.set_status(ui,"Opening the exact retained capture. Back restores the Usage report."),UI.LibraryUsageResults{5,0,[]}),selection,
         Form{0,search,source,blame,files,[LibraryUsageNavigation{origin,prior,[model],saved,[capture],[request],5}],settings},Jobs{revision,wanted,reader,writer,paused},deadline,serial},request)
     case _: state
 
@@ -2138,7 +2138,7 @@ def library_capture_ready(+state: State,+request: Request,+page: LibraryPage.Pag
   match nav:
     case LibraryUsageNavigation{origin,prior,model,view,target,work,5}:
       +filters = {Query.Filters{"",provider,"","",""} : Query.Filters}
-      State{db,dir,program,UI.set_status(UI.set_results(UI.set_document(ui,title,document,"45\0" ++ String.join(args,"\0")),UI.LibraryUsageResults{6,0}),
+      State{db,dir,program,UI.set_status(UI.set_results(UI.set_document(ui,title,document,"45\0" ++ String.join(args,"\0")),UI.LibraryUsageResults{6,0,[]}),
         "Exact retained capture opened. Back returns to Library Usage; Session usage inspects this complete capture."),
         Selection{[Item{snapshot,start,"Library Usage capture",provider,"",generation,filters}],snapshot,start,3,
           Brief.range_args(Json.field(value,"page"),snapshot,start,[]),filters,empty_listing()},

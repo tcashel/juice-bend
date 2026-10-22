@@ -28,3 +28,8 @@ type CaptureItem is Data:
 type View is Data:
   View{heading: String,scope: String,notices: List<&2,Notice>,totals_available: Bool,
     providers: List<&2,ProviderCard>,selected_provider: String,captures: List<&2,CaptureItem>}
+
+# Boxed UI projection of typed totals. The canonical report is retained separately.
+type Summary is Data:
+  Summary{available: Bool,providers: List<&2,ProviderCard>,notices: List<&2,Notice>,
+    selected_provider: String,show_report: Bool}

@@ -16,6 +16,8 @@ for entry do
       tests/font_unboxed_reference.bend) continue ;;
       # The chrome, navigation and restoration entries cover all 11 checks.
       tests/gui_result_links_cards.bend) continue ;;
+      # Active, retired and Escape entries cover all 12 cancellation checks.
+      tests/attachment_image_cancel_app.bend) continue ;;
     esac
   fi
   if [ ! -f "$entry" ]; then

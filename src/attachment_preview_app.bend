@@ -1,4 +1,5 @@
 import Base
+import ./attachment_image_cancel.bend as Cancel
 import ./gui.bend as Gui
 import ./ui.bend as UI
 import ./ui_geometry.bend as Geometry
@@ -23,7 +24,7 @@ type Request is Data:
 type Reply is Type:
   Reply{value: Result<&2,&1,String,T.Raster>}
 type Pending is Data:
-  Pending{expected: Request,bookmark: Gui.State,channel: Chan(Reply),active: Bool}
+  Pending{expected: Request,bookmark: Gui.State,channel: Chan(Reply),active: Bool,cancel: Maybe<&2,Chan(Unit)>}
 type State is Type:
   Browsing{gui: Gui.State,pending: Maybe<&2,Pending>}
   Showing{preview: Preview.State<Gui.State>,caption: String}
@@ -63,15 +64,15 @@ def idle(value: Gui.State) -> Bool:
 def work_result(result: Result<&2,&1,String,T.Raster>) -> Reply:
   Reply{result}
 
-def work(program: String,dir: String,expected: Request) -> IO(Reply):
+def work(program: String,dir: String,expected: Request,cancel: Chan(Unit)) -> IO(Reply):
   match expected:
     case InlinePreview{expected}:
       do IO<Reply>:
-        result : Result<&2,&1,String,T.Raster> <- ImageWorker.read(program,dir,ImageBinding.ExpectedInline{expected})
+        result : Result<&2,&1,String,T.Raster> <- ImageWorker.read_control(program,dir,ImageBinding.ExpectedInline{expected},cancel)
         return work_result(result)
     case RetainedPreview{expected}:
       do IO<Reply>:
-        result : Result<&2,&1,String,T.Raster> <- ImageWorker.read(program,dir,ImageBinding.ExpectedExternal{expected})
+        result : Result<&2,&1,String,T.Raster> <- ImageWorker.read_control(program,dir,ImageBinding.ExpectedExternal{expected},cancel)
         return work_result(result)
 
 def begin_allowed(valid: Bool,+gui: Gui.State,+expected: Request) -> IO(Maybe<State>):
@@ -80,8 +81,9 @@ def begin_allowed(valid: Bool,+gui: Gui.State,+expected: Request) -> IO(Maybe<St
     case True{}:
       Gui.State{_,dir,program,_,_,_,_,_,_} = gui
       do IO<Maybe<State>>:
-        channel : Chan(Reply) <- IO.fork(Reply,work(program,dir,expected))
-        return Some{Browsing{Gui.status(gui,"Opening verified retained image. You can continue navigating; navigation cancels this preview."),Some{Pending{expected,gui,channel,True{}}}}}
+        +cancel : Chan(Unit) <- Chan.new(Unit,1)
+        channel : Chan(Reply) <- IO.fork(Reply,work(program,dir,expected,cancel))
+        return Some{Browsing{Gui.status(gui,"Opening verified retained image. You can continue navigating; navigation cancels this preview."),Some{Pending{expected,gui,channel,True{},Some{cancel}}}}}
 
 def begin_retained(+gui: Gui.State,value: Maybe<&2,External.External>) -> IO(Maybe<State>):
   match value:
@@ -101,7 +103,8 @@ def begin(+gui: Gui.State,pending: Maybe<&2,Pending>) -> IO(Maybe<State>):
     case Some{value}: IO.pure(Maybe<State>,Some{Browsing{Gui.status(gui,"The prior image reader is finishing. You may continue navigating."),Some{value}}})
 
 # Any meaningful new input retires the pending result before ordinary GUI work.
-# The supervised child and bounded incremental admission still finish. Keep
+# The supervised child observes its private control file at JPEG/encode
+# checkpoints. Retained loading and PNG remain synchronous spans. Keep
 # this channel until completion, so cancellation never admits a second worker.
 # A retired affine raster is discarded before it can replace the new reader.
 def retires(event: Event) -> Bool:
@@ -115,13 +118,32 @@ def retires(event: Event) -> Bool:
 
 def retire(needed: Bool,pending: Maybe<&2,Pending>) -> Maybe<&2,Pending>:
   match needed pending:
-    case True{} Some{Pending{expected,bookmark,channel,_}}: Some{Pending{expected,bookmark,channel,False{}}}
+    case True{} Some{Pending{expected,bookmark,channel,_,cancel}}: Some{Pending{expected,bookmark,channel,False{},cancel}}
     case _ value: value
+
+def signal(value: Maybe<&2,Chan(Unit)>) -> IO(Unit):
+  match value:
+    case None{}: IO.pure(Unit,Unit{})
+    case Some{channel}: Cancel.signal(channel)
+
+def signal_pending(needed: Bool,pending: Maybe<&2,Pending>) -> IO(Unit):
+  match needed pending:
+    case True{} Some{Pending{_,_,_,True{},cancel}}: signal(cancel)
+    case _ _: IO.pure(Unit,Unit{})
+
+def close_worker(+channel: Chan(Reply),cancel: Chan(Unit)) -> IO(Unit):
+  do IO<Unit>:
+    Cancel.signal(cancel)
+    # The worker reply is sent only after its exact Process.run has returned,
+    # its watcher has joined, and its private request cleanup has completed.
+    _ : Maybe<&1,Reply> <- Chan.recv(Reply,channel)
+    Chan.close(Reply,channel)
 
 def close_pending(pending: Maybe<&2,Pending>) -> IO(Unit):
   match pending:
     case None{}: IO.pure(Unit,Unit{})
-    case Some{Pending{_,_,channel,_}}: Chan.close(Reply,channel)
+    case Some{Pending{_,_,channel,_,Some{cancel}}}: close_worker(channel,cancel)
+    case Some{Pending{_,_,channel,_,None{}}}: Chan.close(Reply,channel)
 
 def ordinary_result(result: Maybe<Gui.State>,pending: Maybe<&2,Pending>) -> IO(Maybe<State>):
   match result:
@@ -145,7 +167,7 @@ def gui_event(pair: UI.State & UI.Action,gui: Gui.State,pending: Maybe<&2,Pendin
 
 def canceled_notice(needed: Bool,gui: Gui.State,pending: Maybe<&2,Pending>) -> Gui.State:
   match needed pending:
-    case True{} Some{Pending{_,_,_,True{}}}: Gui.status(gui,"Image preview canceled. Your reader navigation continues.")
+    case True{} Some{Pending{_,_,_,True{},_}}: Gui.status(gui,"Image preview canceled. Your reader navigation continues.")
     case _ _: gui
 
 # Keep the pending request boxed while UI.event calculates its native action.
@@ -178,15 +200,19 @@ def resume(+gui: Gui.State) -> Gui.State:
 
 def browse_ordinary(+event: Event,gui: Gui.State,+pending: Maybe<&2,Pending>) -> IO(Maybe<State>):
   +needed = retires(event)
-  browse_input(event,canceled_notice(needed,gui,pending),retire(needed,pending))
+  do IO<Maybe<State>>:
+    signal_pending(needed,pending)
+    browse_input(event,canceled_notice(needed,gui,pending),retire(needed,pending))
 
 # Escape cancels only the currently active preview and restores the exact
 # pre-Open text selection. After navigation has retired it, Escape belongs to
 # the new screen and cannot resurrect the old bookmark. Keep the one channel.
 def browse_event(event: Event,gui: Gui.State,pending: Maybe<&2,Pending>) -> IO(Maybe<State>):
   match event pending:
-    case Key{27,True{}} Some{Pending{expected,+bookmark,channel,True{}}}:
-      IO.pure(Maybe<State>,Some{Browsing{resume(bookmark),Some{Pending{expected,bookmark,channel,False{}}}}})
+    case Key{27,True{}} Some{Pending{expected,+bookmark,channel,True{},+cancel}}:
+      do IO<Maybe<State>>:
+        signal(cancel)
+        return Some{Browsing{resume(bookmark),Some{Pending{expected,bookmark,channel,False{},cancel}}}}
     case other value: browse_ordinary(other,gui,value)
 
 def preview_outcome(step: Preview.Step<Gui.State>,caption: String) -> Maybe<State>:
@@ -242,7 +268,7 @@ def polled(result: Poll<&1,&1,Maybe<&1,Reply>,Unit>,gui: Gui.State,+pending: Pen
   match result:
     case Wait{_}: IO.pure(State,Browsing{gui,Some{pending}})
     case Ready{result}:
-      Pending{expected,bookmark,channel,active} = pending
+      Pending{expected,bookmark,channel,active,_} = pending
       do IO<State>:
         Chan.close(Reply,channel)
         return arrived(active,result,gui,expected,bookmark)
@@ -260,7 +286,7 @@ def service_wait(active: Bool,gui: Gui.State,+pending: Pending) -> IO(State):
 def poll_after(result: Poll<&1,&1,Maybe<&1,Reply>,Unit>,gui: Gui.State,+pending: Pending) -> IO(State):
   match result:
     case Wait{_}:
-      Pending{_,_,_,active} = pending
+      Pending{_,_,_,active,_} = pending
       service_wait(active,gui,pending)
     case Ready{result}: polled(Ready{result},gui,pending)
 
@@ -268,7 +294,7 @@ def browse_service(gui: Gui.State,pending: Maybe<&2,Pending>) -> IO(State):
   match pending:
     case None{}: service_ordinary(gui,None{})
     case Some{+pending}:
-      Pending{_,_,channel,_} = pending
+      Pending{_,_,channel,_,_} = pending
       do IO<State>:
         result : Poll<&1,&1,Maybe<&1,Reply>,Unit> <- Chan.try_recv(Reply,channel,0)
         poll_after(result,gui,pending)
